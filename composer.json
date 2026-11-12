@@ -1,9 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "learn-cambodia/platform",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Learn Cambodia international language school and English learning platform.",
+    "keywords": [
+        "laravel",
+        "education",
+        "language-learning",
+        "cefr"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
