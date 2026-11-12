@@ -16,3 +16,5 @@ body { font-family: var(--font-sans); }
     html { scroll-behavior: auto; }
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+@import './workspace.css';
