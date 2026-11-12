@@ -57,6 +57,8 @@ class RoleProvisioningTest extends TestCase
     {
         $user = User::factory()->create();
 
+        $this->assertSame('student', $user->role);
+
         $this->actingAs($user)->patch('/account/profile', [
             'name' => 'Changed Name',
             'role' => 'admin',

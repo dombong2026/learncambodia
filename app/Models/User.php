@@ -22,6 +22,9 @@ class User extends Authenticatable
     public const ROLE_ADMIN = 'admin';
     public const ROLE_DEVELOPER = 'developer';
 
+    // Match the database default for models created in the current request.
+    protected $attributes = ['role' => self::ROLE_STUDENT];
+
     public function homeRouteName(): string
     {
         return match ($this->role) {
