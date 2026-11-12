@@ -21,6 +21,12 @@ class CatalogTest extends TestCase
             ->assertSee('IELTS');
     }
 
+    public function test_header_tray_lists_individual_published_categories(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $this->get('/')->assertOk()->assertSee('CELPIP')->assertSee('TEYL');
+    }
+
     public function test_search_returns_matching_category(): void
     {
         $this->seed(CategorySeeder::class);

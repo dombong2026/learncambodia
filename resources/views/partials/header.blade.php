@@ -50,8 +50,8 @@
             <button type="button" data-tray-scroll="-1" aria-label="Scroll categories left" class="shrink-0 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
             <div data-category-tray class="scrollbar-hide flex min-w-0 flex-1 snap-x gap-6 overflow-x-auto scroll-smooth whitespace-nowrap py-3">
                 <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.index') }}">{{ __('ui.all_categories') }}</a>
-                @foreach (\App\Models\Category::GROUPS as $slug => $name)
-                    <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.index', ['group' => $slug]) }}">{{ $name }}</a>
+                @foreach ($navigationCategories as $navigationCategory)
+                    <a title="{{ $navigationCategory->name }}" class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.show', $navigationCategory) }}"><span class="font-extrabold">{{ $navigationCategory->code }}</span><span class="ml-1">{{ $navigationCategory->name }}</span></a>
                 @endforeach
                 <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('cefr.index') }}">CEFR A1–C2</a>
             </div>
