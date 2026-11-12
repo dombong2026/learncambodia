@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Models\CourseInstructorAssignment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -53,7 +54,7 @@ class AssignAccountRole extends Command
             $previousRole = $user->role;
             if ($previousRole === User::ROLE_INSTRUCTOR && $role !== User::ROLE_INSTRUCTOR) {
                 // Revoking instructor access must also revoke every active teaching assignment.
-                AppModelsCourseInstructorAssignment::query()
+                CourseInstructorAssignment::query()
                     ->where('instructor_id', $user->id)->where('status', 'active')
                     ->update(['status' => 'revoked', 'revoked_at' => now()]);
             }
