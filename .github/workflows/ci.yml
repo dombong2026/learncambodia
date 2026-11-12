@@ -41,4 +41,4 @@ jobs:
           touch database/database.sqlite
           php artisan migrate --seed --force
       - name: Verify Laravel route compilation
-        run: php artisan route:list --compact
+        run: php artisan route:list
