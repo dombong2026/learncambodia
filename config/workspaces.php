@@ -204,11 +204,19 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Pages"
+          "label": "All Pages",
+          "route": "admin.editorial.index",
+          "parameters": {
+            "kind": "pages"
+          }
         },
         {
           "key": "create",
-          "label": "Create"
+          "label": "Create",
+          "route": "admin.editorial.create",
+          "parameters": {
+            "kind": "pages"
+          }
         },
         {
           "key": "settings",
@@ -223,11 +231,19 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Posts"
+          "label": "All Posts",
+          "route": "admin.editorial.index",
+          "parameters": {
+            "kind": "posts"
+          }
         },
         {
           "key": "create",
-          "label": "Create"
+          "label": "Create",
+          "route": "admin.editorial.create",
+          "parameters": {
+            "kind": "posts"
+          }
         },
         {
           "key": "category",
@@ -269,11 +285,19 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Policies"
+          "label": "All Policies",
+          "route": "admin.editorial.index",
+          "parameters": {
+            "kind": "policies"
+          }
         },
         {
           "key": "create",
-          "label": "Create"
+          "label": "Create",
+          "route": "admin.editorial.create",
+          "parameters": {
+            "kind": "policies"
+          }
         },
         {
           "key": "settings",

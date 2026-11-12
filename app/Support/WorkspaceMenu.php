@@ -29,7 +29,7 @@ final class WorkspaceMenu
     public static function href(string $role, array $group, array $item): string
     {
         if (isset($item['route'])) {
-            return route($item['route']);
+            return route($item['route'], $item['parameters'] ?? []);
         }
 
         $prefix = match ($role) {
