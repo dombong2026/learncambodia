@@ -48,7 +48,7 @@ final class Appearance
                 $kind === 'bool' => ['required', 'boolean'],
                 $kind === 'font' => ['required', 'in:system,serif,mono'],
                 $kind === 'scale' => ['required', 'in:compact,normal,large'],
-                default => ['present', 'string', 'max:'.explode(':', $kind)[1]],
+                default => ['nullable', 'string', 'max:'.explode(':', $kind)[1]],
             };
         }
         return $rules;

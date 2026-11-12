@@ -11,7 +11,8 @@
     </div>
 </section>
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <h2 class="text-2xl font-extrabold">Courses in this pathway</h2>
+    <h2 class="text-2xl font-extrabold">{{ \App\Support\Appearance::value('course','heading') }}</h2>
+    <p class="mt-3 text-sm text-slate-500">{{ \App\Support\Appearance::value('course','intro') }}</p>
     @if($courses->count())
         <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($courses as $course)

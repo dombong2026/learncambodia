@@ -7,7 +7,11 @@
     <title>@yield('title') · Learn Cambodia</title>
     @vite(['resources/css/app.css','resources/js/app.ts'])
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-slate-100 text-slate-900 antialiased dark:from-slate-950 dark:via-blue-950 dark:to-slate-950 dark:text-white">
+@php
+    $typography = \App\Support\Appearance::approved('typography');
+    $fontClass = ['system'=>'font-sans','serif'=>'font-serif','mono'=>'font-mono'][$typography['font_style']];
+@endphp
+<body class="{{ $fontClass }} min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-slate-100 text-slate-900 antialiased dark:from-slate-950 dark:via-blue-950 dark:to-slate-950 dark:text-white">
     <main class="grid min-h-screen place-items-center px-4 py-16">
         <div class="w-full max-w-md rounded-3xl border border-white/75 bg-white p-7 shadow-2xl shadow-slate-900/10 sm:p-9 dark:border-slate-800 dark:bg-slate-900">
             <a href="{{ route('home') }}" class="mb-7 flex items-center justify-center gap-2 text-xl font-black tracking-tight"><span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-700 text-white">L</span><span>Learn<span class="text-blue-700 dark:text-blue-400">Cambodia</span></span></a>

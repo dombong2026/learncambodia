@@ -45,6 +45,11 @@ class AdminAppearanceController extends Controller
     public function store(Request $request, string $section): RedirectResponse
     {
         $data = $request->validate(Appearance::rules($section));
+        foreach (Appearance::fields($section) as $field => $kind) {
+            if (str_starts_with($kind, 'text:')) {
+                $data[$field] = (string) ($data[$field] ?? '');
+            }
+        }
 
         DB::transaction(function () use ($section, $data, $request): void {
             abort_if(AppearanceRevision::query()->where('section', $section)
