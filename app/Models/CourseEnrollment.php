@@ -30,6 +30,11 @@ class CourseEnrollment extends Model
         return $this->hasMany(PracticeAttempt::class, 'enrollment_id');
     }
 
+    public function homeworkSubmissions(): HasMany
+    {
+        return $this->hasMany(HomeworkSubmission::class, 'enrollment_id');
+    }
+
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
