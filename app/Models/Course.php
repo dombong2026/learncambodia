@@ -5,17 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Course extends Model
 {
     protected $fillable = [
         'category_id', 'slug', 'title', 'summary', 'description',
         'cefr_level', 'delivery_mode', 'status', 'published_at',
+        'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime'];
+        return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime'];
     }
 
     public function category(): BelongsTo
@@ -23,9 +25,25 @@ class Course extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function modules(): HasMany
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(CourseEnrollment::class);
+    }
+
+    public function isMutable(): bool
+    {
+        return in_array($this->status, ['draft', 'rejected'], true);
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published')->whereNotNull('published_at')
-            ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now())
+            ->whereHas('category', fn (Builder $builder) => $builder->where('is_published', true));
     }
 }
