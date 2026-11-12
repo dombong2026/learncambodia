@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Models\LessonProgress;
+use App\Models\PracticeAttempt;
 use App\Models\User;
 use App\Support\WorkspaceMenu;
 use Illuminate\Http\Request;
@@ -28,7 +31,7 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function student(): View
+    public function student(Request $request): View
     {
         return view('workspace.overview', [
             'role' => 'student',
@@ -37,6 +40,13 @@ class WorkspaceController extends Controller
             'stats' => [
                 ['label' => 'Learning categories', 'value' => Category::published()->count()],
                 ['label' => 'CEFR levels', 'value' => CefrLevel::count()],
+                ['label' => 'My approved enrollments', 'value' => CourseEnrollment::query()
+                    ->where('student_id', $request->user()->id)->where('status', 'approved')->count()],
+                ['label' => 'My completed lessons', 'value' => LessonProgress::query()
+                    ->whereNotNull('completed_at')
+                    ->whereHas('enrollment', fn ($q) => $q
+                        ->where('student_id', $request->user()->id)->where('status', 'approved'))
+                    ->count()],
             ],
         ]);
     }

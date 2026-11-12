@@ -45,6 +45,8 @@ class StudentEnrollmentController extends Controller
             'role' => 'student',
             'enrollment' => $enrollment,
             'course' => $course,
+            'completedLessonIds' => $enrollment->lessonProgress()
+                ->whereNotNull('completed_at')->pluck('lesson_id')->all(),
         ]);
     }
 

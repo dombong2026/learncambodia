@@ -60,7 +60,9 @@ class AdminReviewController extends Controller
                 $modules = $locked->modules()->withCount('lessons')->get();
                 abort_unless($modules->isNotEmpty()
                     && $modules->every(fn ($module) => $module->lessons_count > 0)
-                    && filled($locked->description), 422);
+                    && filled($locked->description)
+                    && $locked->quizzes()->withCount('questions')->get()
+                        ->every(fn ($quiz) => $quiz->questions_count > 0), 422);
             }
 
             $status = $data['decision'] === 'approve' ? 'published' : 'rejected';

@@ -102,6 +102,9 @@ class AdminCourseController extends Controller
                 422, 'Every submitted course must have at least one module and lesson per module.');
             abort_unless(filled($locked->description), 422,
                 'Complete the course description before requesting review.');
+            $quizzes = $locked->quizzes()->withCount('questions')->get();
+            abort_unless($quizzes->every(fn ($quiz) => $quiz->questions_count > 0), 422,
+                'Every practice quiz must include at least one complete question.');
 
             $from = $locked->status;
             $locked->update([
