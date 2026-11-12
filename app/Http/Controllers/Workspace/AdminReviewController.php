@@ -138,7 +138,7 @@ class AdminReviewController extends Controller
             abort_unless($locked->status === 'pending', 409);
 
             if ($data['decision'] === 'approve') {
-                abort_unless(Course::published()->whereKey($locked->course_id)->exists(), 422,
+                abort_unless(Course::discoverable()->whereKey($locked->course_id)->exists(), 422,
                     'Only published courses may accept enrollments.');
                 abort_unless(User::query()->whereKey($locked->student_id)
                     ->where('role', User::ROLE_STUDENT)->exists(), 422);
