@@ -99,6 +99,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/enrollments', [StudentEnrollmentController::class, 'index'])->name('enrollments.index');
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+        Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 

@@ -11,7 +11,9 @@
     @forelse($enrollments as $enrollment)
         <tr><td class="px-5 py-4"><p class="font-bold">{{ $enrollment->course?->title }}</p><p class="mt-1 text-xs text-slate-500">{{ $enrollment->course?->category?->name }}</p></td>
             <td class="px-5 py-4 text-xs">{{ $enrollment->created_at->format('Y-m-d') }}</td>
-            <td class="px-5 py-4 text-sm font-semibold">{{ ucfirst($enrollment->status) }}</td>
+            <td class="px-5 py-4 text-sm font-semibold">{{ ucfirst($enrollment->status) }}
+                @if($enrollment->status === 'approved')<a href="{{ route('account.enrollments.show',$enrollment) }}" class="mt-1 block text-xs font-bold text-blue-700 underline dark:text-blue-400">Open lessons</a>@endif
+            </td>
             <td class="px-5 py-4 text-right">
                 @if(in_array($enrollment->status, ['pending','approved'], true))
                 <form method="POST" action="{{ route('account.enrollments.cancel', $enrollment) }}">@csrf @method('DELETE')

@@ -33,6 +33,21 @@ class StudentEnrollmentController extends Controller
         ]);
     }
 
+    public function show(Request $request, CourseEnrollment $enrollment): View
+    {
+        abort_unless($enrollment->student_id === $request->user()->id, 404);
+        abort_unless($enrollment->status === 'approved', 403);
+
+        $course = Course::published()->whereKey($enrollment->course_id)
+            ->with('modules.lessons')->firstOrFail();
+
+        return view('workspace.student.study', [
+            'role' => 'student',
+            'enrollment' => $enrollment,
+            'course' => $course,
+        ]);
+    }
+
     public function store(Request $request, Course $course): RedirectResponse
     {
         DB::transaction(function () use ($request, $course): void {
