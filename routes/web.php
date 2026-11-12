@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/categories', [AdminCategoryController::class, 'store'])->name('categories.store');
         Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
         Route::patch('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
-        Route::prefix('editorial/{kind}')->whereIn('kind', ['pages', 'posts', 'policies'])->name('editorial.')->group(function (): void {
+        Route::prefix('editorial/{kind}')->name('editorial.')->group(function (): void {
             Route::get('/', [AdminEditorialController::class, 'index'])->name('index');
             Route::get('/create', [AdminEditorialController::class, 'create'])->name('create');
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');
