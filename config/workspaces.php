@@ -512,6 +512,23 @@ return json_decode(<<<'JSON'
           "route": "admin.learning.report"
         }
       ]
+    },
+    {
+      "key": "academic-quality",
+      "title": "Academic Quality",
+      "icon": "award",
+      "items": [
+        {
+          "key": "gradebook",
+          "label": "Assignment Gradebook",
+          "route": "admin.academic.gradebook"
+        },
+        {
+          "key": "evidence",
+          "label": "Certificate Evidence Review",
+          "route": "admin.academic.evidence"
+        }
+      ]
     }
   ],
   "student": [

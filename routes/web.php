@@ -25,6 +25,7 @@ use App\Http\Controllers\Workspace\StudentResourcesController;
 use App\Http\Controllers\Workspace\WorkspaceController;
 use App\Http\Controllers\Workspace\AdminInstructorController;
 use App\Http\Controllers\Workspace\AdminHomeworkReviewController;
+use App\Http\Controllers\Workspace\AdminAcademicController;
 use App\Http\Controllers\Workspace\InstructorTeachingController;
 use App\Http\Controllers\Workspace\InstructorHomeworkController;
 use App\Http\Controllers\Workspace\InstructorGradingController;
@@ -60,6 +61,12 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:10,1')->name('instructors.assign');
         Route::patch('/instructors/{assignment}/revoke', [AdminInstructorController::class, 'revoke'])
             ->name('instructors.revoke');
+        Route::get('/academic/gradebook', [AdminAcademicController::class, 'gradebook'])->name('academic.gradebook');
+        Route::get('/academic/evidence', [AdminAcademicController::class, 'evidence'])->name('academic.evidence');
+        Route::post('/academic/evidence/enrollments/{enrollment}', [AdminAcademicController::class, 'request'])
+            ->middleware('throttle:10,1')->name('academic.request');
+        Route::post('/academic/evidence/reviews/{review}', [AdminAcademicController::class, 'review'])
+            ->name('academic.review');
         Route::get('/homework/reviews', [AdminHomeworkReviewController::class, 'index'])->name('homework.reviews');
         Route::post('/homework/reviews/{assignment}', [AdminHomeworkReviewController::class, 'review'])
             ->name('homework.review');
