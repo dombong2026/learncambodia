@@ -35,6 +35,7 @@ final class WorkspaceMenu
         $prefix = match ($role) {
             'admin' => 'admin',
             'developer' => 'developer',
+            'instructor' => 'instructor',
             default => 'account',
         };
 
@@ -48,6 +49,7 @@ final class WorkspaceMenu
         return match ($role) {
             'admin' => route('admin.overview'),
             'developer' => route('developer.overview'),
+            'instructor' => route('instructor.overview'),
             default => route('account.overview'),
         };
     }

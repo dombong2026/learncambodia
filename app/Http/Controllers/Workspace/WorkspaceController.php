@@ -7,6 +7,9 @@ use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\CourseInstructorAssignment;
+use App\Models\CourseHomeworkAssignment;
+use App\Models\HomeworkSubmission;
 use App\Models\LessonProgress;
 use App\Models\PracticeAttempt;
 use App\Models\User;
@@ -46,6 +49,28 @@ class WorkspaceController extends Controller
                     ->whereNotNull('completed_at')
                     ->whereHas('enrollment', fn ($q) => $q
                         ->where('student_id', $request->user()->id)->where('status', 'approved'))
+                    ->count()],
+            ],
+        ]);
+    }
+
+    public function instructor(Request $request): View
+    {
+        $id = $request->user()->id;
+
+        return view('workspace.overview', [
+            'role' => 'instructor',
+            'heading' => 'Instructor Overview',
+            'description' => 'Access only your assigned courses, independently reviewed assignments and submissions awaiting feedback.',
+            'stats' => [
+                ['label' => 'Assigned courses', 'value' => CourseInstructorAssignment::query()
+                    ->where('instructor_id', $id)->where('status', 'active')->count()],
+                ['label' => 'My assignment drafts', 'value' => CourseHomeworkAssignment::query()
+                    ->where('author_id', $id)->where('status', 'draft')->count()],
+                ['label' => 'Awaiting grading', 'value' => HomeworkSubmission::query()
+                    ->where('status', 'submitted')
+                    ->whereHas('assignment.course', fn ($query) => $query->whereHas('instructorAssignments',
+                        fn ($assignments) => $assignments->where('instructor_id', $id)->where('status', 'active')))
                     ->count()],
             ],
         ]);

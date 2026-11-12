@@ -21,6 +21,7 @@ class User extends Authenticatable
     public const ROLE_STUDENT = 'student';
     public const ROLE_ADMIN = 'admin';
     public const ROLE_DEVELOPER = 'developer';
+    public const ROLE_INSTRUCTOR = 'instructor';
 
     // Match the database default for models created in the current request.
     protected $attributes = ['role' => self::ROLE_STUDENT];
@@ -30,6 +31,7 @@ class User extends Authenticatable
         return match ($this->role) {
             self::ROLE_ADMIN => 'admin.overview',
             self::ROLE_DEVELOPER => 'developer.overview',
+            self::ROLE_INSTRUCTOR => 'instructor.overview',
             default => 'account.overview',
         };
     }
@@ -37,6 +39,11 @@ class User extends Authenticatable
     public function isAdministrator(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isInstructor(): bool
+    {
+        return $this->role === self::ROLE_INSTRUCTOR;
     }
 
     public function isDeveloper(): bool
