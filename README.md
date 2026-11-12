@@ -68,3 +68,12 @@ verification. **Do not deploy to production from this draft PR.**
 
 See [Architecture](docs/ARCHITECTURE.md) and
 [Deployment Checklist](docs/DEPLOYMENT.md).
+
+## Role-based account foundation (draft PR #2)
+
+The three role-separated account areas are `/dashboard` (admin),
+`/account` (student), and `/developer` (developer). Their navigation
+uses one reusable workspace layout with distinct grouped menu definitions.
+
+Read [Role-Based Account Architecture](docs/ACCOUNT_WORKSPACES.md) for
+provisioning controls, API-token scope, and implementation status.

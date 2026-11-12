@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\AssignAccountRole;
 use App\Http\Middleware\EnsureDeveloperToken;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\SetLocale;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([AssignAccountRole::class])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [SetLocale::class]);
         $middleware->alias([

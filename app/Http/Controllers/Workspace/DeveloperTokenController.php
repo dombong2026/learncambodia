@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class DeveloperTokenController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
-        return view('workspace.developer.tokens', [
+        return response()->view('workspace.developer.tokens', [
             'role' => 'developer',
             'tokens' => $request->user()->tokens()->orderByDesc('id')->paginate(10),
-        ]);
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function store(Request $request): RedirectResponse

@@ -35,6 +35,8 @@ class ProfileController extends Controller
         ]);
 
         $request->user()->forceFill(['password' => Hash::make($validated['password'])])->save();
+        // Rotate all developer tokens when login credentials change.
+        $request->user()->tokens()->delete();
         $request->session()->regenerate();
 
         return back()->with('status', 'Password updated successfully.');

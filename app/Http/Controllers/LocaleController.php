@@ -16,6 +16,6 @@ class LocaleController extends Controller
 
         $request->session()->put('locale', $validated['locale']);
 
-        return redirect()->route('home');
+        return redirect()->route($request->user()?->homeRouteName() ?? 'home');
     }
 }
