@@ -59,6 +59,19 @@ class WorkspaceAccessTest extends TestCase
         $this->get('/dashboard/manage/fiction/fake')->assertNotFound();
     }
 
+    public function test_public_header_resolves_role_appropriate_workspace_link(): void
+    {
+        foreach ([
+            'student' => '/account',
+            'admin' => '/dashboard',
+            'developer' => '/developer',
+        ] as $role => $target) {
+            $user = $this->user($role);
+            $this->actingAs($user)->get('/')
+                ->assertOk()->assertSee('href="'.url($target).'"', false);
+        }
+    }
+
     public function test_public_registration_cannot_set_admin_role(): void
     {
         $this->post('/register', [
