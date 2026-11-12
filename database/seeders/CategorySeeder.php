@@ -177,17 +177,22 @@ class CategorySeeder extends Seeder
 JSON, true, 512, JSON_THROW_ON_ERROR);
 
         foreach ($rows as $row) {
-            Category::updateOrCreate(
-                ['code' => $row['code']],
-                [
-                    'slug' => Str::slug($row['code'].'-'.$row['name']),
-                    'name' => $row['name'],
-                    'group' => $row['group'],
-                    'description' => $row['description'],
-                    'sort_order' => $row['sort_order'],
-                    'is_published' => true,
-                ]
-            );
+            $category = Category::firstOrNew(['code' => $row['code']]);
+            $isNew = ! $category->exists;
+            $category->fill([
+                'slug' => Str::slug($row['code'].'-'.$row['name']),
+                'name' => $row['name'],
+                'group' => $row['group'],
+                'description' => $row['description'],
+                'sort_order' => $row['sort_order'],
+            ]);
+
+            // Never override an administrator's unpublished decision on re-seeding.
+            if ($isNew) {
+                $category->is_published = true;
+            }
+
+            $category->save();
         }
     }
 }

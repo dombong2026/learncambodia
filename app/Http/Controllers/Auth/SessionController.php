@@ -33,7 +33,7 @@ class SessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $key = Str::lower($credentials['email']).'|'.$request->ip();
+        $key = hash('sha256', Str::lower($credentials['email']).'|'.$request->ip());
 
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages([

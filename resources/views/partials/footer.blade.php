@@ -16,10 +16,10 @@
         </ul></div>
         <div><h2 class="mb-5 text-base font-bold text-white">Exams &amp; Teaching</h2><ul class="space-y-3 text-sm text-slate-400">
             <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'IELTS']) }}">IELTS Preparation</a></li>
-            <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'TOEFL']) }}">TOEFL &amp; TOEIC</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'exam-preparation']) }}">TOEFL &amp; TOEIC</a></li>
             <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'exam-preparation']) }}">PTE &amp; Duolingo (DET)</a></li>
             <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'teacher-development']) }}">TEFL &amp; TESOL</a></li>
-            <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'CELTA']) }}">CELTA &amp; TKT</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'teacher-development']) }}">CELTA &amp; TKT</a></li>
         </ul></div>
         <div><h2 class="mb-5 text-base font-bold text-white">Student Support</h2><ul class="space-y-3 text-sm text-slate-400">
             <li><a class="hover:text-white" href="{{ route('information.show','placement') }}">Free Placement Test</a></li>

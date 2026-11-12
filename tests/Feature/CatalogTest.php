@@ -38,6 +38,18 @@ class CatalogTest extends TestCase
         $this->get('/categories/'.$category->slug)->assertNotFound();
     }
 
+    public function test_reseeding_does_not_republish_a_withdrawn_category(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $category = Category::query()->where('code', 'IELTS')->firstOrFail();
+        $category->update(['is_published' => false]);
+
+        $this->seed(CategorySeeder::class);
+
+        $this->assertFalse($category->fresh()->is_published);
+        $this->get('/categories/'.$category->slug)->assertNotFound();
+    }
+
     public function test_cefr_reference_lists_all_six_levels(): void
     {
         $this->seed(CefrLevelSeeder::class);
