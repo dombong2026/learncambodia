@@ -17,6 +17,9 @@ page; they do not create data or call third-party services.
 
 **Admin:** category list, create and edit; published/unpublished state;
 read-only user, course and CEFR lists, profile and password updates.
+The Page, Post and Policy managers support private, plain-text **draft**
+creation, listing and editing. Draft records are never routed to public pages
+and cannot be marked published through this interface.
 
 **Student:** published learning categories, CEFR descriptors, account profile
 and password settings. Formal placement tests, enrollment and ticketing are
@@ -27,7 +30,7 @@ not enabled.
 `GET /api/v1/courses`; API reference and policy.
 No account, payment, write, student assessment or private data APIs exist.
 
-**Planned only:** advertising providers, appearance CRUD, content publishing,
+**Planned only:** advertising providers, appearance CRUD, public content publishing,
 real-time support, policy workflows, user creation, payment configuration,
 storage providers, social sign-in, exams and formal test issuance. A menu link
 alone does not establish a working module.
