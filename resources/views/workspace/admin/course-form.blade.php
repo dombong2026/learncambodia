@@ -72,6 +72,33 @@
             @endif
         </details>
     @endforeach
+
+    <section class="mt-10 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-xl font-extrabold">Practice quizzes</h2>
+        <p class="mt-2 text-sm leading-7 text-slate-500">Practice questions are included in the course review. A quiz needs at least one complete four-option question before submission.</p>
+        <div class="mt-5 space-y-3">
+            @forelse($course->quizzes as $quiz)
+            <a href="{{ route('admin.course-builder.quizzes.edit', [$course,$quiz]) }}" class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-blue-400 dark:border-slate-800">
+                <span><strong>{{ $quiz->title }}</strong><span class="ml-2 text-xs text-slate-500">{{ $quiz->questions()->count() }} questions</span></span>
+                <span class="text-sm font-bold text-blue-700 dark:text-blue-400">Open quiz →</span>
+            </a>
+            @empty
+            <p class="text-sm text-slate-500">No practice quiz added to this course.</p>
+            @endforelse
+        </div>
+        @if($editable)
+        <form method="POST" action="{{ route('admin.course-builder.quizzes.store',$course) }}" class="mt-6 space-y-4 rounded-2xl border border-dashed border-blue-300 bg-blue-50 p-5 dark:border-blue-900 dark:bg-slate-950">@csrf
+            <h3 class="text-base font-bold">Add a practice quiz</h3>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <div><label class="mb-2 block text-xs font-bold" for="new-quiz-title">Title</label><input id="new-quiz-title" name="title" maxlength="180" required placeholder="Unit review quiz" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"></div>
+                <div><label class="mb-2 block text-xs font-bold" for="new-quiz-pass">Passing score (%)</label><input id="new-quiz-pass" name="passing_percent" type="number" min="0" max="100" value="70" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"></div>
+            </div>
+            <div><label class="mb-2 block text-xs font-bold" for="new-quiz-instructions">Instructions (optional)</label><textarea id="new-quiz-instructions" name="instructions" maxlength="1000" rows="2" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900"></textarea></div>
+            <input type="hidden" name="position" value="{{ $course->quizzes->count()+1 }}">
+            <div class="flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white">Create practice quiz</button></div>
+        </form>
+        @endif
+    </section>
     @if($editable)
         <form method="POST" action="{{ route('admin.course-builder.modules.store',$course) }}" class="mt-6 rounded-3xl border border-dashed border-blue-300 bg-blue-50 p-6 dark:border-blue-900 dark:bg-slate-900">@csrf
             <h3 class="text-lg font-extrabold">Add curriculum module</h3>

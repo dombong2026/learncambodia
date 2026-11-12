@@ -88,7 +88,7 @@ class AdminQuizController extends Controller
             return $locked->quizzes()->create($data);
         });
 
-        return redirect()->route('admin.quiz-builder.edit', [$course, $quiz])
+        return redirect()->route('admin.course-builder.quizzes.edit', [$course, $quiz])
             ->with('status', 'Practice quiz created in draft curriculum.');
     }
 

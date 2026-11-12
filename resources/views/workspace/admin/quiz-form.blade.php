@@ -8,7 +8,7 @@
     <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-extrabold">Quiz settings</h2>
         <p class="mt-2 text-xs text-slate-500">Course: {{ $course->title }} · {{ $editable ? 'Editable draft' : 'Locked curriculum' }}</p>
-        <form method="POST" action="{{ route('admin.quiz-builder.update', [$course, $quiz]) }}" class="mt-6 space-y-4">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('admin.course-builder.quizzes.update', [$course, $quiz]) }}" class="mt-6 space-y-4">@csrf @method('PATCH')
             <fieldset @disabled(!$editable) class="space-y-4">
                 <div><label class="mb-2 block text-sm font-bold" for="quiz-title">Quiz title</label><input id="quiz-title" name="title" required maxlength="180" value="{{ old('title',$quiz->title) }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950"></div>
                 <div><label class="mb-2 block text-sm font-bold" for="quiz-instructions">Instructions</label><textarea id="quiz-instructions" name="instructions" maxlength="1000" rows="3" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old('instructions',$quiz->instructions) }}</textarea></div>
@@ -24,7 +24,7 @@
     @foreach($quiz->questions as $question)
     <details class="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <summary class="cursor-pointer text-sm font-bold">Question {{ $question->position }} · {{ \Illuminate\Support\Str::limit($question->prompt, 100) }}</summary>
-        <form method="POST" action="{{ route('admin.quiz-builder.questions.update', [$course, $quiz, $question]) }}" class="mt-5 space-y-4">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('admin.course-builder.quizzes.questions.update', [$course, $quiz, $question]) }}" class="mt-5 space-y-4">@csrf @method('PATCH')
             <fieldset @disabled(!$editable) class="space-y-3">
                 <div><label class="block text-sm font-semibold" for="question-prompt-{{ $question->id }}">Question</label><textarea id="question-prompt-{{ $question->id }}" name="prompt" required maxlength="1500" rows="3" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">{{ $question->prompt }}</textarea></div>
                 <div class="grid gap-3 sm:grid-cols-2">
@@ -42,14 +42,14 @@
             </fieldset>
         </form>
         @if($editable)
-            <form method="POST" action="{{ route('admin.quiz-builder.questions.destroy', [$course, $quiz, $question]) }}" class="mt-3 flex justify-end">@csrf @method('DELETE')<button type="submit" class="text-xs font-bold text-red-600">Delete draft question</button></form>
+            <form method="POST" action="{{ route('admin.course-builder.quizzes.questions.destroy', [$course, $quiz, $question]) }}" class="mt-3 flex justify-end">@csrf @method('DELETE')<button type="submit" class="text-xs font-bold text-red-600">Delete draft question</button></form>
         @endif
     </details>
     @endforeach
     @if($editable)
     <section class="rounded-3xl border border-dashed border-blue-300 bg-blue-50 p-7 dark:border-blue-900 dark:bg-slate-900">
         <h2 class="text-lg font-extrabold">Add practice question</h2>
-        <form method="POST" action="{{ route('admin.quiz-builder.questions.store',[$course,$quiz]) }}" class="mt-5 space-y-4">@csrf
+        <form method="POST" action="{{ route('admin.course-builder.quizzes.questions.store',[$course,$quiz]) }}" class="mt-5 space-y-4">@csrf
             <div><label for="new-prompt" class="mb-2 block text-sm font-bold">Question prompt</label><textarea id="new-prompt" name="prompt" rows="3" maxlength="1500" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea></div>
             <div class="grid gap-3 sm:grid-cols-2">
                 @foreach(['A','B','C','D'] as $option)
@@ -64,7 +64,7 @@
             <div class="flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white">Add question</button></div>
         </form>
     </section>
-    <form method="POST" action="{{ route('admin.quiz-builder.destroy',[$course,$quiz]) }}" class="flex justify-end">@csrf @method('DELETE')<button type="submit" class="rounded-full border border-red-300 px-5 py-3 text-sm font-bold text-red-700 dark:border-red-900">Delete draft quiz</button></form>
+    <form method="POST" action="{{ route('admin.course-builder.quizzes.destroy',[$course,$quiz]) }}" class="flex justify-end">@csrf @method('DELETE')<button type="submit" class="rounded-full border border-red-300 px-5 py-3 text-sm font-bold text-red-700 dark:border-red-900">Delete draft quiz</button></form>
     @else
         <p class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">Quiz locked under curriculum review or after publication.</p>
     @endif

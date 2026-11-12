@@ -20,13 +20,13 @@
         <div class="mt-6 flex flex-wrap gap-2">
         @if($role === 'admin')
             <a href="{{ route('admin.categories.index') }}" class="rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">Manage categories</a>
-            <a href="{{ route('admin.users.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Review users</a>
+            <a href="{{ route('admin.learning.report') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Learning reports</a>
         @elseif($role === 'developer')
             <a href="{{ route('developer.tokens.index') }}" class="rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">Manage tokens</a>
             <a href="{{ route('developer.apis') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">API reference</a>
         @else
-            <a href="{{ route('account.categories') }}" class="rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">Course catalog</a>
-            <a href="{{ route('account.cefr') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">CEFR guide</a>
+            <a href="{{ route('account.progress.index') }}" class="rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">My learning progress</a>
+            <a href="{{ route('account.practice.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Practice quizzes</a>
         @endif
         </div>
     </div>
