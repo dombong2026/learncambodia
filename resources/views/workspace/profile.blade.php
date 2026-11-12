@@ -3,7 +3,7 @@
 @section('heading', 'Profile & Security')
 @section('description', 'Manage your account name and password. Your role and email address cannot be changed from this form.')
 @section('content')
-@php $prefix = $role === 'admin' ? 'admin' : ($role === 'developer' ? 'developer' : 'account'); @endphp
+@php $prefix = $role === 'admin' ? 'admin' : ($role === 'developer' ? 'developer' : ($role === 'instructor' ? 'instructor' : 'account')); @endphp
 <div class="grid gap-6 xl:grid-cols-2">
     <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-bold">Profile information</h2>
