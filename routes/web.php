@@ -7,6 +7,11 @@ use App\Http\Controllers\InformationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
+use App\Http\Controllers\Workspace\AdminCourseController;
+use App\Http\Controllers\Workspace\AdminCurriculumController;
+use App\Http\Controllers\Workspace\AdminAppearanceController;
+use App\Http\Controllers\Workspace\AdminReviewController;
+use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\AdminEditorialController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
@@ -38,7 +43,34 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
-        Route::get('/courses', [AdminRecordsController::class, 'courses'])->name('courses.index');
+        Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
+
+        Route::prefix('course-builder')->name('course-builder.')->group(function (): void {
+            Route::get('/create', [AdminCourseController::class, 'create'])->name('create');
+            Route::post('/', [AdminCourseController::class, 'store'])->name('store');
+            Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
+            Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
+            Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+
+            Route::post('/{course}/modules', [AdminCurriculumController::class, 'storeModule'])->name('modules.store');
+            Route::patch('/{course}/modules/{module}', [AdminCurriculumController::class, 'updateModule'])->name('modules.update');
+            Route::delete('/{course}/modules/{module}', [AdminCurriculumController::class, 'destroyModule'])->name('modules.destroy');
+            Route::post('/{course}/modules/{module}/lessons', [AdminCurriculumController::class, 'storeLesson'])->name('lessons.store');
+            Route::patch('/{course}/modules/{module}/lessons/{lesson}', [AdminCurriculumController::class, 'updateLesson'])->name('lessons.update');
+            Route::delete('/{course}/modules/{module}/lessons/{lesson}', [AdminCurriculumController::class, 'destroyLesson'])->name('lessons.destroy');
+        });
+
+        Route::prefix('appearance')->name('appearance.')->group(function (): void {
+            Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');
+            Route::get('/{section}', [AdminAppearanceController::class, 'edit'])->name('edit');
+            Route::post('/{section}', [AdminAppearanceController::class, 'store'])->name('store');
+            Route::post('/revisions/{revision}/submit', [AdminAppearanceController::class, 'submit'])->name('submit');
+        });
+
+        Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/courses/{course}', [AdminReviewController::class, 'course'])->name('reviews.course');
+        Route::post('/reviews/appearance/{revision}', [AdminReviewController::class, 'appearance'])->name('reviews.appearance');
+        Route::post('/reviews/enrollments/{enrollment}', [AdminReviewController::class, 'enrollment'])->name('reviews.enrollment');
         Route::get('/cefr', [AdminRecordsController::class, 'cefr'])->name('cefr.index');
         Route::get('/categories', [AdminCategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/create', [AdminCategoryController::class, 'create'])->name('categories.create');
@@ -63,6 +95,10 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/categories', [StudentResourcesController::class, 'categories'])->name('categories');
         Route::get('/cefr', [StudentResourcesController::class, 'cefr'])->name('cefr');
         Route::get('/help', [StudentResourcesController::class, 'help'])->name('help');
+        Route::get('/courses', [StudentEnrollmentController::class, 'catalog'])->name('courses.index');
+        Route::get('/enrollments', [StudentEnrollmentController::class, 'index'])->name('enrollments.index');
+        Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
+        Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 

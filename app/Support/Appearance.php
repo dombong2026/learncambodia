@@ -58,11 +58,10 @@ final class Appearance
     {
         self::fields($section);
 
-        return once(fn () => array_replace(
-            self::DEFAULTS[$section],
-            AppearanceRevision::query()->approved()->where('section', $section)
-                ->orderByDesc('id')->value('settings') ?? []
-        ));
+        $approved = AppearanceRevision::query()->approved()
+            ->where('section', $section)->orderByDesc('id')->first();
+
+        return array_replace(self::DEFAULTS[$section], $approved?->settings ?? []);
     }
 
     public static function value(string $section, string $field): mixed
