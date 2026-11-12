@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
@@ -28,6 +29,16 @@ class Course extends Model
     public function modules(): HasMany
     {
         return $this->hasMany(CourseModule::class)->orderBy('position')->orderBy('id');
+    }
+
+    public function lessons(): HasManyThrough
+    {
+        return $this->hasManyThrough(CourseLesson::class, CourseModule::class, 'course_id', 'course_module_id');
+    }
+
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(CourseQuiz::class)->orderBy('position')->orderBy('id');
     }
 
     public function enrollments(): HasMany
