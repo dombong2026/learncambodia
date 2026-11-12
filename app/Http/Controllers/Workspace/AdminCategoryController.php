@@ -66,7 +66,7 @@ class AdminCategoryController extends Controller
         return $request->validate([
             'code' => [
                 'required', 'string', 'max:24', 'regex:/^[A-Z0-9-]+$/',
-                Rule::unique('categories', 'code')->ignore($category?->id),
+                $category ? Rule::in([$category->code]) : Rule::unique('categories', 'code'),
             ],
             'name' => ['required', 'string', 'max:255'],
             'group' => ['required', Rule::in(array_keys(Category::GROUPS))],

@@ -17,4 +17,13 @@ body { font-family: var(--font-sans); }
     *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
 
-@import './workspace.css';
+
+/* Shared workspace visual primitives */
+.workspace-nav details > summary::-webkit-details-marker { display: none; }
+.workspace-nav details > summary::marker { content: ""; }
+.workspace-nav details .nav-chevron { transition: transform 0.16s ease; }
+.workspace-nav details[open] .nav-chevron { transform: rotate(180deg); }
+.workspace-nav .nav-item[hidden], .workspace-nav details[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .workspace-sidebar, .workspace-nav details .nav-chevron { transition: none !important; }
+}
