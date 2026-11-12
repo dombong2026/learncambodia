@@ -73,7 +73,8 @@ class AppearanceApprovalTest extends TestCase
             'note' => 'Needs additional public privacy and accessibility review.',
         ])->assertRedirect();
 
-        $this->get('/login')->assertSee('Welcome back')->assertDontSee('Unapproved sign in');
+        $this->post('/logout')->assertRedirect();
+        $this->get('/login')->assertOk()->assertSee('Welcome back')->assertDontSee('Unapproved sign in');
         $this->assertSame('rejected', $revision->fresh()->status);
     }
 

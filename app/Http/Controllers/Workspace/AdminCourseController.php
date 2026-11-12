@@ -56,7 +56,7 @@ class AdminCourseController extends Controller
             'delivery_mode' => ['required', Rule::in(['online','onsite','hybrid'])],
         ]);
 
-        $data['slug'] = $data['slug'] ?: Str::slug($data['title']);
+        $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['title']);
         validator($data, [
             'slug' => ['required', 'string', 'max:180',
                 Rule::unique('courses', 'slug')->ignore($course?->id)],
