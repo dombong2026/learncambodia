@@ -9,13 +9,37 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
+
+    public const ROLE_STUDENT = 'student';
+    public const ROLE_ADMIN = 'admin';
+    public const ROLE_DEVELOPER = 'developer';
+
+    public function homeRouteName(): string
+    {
+        return match ($this->role) {
+            self::ROLE_ADMIN => 'admin.overview',
+            self::ROLE_DEVELOPER => 'developer.overview',
+            default => 'account.overview',
+        };
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isDeveloper(): bool
+    {
+        return $this->role === self::ROLE_DEVELOPER;
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -26,6 +50,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
