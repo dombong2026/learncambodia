@@ -14,11 +14,12 @@ class Course extends Model
         'category_id', 'slug', 'title', 'summary', 'description',
         'cefr_level', 'delivery_mode', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
+        'source_course_id', 'revision_number', 'superseded_at',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime'];
+        return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
     }
 
     public function category(): BelongsTo
@@ -49,6 +50,16 @@ class Course extends Model
     public function isMutable(): bool
     {
         return in_array($this->status, ['draft', 'rejected'], true);
+    }
+
+    public function scopeDiscoverable(Builder $query): Builder
+    {
+        return $query->published()->whereNull('superseded_at');
+    }
+
+    public function sourceCourse(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_course_id');
     }
 
     public function scopePublished(Builder $query): Builder

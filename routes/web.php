@@ -8,6 +8,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
+use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminReviewController;
@@ -57,6 +58,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::post('/{course}/revise', [AdminCourseRevisionController::class, 'store'])
+                ->middleware('throttle:3,1')->name('revise');
 
             Route::post('/{course}/quizzes', [AdminQuizController::class, 'store'])->name('quizzes.store');
             Route::get('/{course}/quizzes/{quiz}/edit', [AdminQuizController::class, 'edit'])->name('quizzes.edit');

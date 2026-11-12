@@ -65,6 +65,16 @@ class AdminReviewController extends Controller
                         ->every(fn ($quiz) => $quiz->questions_count > 0), 422);
             }
 
+            // A replacement must not supersede an edition that was already withdrawn.
+            $source = null;
+            if ($data['decision'] === 'approve' && $locked->source_course_id) {
+                $source = Course::whereKey($locked->source_course_id)
+                    ->lockForUpdate()->firstOrFail();
+                abort_unless($source->status === 'published'
+                    && $source->superseded_at === null, 409,
+                    'The source edition is no longer current.');
+            }
+
             $status = $data['decision'] === 'approve' ? 'published' : 'rejected';
             $locked->update([
                 'status' => $status,
@@ -75,6 +85,12 @@ class AdminReviewController extends Controller
             ]);
             ApprovalAudit::record('course', $locked->id, $request->user(),
                 $data['decision'], 'pending_review', $status, $data['note'] ?? null);
+            if ($source !== null) {
+                $source->update(['superseded_at' => now()]);
+                ApprovalAudit::record('course', $source->id, $request->user(),
+                    'superseded', 'published', 'published',
+                    'Replaced by approved edition '.$locked->id);
+            }
         });
 
         return back()->with('status', 'Course review decision recorded.');

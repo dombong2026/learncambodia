@@ -6,7 +6,16 @@
 @php $editable = !$course->exists || $course->isMutable(); @endphp
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <a href="{{ route('admin.courses.index') }}" class="rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">← Course Manager</a>
-    @if($course->exists)<span class="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ ucwords(str_replace('_',' ', $course->status)) }}</span>@endif
+    @if($course->exists)
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ ucwords(str_replace('_',' ', $course->status)) }} · Edition {{ $course->revision_number }}</span>
+            @if($course->status === 'published' && $course->superseded_at === null)
+            <form method="POST" action="{{ route('admin.course-builder.revise', $course) }}">@csrf
+                <button type="submit" class="rounded-full border border-blue-400 px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:text-blue-400">Create next edition</button>
+            </form>
+            @endif
+        </div>
+    @endif
 </div>
 <form method="POST" action="{{ $course->exists ? route('admin.course-builder.update',$course) : route('admin.course-builder.store') }}" class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
     @csrf @if($course->exists)@method('PATCH')@endif

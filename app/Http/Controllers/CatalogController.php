@@ -51,7 +51,7 @@ class CatalogController extends Controller
             ->whereKeyNot($category->getKey())
             ->orderBy('sort_order')->limit(4)->get();
 
-        $courses = $category->courses()->published()->orderBy('title')->paginate(9);
+        $courses = $category->courses()->discoverable()->orderBy('title')->paginate(9);
 
         return view('categories.show', compact('category', 'relatedCategories', 'courses'));
     }

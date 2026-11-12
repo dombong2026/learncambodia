@@ -28,7 +28,7 @@ class StudentEnrollmentController extends Controller
     {
         return view('workspace.student.course-catalog', [
             'role' => 'student',
-            'courses' => Course::published()->with('category')
+            'courses' => Course::discoverable()->with('category')
                 ->orderBy('title')->paginate(10),
         ]);
     }
@@ -58,7 +58,7 @@ class StudentEnrollmentController extends Controller
                 ->lockForUpdate()->firstOrFail();
             abort_unless($student->role === User::ROLE_STUDENT, 403);
 
-            abort_unless(Course::published()->whereKey($course->id)->exists(), 404);
+            abort_unless(Course::discoverable()->whereKey($course->id)->exists(), 404);
             $existing = CourseEnrollment::query()
                 ->where('student_id', $student->id)->where('course_id', $course->id)
                 ->first();

@@ -44,7 +44,7 @@ class CatalogApiController extends Controller
 
     public function courses(Request $request): JsonResponse
     {
-        $result = Course::query()->published()->orderBy('title')
+        $result = Course::query()->discoverable()->orderBy('title')
             ->paginate($this->pagination($request), ['id', 'category_id', 'slug', 'title', 'summary', 'cefr_level', 'delivery_mode']);
 
         return response()->json($result)->header('Cache-Control', 'private, no-store');
