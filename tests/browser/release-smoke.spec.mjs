@@ -103,3 +103,28 @@ test('installer and private server files do not appear publicly', async ({ reque
     }
   }
 });
+
+
+test('locale remains in the URL while switching pages, not redirected to home', async ({ page }) => {
+  await page.goto('/courses?lang=en');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.locator('button[aria-controls="locale-menu"]').click();
+  await page.locator('#locale-menu button[name="locale"][value="km"]').click();
+  await expect(page).toHaveURL(/\/courses\?lang=km/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'km');
+  await page.locator('a[href*="/articles"]').first().click();
+  await expect(page).toHaveURL(/\/articles\?lang=km/);
+});
+
+test('auth UI uses inline floating labels, recovery link and modal home icon', async ({ page }) => {
+  await page.goto('/login?lang=en');
+  await expect(page.locator('[data-auth-body] .auth-modal')).toBeVisible();
+  await expect(page.locator('label[for="login_email"]')).toBeVisible();
+  await page.locator('#login_email').fill('student@example.test');
+  await expect(page.locator('label[for="login_email"]')).toBeVisible();
+  await expect(page.locator('[data-auth-body] [name="locale"]')).toHaveCount(0);
+  await expect(page.locator('[data-auth-body] a[aria-label*="home" i]')).toHaveCount(1);
+  await page.locator('a[href*="/forgot-password"]').click();
+  await expect(page).toHaveURL(/\/forgot-password/);
+  await expect(page.locator('input[name="email"]')).toBeVisible();
+});
