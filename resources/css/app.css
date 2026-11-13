@@ -97,19 +97,19 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 /* A deliberate motion affordance for real actions, never disabled elements. */
 @media (hover: hover) and (pointer: fine) {
     a[href], button:not(:disabled), summary, [role="button"], [data-dropdown-trigger] {
-        transition-property: transform, color, background-color, border-color, box-shadow, opacity;
+        transition-property: translate, scale, color, background-color, border-color, box-shadow, opacity;
         transition-duration: 180ms;
         transition-timing-function: cubic-bezier(.22, 1, .36, 1);
     }
     a[href]:hover, button:not(:disabled):hover, summary:hover, [role="button"]:hover {
-        transform: translateY(-1.5px);
+        translate: 0 -1.5px;
     }
     .auth-primary:hover, a[href].auth-primary:hover {
-        transform: translateY(-2px);
+        translate: 0 -2px;
         box-shadow: 0 9px 24px rgba(12, 45, 91, .20);
     }
     a[href]:active, button:not(:disabled):active, summary:active, [role="button"]:active {
-        transform: translateY(0) scale(.985);
+        translate: 0 0; scale: .985;
     }
     /* Only panels that actually contain a working navigation action move. */
     :is(.learning-dashboard-panel, [data-action-card]):has(a[href]):hover {
@@ -125,6 +125,6 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
     .auth-field-label, .auth-modal, .auth-primary, .learning-dashboard-panel, [data-action-card] {
         animation: none !important;
         transition: none !important;
-        transform: none !important;
+        translate: none !important; scale: none !important;
     }
 }
