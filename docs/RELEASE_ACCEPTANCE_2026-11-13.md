@@ -41,9 +41,13 @@ KHQR/billing and payments; advertisements; live chat and Telegram integration; e
 GitHub CI PASS does not mean real aaPanel, physical Safari, physical Android or independent security PASS. Each gate requires evidence, exact commit, environment, responsible reviewer and signature. Keep production unchanged until every mandatory gate is complete.
 
 
-## Dependency-lock release blocker (open)
+## Dependency lockfiles: tracked and reproducible CI gate implemented
 
-The source tree currently does **not** track composer.lock or package-lock.json. CI resolves dependencies dynamically, so a passing test run is not sufficient evidence that aaPanel can install the identical packages later. The release acceptance workflow uploads the generated lockfiles as an ephemeral review artifact. An authorized maintainer must inspect dependency licenses/advisories, commit approved lockfiles to the source branch, switch deployment to composer install and npm ci, and independently rerun MySQL and browser acceptance on the pinned package graph. Keep production installation blocked until the lockfiles are reviewed and committed.
+The original release candidate lacked tracked PHP and Node lockfiles. On 13 November 2026, an operator validated identical Composer/npm lock artifacts from successful isolated CI runs and committed `composer.lock` and `package-lock.json` to the QA branch at `1080a8a2286356636fdea7d92ea2281a246f1bbb`. The original GitHub push was denied to `moyuradesign`; the authorized `dombong2026` identity subsequently completed the push.
+
+The QA workflows now fail if either committed lockfile is missing, run Composer installs from the committed PHP lock, use `npm ci` for reproducible Node installation, and verify install steps did not change either lockfile. The browser-only Playwright installation uses a pinned test driver without updating the committed lock. Run the isolated MySQL, browser and security jobs on the **current** QA head, recording their real conclusions before advancing. A successful CI result still does not approve production installation.
+
+The physical aaPanel host inventory was read-only and reported PHP 8.4/8.5 extensions and Nginx syntax PASS, 51.52 GiB available space, MySQL client 8.0.45, Composer 2.2.6, and Node/npm absent from PATH. Node-free deploys will need a pinned CI-built Vite artifact, or explicitly approved isolated Node provisioning; do not install packages into the unconfigured host or modify unrelated sites.
 
 ## Automated results (baseline 61ee46a, 13 Nov 2026)
 
@@ -52,10 +56,10 @@ The source tree currently does **not** track composer.lock or package-lock.json.
 - Dependency/source review workflow: green, but only on dynamically resolved dependencies due to missing source lockfiles.
 - aaPanel real host installation, physical Safari/iOS/Android, reviewed restore of real staging data, and independent penetration/security signoff remain **NOT DONE**.
 
-## Before creating the isolated QA directory
+## Read-only host inventory (operator completed)
 
-Run `support/qa/aapanel-host-readiness.sh` as root to inspect PHP 8.4/8.5 extensions, Nginx syntax, Node/npm/Composer, aaPanel vhost names and available disk *before the app exists*. This command performs no modifications, never connects to a database and does not print credentials. A passing inventory alone does not authorize installation or prove QA DNS/TLS readiness.
+The operator ran the pinned `support/qa/aapanel-host-readiness.sh` script as root to inspect PHP 8.4/8.5 extensions, Nginx syntax, Node/npm/Composer, aaPanel vhost names and available disk *before the app exists*. This command performs no modifications, never connects to a database and does not print credentials. A passing inventory alone does not authorize installation or prove QA DNS/TLS readiness.
 
-## Isolated source staging — not an installation
+## Isolated source staging — complete, not an installation
 
-Use `support/qa/aapanel-stage-source.sh <exact 40-char review SHA>` only after review, executed by the authorized server operator. It clones the pinned QA branch into a private temporary location, verifies the exact commit and expected files, and moves the fresh worktree under `/www/wwwroot/learncambodia-qa-20261113`. It refuses to overwrite pre-existing paths. It does **not** generate `.env`, install packages, create MySQL databases or users, configure DNS/HTTPS/Nginx, start the installer, or change production. Until approved PHP/npm lockfiles and a dedicated QA hostname/database are available, do not point a vhost at the staging directory or activate the installer.
+The authorized host operator executed `support/qa/aapanel-stage-source.sh 3e4a43b84d2360a8253460b8cfb335431ac6eb4b` after verifying the script Git blob and PR head; the source staging output was `QA_SOURCE_STAGING=PASS` at `/www/wwwroot/learncambodia-qa-20261113`. It clones the pinned QA branch into a private temporary location, verifies the exact commit and expected files, and moves the fresh worktree under `/www/wwwroot/learncambodia-qa-20261113`. It refused to overwrite pre-existing paths. Its output confirmed no `.env`, packages, MySQL database/user, DNS/HTTPS/Nginx vhost, installer activation, or production changes. Subsequent local Git commit/push of the approved dependency lockfiles changed source only; it did not install the application. Lockfiles are now tracked, but until a dedicated QA hostname/database and current-head pinned CI acceptance are verified, do not point a vhost at the staging directory or activate the installer.
