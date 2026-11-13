@@ -5,7 +5,17 @@
 @section('content')
 @php
     $pageSections = $sections->filter(fn($s)=>in_array($s['key'],['categories','single_category','author','about','contact'],true));
-    $otherSections = $sections->reject(fn($s)=>in_array($s['key'],['categories','single_category','author','about','contact'],true));
+    $newIds=['blog','single_blog','recommendations','leaderboard_trophy','course_exam_catalog',
+        'single_course_exam','course_watch','reading','library','upload_studio'];
+    $newSections=$sections->filter(fn($s)=>in_array($s['key'],$newIds,true));
+    $otherSections=$sections->reject(fn($s)=>in_array($s['key'],array_merge(
+        ['categories','single_category','author','about','contact'],$newIds),true));
+    $newIcons=[
+        'blog'=>'newspaper','single_blog'=>'file','recommendations'=>'compass',
+        'leaderboard_trophy'=>'award','course_exam_catalog'=>'clipboard-check',
+        'single_course_exam'=>'list-check','course_watch'=>'book-open',
+        'reading'=>'book-marked','library'=>'library','upload_studio'=>'book-plus',
+    ];
     $pageIcons = ['categories'=>'tags','single_category'=>'book-open','author'=>'pen-square','about'=>'info','contact'=>'inbox'];
 @endphp
 <div class="rounded-2xl border border-[#e4d0a4] bg-[#fff8e9] px-6 py-5 text-sm leading-8 text-[#765524] dark:border-[#7e6437] dark:bg-[#413620] dark:text-[#f6d38e]">
@@ -41,6 +51,43 @@
         @endforeach
     </div>
 </section>
+<section class="mt-12">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <p class="text-xs font-black uppercase tracking-[.14em] text-[#b17b26]">Next long-page layouts</p>
+            <h2 class="mt-2 text-2xl font-black text-[#10365e] dark:text-white">Articles, assessments, learning & instructor pages</h2>
+            <p class="mt-3 max-w-5xl text-sm leading-8 text-slate-600 dark:text-slate-300">Ten additional wide, vertically stacked page layouts from the supplied reference set. Each has its own editable copy and a functional preview. Protected student/instructor content is still permission-scoped.</p>
+        </div>
+        <span class="rounded-full bg-[#f8e9c6] px-4 py-2 text-xs font-black text-[#88601f]">10 page layouts</span>
+    </div>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        @foreach($newSections as $section)
+            @php
+                $label=\App\Support\Appearance::LABELS[$section['key']] ?? $section['key'];
+                $preview=\App\Support\Appearance::preview($section['key']);
+            @endphp
+            <article class="flex min-h-64 min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#d6ab62] hover:shadow-lg dark:border-slate-700 dark:bg-[#172f4f]">
+                <div class="flex items-start justify-between gap-3">
+                    <span class="grid h-14 w-14 place-items-center rounded-2xl bg-[#f5e7c6] text-[#af7926] dark:bg-[#493c24]">
+                        <x-workspace-icon :name="$newIcons[$section['key']]" class="h-7 w-7"/>
+                    </span>
+                    @if($section['pending'])<span class="rounded-full bg-amber-100 px-3 py-1 text-[11px] font-black text-amber-800">Under review</span>
+                    @elseif($section['approved'])<span class="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">Active</span>
+                    @else<span class="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500">Default</span>@endif
+                </div>
+                <h3 class="mt-6 break-words text-lg font-black text-[#10345e] dark:text-white">{{ $label }}</h3>
+                <p class="mt-3 flex-1 text-xs leading-7 text-slate-600 dark:text-slate-300">{{ count(\App\Support\Appearance::SECTIONS[$section['key']]) }} editable page fields · Full-width continuous layout</p>
+                <div class="mt-6 flex flex-wrap gap-2">
+                    <a href="{{ route('admin.appearance.edit',$section['key']) }}" class="rounded-xl bg-[#113861] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#225184]">Customize</a>
+                    @if($preview)
+                    <a href="{{ $preview }}" target="_blank" rel="noopener" class="rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-bold text-[#11345f] hover:border-[#d8a85c] dark:border-slate-600 dark:text-[#f4c875]">Preview</a>
+                    @endif
+                </div>
+            </article>
+        @endforeach
+    </div>
+</section>
+
 <section class="mt-12">
     <h2 class="text-2xl font-black text-[#12345e] dark:text-white">Global & existing appearance settings</h2>
     <p class="mt-3 max-w-4xl text-sm leading-8 text-slate-500 dark:text-slate-300">Existing global Header, Menu, Footer, Typography and original Home, Course, Catalog and Authentication editing remain available.</p>

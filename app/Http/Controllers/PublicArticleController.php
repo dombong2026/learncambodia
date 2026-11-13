@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
+use App\Models\PublicProfile;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -20,7 +21,13 @@ class PublicArticleController extends Controller
                     ->orWhere('summary','like','%'.$search.'%')))
             ->orderByDesc('id')->paginate(10)->withQueryString();
 
-        return view('articles.index',compact('articles','search'));
+
+        $featured=ContentEntry::query()->where('type','post')->where('status','published')
+            ->orderByDesc('id')->first();
+        $publishedCount=ContentEntry::query()->where('type','post')
+            ->where('status','published')->count();
+
+        return view('articles.index',compact('articles','search','featured','publishedCount'));
     }
 
     public function show(string $article): View
@@ -28,6 +35,13 @@ class PublicArticleController extends Controller
         $article = ContentEntry::query()->where('type','post')->where('status','published')
             ->where('slug',$article)->firstOrFail();
 
-        return view('articles.show',compact('article'));
+
+        $related=ContentEntry::query()->where('type','post')->where('status','published')
+            ->whereKeyNot($article->id)->orderByDesc('id')->limit(4)->get();
+        $author=PublicProfile::visible()->where('kind','instructor')
+            ->where('user_id',$article->created_by)->first();
+        // Safely present the editorial text as distinct paragraphs; never parse it as HTML.
+        $paragraphs=array_values(array_filter(preg_split('/\R{2,}/u',trim($article->body)) ?: [],fn($p)=>trim($p)!==''));
+        return view('articles.show',compact('article','related','author','paragraphs'));
     }
 }

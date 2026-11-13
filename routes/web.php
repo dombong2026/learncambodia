@@ -6,6 +6,7 @@ use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\PublicContactController;
 use App\Http\Controllers\PublicAuthorController;
+use App\Http\Controllers\LearningHubController;
 use App\Http\Controllers\Workspace\AdminContactInquiryController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\InstallController;
@@ -55,6 +56,14 @@ Route::get('/students', [PublicPeopleController::class, 'students'])->name('stud
 Route::get('/students/{profile}', [PublicPeopleController::class, 'student'])->name('students.show');
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
+Route::get('/library', [LearningHubController::class,'library'])->name('learning.library');
+Route::get('/reading', [LearningHubController::class,'reading'])->name('learning.reading');
+Route::get('/exam-catalog', [LearningHubController::class,'exams'])->name('learning.exams');
+Route::get('/exam-catalog/{course:slug}', [LearningHubController::class,'exam'])->name('learning.exam.show');
+Route::get('/recommendations', [LearningHubController::class,'recommendations'])->name('learning.recommendations');
+Route::get('/leaderboard', [LearningHubController::class,'leaderboard'])->name('learning.leaderboard');
+Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learning.watch');
+Route::get('/upload-studio', [LearningHubController::class,'studio'])->name('learning.studio');
 Route::get('/authors', [PublicAuthorController::class, 'index'])->name('authors.index');
 Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name('authors.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
@@ -183,6 +192,8 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
+        Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
+            ->name('lessons.watch');
         Route::get('/homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
         Route::get('/homework/submissions', [StudentHomeworkController::class, 'submissions'])->name('homework.submissions');
         Route::get('/homework/{assignment}', [StudentHomeworkController::class, 'show'])->name('homework.show');
