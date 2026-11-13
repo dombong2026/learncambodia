@@ -21,10 +21,11 @@ class LocaleController extends Controller
         // origin-matching referer; never redirect to an arbitrary external URL.
         $previous = (string) $request->headers->get('referer', '');
         $parts = parse_url($previous);
-        $expected = parse_url(config('app.url'));
+        $expected = parse_url($request->getSchemeAndHttpHost());
 
+        // The live request host may differ from APP_URL in local QA and
+        // behind a reverse proxy. Compare hosts, then redirect by PATH only.
         if (! is_array($parts) || ! is_array($expected)
-            || ($parts['scheme'] ?? '') !== ($expected['scheme'] ?? '')
             || ($parts['host'] ?? '') !== ($expected['host'] ?? '')
             || ($parts['port'] ?? null) !== ($expected['port'] ?? null)) {
             $previous = route($request->user()?->homeRouteName() ?? 'home');
