@@ -9,14 +9,14 @@
             </span>
             <span class="text-base font-extrabold tracking-tight sm:text-lg">Learn<span class="text-blue-700 dark:text-blue-400">Cambodia</span></span>
         </a>
-        <form action="{{ route('courses.index') }}" method="GET" role="search" class="relative hidden min-w-0 flex-1 sm:block">
+        <form action="{{ route('courses.index') }}" method="GET" role="search" class="relative mx-auto hidden min-w-0 w-full max-w-[440px] flex-1 sm:block">
             <label for="global-search" class="sr-only">{{ __('ui.search') }}</label>
             <svg viewBox="0 0 24 24" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>
-            <input id="global-search" name="q" type="search" maxlength="80" value="{{ request('q', '') }}" placeholder="{{ __('frontend.search_placeholder') }}" class="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-12 pr-5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900">
+            <input id="global-search" name="q" type="search" maxlength="80" value="{{ request('q', '') }}" placeholder="{{ __('frontend.search_placeholder') }}" class="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-12 pr-5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900">
         </form>
-        <div class="ml-auto flex shrink-0 items-center gap-2 sm:ml-0">
+        <div class="ml-auto flex shrink-0 items-center gap-2">
             <div class="relative" data-dropdown>
-                <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="locale-menu" aria-label="{{ __('ui.language') }}" class="flex h-10 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-sm font-semibold transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-slate-700 dark:hover:bg-slate-900">
+                <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="locale-menu" aria-label="{{ __('ui.language') }}" class="flex h-10 items-center gap-1.5 rounded-full border border-transparent bg-transparent px-2 text-sm font-semibold transition hover:-translate-y-0.5 hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:text-blue-400">
                     <span class="text-xl" aria-hidden="true">{{ ['en'=>'🇬🇧','km'=>'🇰🇭','zh'=>'🇨🇳'][app()->getLocale()] ?? '🇬🇧' }}</span>
                     <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-slate-500" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
@@ -34,6 +34,9 @@
                     @auth
                         <p class="truncate border-b border-slate-100 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700">{{ auth()->user()->name }}</p>
                         <a href="{{ route(auth()->user()->homeRouteName()) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.dashboard') }}</a>
+                        @if(! auth()->user()->hasVerifiedEmail())
+                            <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
+                        @endif
                         <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_out') }}</button></form>
                     @else
                         <a href="{{ route('login') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_in') }}</a>

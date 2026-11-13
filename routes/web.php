@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\Auth\PasswordRecoveryController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
@@ -89,7 +91,25 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/register', [SessionController::class, 'register'])->middleware('throttle:5,1')->name('register.store');
 });
 
+// Password reset links are token-protected, throttled, and never disclose whether
+// an email address exists. SMTP delivery is disabled in the initial log-only install.
+Route::middleware('guest')->group(function (): void {
+    Route::get('/forgot-password', [PasswordRecoveryController::class, 'requestForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordRecoveryController::class, 'sendLink'])
+        ->middleware('throttle:3,1')->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordRecoveryController::class, 'resetForm'])
+        ->name('password.reset');
+    Route::post('/reset-password', [PasswordRecoveryController::class, 'reset'])
+        ->middleware('throttle:5,1')->name('password.update');
+});
+
 Route::middleware('auth')->group(function (): void {
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:3,1')->name('verification.send');
+
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {

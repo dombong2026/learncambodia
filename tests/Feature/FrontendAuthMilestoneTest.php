@@ -97,32 +97,35 @@ class FrontendAuthMilestoneTest extends TestCase
         $this->get('/')->assertOk()->assertSee('Published Study Tip');
     }
 
-    public function test_public_and_auth_page_have_three_language_controls_and_real_navigation(): void
+    public function test_public_header_supports_languages_and_auth_pages_have_floating_fields(): void
     {
         $this->seed(CategorySeeder::class);
+
         $this->get('/')->assertOk()
             ->assertSee('Learn Cambodia')
-            ->assertSee('name="locale" value="zh"',false)
-            ->assertSee('href="'.route('courses.index').'"',false)
-            ->assertSee('href="'.route('articles.index').'"',false);
+            ->assertSee('name="locale" value="zh"', false)
+            ->assertSee('href="'.route('courses.index').'"', false)
+            ->assertSee('href="'.route('articles.index').'"', false);
 
         $this->get('/login')->assertOk()
-            ->assertSee('data-password-toggle',false)
-            ->assertSee('name="locale" value="zh"',false)
-            ->assertSee('Back to home');
+            ->assertSee('data-password-toggle', false)
+            ->assertSee('class="auth-field-label', false)
+            ->assertSee('href="'.route('password.request').'"', false)
+            ->assertDontSee('name="locale" value="zh"', false);
+
         $this->get('/register')->assertOk()
-            ->assertSee('register_password_confirmation',false)
-            ->assertSee('data-password-toggle',false)
+            ->assertSee('register_password_confirmation', false)
+            ->assertSee('auth-field-label', false)
             ->assertSee('draft Privacy Notice');
 
-        $this->post('/language',['locale'=>'zh'])->assertRedirect('/');
-        $this->get('/login')->assertOk()->assertSee('欢迎回来');
-        $this->get('/register')->assertOk()->assertSee('创建账户');
-        $this->get('/courses')->assertOk()->assertSee('探索课程');
+        $this->post('/language', ['locale' => 'zh'])->assertRedirect('/?lang=zh');
+        $this->get('/login?lang=zh')->assertOk()->assertSee('欢迎回来');
+        $this->get('/register?lang=zh')->assertOk()->assertSee('创建账户');
+        $this->get('/courses?lang=zh')->assertOk()->assertSee('探索课程');
 
-        $this->post('/language',['locale'=>'km'])->assertRedirect('/');
-        $this->get('/login')->assertOk()->assertSee('សូមស្វាគមន៍មកវិញ');
-        $this->get('/courses')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា');
+        $this->post('/language', ['locale' => 'km'])->assertRedirect('/?lang=km');
+        $this->get('/login?lang=km')->assertOk()->assertSee('សូមស្វាគមន៍មកវិញ');
+        $this->get('/courses?lang=km')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា');
     }
 
     public function test_public_course_has_real_student_enrollment_action_and_resume_link(): void

@@ -130,7 +130,7 @@ class PremiumDashboardTest extends TestCase
     {
         $student = $this->user('student');
         $this->actingAs($student)->post('/language',['locale'=>'km'])
-            ->assertRedirect('/account');
+            ->assertRedirect('/account?lang=km');
         $this->get('/account')->assertOk()
             ->assertSee('ផ្ទាំងការសិក្សារបស់ខ្ញុំ')
             ->assertSee('ប្រវត្តិរូប និងសុវត្ថិភាព')
@@ -138,7 +138,7 @@ class PremiumDashboardTest extends TestCase
             ->assertSee('value="en"',false)
             ->assertSee('value="km"',false);
 
-        $this->post('/language',['locale'=>'en'])->assertRedirect('/account');
+        $this->post('/language',['locale'=>'en'])->assertRedirect('/account?lang=en');
         $this->get('/account')->assertOk()->assertSee('My Learning Dashboard');
     }
 

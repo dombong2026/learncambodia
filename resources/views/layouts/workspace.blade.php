@@ -54,18 +54,18 @@
                 <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
                     <button type="button" data-sidebar-toggle aria-label="Open navigation" aria-expanded="false" aria-controls="workspace-sidebar" class="rounded-xl p-2 text-slate-500 hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800"><x-workspace-icon name="menu" /></button>
                     <a href="{{ route('home') }}" aria-label="Home" title="Visit website" class="rounded-xl p-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-blue-700 dark:hover:bg-slate-800 dark:hover:text-blue-400"><x-workspace-icon name="home" /></a>
-                    <div class="relative hidden min-w-0 max-w-xl flex-1 sm:block">
+                    <div class="relative mx-auto hidden min-w-0 w-full max-w-[380px] flex-1 sm:block">
                         <label for="workspace-search" class="sr-only">Search workspace navigation</label>
                         <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><x-workspace-icon name="search" /></span>
-                        <input id="workspace-search" data-workspace-search type="search" autocomplete="off" placeholder="{{ __('workspace.search') }}…" class="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-950" />
+                        <input id="workspace-search" data-workspace-search type="search" autocomplete="off" placeholder="{{ __('workspace.search') }}…" class="w-full rounded-full border border-slate-200 bg-slate-50 py-2 pl-11 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-950" />
                     </div>
-                    <button type="button" data-saver-toggle aria-pressed="false" aria-label="{{ __('workspace.data_saver_off') }}" title="{{ __('workspace.data_saver_off') }}" class="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300 dark:hover:text-blue-400">
+                    <button type="button" data-saver-toggle aria-pressed="false" aria-label="{{ __('workspace.data_saver_off') }}" title="{{ __('workspace.data_saver_off') }}" class="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-transparent bg-transparent px-2 text-xs font-bold text-slate-600 transition hover:-translate-y-0.5 hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400">
                         <x-workspace-icon name="activity" />
                         <span class="hidden xl:inline" data-saver-label>{{ __('workspace.data_saver_off') }}</span>
                     </button>
-                    <div class="flex h-10 shrink-0 items-center rounded-full border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-950" role="group" aria-label="{{ __('workspace.languages') }}">
+                    <div class="flex h-10 shrink-0 items-center rounded-full border border-transparent bg-transparent p-1" role="group" aria-label="{{ __('workspace.languages') }}">
                         <form method="POST" action="{{ route('language.update') }}">@csrf
-                            <button type="submit" name="locale" value="en" title="English" aria-label="English" aria-pressed="{{ app()->getLocale()==='en' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='en' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇬🇧</span><span class="hidden xl:inline">EN</span></button>
+                            <button type="submit" name="locale" value="en" title="English" aria-label="English" aria-pressed="{{ app()->getLocale()==='en' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='en' ? 'text-blue-700 underline decoration-amber-500 underline-offset-4 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇬🇧</span><span class="hidden xl:inline">EN</span></button>
                         </form>
                         <form method="POST" action="{{ route('language.update') }}">@csrf
                             <button type="submit" name="locale" value="km" title="ភាសាខ្មែរ" aria-label="ភាសាខ្មែរ" aria-pressed="{{ app()->getLocale()==='km' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='km' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇰🇭</span><span class="hidden xl:inline">ខ្មែរ</span></button>
@@ -74,13 +74,16 @@
                             <button type="submit" name="locale" value="zh" title="简体中文" aria-label="简体中文" aria-pressed="{{ app()->getLocale()==='zh' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='zh' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇨🇳</span><span class="hidden xl:inline">中文</span></button>
                         </form>
                     </div>
-                    <div class="relative" data-dropdown>
+                    <div class="relative ml-auto" data-dropdown>
                         <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="workspace-profile" aria-label="Account menu" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-700 font-bold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
                             {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
                         </button>
                         <div id="workspace-profile" data-dropdown-panel hidden class="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                             <div class="border-b border-slate-100 px-3 py-2 dark:border-slate-800"><p class="truncate text-sm font-bold">{{ auth()->user()->name }}</p><p class="truncate text-xs text-slate-500">{{ auth()->user()->email }}</p></div>
                             <a href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="mt-1 block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.profile_security') }}</a>
+                            @if(! auth()->user()->hasVerifiedEmail())
+                                <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
+                            @endif
                             <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.overview') }}</a>
                             <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">{{ __('workspace.sign_out') }}</button></form>
                         </div>

@@ -284,13 +284,13 @@ final class LongFormPublicPagesTest extends TestCase
     {
         $this->seed(CategorySeeder::class);
 
-        $this->post('/language',['locale'=>'zh'])->assertRedirect('/');
+        $this->post('/language',['locale'=>'zh'])->assertRedirect('/?lang=zh');
         $this->get('/categories')->assertOk()->assertSee('课程类别');
         $this->get('/information/about')->assertOk()->assertSee('我们的使命');
         $this->get('/information/contact')->assertOk()->assertSee('提交咨询');
         $this->get('/authors')->assertOk()->assertSee('教育作者');
 
-        $this->post('/language',['locale'=>'km'])->assertRedirect('/');
+        $this->post('/language',['locale'=>'km'])->assertRedirect('/?lang=km');
         $this->get('/categories')->assertOk()->assertSee('ប្រភេទវគ្គសិក្សា');
         $this->get('/information/about')->assertOk()->assertSee('បេសកកម្មរបស់យើង');
         $this->get('/information/contact')->assertOk()->assertSee('ផ្ញើសំណួរ');
