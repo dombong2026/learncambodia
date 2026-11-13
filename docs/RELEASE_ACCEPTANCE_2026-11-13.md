@@ -55,3 +55,7 @@ The source tree currently does **not** track composer.lock or package-lock.json.
 ## Before creating the isolated QA directory
 
 Run `support/qa/aapanel-host-readiness.sh` as root to inspect PHP 8.4/8.5 extensions, Nginx syntax, Node/npm/Composer, aaPanel vhost names and available disk *before the app exists*. This command performs no modifications, never connects to a database and does not print credentials. A passing inventory alone does not authorize installation or prove QA DNS/TLS readiness.
+
+## Isolated source staging — not an installation
+
+Use `support/qa/aapanel-stage-source.sh <exact 40-char review SHA>` only after review, executed by the authorized server operator. It clones the pinned QA branch into a private temporary location, verifies the exact commit and expected files, and moves the fresh worktree under `/www/wwwroot/learncambodia-qa-20261113`. It refuses to overwrite pre-existing paths. It does **not** generate `.env`, install packages, create MySQL databases or users, configure DNS/HTTPS/Nginx, start the installer, or change production. Until approved PHP/npm lockfiles and a dedicated QA hostname/database are available, do not point a vhost at the staging directory or activate the installer.
