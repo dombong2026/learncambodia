@@ -37,12 +37,12 @@
 </section>
 
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="grid gap-5 lg:grid-cols-[1.1fr_1fr_1fr]">
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
+    <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <section class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
             <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-black text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2><a href="{{ route('categories.index') }}" class="text-xs font-bold text-[#b98223] hover:underline">{{ __('pages.view_all') }}</a></div>
             <div class="mt-5 space-y-3">
                 @forelse($featuredCategories->take(5) as $category)
-                    <a href="{{ route('categories.show',$category) }}" class="flex items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
+                    <a href="{{ route('categories.show',$category) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
                         <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f8ebce] text-xs font-black text-[#795018] dark:bg-[#4c4026] dark:text-[#ffe5aa]">{{ $category->code }}</span>
                         <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#133761] dark:text-white">{{ $category->name }}</strong><small class="mt-1 block text-[11px] text-slate-500">{{ \App\Models\Category::GROUPS[$category->group] ?? __('pages.study_pathway') }}</small></span>
                         <x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-[#bc902e]" />
@@ -52,7 +52,7 @@
                 @endforelse
             </div>
         </section>
-        <section class="flex flex-col gap-4">
+        <section class="flex min-w-0 flex-col gap-4">
             <a href="{{ route('courses.index') }}" class="flex-1 rounded-3xl bg-gradient-to-br from-[#123b6b] to-[#0a2854] p-6 text-white shadow-lg transition hover:from-[#1c4a7e]">
                 <x-workspace-icon name="book-open" class="h-8 w-8 text-[#edbf68]" />
                 <h2 class="mt-4 text-xl font-black">{{ __('pages.flexible_learning') }}</h2>
@@ -65,7 +65,7 @@
                 <p class="mt-2 text-sm leading-7 text-slate-500">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
-        <section class="rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
+        <section class="min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
             <p class="text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
             <h2 class="mt-5 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
             <p class="mt-4 text-sm leading-8 text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
