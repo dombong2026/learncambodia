@@ -123,10 +123,10 @@
         @foreach([
             ['compass',__('pages.step_discover'),__('pages.step_discover_desc'),route('courses.index')],
             ['user-round',__('pages.step_account'),__('pages.step_account_desc'),route('register')],
-            ['user-check',__('pages.step_approval'),__('pages.step_approval_desc'),route('account.overview')],
+            ['user-check',__('pages.step_approval'),__('pages.step_approval_desc'),auth()->check() ? route(auth()->user()->homeRouteName()) : route('login')],
             ['book-open-check',__('pages.step_study'),__('pages.step_study_desc'),route('cefr.index')],
         ] as $step)
-            <a href="{{ $step[3]==route('account.overview') && !auth()->check() ? route('login') : $step[3] }}" class="rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
+            <a href="{{ $step[3] }}" class="rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
                 <span class="grid h-14 w-14 place-items-center rounded-full bg-[#f8eccd]"><x-workspace-icon :name="$step[0]" class="h-7 w-7 text-[#ae7724]" /></span>
                 <h3 class="mt-5 text-sm font-black">{{ $step[1] }}</h3><p class="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
             </a>

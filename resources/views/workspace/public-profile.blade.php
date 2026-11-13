@@ -50,7 +50,7 @@
                     <button type="submit" class="w-full rounded-xl border border-red-300 px-5 py-3 text-xs font-bold text-red-700 dark:text-red-300">{{ __('people.withdraw') }}</button>
                 </form>
             @endif
-            @if($profile && $profile->status==='published')
+            @if($profile && $profile->status==='published' && ($role==='instructor' || config('public_profiles.students_enabled')))
                 <a href="{{ $role==='instructor' ? route('instructors.show',$profile) : route('students.show',$profile) }}" class="mt-4 block rounded-xl border border-slate-300 px-4 py-3 text-center text-xs font-bold dark:border-slate-700">{{ __('people.view_profile') }}</a>
             @endif
             @if($profile?->review_note)<p class="mt-4 rounded-xl bg-amber-50 p-4 text-xs leading-7 text-amber-900 dark:bg-[#49371e] dark:text-[#ffdead]">{{ $profile->review_note }}</p>@endif

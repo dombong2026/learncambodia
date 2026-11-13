@@ -141,7 +141,7 @@ class FrontendAuthMilestoneTest extends TestCase
 
         $this->get('/courses/'.$course->slug)->assertOk()
             ->assertSee('Enrollment status')
-            ->assertDontSee('Request enrollment');
+            ->assertDontSee('action="'.route('account.enrollments.store',$course).'"',false);
 
         $enrollment=\App\Models\CourseEnrollment::firstOrFail();
         $enrollment->update(['status'=>'approved']);
