@@ -7,6 +7,18 @@ use App\Models\CourseEnrollment;
 
 final class AcademicEvidence
 {
+    /**
+     * MySQL JSON objects may canonicalize property order; SQLite preserves the
+     * insertion order. Compare exact snapshot keys, types and values, not key order.
+     */
+    public static function matchesSnapshot(array $fresh, array $stored): bool
+    {
+        ksort($fresh, SORT_STRING);
+        ksort($stored, SORT_STRING);
+
+        return $fresh === $stored;
+    }
+
     public static function summary(CourseEnrollment $enrollment): array
     {
         $course = Course::published()->whereKey($enrollment->course_id)->firstOrFail();

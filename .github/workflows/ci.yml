@@ -19,7 +19,12 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom
           coverage: none
-      - name: Validate Composer metadata
+      - name: Require committed dependency lockfiles
+        run: |
+          git ls-files --error-unmatch composer.lock package-lock.json >/dev/null
+          test -s composer.lock
+          test -s package-lock.json
+      - name: Validate Composer metadata and lock
         run: composer validate --no-check-publish
       - name: Install PHP packages
         run: composer install --prefer-dist --no-progress --no-interaction
@@ -27,7 +32,9 @@ jobs:
         with:
           node-version: '22.16.0'
       - name: Install frontend packages
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+      - name: Ensure installers did not rewrite committed locks
+        run: git diff --exit-code -- composer.lock package-lock.json
       - name: TypeScript checks and frontend build
         run: npm run build
       - name: Prepare isolated test environment
