@@ -22,7 +22,7 @@ class AccountTest extends TestCase
             'password' => 'ValidSecret123!',
             'password_confirmation' => 'ValidSecret123!',
             'terms' => '1',
-        ])->assertRedirect('/dashboard');
+        ])->assertRedirect('/account');
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [

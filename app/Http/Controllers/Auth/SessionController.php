@@ -52,7 +52,7 @@ class SessionController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route($request->user()->homeRouteName());
     }
 
     public function register(Request $request): RedirectResponse
@@ -75,7 +75,7 @@ class SessionController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route($user->homeRouteName());
     }
 
     public function logout(Request $request): RedirectResponse
