@@ -5,6 +5,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
@@ -31,6 +32,12 @@ use App\Http\Controllers\Workspace\InstructorHomeworkController;
 use App\Http\Controllers\Workspace\InstructorGradingController;
 use App\Http\Controllers\Workspace\StudentHomeworkController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/install', [InstallController::class, 'index'])->name('install.index');
+Route::post('/install/unlock', [InstallController::class, 'unlock'])
+    ->middleware('throttle:5,1')->name('install.unlock');
+Route::post('/install/complete', [InstallController::class, 'complete'])
+    ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
