@@ -1,19 +1,22 @@
 @extends('layouts.workspace')
-@section('title', ucfirst($section) . ' Appearance')
+@section('title', (\App\Support\Appearance::LABELS[$section] ?? ucfirst($section)) . ' Appearance')
 @section('heading', ucfirst($section) . ' Appearance')
-@section('description', 'Edit a constrained draft. No CSS, HTML, JavaScript or third-party integrations can be injected into the public website.')
+@section('description', 'Edit reviewed page headings and section copy. Public pages change only after independent approval; no unsafe scripts or third-party integrations.')
 @section('content')
-<div class="max-w-4xl">
+<div class="w-full">
     <div class="mb-5 flex flex-wrap gap-3">
         <a href="{{ route('admin.appearance.index') }}" class="rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">← Appearance Manager</a>
+        @if($previewUrl = \App\Support\Appearance::preview($section))
+            <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="rounded-full border border-[#d5a953] px-4 py-2.5 text-sm font-bold text-[#9b6d24] dark:text-[#f2ce8a]">View public page</a>
+        @endif
         @if($revision)<span class="rounded-full bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">Current draft #{{ $revision->id }}</span>@endif
     </div>
     <form method="POST" action="{{ route('admin.appearance.store', $section) }}" class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         @csrf
-        <div class="space-y-6">
+        <div class="grid gap-6 lg:grid-cols-2">
             @foreach($fields as $key => $type)
                 <div>
-                    <label class="mb-2 block text-sm font-bold" for="appearance-{{ $key }}">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
+                    <label class="mb-2 block text-sm font-bold text-[#0e315e] dark:text-white" for="appearance-{{ $key }}">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
                     @if($type === 'bool')
                         <select id="appearance-{{ $key }}" name="{{ $key }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
                             <option value="1" @selected((string) old($key, $settings[$key] ? '1' : '0') === '1')>Enabled</option>
@@ -32,7 +35,7 @@
                 </div>
             @endforeach
         </div>
-        <div class="mt-7 flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">Save new draft</button></div>
+        <div class="mt-7 flex justify-end"><button type="submit" class="rounded-xl bg-[#0e315e] px-6 py-3 text-sm font-bold text-white hover:bg-[#265184]">Save new draft</button></div>
     </form>
     <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-base font-extrabold">Review & activation</h2>
