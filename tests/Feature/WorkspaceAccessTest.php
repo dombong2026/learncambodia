@@ -28,7 +28,7 @@ class WorkspaceAccessTest extends TestCase
     public function test_students_can_only_access_student_workspace(): void
     {
         $this->actingAs($this->user('student'));
-        $this->get('/account')->assertOk()->assertSee('My Learning Overview');
+        $this->get('/account')->assertOk()->assertSee('My Learning Dashboard');
         $this->get('/dashboard')->assertForbidden();
         $this->get('/developer')->assertForbidden();
         $this->get('/dashboard/users')->assertForbidden();
@@ -38,7 +38,7 @@ class WorkspaceAccessTest extends TestCase
     public function test_administrators_cannot_open_other_roles_workspaces(): void
     {
         $this->actingAs($this->user('admin'));
-        $this->get('/dashboard')->assertOk()->assertSee('Administration Overview');
+        $this->get('/dashboard')->assertOk()->assertSee('School Dashboard');
         $this->get('/account')->assertForbidden();
         $this->get('/developer')->assertForbidden();
     }
@@ -46,7 +46,7 @@ class WorkspaceAccessTest extends TestCase
     public function test_developers_cannot_open_admin_or_student_workspace(): void
     {
         $this->actingAs($this->user('developer'));
-        $this->get('/developer')->assertOk()->assertSee('Developer Overview');
+        $this->get('/developer')->assertOk()->assertSee('Developer Dashboard');
         $this->get('/account')->assertForbidden();
         $this->get('/dashboard')->assertForbidden();
     }

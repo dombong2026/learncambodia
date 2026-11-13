@@ -21,72 +21,22 @@ class WorkspaceController extends Controller
 {
     public function admin(): View
     {
-        return view('workspace.overview', [
-            'role' => 'admin',
-            'heading' => 'Administration Overview',
-            'description' => 'Review school operations, published pathways and draft courses.',
-            'stats' => [
-                ['label' => 'Learning categories', 'value' => Category::count()],
-                ['label' => 'Registered accounts', 'value' => User::count()],
-                ['label' => 'Draft courses', 'value' => Course::where('status', 'draft')->count()],
-                ['label' => 'Published courses', 'value' => Course::published()->count()],
-            ],
-        ]);
+        return view('workspace.overview', \App\Support\DashboardInsights::admin());
     }
 
     public function student(Request $request): View
     {
-        return view('workspace.overview', [
-            'role' => 'student',
-            'heading' => 'My Learning Overview',
-            'description' => 'Browse English learning categories, track your future studies, and explore CEFR.',
-            'stats' => [
-                ['label' => 'Learning categories', 'value' => Category::published()->count()],
-                ['label' => 'CEFR levels', 'value' => CefrLevel::count()],
-                ['label' => 'My approved enrollments', 'value' => CourseEnrollment::query()
-                    ->where('student_id', $request->user()->id)->where('status', 'approved')->count()],
-                ['label' => 'My completed lessons', 'value' => LessonProgress::query()
-                    ->whereNotNull('completed_at')
-                    ->whereHas('enrollment', fn ($q) => $q
-                        ->where('student_id', $request->user()->id)->where('status', 'approved'))
-                    ->count()],
-            ],
-        ]);
+        return view('workspace.overview', \App\Support\DashboardInsights::student($request->user()));
     }
 
     public function instructor(Request $request): View
     {
-        $id = $request->user()->id;
-
-        return view('workspace.overview', [
-            'role' => 'instructor',
-            'heading' => 'Instructor Overview',
-            'description' => 'Access only your assigned courses, independently reviewed assignments and submissions awaiting feedback.',
-            'stats' => [
-                ['label' => 'Assigned courses', 'value' => CourseInstructorAssignment::query()
-                    ->where('instructor_id', $id)->where('status', 'active')->count()],
-                ['label' => 'My assignment drafts', 'value' => CourseHomeworkAssignment::query()
-                    ->where('author_id', $id)->where('status', 'draft')->count()],
-                ['label' => 'Awaiting grading', 'value' => HomeworkSubmission::query()
-                    ->where('status', 'submitted')
-                    ->whereHas('assignment.course', fn ($query) => $query->whereHas('instructorAssignments',
-                        fn ($assignments) => $assignments->where('instructor_id', $id)->where('status', 'active')))
-                    ->count()],
-            ],
-        ]);
+        return view('workspace.overview', \App\Support\DashboardInsights::instructor($request->user()));
     }
 
     public function developer(Request $request): View
     {
-        return view('workspace.overview', [
-            'role' => 'developer',
-            'heading' => 'Developer Overview',
-            'description' => 'Manage personal API credentials and browse the read-only API reference.',
-            'stats' => [
-                ['label' => 'Active tokens', 'value' => $request->user()->tokens()->where('expires_at', '>', now())->count()],
-                ['label' => 'API endpoints', 'value' => 3],
-            ],
-        ]);
+        return view('workspace.overview', \App\Support\DashboardInsights::developer($request->user()));
     }
 
     public function module(Request $request, string $section, string $item): View
