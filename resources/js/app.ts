@@ -90,7 +90,7 @@ function initLocaleUrls(): void {
         window.history.replaceState(window.history.state, '', current.pathname + current.search + current.hash);
     }
 
-    for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+    for (const link of Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href]'))) {
         if (link.hasAttribute('download')) continue;
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#') || /^(mailto:|tel:|javascript:)/i.test(href)) continue;
@@ -104,7 +104,7 @@ function initLocaleUrls(): void {
         } catch { /* Ignore malformed external URLs; no unsafe navigation. */ }
     }
 
-    for (const form of document.querySelectorAll<HTMLFormElement>('form[method="GET"],form[method="get"]')) {
+    for (const form of Array.from(document.querySelectorAll<HTMLFormElement>('form[method="GET"],form[method="get"]'))) {
         if (form.querySelector('[name="lang"]')) continue;
         const hidden = document.createElement('input');
         hidden.type = 'hidden';
