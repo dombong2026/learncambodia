@@ -34,7 +34,7 @@ class PremiumAuthLocaleTest extends TestCase
         $this->get('/email/verify')->assertRedirect('/login');
         $this->actingAs(User::factory()->create())
             ->get('/email/verify')->assertOk()
-            ->assertSee('resend_confirmation', false);
+            ->assertSee(__('auth.resend_confirmation'));
     }
 
     public function test_password_reset_is_not_falsely_reported_delivered_with_log_mail(): void
