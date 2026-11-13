@@ -8,6 +8,9 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\PublicCourseController;
 use App\Http\Controllers\PublicArticleController;
+use App\Http\Controllers\PublicPeopleController;
+use App\Http\Controllers\Workspace\PublicProfileController;
+use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
@@ -43,6 +46,10 @@ Route::post('/install/complete', [InstallController::class, 'complete'])
     ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
+Route::get('/instructors', [PublicPeopleController::class, 'instructors'])->name('instructors.index');
+Route::get('/instructors/{profile}', [PublicPeopleController::class, 'instructor'])->name('instructors.show');
+Route::get('/students', [PublicPeopleController::class, 'students'])->name('students.index');
+Route::get('/students/{profile}', [PublicPeopleController::class, 'student'])->name('students.show');
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
@@ -71,6 +78,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
         Route::get('/instructors', [AdminInstructorController::class, 'index'])->name('instructors.index');
+        Route::get('/public-profiles', [AdminPublicProfileController::class, 'index'])->name('public-profiles.index');
+        Route::post('/public-profiles/{profile}/review', [AdminPublicProfileController::class, 'review'])
+            ->middleware('throttle:12,1')->name('public-profiles.review');
         Route::post('/instructors/assign', [AdminInstructorController::class, 'assign'])
             ->middleware('throttle:10,1')->name('instructors.assign');
         Route::patch('/instructors/{assignment}/revoke', [AdminInstructorController::class, 'revoke'])
@@ -144,6 +154,13 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('role:student')->prefix('account')->name('account.')->group(function (): void {
         Route::get('/', [WorkspaceController::class, 'student'])->name('overview');
+        Route::get('/public-profile', [PublicProfileController::class, 'edit'])->name('public-profile.edit');
+        Route::post('/public-profile', [PublicProfileController::class, 'save'])
+            ->middleware('throttle:12,1')->name('public-profile.save');
+        Route::post('/public-profile/submit', [PublicProfileController::class, 'submit'])
+            ->middleware('throttle:6,1')->name('public-profile.submit');
+        Route::post('/public-profile/withdraw', [PublicProfileController::class, 'withdraw'])
+            ->middleware('throttle:6,1')->name('public-profile.withdraw');
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
@@ -177,6 +194,13 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('role:instructor')->prefix('instructor')->name('instructor.')->group(function (): void {
         Route::get('/', [WorkspaceController::class, 'instructor'])->name('overview');
+        Route::get('/public-profile', [PublicProfileController::class, 'edit'])->name('public-profile.edit');
+        Route::post('/public-profile', [PublicProfileController::class, 'save'])
+            ->middleware('throttle:12,1')->name('public-profile.save');
+        Route::post('/public-profile/submit', [PublicProfileController::class, 'submit'])
+            ->middleware('throttle:6,1')->name('public-profile.submit');
+        Route::post('/public-profile/withdraw', [PublicProfileController::class, 'withdraw'])
+            ->middleware('throttle:6,1')->name('public-profile.withdraw');
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])
