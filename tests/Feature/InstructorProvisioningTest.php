@@ -68,7 +68,7 @@ class InstructorProvisioningTest extends TestCase
         $this->get('/developer')->assertForbidden();
         $this->get('/dashboard')->assertForbidden();
         $this->get('/instructor/profile')->assertOk()->assertSee('Profile & Security');
-        $this->post('/language',['locale'=>'km'])->assertRedirect('/instructor');
+        $this->post('/language',['locale'=>'km'])->assertRedirect('/instructor?lang=km');
     }
 
     public function test_administrator_can_assign_revoke_and_reassign_teacher_to_published_course(): void
