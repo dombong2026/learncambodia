@@ -153,3 +153,20 @@ jobs:
         run: npm audit --audit-level=high
       - name: Source security and disabled integration gates
         run: bash support/qa/release-source-security-gates.sh
+      - name: Identify whether dependency versions are reproducibly pinned
+        run: |
+          if ! git ls-files --error-unmatch composer.lock >/dev/null 2>&1; then
+            echo "::warning title=Release blocker::composer.lock is not tracked. Review and commit a generated PHP lockfile before installation."
+          fi
+          if ! git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            echo "::warning title=Release blocker::package-lock.json is not tracked. Review and commit a generated Node lockfile before installation."
+          fi
+      - name: Collect resolved lockfiles for separate maintainer review
+        uses: actions/upload-artifact@v4
+        with:
+          name: learncambodia-resolved-dependency-locks
+          path: |
+            composer.lock
+            package-lock.json
+          retention-days: 7
+          if-no-files-found: error

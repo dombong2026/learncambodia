@@ -39,3 +39,15 @@ KHQR/billing and payments; advertisements; live chat and Telegram integration; e
 ## Release decision
 
 GitHub CI PASS does not mean real aaPanel, physical Safari, physical Android or independent security PASS. Each gate requires evidence, exact commit, environment, responsible reviewer and signature. Keep production unchanged until every mandatory gate is complete.
+
+
+## Dependency-lock release blocker (open)
+
+The source tree currently does **not** track composer.lock or package-lock.json. CI resolves dependencies dynamically, so a passing test run is not sufficient evidence that aaPanel can install the identical packages later. The release acceptance workflow uploads the generated lockfiles as an ephemeral review artifact. An authorized maintainer must inspect dependency licenses/advisories, commit approved lockfiles to the source branch, switch deployment to composer install and npm ci, and independently rerun MySQL and browser acceptance on the pinned package graph. Keep production installation blocked until the lockfiles are reviewed and committed.
+
+## Automated results (baseline 61ee46a, 13 Nov 2026)
+
+- MySQL 8.0: 153 tests / 1,706 assertions, complete backup/restore with 23 categories and matching logical SQL rows, schema and migration history.
+- Browser engines: 100/100 Playwright checks on Linux Chromium desktop/mobile/tablet and WebKit desktop/mobile; the corrected responsive home grid no longer overflows the mobile viewport.
+- Dependency/source review workflow: green, but only on dynamically resolved dependencies due to missing source lockfiles.
+- aaPanel real host installation, physical Safari/iOS/Android, reviewed restore of real staging data, and independent penetration/security signoff remain **NOT DONE**.
