@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
+use App\Http\Controllers\PublicContactController;
+use App\Http\Controllers\Workspace\AdminContactInquiryController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\PublicCourseController;
@@ -58,6 +60,8 @@ Route::get('/categories', [CatalogController::class, 'index'])->name('categories
 Route::get('/categories/{category}', [CatalogController::class, 'show'])->name('categories.show');
 Route::get('/cefr', [CefrController::class, 'index'])->name('cefr.index');
 Route::get('/information/{page}', [InformationController::class, 'show'])->name('information.show');
+Route::post('/contact', [PublicContactController::class, 'store'])
+    ->middleware('throttle:5,1')->name('contact.store');
 Route::post('/language', [LocaleController::class, 'update'])->name('language.update');
 
 Route::middleware('guest')->group(function (): void {
@@ -76,6 +80,9 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
+        Route::get('/contact-inquiries', [AdminContactInquiryController::class, 'index'])->name('contact-inquiries.index');
+        Route::patch('/contact-inquiries/{inquiry}', [AdminContactInquiryController::class, 'update'])
+            ->middleware('throttle:30,1')->name('contact-inquiries.update');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
         Route::get('/instructors', [AdminInstructorController::class, 'index'])->name('instructors.index');
         Route::get('/public-profiles', [AdminPublicProfileController::class, 'index'])->name('public-profiles.index');
