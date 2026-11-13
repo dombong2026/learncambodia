@@ -4,6 +4,11 @@
 @section('description', $description)
 
 @section('content')
+<x-dashboard-showcase :showcase="$showcase" :role="$role" />
+<div class="mt-8 mb-4 flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-lg font-extrabold tracking-tight text-[#102f5c] dark:text-[#f8cf7a]">{{ __('dashboard.metrics_label') }}</h2>
+    <span class="text-xs text-slate-500 dark:text-slate-400">{{ __('dashboard.badge_no_data') }}</span>
+</div>
 {{-- Every summary uses real authorized database records and an existing destination. --}}
 <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
     @foreach(array_slice($stats, 0, 15) as $stat)

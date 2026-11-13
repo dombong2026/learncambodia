@@ -21,22 +21,30 @@ class WorkspaceController extends Controller
 {
     public function admin(): View
     {
-        return view('workspace.overview', \App\Support\DashboardInsights::admin());
+        $insights = \App\Support\DashboardInsights::admin();
+        $insights['showcase'] = \App\Support\DashboardShowcase::forRole('admin', $insights);
+        return view('workspace.overview', $insights);
     }
 
     public function student(Request $request): View
     {
-        return view('workspace.overview', \App\Support\DashboardInsights::student($request->user()));
+        $insights = \App\Support\DashboardInsights::student($request->user());
+        $insights['showcase'] = \App\Support\DashboardShowcase::forRole('student', $insights, $request->user());
+        return view('workspace.overview', $insights);
     }
 
     public function instructor(Request $request): View
     {
-        return view('workspace.overview', \App\Support\DashboardInsights::instructor($request->user()));
+        $insights = \App\Support\DashboardInsights::instructor($request->user());
+        $insights['showcase'] = \App\Support\DashboardShowcase::forRole('instructor', $insights, $request->user());
+        return view('workspace.overview', $insights);
     }
 
     public function developer(Request $request): View
     {
-        return view('workspace.overview', \App\Support\DashboardInsights::developer($request->user()));
+        $insights = \App\Support\DashboardInsights::developer($request->user());
+        $insights['showcase'] = \App\Support\DashboardShowcase::forRole('developer', $insights, $request->user());
+        return view('workspace.overview', $insights);
     }
 
     public function module(Request $request, string $section, string $item): View

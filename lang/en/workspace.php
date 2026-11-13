@@ -14,6 +14,10 @@ return [
     'data_saver_on' => 'Data Saver on',
     'data_saver_off' => 'Data Saver off',
     'languages' => 'Language',
+    'settings' => 'Settings',
+    'group_subtitle' => 'Menu section',
+    'sign_out' => 'Sign out',
+    'my_account' => 'My account',
     'groups' => [
         'overview' => 'Overview',
         'content' => 'Content & Appearance',

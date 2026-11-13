@@ -14,6 +14,10 @@ return [
     'data_saver_on' => 'សន្សំទិន្នន័យ៖ បើក',
     'data_saver_off' => 'សន្សំទិន្នន័យ៖ បិទ',
     'languages' => 'ភាសា',
+    'settings' => 'ការកំណត់',
+    'group_subtitle' => 'ផ្នែកម៉ឺនុយ',
+    'sign_out' => 'ចាកចេញ',
+    'my_account' => 'គណនីរបស់ខ្ញុំ',
     'groups' => [
         'overview' => 'ទិដ្ឋភាពទូទៅ',
         'content' => 'មាតិកា និងរូបរាង',

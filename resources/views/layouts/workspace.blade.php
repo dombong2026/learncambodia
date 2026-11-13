@@ -12,42 +12,41 @@
     <a href="#workspace-main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:text-slate-900">Skip to main content</a>
     <div data-workspace class="workspace-shell min-h-screen lg:pl-[266px]">
         <div data-sidebar-overlay hidden class="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"></div>
-        <aside id="workspace-sidebar" data-sidebar class="workspace-sidebar fixed inset-y-0 left-0 z-50 flex w-[266px] -translate-x-full flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 lg:translate-x-0 lg:shadow-none dark:border-slate-800 dark:bg-slate-900" aria-label="Workspace sidebar">
-            <div class="flex h-16 shrink-0 items-center gap-3 border-b border-slate-100 px-5 dark:border-slate-800">
+        <aside id="workspace-sidebar" data-sidebar class="workspace-sidebar fixed inset-y-0 left-0 z-50 flex w-[266px] -translate-x-full flex-col border-r border-[#304f7d] bg-[#0c2d5b] text-white shadow-xl transition-transform duration-200 lg:translate-x-0 lg:shadow-none" aria-label="Workspace sidebar">
+            <div class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
                 <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 font-extrabold tracking-tight">
-                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blue-700 text-white">L</span>
-                    <span class="truncate text-sm">Learn<span class="text-blue-700 dark:text-blue-400">Cambodia</span></span>
+                    <span class="truncate text-base font-black tracking-tight text-white">Learn <span class="text-[#fbbf48]">Cambodia</span></span>
                 </a>
-                <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800"><x-workspace-icon name="close" /></button>
+                <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 lg:hidden"><x-workspace-icon name="close" /></button>
             </div>
-            <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-                <p class="text-[10px] font-bold uppercase tracking-[.17em] text-slate-400">{{ $role === 'admin' ? 'School Administration' : ($role === 'developer' ? 'Developer Workspace' : ($role === 'instructor' ? 'Instructor Workspace' : 'Student Workspace')) }}</p>
-                <p class="mt-1 truncate text-sm font-bold">{{ auth()->user()->name }}</p>
+            <div class="border-b border-white/10 px-5 py-4">
+                <p class="text-[10px] font-bold uppercase tracking-[.15em] text-[#efbe59]">{{ __('workspace.groups.overview') }} · {{ __('workspace.workspace') }}</p>
+                <p class="mt-1 truncate text-sm font-extrabold text-white">{{ auth()->user()->name }}</p>
             </div>
             <nav data-workspace-nav class="workspace-nav scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Account navigation">
                 @foreach(\App\Support\WorkspaceMenu::groups($role) as $group)
-                    <details data-nav-group class="mb-2 rounded-2xl" {{ $loop->first ? 'open' : '' }}>
-                        <summary class="group flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-[.09em] text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                    <details data-nav-group class="mb-2 rounded-xl" {{ $loop->first ? 'open' : '' }}>
+                        <summary class="group flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-extrabold tracking-[.06em] text-[#e9eef8] transition hover:bg-white/10">
                             <x-workspace-icon :name="$group['icon']" />
-                            <span class="min-w-0 flex-1 truncate">{{ app()->getLocale()==='km' ? (__('workspace.groups.'.$group['key'])==='workspace.groups.'.$group['key'] ? $group['title'] : __('workspace.groups.'.$group['key'])) : $group['title'] }}</span>
+                            <span class="min-w-0 flex-1 truncate">{{ app()->getLocale()!=='en' && __('workspace.groups.'.$group['key'])!=='workspace.groups.'.$group['key'] ? __('workspace.groups.'.$group['key']) : $group['title'] }}</span>
                             <x-workspace-icon name="chevron-down" class="nav-chevron h-4 w-4" />
                         </summary>
-                        <div class="mt-1 space-y-0.5 pb-1 pl-3">
+                        <div class="mt-1 space-y-1 pb-2 pl-2">
                         @foreach($group['items'] as $navItem)
-                            @php $href = \App\Support\WorkspaceMenu::href($role, $group, $navItem); $active = url()->current() === $href; @endphp
-                            <a href="{{ $href }}" @if($active) aria-current="page" @endif data-workspace-link class="nav-item flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium transition {{ $active ? 'bg-blue-50 font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white' }}">
-                                <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $active ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
-                                <span class="min-w-0 flex-1">{{ app()->getLocale()==='km' && __('workspace.labels.'.$navItem['label'])!=='workspace.labels.'.$navItem['label'] ? __('workspace.labels.'.$navItem['label']) : $navItem['label'] }}</span>
+                            @php $href = \App\Support\WorkspaceMenu::href($role, $group, $navItem); $active = request()->fullUrl() === $href || url()->current() === $href; @endphp
+                            <a href="{{ $href }}" @if($active) aria-current="page" @endif data-workspace-link class="nav-item flex items-center gap-3 rounded-xl border-l-[3px] px-3 py-2.5 text-[13px] font-semibold transition {{ $active ? 'border-[#f9bd4f] bg-[#244a79] font-extrabold text-[#ffd374] shadow-inner' : 'border-transparent text-[#c3d2e7] hover:bg-white/10 hover:text-white' }}">
+                                <x-workspace-icon :name="$navItem['icon'] ?? 'file'" class="h-[19px] w-[19px] shrink-0 {{ $active ? 'text-[#ffc65b]' : 'text-[#8fa9ca]' }}" />
+                                <span class="min-w-0 flex-1">{{ app()->getLocale()!=='en' && __('workspace.labels.'.$navItem['label'])!=='workspace.labels.'.$navItem['label'] ? __('workspace.labels.'.$navItem['label']) : $navItem['label'] }}</span>
                             </a>
                         @endforeach
                         </div>
                     </details>
                 @endforeach
-                <p data-workspace-no-results hidden class="px-4 py-5 text-sm text-slate-500">No matching navigation items.</p>
+                <p data-workspace-no-results hidden class="px-4 py-5 text-sm text-white/70">{{ __('workspace.search') }}: 0</p>
             </nav>
-            <div class="shrink-0 border-t border-slate-100 p-3 dark:border-slate-800">
-                <a href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-400"><x-workspace-icon name="settings" /> {{ __('workspace.profile_security') }}</a>
-                <a href="{{ route('home') }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"><x-workspace-icon name="home" /> {{ __('workspace.home') }}</a>
+            <div class="shrink-0 border-t border-white/15 p-3">
+                <a href="{{ route('home') }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#c3d2e7] transition hover:bg-white/10 hover:text-white"><x-workspace-icon name="home" /> {{ __('workspace.home') }}</a>
+                <a data-sidebar-settings href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="flex items-center gap-3 rounded-xl border-l-[3px] border-[#f4bd4e] bg-white/10 px-3 py-3 text-sm font-bold text-white transition hover:bg-white/20"><x-workspace-icon name="settings" class="h-5 w-5 text-[#ffca65]" /> {{ __('workspace.settings') }}</a>
             </div>
         </aside>
         <div class="min-w-0">
@@ -71,6 +70,9 @@
                         <form method="POST" action="{{ route('language.update') }}">@csrf
                             <button type="submit" name="locale" value="km" title="ភាសាខ្មែរ" aria-label="ភាសាខ្មែរ" aria-pressed="{{ app()->getLocale()==='km' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='km' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇰🇭</span><span class="hidden xl:inline">ខ្មែរ</span></button>
                         </form>
+                        <form method="POST" action="{{ route('language.update') }}">@csrf
+                            <button type="submit" name="locale" value="zh" title="简体中文" aria-label="简体中文" aria-pressed="{{ app()->getLocale()==='zh' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='zh' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇨🇳</span><span class="hidden xl:inline">中文</span></button>
+                        </form>
                     </div>
                     <div class="relative" data-dropdown>
                         <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="workspace-profile" aria-label="Account menu" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-700 font-bold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
@@ -79,8 +81,8 @@
                         <div id="workspace-profile" data-dropdown-panel hidden class="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                             <div class="border-b border-slate-100 px-3 py-2 dark:border-slate-800"><p class="truncate text-sm font-bold">{{ auth()->user()->name }}</p><p class="truncate text-xs text-slate-500">{{ auth()->user()->email }}</p></div>
                             <a href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="mt-1 block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.profile_security') }}</a>
-                            <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Workspace overview</a>
-                            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">Sign out</button></form>
+                            <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.overview') }}</a>
+                            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">{{ __('workspace.sign_out') }}</button></form>
                         </div>
                     </div>
                 </div>
