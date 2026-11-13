@@ -125,6 +125,32 @@ class FrontendAuthMilestoneTest extends TestCase
         $this->get('/courses')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា');
     }
 
+    public function test_public_course_has_real_student_enrollment_action_and_resume_link(): void
+    {
+        $course = $this->publishedCourse();
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->get('/courses/'.$course->slug)->assertOk()
+            ->assertSee('Request enrollment')
+            ->assertSee('action="'.route('account.enrollments.store',$course).'"',false);
+
+        $this->post('/account/courses/'.$course->id.'/enroll')->assertRedirect('/account/enrollments');
+        $this->assertDatabaseHas('course_enrollments', [
+            'student_id'=>$student->id, 'course_id'=>$course->id, 'status'=>'pending',
+        ]);
+
+        $this->get('/courses/'.$course->slug)->assertOk()
+            ->assertSee('Enrollment status')
+            ->assertDontSee('Request enrollment');
+
+        $enrollment=\App\Models\CourseEnrollment::firstOrFail();
+        $enrollment->update(['status'=>'approved']);
+
+        $this->get('/courses/'.$course->slug)->assertOk()
+            ->assertSee('Resume learning')
+            ->assertSee('href="'.route('account.enrollments.show',$enrollment).'"',false);
+    }
+
     public function test_existing_signup_still_creates_student_only(): void
     {
         $this->post('/register',[
