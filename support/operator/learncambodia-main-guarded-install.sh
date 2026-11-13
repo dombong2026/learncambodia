@@ -68,7 +68,13 @@ done
 echo 'RELEASE_AND_CI=PASS'
 
 echo '========== DOMAIN AND HTTPS PROTECTION =========='
-[[ -n "$(dig @a.gtld-servers.net "$DOMAIN" NS +short +time=4 +tries=1 || :)" ]] || fail 'learncambodia.com not delegated in .com; register domain first'
+# gTLD servers return NS *referrals* in the AUTHORITY section; +short only reads ANSWER.
+# Explicitly require the Cloudflare delegation recorded by the registry.
+REGISTRY_NS="$(dig @a.gtld-servers.net "$DOMAIN" NS +norecurse +time=5 +tries=2 +noall +answer +authority \
+  | awk -v domain="$DOMAIN." 'tolower($1)==domain && $3=="IN" && $4=="NS" {print tolower($5)}' | LC_ALL=C sort -u)"
+printf '%s\n' "$REGISTRY_NS" | grep -Fxq 'june.ns.cloudflare.com.' || fail 'registry delegation missing june.ns.cloudflare.com'
+printf '%s\n' "$REGISTRY_NS" | grep -Fxq 'watson.ns.cloudflare.com.' || fail 'registry delegation missing watson.ns.cloudflare.com'
+echo 'REGISTRY_DELEGATION=PASS'
 [[ -n "$(dig @1.1.1.1 "$DOMAIN" A +short +time=4 +tries=1 || :)" ]] || fail 'learncambodia.com has no A record; set correct DNS first'
 [[ -f "$VHOST" && ! -L "$VHOST" ]] || fail 'create a separate HTTPS website using aaPanel first'
 awk -v root="$APP/public;" '$1=="root" && $2==root {ok=1} END{exit !ok}' "$VHOST" || fail 'Nginx root must be new application public/'
