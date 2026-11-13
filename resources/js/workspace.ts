@@ -83,6 +83,7 @@ if (saver && saverBody) {
     const storageKey = 'learncambodia.workspace.data-saver.v1';
     const onLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បើក' : 'Data Saver on';
     const offLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បិទ' : 'Data Saver off';
+    const priorVideoSettings = new WeakMap<HTMLVideoElement, { autoplay: boolean, preload: string }>();
     let enabled = false;
     try { enabled = window.localStorage.getItem(storageKey) === 'on'; } catch { /* private browser mode */ }
     const applySaver = (value: boolean): void => {
@@ -95,9 +96,19 @@ if (saver && saverBody) {
         if (span) span.textContent = enabled ? onLabel : offLabel;
         document.querySelectorAll<HTMLVideoElement>('video').forEach(video => {
             if (enabled) {
+                if (!priorVideoSettings.has(video)) priorVideoSettings.set(video, {
+                    autoplay: video.autoplay, preload: video.preload,
+                });
                 video.pause();
                 video.autoplay = false;
                 video.preload = 'none';
+            } else {
+                const previous = priorVideoSettings.get(video);
+                if (previous) {
+                    video.autoplay = previous.autoplay;
+                    video.preload = previous.preload;
+                    priorVideoSettings.delete(video);
+                }
             }
         });
         try { window.localStorage.setItem(storageKey, enabled ? 'on' : 'off'); } catch { /* local setting only */ }

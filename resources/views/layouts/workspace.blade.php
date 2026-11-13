@@ -85,7 +85,7 @@
                     </div>
                 </div>
             </header>
-            <main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pb-10 sm:pt-7 lg:px-8">
+            <main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
                 @php
                     $workspaceHeading = trim($__env->yieldContent('heading', __('workspace.overview')));
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);
@@ -123,7 +123,7 @@
                 @yield('content')
             </main>
         </div>
-        <nav class="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.08)] backdrop-blur-xl sm:hidden dark:border-slate-800 dark:bg-slate-900/95" aria-label="Mobile workspace navigation">
+        <nav class="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.08)] backdrop-blur-xl lg:hidden dark:border-slate-800 dark:bg-slate-900/95" aria-label="Mobile workspace navigation">
             @foreach(\App\Support\WorkspaceMenu::mobileItems($role) as $mobileItem)
                 <a href="{{ $mobileItem['url'] }}" @if($mobileItem['active']) aria-current="page" @endif class="flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-[10px] font-semibold transition {{ $mobileItem['active'] ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700 dark:text-slate-400' }}"><x-workspace-icon :name="$mobileItem['icon']" class="h-5 w-5" /><span class="max-w-full truncate">{{ $mobileItem['label'] }}</span></a>
             @endforeach
