@@ -23,7 +23,7 @@ TOKEN='/root/learncambodia-setup-token'
 fail(){ echo "INSTALL=BLOCKED: $*" >&2; exit 2; }
 [[ "$(id -u)" == 0 ]] || fail 'requires root'
 [[ "$MODE" == check || "$MODE" == install || "$MODE" == finalize ]] || fail 'mode must be check/install/finalize'
-for cmd in gh git dig curl awk grep python3 sha256sum tar mktemp runuser; do
+for cmd in gh git dig curl awk grep python3 sha256sum tar mktemp runuser find cp; do
   command -v "$cmd" >/dev/null || fail "missing $cmd"
 done
 [[ -x "$PHP" && -d /www/wwwroot && ! -L /www/wwwroot ]] || fail 'aaPanel PHP or directory absent'
@@ -77,7 +77,14 @@ grep -Eq 'auth_basic[[:space:]]+|deny[[:space:]]+all' "$VHOST" || fail 'require 
 /www/server/nginx/sbin/nginx -t >/dev/null 2>&1 || fail 'Nginx configuration invalid'
 STATUS="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 12 --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/")" || fail 'local HTTPS certificate invalid'
 [[ "$STATUS" == 401 || "$STATUS" == 403 ]] || fail 'site not restricted: require actual HTTP 401/403 before installer'
-[[ ! -e "$APP" && ! -L "$APP" ]] || fail 'website directory already exists; never overwrite a site or placeholder'
+[[ ! -L "$APP" ]] || fail 'website path is a symlink'
+if [[ -e "$APP" ]]; then
+  [[ -d "$APP" ]] || fail 'website root is not a directory'
+  [[ -z "$(find "$APP" -mindepth 1 -maxdepth 1 -print -quit)" ]] || fail 'website directory contains files; do not overwrite any aaPanel default or existing site'
+  echo 'AAPANEL_SITE_ROOT=VERIFIED_EMPTY'
+else
+  echo 'AAPANEL_SITE_ROOT=ABSENT'
+fi
 [[ ! -e "$TOKEN" && ! -L "$TOKEN" ]] || fail 'installer token already exists'
 echo 'DOMAIN_TLS_ACCESS_GATES=PASS'
 
@@ -217,8 +224,17 @@ find "$STAGE/app" -type f -exec chmod 640 '{}' +
 chown -R www:www "$STAGE/app/storage" "$STAGE/app/bootstrap/cache"
 find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type d -exec chmod 770 '{}' +
 find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type f -exec chmod 660 '{}' +
-[[ ! -e "$APP" && ! -L "$APP" ]] || fail 'destination appeared; refusing overwrite'
-mv -- "$STAGE/app" "$APP"
+[[ ! -L "$APP" ]] || fail 'destination became a symlink'
+if [[ -d "$APP" ]]; then
+  [[ -z "$(find "$APP" -mindepth 1 -maxdepth 1 -print -quit)" ]] || fail 'destination is no longer empty; refuse overwrite'
+  cp -a -- "$STAGE/app/." "$APP/"
+  chown root:www "$APP"
+  chmod 750 "$APP"
+elif [[ ! -e "$APP" ]]; then
+  mv -- "$STAGE/app" "$APP"
+else
+  fail 'destination changed type'
+fi
 printf '%s\n' "$SETUP" > "$TOKEN"
 chmod 600 "$TOKEN"
 echo 'NEW_SITE=STAGED_WITH_PROTECTED_INSTALLER'
