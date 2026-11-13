@@ -1,25 +1,36 @@
-# Learn Cambodia — guarded aaPanel installation runbook (13 Nov 2026)
+# Learn Cambodia — guarded aaPanel installation runbook
 
-**Merged app release:** `db2a5cdd6fa3a3b6b2066fdb8c95084e4dbb387e` on `main` (three stacked PRs #12, #14, #15). The release tree is identical to accepted feature SHA `c2eec3680d2b69e5e5ee2bea30ccc66ac404e96e`. All three workflow runs on the feature SHA passed; GitHub Foundation Quality also passed on merged main (run 43430104933).
+Updated 13 November 2026. This document supersedes the earlier pre-registration version.
 
-**Installation tool:** `support/operator/learncambodia-main-guarded-install.sh`, pinned blob `0d00d7268ea214e797607d141e8fe2f3d6ac0874`. The tool is source-readable. Operator downloads via `gh api` with Git object integrity verification, runs `bash -n`, then runs `check` or `install`. Credentials and installer token must never be sent to ChatGPT or GitHub.
+## Verified GitHub state
+- Release main: db2a5cdd6fa3a3b6b2066fdb8c95084e4dbb387e.
+- Exact source tree: 588b4af180b446bec48189863bb2c84e322028ad, identical to fully CI-tested feature commit c2eec3680d2b69e5e5ee2bea30ccc66ac404e96e.
+- PRs 12, 14 and 15 are merged. All three feature CI workflows and the latest main Foundation Quality job passed.
 
-## Mandatory prerequisites (NO automatic bypass)
+## Verified hosting state
+- Domain learncambodia.com is NOW registered and delegated to Cloudflare nameservers june.ns.cloudflare.com and watson.ns.cloudflare.com.
+- Active Cloudflare zone proxies apex A record to origin 72.61.113.168, with www CNAME to apex.
+- Direct origin HTTPS at 127.0.0.1 with the correct SNI verifies TLS and returns HTTP 403, but that status does NOT prove access control; the main Nginx vhost has no site-wide HTTP Basic Auth directive.
+- Nginx syntax PASS; PHP 8.5.11 present.
+- Existing site directory /www/wwwroot/learncambodia.com is www:www, mode 755, with ONLY an aaPanel .user.ini file. No Laravel application, no .env.
+- Nginx root is the parent site directory, not the required /www/wwwroot/learncambodia.com/public.
+- Global Composer is 2.2.6 and must remain unchanged. MySQL install account and empty database have NOT been verified.
 
-1. **Domain ownership:** As of the last real operator inspection on 13 Nov 2026, `learncambodia.com` was `NXDOMAIN` at Google, Cloudflare, and authoritative `.com` nameserver, and Verisign RDAP returned 404. Domain registration/delegation and a correct origin A record must be established **before** running an installation. The installer fails closed if NS/A records are absent. This evidence cannot establish whether a domain has since been purchased. Recheck and prove registration with the actual registrar.
-2. **Existing isolated aaPanel TLS site:** In aaPanel, create a *new* site specifically for `learncambodia.com` with **PHP 8.5**, Nginx site root exactly `/www/wwwroot/learncambodia.com/public`, and a certificate valid for the domain. Enable a real Nginx **HTTP Basic Auth (401)** or **IP allowlist (403)** while installer and legal/security acceptance remain pending. The host script validates Nginx syntax, TLS on 127.0.0.1, and 401/403. Do not change other vhosts. If aaPanel creates default site files in the new app root, inspect/backup/remove those deliberate blank-site files in aaPanel first; the script refuses to overwrite any existing target directory or file. Never delete a real site.
-3. **New isolated MySQL database:** Create a **completely empty** database name `learncambodia_...` in aaPanel and a unique least-privilege account `lcam_...` (24+ character alphanumeric, underscore or hyphen password) with grants limited to that database. The script verifies the database has zero tables; **never** supply an existing database or privileged/root DB account.
-4. **PHP/Composer:** The host previously had PHP 8.4/8.5 with required extensions and a PHP 8.5 FPM socket, but global Composer was 2.2.6. The installer *blocks* Composer 2.2: provision a reviewed newer Composer executable in an isolated manner; do not overwrite the global system tool or modify unrelated website runtimes. Host Node/npm installation is not required because the script downloads a pinned CI Vite artifact (GitHub artifact ID `14038232950`, currently expires after 7 days from its run).
-5. **Privacy and human acceptance:** Registration, public content and educational data require approved Terms/Privacy, independent security review, evidence of age/child-data safeguards, content rights, backups/restore, real aaPanel/PHP-FPM and physical Safari/iOS/Android testing. Keep HTTP basic auth or the IP allowlist in place until sign-off.
+## Before running an installer
 
-## Installer behavior
-
-- `check`: read-only preflight. No .env, DB changes, Nginx configuration changes, or installation.
-- `install`: after preflight, prompts privately for new DB credentials and explicit operator acknowledgment, rechecks empty DB, clones **exact** main SHA into a private temporary directory, validates lockfile hashes and CI asset provenance, installs PHP vendor dependencies locally without touching the system or installing Node, generates a private APP_KEY and setup token, and stages the app into a **previously absent** `/www/wwwroot/learncambodia.com`. It sets `APP_DEBUG=false`, secure sessions, `MAIL_MAILER=log`, disabled public student profiles, and guarded web installer. It never runs migrations on an existing database. It does not create the Nginx vhost or issue certificates.
-- Open `https://learncambodia.com/install` **through the access restriction**; retrieve the setup token locally from `/root/learncambodia-setup-token` (do not paste it into chat), then complete the install wizard and create the first admin. The application's installer creates tables/seeds in the empty DB, sets its permanent installer lock and checks installation prerequisites. Do not send admin credentials in a chat.
-- `finalize`: after verifying the installer lock, removes INSTALLER_ENABLED/TOKEN, rebuilds config cache, and removes the root-only token file. This does **not** remove Nginx access restriction or approve launch.
+1. Preserve the aaPanel website and its root .user.ini. Do not delete or replace them. Create a clean empty public/ folder inside the site directory. Confirm the .user.ini is a regular aaPanel PHP restriction file; any custom or unexpected directives must be manually reviewed.
+2. In the settings for ONLY learncambodia.com, change the Nginx document root to /www/wwwroot/learncambodia.com/public. Verify Nginx syntax.
+3. Enable real site-wide Nginx HTTP Basic Auth (website password access) and verify the DIRECT origin returns HTTP 401 to an unauthenticated HTTPS request. A Cloudflare 403 or missing-index 403 is insufficient.
+4. Use an isolated Composer 2.11.2 PHAR at /root/learncambodia-tools/composer-2.11.2.phar with published SHA256 dd158c0afd41d15fac89e1b4e47b5d42911fe316c3687cd5edac98319b25d028 from https://getcomposer.org/download/. Do NOT modify global Composer.
+5. Use aaPanel to create a completely empty new MySQL database learncambodia_... and new least-privilege DB user lcam_... allowed only on that DB. Do not paste credentials in GitHub or chat.
+6. Use the latest ops/guarded-aapanel-install-20261113 operator script only after checking its Git commit and Git blob. Download with gh api, verify git hash-object and bash -n, then run check before install. The installer checks Git/CI/tree/lockfiles, domain delegation, live origin TLS plus 401, auth_basic, PHP/FPM, Composer checksum, and approved placeholder contents.
+7. The installer prompts privately for isolated DB credentials, checks the database is empty, builds the application in a private staging area, downloads a provenanced CI Vite artifact, installs PHP dependencies using the isolated PHAR, and places the app only into the approved placeholder. It preserves original .user.ini and copies its validated open_basedir restriction to public/.user.ini, where PHP-FPM can read it.
+8. Open https://learncambodia.com/install only through Basic Auth. Complete the authorized web installer with locally stored token. The installer migrates and seeds the fresh DB and creates the first administrator, then writes an installer lock. After verifying lock, run the same script in finalize mode to disable installer and remove token. Do not publicly launch yet.
 
 ## Stop conditions
 
-- Domain unregistered; TLS invalid, vhost not private or root mismatch, existing target path, existing database data, unexpected Git SHA/CI artifacts, old Composer or FPM socket, insecure credentials, incomplete migration, installer lock absence.
-- If a guard fails, stop and inspect; do not use chmod 777, migration:fresh, DROP DB, `-k` insecure TLS, or override protections. Main code stays merged, but public site remains unlaunched until independent signoffs.
+Any missing auth gate, insecure TLS, unexpected directory contents, altered Git tree, absent/expired CI artifact, unreviewed .user.ini, missing PHP extension, Composer digest mismatch, nonempty database or unexpected installation lock must STOP installation. Never bypass these guards or overwrite other websites.
+
+## Independent release requirements
+
+Real aaPanel/PHP-FPM and backup/restore tests, independent privacy and security review, student/age safeguarding, legal documents and content rights approval, physical iPhone/Android/Safari acceptance, monitoring, backup and rollback remain required for PUBLIC release. Green CI and a private installer do not replace these gates.
