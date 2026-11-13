@@ -32,7 +32,7 @@ class PremiumAuthLocaleTest extends TestCase
             ->assertSee('reset_password_confirmation', false);
 
         $this->get('/email/verify')->assertRedirect('/login');
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->unverified()->create())
             ->get('/email/verify')->assertOk()
             ->assertSee(__('auth.resend_confirmation'));
     }
