@@ -32,6 +32,11 @@ class LocaleController extends Controller
         }
 
         $path = $parts['path'] ?? '/';
+        if (! is_string($path) || ! str_starts_with($path, '/') ||
+            str_starts_with($path, '//') || str_contains($path, '\\') ||
+            preg_match('/[\x00-\x1F\x7F]/', $path)) {
+            $path = '/';
+        }
         parse_str($parts['query'] ?? '', $query);
         // Prevent a query parameter from creating an open redirect or
         // overriding the validated locale.
