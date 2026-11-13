@@ -578,6 +578,11 @@ return json_decode(<<<'JSON'
           "key": "course-catalog",
           "label": "Available Courses",
           "route": "account.courses.index"
+        },
+        {
+          "key": "saved-courses",
+          "label": "Saved Courses",
+          "route": "account.saved-courses.index"
         }
       ]
     },

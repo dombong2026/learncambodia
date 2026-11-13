@@ -23,6 +23,7 @@ use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
+use App\Http\Controllers\Workspace\StudentSavedCourseController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -188,6 +189,11 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/help', [StudentResourcesController::class, 'help'])->name('help');
         Route::get('/courses', [StudentEnrollmentController::class, 'catalog'])->name('courses.index');
         Route::get('/enrollments', [StudentEnrollmentController::class, 'index'])->name('enrollments.index');
+        Route::get('/saved-courses', [StudentSavedCourseController::class, 'index'])->name('saved-courses.index');
+        Route::post('/saved-courses/{course}', [StudentSavedCourseController::class, 'store'])
+            ->middleware('throttle:20,1')->name('saved-courses.store');
+        Route::delete('/saved-courses/{course}', [StudentSavedCourseController::class, 'destroy'])
+            ->middleware('throttle:20,1')->name('saved-courses.destroy');
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
