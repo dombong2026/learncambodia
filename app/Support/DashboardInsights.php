@@ -151,7 +151,7 @@ final class DashboardInsights
                     PracticeAttempt::whereHas('enrollment',$scope)->count(),
                     'layers',route('account.practice.history'),__('dashboard.practice_only')),
                 self::metric(__('dashboard.study_streak'),
-                    $streak,'activity',route('account.progress.index'),__('dashboard.activity_days')),
+                    $streak,'flame',route('account.progress.index'),__('dashboard.activity_days')),
             ],
             'activeCourses'=>$activeCourses,
             'upcoming'=>$upcoming,

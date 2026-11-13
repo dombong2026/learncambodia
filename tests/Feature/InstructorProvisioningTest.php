@@ -63,7 +63,7 @@ class InstructorProvisioningTest extends TestCase
             'new_role'=>'instructor',
         ]);
         $this->actingAs($teacher->fresh())
-            ->get('/instructor')->assertOk()->assertSee('Instructor Overview');
+            ->get('/instructor')->assertOk()->assertSee('Teaching Dashboard');
         $this->get('/account')->assertForbidden();
         $this->get('/developer')->assertForbidden();
         $this->get('/dashboard')->assertForbidden();
