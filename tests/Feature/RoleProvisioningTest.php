@@ -90,7 +90,7 @@ class RoleProvisioningTest extends TestCase
         $user->forceFill(['role' => 'developer'])->save();
 
         $this->actingAs($user)->post('/language', ['locale' => 'km'])
-            ->assertRedirect('/developer');
+            ->assertRedirect('/developer?lang=km');
 
         $this->assertSame('km', session('locale'));
     }
