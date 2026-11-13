@@ -70,6 +70,7 @@
         'bookmark-check' => 'M5 3h14v19l-7-4-7 4V3ZM9 10l2 2 4-4',
         'calendar-check' => 'M4 4h16v17H4zM8 2v5M16 2v5M4 10h16M8 15l3 3 5-5',
         'notebook-text' => 'M4 2h16v20H4zM8 2v20M11 8h6M11 12h6M11 16h5',
+        'message-square' => 'M3 4h18v15H8l-5 4V4zM7 9h10M7 13h7',
         'notebook-pen' => 'M4 3h15v18H4zM8 3v18M11 16l7-7 2 2-7 7h-2z',
         'send' => 'm22 2-7 20-4-9-9-4zM22 2 11 13',
         'list-check' => 'M9 6h13M9 12h13M9 18h13M2 6l2 2 3-4M2 12l2 2 3-4M2 18l2 2 3-4',

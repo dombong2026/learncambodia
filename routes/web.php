@@ -26,6 +26,8 @@ use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
 use App\Http\Controllers\Workspace\StudentPlannerController;
 use App\Http\Controllers\Workspace\StudentNoteController;
+use App\Http\Controllers\Workspace\InstructorInsightsController;
+use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -251,6 +253,14 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:5,1')->name('profile.password');
         Route::get('/courses', [InstructorTeachingController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [InstructorTeachingController::class, 'show'])->name('courses.show');
+        Route::get('/insights', [InstructorInsightsController::class, 'index'])->name('insights.index');
+        Route::get('/feedback-templates', [InstructorFeedbackTemplateController::class, 'index'])->name('feedback-templates.index');
+        Route::post('/feedback-templates', [InstructorFeedbackTemplateController::class, 'store'])
+            ->middleware('throttle:12,1')->name('feedback-templates.store');
+        Route::patch('/feedback-templates/{template}', [InstructorFeedbackTemplateController::class, 'update'])
+            ->middleware('throttle:12,1')->name('feedback-templates.update');
+        Route::delete('/feedback-templates/{template}', [InstructorFeedbackTemplateController::class, 'destroy'])
+            ->name('feedback-templates.destroy');
         Route::get('/assignments', [InstructorHomeworkController::class, 'index'])->name('homework.index');
         Route::post('/courses/{course}/assignments', [InstructorHomeworkController::class, 'store'])->name('homework.store');
         Route::get('/assignments/{assignment}/edit', [InstructorHomeworkController::class, 'edit'])->name('homework.edit');

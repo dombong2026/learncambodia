@@ -767,6 +767,11 @@ return json_decode(<<<'JSON'
           "key": "assignments",
           "label": "Homework Builder",
           "route": "instructor.homework.index"
+        },
+        {
+          "key": "insights",
+          "label": "Teaching Insights",
+          "route": "instructor.insights.index"
         }
       ]
     },
@@ -779,6 +784,11 @@ return json_decode(<<<'JSON'
           "key": "submissions",
           "label": "Submitted Assignments",
           "route": "instructor.grading.index"
+        },
+        {
+          "key": "feedback-templates",
+          "label": "Feedback Templates",
+          "route": "instructor.feedback-templates.index"
         },
         {
           "key": "review",

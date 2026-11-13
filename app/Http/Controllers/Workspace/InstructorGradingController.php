@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\HomeworkSubmission;
+use App\Models\InstructorFeedbackTemplate;
 use App\Support\ApprovalAudit;
 use App\Support\InstructorAccess;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,10 @@ class InstructorGradingController extends Controller
 
     public function index(Request $request): View
     {
+        $filters=$request->validate([
+            'status'=>['nullable',Rule::in(['submitted','graded','returned'])],
+            'course'=>['nullable','integer'],
+        ]);
         $id = $request->user()->id;
         $submissions = HomeworkSubmission::query()
             ->whereHas('assignment.course', fn ($courses) => $courses
@@ -29,20 +34,31 @@ class InstructorGradingController extends Controller
                     ->where('instructor_id',$id)->where('status','active')))
             ->whereHas('assignment', fn ($assignments) => $assignments
                 ->where('status','published'))
+            ->when($filters['status']??null,fn($q,$status)=>$q->where('status',$status))
+            ->when($filters['course']??null,fn($q,$course)=>$q->whereHas('assignment',fn($a)=>$a->where('course_id',(int)$course)))
             ->with(['assignment.course','enrollment.student'])
-            ->orderByDesc('submitted_at')->paginate(10);
+            ->orderByDesc('submitted_at')->paginate(10)->withQueryString();
 
         return view('workspace.instructor.submissions', [
             'role' => 'instructor','submissions' => $submissions,
+            'filters' => $filters,
+            'courses' => \App\Models\Course::published()->whereHas('instructorAssignments',
+                fn($q)=>$q->where('instructor_id',$id)->where('status','active'))
+                ->orderBy('title')->get(['id','title']),
         ]);
     }
 
     public function show(Request $request, HomeworkSubmission $submission): View
     {
         $this->authorizeSubmission($request, $submission);
+        $data=$request->validate(['template'=>['nullable','integer']]);
+        $templates=InstructorFeedbackTemplate::query()->where('instructor_id',$request->user()->id)
+            ->orderBy('title')->limit(30)->get();
+        $selected=isset($data['template']) ? $templates->firstWhere('id',(int)$data['template']) : null;
+        if(isset($data['template'])) abort_unless($selected!==null,404);
 
         return view('workspace.instructor.submission', [
-            'role' => 'instructor',
+            'role' => 'instructor','templates'=>$templates,'selectedTemplate'=>$selected,
             'submission' => $submission->load(['assignment.course', 'enrollment.student', 'versions']),
         ]);
     }
