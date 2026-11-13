@@ -1,0 +1,44 @@
+name: v0.0.1 Foundation Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/v0.0.1-platform-foundation
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom
+          coverage: none
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+      - name: Install PHP packages
+        run: composer install --prefer-dist --no-progress --no-interaction
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Install frontend packages
+        run: npm install --no-audit --no-fund
+      - name: TypeScript checks and frontend build
+        run: npm run build
+      - name: Prepare isolated test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+      - name: Execute Laravel feature tests
+        run: php artisan test
+      - name: Verify independent SQLite schema and editorial reference data
+        run: |
+          touch database/database.sqlite
+          php artisan migrate --seed --force
+      - name: Verify Laravel route compilation
+        run: php artisan route:list

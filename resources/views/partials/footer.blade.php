@@ -1,0 +1,36 @@
+<footer class="mt-16 border-t border-slate-800 bg-slate-950 text-slate-200">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+        <div><h2 class="mb-5 text-base font-bold text-white">LearnCambodia</h2><ul class="space-y-3 text-sm text-slate-400">
+            <li><a class="hover:text-white" href="{{ route('information.show','about') }}">About Us <span lang="km"> (អំពីយើង)</span></a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','instructors') }}">Our Instructors</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','blog') }}">Blog &amp; Study Tips</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','careers') }}">Careers / Teach With Us</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','partners') }}">Partners &amp; Schools</a></li>
+        </ul></div>
+        <div><h2 class="mb-5 text-base font-bold text-white">English Courses</h2><ul class="space-y-3 text-sm text-slate-400">
+            <li><a class="hover:text-white" href="{{ route('cefr.index') }}#A1">Beginner (A1–A2)</a></li>
+            <li><a class="hover:text-white" href="{{ route('cefr.index') }}#B1">Intermediate (B1–B2)</a></li>
+            <li><a class="hover:text-white" href="{{ route('cefr.index') }}#C1">Advanced (C1–C2)</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'Business English']) }}">Business English</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'EAP']) }}">Academic English (EAP)</a></li>
+        </ul></div>
+        <div><h2 class="mb-5 text-base font-bold text-white">Exams &amp; Teaching</h2><ul class="space-y-3 text-sm text-slate-400">
+            <li><a class="hover:text-white" href="{{ route('categories.index',['q'=>'IELTS']) }}">IELTS Preparation</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'exam-preparation']) }}">TOEFL &amp; TOEIC</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'exam-preparation']) }}">PTE &amp; Duolingo (DET)</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'teacher-development']) }}">TEFL &amp; TESOL</a></li>
+            <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'teacher-development']) }}">CELTA &amp; TKT</a></li>
+        </ul></div>
+        <div><h2 class="mb-5 text-base font-bold text-white">Student Support</h2><ul class="space-y-3 text-sm text-slate-400">
+            <li><a class="hover:text-white" href="{{ route('information.show','placement') }}">Free Placement Test</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','scores') }}">Exam Score Guide</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','faq') }}">FAQs</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','contact') }}">Contact Us</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','privacy') }}">Privacy</a> <span aria-hidden="true">&amp;</span> <a class="hover:text-white" href="{{ route('information.show','terms') }}">Terms</a></li>
+        </ul></div>
+    </div>
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 border-t border-slate-800 px-4 py-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <p>© {{ date('Y') }} Learn Cambodia. Original educational content and branding reserved.</p>
+        <p>Independent preparation information. Third-party exams and qualifications belong to their respective organizations.</p>
+    </div>
+</footer>
