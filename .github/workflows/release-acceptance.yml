@@ -76,7 +76,7 @@ jobs:
           Path("phpunit.mysql.xml").write_text(s)
           PY
       - name: Full MySQL 8 feature suite
-        run: php artisan test --configuration=phpunit.mysql.xml
+        run: ./vendor/bin/phpunit --configuration=phpunit.mysql.xml
       - name: Recreate ONLY disposable test MySQL schema
         run: php artisan migrate:fresh --seed --force --no-interaction
       - name: Backup/restore complete MySQL schema and row payload
