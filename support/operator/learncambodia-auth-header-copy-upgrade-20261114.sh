@@ -93,7 +93,7 @@ while IFS= read -r f; do
     app/Http/Controllers/Auth/*.php|app/Http/Controllers/LocaleController.php|app/Http/Middleware/SetLocale.php|app/Models/User.php|lang/en/auth.php|lang/km/auth.php|lang/zh/auth.php|resources/css/app.css|resources/js/app.ts|resources/views/auth/*.blade.php|resources/views/components/auth-field.blade.php|resources/views/layouts/auth.blade.php|resources/views/layouts/workspace.blade.php|resources/views/partials/header.blade.php|routes/web.php) ;;
     *) fail "unapproved file $f" ;;
   esac
-  [[ "$f" != /* && "$f" != *..* && -d "$(dirname "$APP/$f")" ]] || fail "unsafe file $f"
+  [[ "$f" != /* && "$f" != *..* && -d "$(dirname "$APP/$f")" && ! -L "$(dirname "$APP/$f")" ]] || fail "unsafe or linked parent directory $f"
   [[ ! -L "$APP/$f" ]] || fail "live symlink $f"
   if git -C "$STAGE/src" cat-file -e "$OLD:$f" 2>/dev/null; then
     expected="$(git -C "$STAGE/src" rev-parse "$OLD:$f")"
@@ -209,6 +209,7 @@ while IFS= read -r f; do
   chown root:www "$tmp"
   chmod 640 "$tmp"
   mv -f "$tmp" "$APP/$f"
+  [[ "$(git hash-object "$APP/$f")" == "$(git -C "$STAGE/src" rev-parse "$NEW:$f")" ]] || fail "new file integrity mismatch: $f"
 done <<< "$FILES"
 chown -R root:www "$STAGE/extracted/build"
 find "$STAGE/extracted/build" -type d -exec chmod 750 '{}' +
