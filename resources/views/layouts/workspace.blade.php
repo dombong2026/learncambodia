@@ -21,7 +21,7 @@
                 <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 lg:hidden dark:hover:bg-slate-800"><x-workspace-icon name="close" /></button>
             </div>
             <div class="border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-                <p class="text-[10px] font-bold uppercase tracking-[.17em] text-slate-400">{{ $role === 'admin' ? 'School Administration' : ($role === 'developer' ? 'Developer Workspace' : 'Student Workspace') }}</p>
+                <p class="text-[10px] font-bold uppercase tracking-[.17em] text-slate-400">{{ $role === 'admin' ? 'School Administration' : ($role === 'developer' ? 'Developer Workspace' : ($role === 'instructor' ? 'Instructor Workspace' : 'Student Workspace')) }}</p>
                 <p class="mt-1 truncate text-sm font-bold">{{ auth()->user()->name }}</p>
             </div>
             <nav data-workspace-nav class="workspace-nav scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Account navigation">

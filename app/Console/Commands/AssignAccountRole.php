@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Models\CourseInstructorAssignment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -10,7 +11,7 @@ class AssignAccountRole extends Command
 {
     protected $signature = 'accounts:assign-role
         {email : Existing account email address}
-        {role : student, admin or developer}
+        {role : student, admin, developer or instructor}
         {--operator= : Approved operator identifier}
         {--reason= : Approved reason or change ticket}
         {--confirm : Explicitly authorize the role transition}';
@@ -24,7 +25,7 @@ class AssignAccountRole extends Command
         $operator = trim((string) $this->option('operator'));
         $reason = trim((string) $this->option('reason'));
 
-        if (! in_array($role, [User::ROLE_STUDENT, User::ROLE_ADMIN, User::ROLE_DEVELOPER], true)) {
+        if (! in_array($role, [User::ROLE_STUDENT, User::ROLE_ADMIN, User::ROLE_DEVELOPER, User::ROLE_INSTRUCTOR], true)) {
             $this->error('Invalid role.');
             return self::FAILURE;
         }
@@ -51,6 +52,12 @@ class AssignAccountRole extends Command
             }
 
             $previousRole = $user->role;
+            if ($previousRole === User::ROLE_INSTRUCTOR && $role !== User::ROLE_INSTRUCTOR) {
+                // Revoking instructor access must also revoke every active teaching assignment.
+                CourseInstructorAssignment::query()
+                    ->where('instructor_id', $user->id)->where('status', 'active')
+                    ->update(['status' => 'revoked', 'revoked_at' => now()]);
+            }
             $user->forceFill(['role' => $role])->save();
             // Existing API tokens must never outlive a role transition.
             $user->tokens()->delete();

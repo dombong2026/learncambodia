@@ -447,7 +447,8 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "instructors",
-          "label": "Instructors"
+          "label": "Instructors",
+          "route": "admin.instructors.index"
         },
         {
           "key": "enrollments",
@@ -461,6 +462,11 @@ return json_decode(<<<'JSON'
           "key": "quizzes",
           "label": "Practice Quizzes",
           "route": "admin.quizzes.index"
+        },
+        {
+          "key": "homework",
+          "label": "Homework Reviews",
+          "route": "admin.homework.reviews"
         }
       ]
     },
@@ -504,6 +510,23 @@ return json_decode(<<<'JSON'
           "key": "overview",
           "label": "Learning Analytics",
           "route": "admin.learning.report"
+        }
+      ]
+    },
+    {
+      "key": "academic-quality",
+      "title": "Academic Quality",
+      "icon": "award",
+      "items": [
+        {
+          "key": "gradebook",
+          "label": "Assignment Gradebook",
+          "route": "admin.academic.gradebook"
+        },
+        {
+          "key": "evidence",
+          "label": "Certificate Evidence Review",
+          "route": "admin.academic.evidence"
         }
       ]
     }
@@ -555,6 +578,23 @@ return json_decode(<<<'JSON'
           "key": "course-catalog",
           "label": "Available Courses",
           "route": "account.courses.index"
+        }
+      ]
+    },
+    {
+      "key": "homework",
+      "title": "Course Assignments",
+      "icon": "clipboard-list",
+      "items": [
+        {
+          "key": "available",
+          "label": "My Assignments",
+          "route": "account.homework.index"
+        },
+        {
+          "key": "submissions",
+          "label": "Submitted Work",
+          "route": "account.homework.submissions"
         }
       ]
     },
@@ -676,6 +716,59 @@ return json_decode(<<<'JSON'
           "key": "security",
           "label": "Security",
           "route": "developer.profile.edit"
+        }
+      ]
+    }
+  ],
+  "instructor": [
+    {
+      "key": "dashboard",
+      "title": "Dashboard",
+      "icon": "layout",
+      "items": [
+        {
+          "key": "overview",
+          "label": "Overview",
+          "route": "instructor.overview"
+        },
+        {
+          "key": "profile",
+          "label": "Profile & Security",
+          "route": "instructor.profile.edit"
+        }
+      ]
+    },
+    {
+      "key": "teaching",
+      "title": "Teaching Courses",
+      "icon": "book",
+      "items": [
+        {
+          "key": "courses",
+          "label": "My Assigned Courses",
+          "route": "instructor.courses.index"
+        },
+        {
+          "key": "assignments",
+          "label": "Homework Builder",
+          "route": "instructor.homework.index"
+        }
+      ]
+    },
+    {
+      "key": "assessment",
+      "title": "Assignment & Grading",
+      "icon": "clipboard-list",
+      "items": [
+        {
+          "key": "submissions",
+          "label": "Submitted Assignments",
+          "route": "instructor.grading.index"
+        },
+        {
+          "key": "review",
+          "label": "Academic Review Process",
+          "route": "instructor.guidance"
         }
       ]
     }

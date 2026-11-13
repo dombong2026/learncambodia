@@ -23,6 +23,13 @@ use App\Http\Controllers\Workspace\DeveloperTokenController;
 use App\Http\Controllers\Workspace\ProfileController;
 use App\Http\Controllers\Workspace\StudentResourcesController;
 use App\Http\Controllers\Workspace\WorkspaceController;
+use App\Http\Controllers\Workspace\AdminInstructorController;
+use App\Http\Controllers\Workspace\AdminHomeworkReviewController;
+use App\Http\Controllers\Workspace\AdminAcademicController;
+use App\Http\Controllers\Workspace\InstructorTeachingController;
+use App\Http\Controllers\Workspace\InstructorHomeworkController;
+use App\Http\Controllers\Workspace\InstructorGradingController;
+use App\Http\Controllers\Workspace\StudentHomeworkController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
@@ -49,6 +56,20 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
+        Route::get('/instructors', [AdminInstructorController::class, 'index'])->name('instructors.index');
+        Route::post('/instructors/assign', [AdminInstructorController::class, 'assign'])
+            ->middleware('throttle:10,1')->name('instructors.assign');
+        Route::patch('/instructors/{assignment}/revoke', [AdminInstructorController::class, 'revoke'])
+            ->name('instructors.revoke');
+        Route::get('/academic/gradebook', [AdminAcademicController::class, 'gradebook'])->name('academic.gradebook');
+        Route::get('/academic/evidence', [AdminAcademicController::class, 'evidence'])->name('academic.evidence');
+        Route::post('/academic/evidence/enrollments/{enrollment}', [AdminAcademicController::class, 'request'])
+            ->middleware('throttle:10,1')->name('academic.request');
+        Route::post('/academic/evidence/reviews/{review}', [AdminAcademicController::class, 'review'])
+            ->name('academic.review');
+        Route::get('/homework/reviews', [AdminHomeworkReviewController::class, 'index'])->name('homework.reviews');
+        Route::post('/homework/reviews/{assignment}', [AdminHomeworkReviewController::class, 'review'])
+            ->name('homework.review');
         Route::get('/practice-quizzes', [AdminQuizController::class, 'index'])->name('quizzes.index');
         Route::get('/learning-report', [AdminLearningReportController::class, 'index'])->name('learning.report');
 
@@ -118,6 +139,13 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
+        Route::get('/homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
+        Route::get('/homework/submissions', [StudentHomeworkController::class, 'submissions'])->name('homework.submissions');
+        Route::get('/homework/{assignment}', [StudentHomeworkController::class, 'show'])->name('homework.show');
+        Route::post('/homework/{assignment}/submit', [StudentHomeworkController::class, 'submit'])
+            ->middleware('throttle:6,1')->name('homework.submit');
+        Route::get('/homework/submissions/{submission}/review', [StudentHomeworkController::class, 'result'])
+            ->name('homework.result');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/progress', [StudentProgressController::class, 'update'])
             ->middleware('throttle:30,1')->name('progress.update');
         Route::get('/practice', [StudentPracticeController::class, 'index'])->name('practice.index');
@@ -127,6 +155,28 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:6,1')->name('practice.store');
         Route::get('/enrollments/{enrollment}/quizzes/{quiz}/attempts/{attempt}', [StudentPracticeController::class, 'result'])
             ->name('practice.result');
+        Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
+    });
+
+    Route::middleware('role:instructor')->prefix('instructor')->name('instructor.')->group(function (): void {
+        Route::get('/', [WorkspaceController::class, 'instructor'])->name('overview');
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::patch('/profile/password', [ProfileController::class, 'password'])
+            ->middleware('throttle:5,1')->name('profile.password');
+        Route::get('/courses', [InstructorTeachingController::class, 'index'])->name('courses.index');
+        Route::get('/courses/{course}', [InstructorTeachingController::class, 'show'])->name('courses.show');
+        Route::get('/assignments', [InstructorHomeworkController::class, 'index'])->name('homework.index');
+        Route::post('/courses/{course}/assignments', [InstructorHomeworkController::class, 'store'])->name('homework.store');
+        Route::get('/assignments/{assignment}/edit', [InstructorHomeworkController::class, 'edit'])->name('homework.edit');
+        Route::patch('/assignments/{assignment}', [InstructorHomeworkController::class, 'update'])->name('homework.update');
+        Route::post('/assignments/{assignment}/submit', [InstructorHomeworkController::class, 'submit'])
+            ->name('homework.submit');
+        Route::get('/submissions', [InstructorGradingController::class, 'index'])->name('grading.index');
+        Route::get('/submissions/{submission}', [InstructorGradingController::class, 'show'])->name('grading.show');
+        Route::post('/submissions/{submission}/review', [InstructorGradingController::class, 'review'])
+            ->middleware('throttle:30,1')->name('grading.review');
+        Route::get('/guidance', [InstructorTeachingController::class, 'guidance'])->name('guidance');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 

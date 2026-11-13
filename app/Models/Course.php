@@ -42,6 +42,16 @@ class Course extends Model
         return $this->hasMany(CourseQuiz::class)->orderBy('position')->orderBy('id');
     }
 
+    public function instructorAssignments(): HasMany
+    {
+        return $this->hasMany(CourseInstructorAssignment::class);
+    }
+
+    public function homeworkAssignments(): HasMany
+    {
+        return $this->hasMany(CourseHomeworkAssignment::class);
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(CourseEnrollment::class);
