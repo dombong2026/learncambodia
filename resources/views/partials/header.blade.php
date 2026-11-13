@@ -34,6 +34,9 @@
                     @auth
                         <p class="truncate border-b border-slate-100 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700">{{ auth()->user()->name }}</p>
                         <a href="{{ route(auth()->user()->homeRouteName()) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.dashboard') }}</a>
+                        @if(! auth()->user()->hasVerifiedEmail())
+                            <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
+                        @endif
                         <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_out') }}</button></form>
                     @else
                         <a href="{{ route('login') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_in') }}</a>
