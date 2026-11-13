@@ -26,7 +26,7 @@
                     ['book-open',$publishedCourseCount,__('longpage.published_courses')],
                     ['tags',1,__('longpage.current_pathway')],
                     ['school',$featuredInstructors->count(),__('longpage.public_educators')],
-                    ['award',6,__('longpage.cefr_levels')],
+                    ['award',$cefrLevelCount,__('longpage.cefr_levels')],
                 ] as [$icon,$value,$label])
                     <div class="relative min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5">
                         <x-workspace-icon :name="$icon" class="absolute right-4 top-4 h-6 w-6 text-[#f3ca75]"/>

@@ -70,6 +70,11 @@ final class Appearance
         $route = self::PAGE_PREVIEWS[$section] ?? null;
         if (!$route || !\Illuminate\Support\Facades\Route::has($route)) return null;
 
+        if ($section==='single_category') {
+            $category=\App\Models\Category::published()->orderBy('sort_order')->first();
+            return $category ? route('categories.show',$category) : route('categories.index');
+        }
+
         return match ($section) {
             'about'=>route('information.show','about'),
             'contact'=>route('information.show','contact'),

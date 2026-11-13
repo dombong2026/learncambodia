@@ -6,6 +6,7 @@ use Illuminate\View\View;
 use App\Support\Appearance;
 use App\Models\Course;
 use App\Models\Category;
+use App\Models\CefrLevel;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
 
@@ -38,12 +39,13 @@ class InformationController extends Controller
         if ($page==='about') {
             $courseCount=Course::discoverable()->count();
             $categoryCount=Category::published()->count();
+            $cefrLevelCount=CefrLevel::query()->count();
             $publishedArticles=ContentEntry::query()->where('type','post')->where('status','published')->count();
             $instructors=PublicProfile::visible()->where('kind','instructor')
                 ->orderBy('display_name')->limit(4)->get();
 
             return view('information.about',compact(
-                'title','lede','body','page','courseCount','categoryCount','publishedArticles','instructors'
+                'title','lede','body','page','courseCount','categoryCount','publishedArticles','instructors','cefrLevelCount'
             ));
         }
 

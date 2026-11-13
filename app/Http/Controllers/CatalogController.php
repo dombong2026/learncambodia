@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
@@ -64,6 +65,7 @@ class CatalogController extends Controller
             ->groupBy('group')->pluck('aggregate_count','group');
         $publishedCategories = Category::published()->count();
         $publishedCourses = Course::discoverable()->count();
+        $cefrLevelCount=CefrLevel::query()->count();
         $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
             ->orderBy('display_name')->limit(4)->get();
         $articles = ContentEntry::query()->where('type','post')
@@ -71,7 +73,7 @@ class CatalogController extends Controller
 
         return view('categories.index', compact(
             'categories','group','query','groupCounts','publishedCategories',
-            'publishedCourses','featuredInstructors','articles'
+            'publishedCourses','featuredInstructors','articles','cefrLevelCount'
         ));
     }
 
@@ -89,6 +91,7 @@ class CatalogController extends Controller
             ->orderBy('title')->paginate(12);
 
         $publishedCourseCount = $category->courses()->discoverable()->count();
+        $cefrLevelCount=CefrLevel::query()->count();
         $instructorIds = CourseInstructorAssignment::query()
             ->where('status','active')
             ->whereHas('course', fn($q)=>$q->discoverable()
@@ -103,7 +106,7 @@ class CatalogController extends Controller
 
         return view('categories.show', compact(
             'category','relatedCategories','courses','publishedCourseCount',
-            'featuredInstructors','articles'
+            'featuredInstructors','articles','cefrLevelCount'
         ));
     }
 }
