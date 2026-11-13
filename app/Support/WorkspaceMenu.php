@@ -61,6 +61,13 @@ final class WorkspaceMenu
                     $items[] = $item;
                 }
             }
+            if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {
+                $items[] = [
+                    'key'=>'public-profiles','label'=>'Public Profile Reviews',
+                    'route'=>'admin.public-profiles.index',
+                    'icon'=>'id-card','section_title'=>'People & Accounts',
+                ];
+            }
             if ($items !== []) {
                 $groups[] = compact('key', 'title', 'icon', 'items');
             }
