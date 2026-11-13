@@ -61,6 +61,10 @@ final class WorkspaceMenu
                     $items[] = $item;
                 }
             }
+            if ($role === 'admin' && $key === 'content' && Route::has('admin.contact-inquiries.index')) {
+                $items[]=['key'=>'inquiries','label'=>'Contact Inquiries','route'=>'admin.contact-inquiries.index',
+                    'icon'=>'inbox','section_title'=>'Support & Content'];
+            }
             if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {
                 $items[] = [
                     'key'=>'public-profiles','label'=>'Public Profile Reviews',
