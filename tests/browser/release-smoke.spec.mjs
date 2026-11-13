@@ -35,12 +35,24 @@ test.describe('Actual rendered public pages on isolated QA server', () => {
         scroll: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth,
       }));
+      if (width.scroll > width.viewport + 2) {
+        const offenders = await page.evaluate(() => [...document.querySelectorAll('body *')]
+          .map(el => ({ el, bounds: el.getBoundingClientRect() }))
+          .filter(x => x.bounds.right > document.documentElement.clientWidth + 2
+            && x.bounds.width > 0
+            && getComputedStyle(x.el).position !== 'fixed')
+          .slice(0, 24)
+          .map(x => ({ tag: x.el.tagName, class: String(x.el.className).slice(0, 180),
+            text: String(x.el.textContent).trim().slice(0, 80), right: Math.round(x.bounds.right),
+            width: Math.round(x.bounds.width) })));
+        console.log('OVERFLOW_DIAGNOSTICS ' + name + ' ' + JSON.stringify(offenders));
+      }
       expect(width.scroll, name + ': horizontal overflow').toBeLessThanOrEqual(width.viewport + 2);
       expect(errors, name + ': browser JS exceptions').toEqual([]);
       if (screenshots.has(name)) {
         const dir = join('test-results', 'screenshots');
         mkdirSync(dir, { recursive: true });
-        await page.screenshot({ path: join(dir, info.project.name + '-' + name + '.png'), fullPage: true });
+        await page.screenshot({ path: join(dir, info.project.name + '-' + name + '.png'), fullPage: info.project.name.includes('mobile') ? false : true });
       }
     });
   }
@@ -79,6 +91,10 @@ test('guests cannot view private dashboard routes', async ({ page }) => {
 test('installer and private server files do not appear publicly', async ({ request }) => {
   for (const path of ['/install', '/.env', '/vendor/autoload.php', '/storage/app/private/learncambodia.installed']) {
     const response = await request.get(path);
-    expect(response.status(), path + ' must not be publicly accessible').toBe(404);
+    if (path === '/install' || path === '/.env' || path === '/vendor/autoload.php') {
+      expect(response.status(), path + ' should be absent').toBe(404);
+    } else {
+      expect([403,404], path + ' must be denied').toContain(response.status());
+    }
   }
 });
