@@ -4,9 +4,9 @@
 @section('auth_intro', __('auth.login_intro'))
 @section('content')
 <form method="POST" action="{{ route('login.store') }}" class="space-y-4">@csrf
-    <x-auth-field id="login_email" name="email" type="email" icon="mail" :label="__('auth.email')" autocomplete="email" :value="old('email')" :maxlength="255" required autofocus />
+    <x-auth-field id="login_email" name="email" type="email" icon="mail" :label="__('auth.email')" autocomplete="email" :value="old('email')" :maxlength="255" :required="true" :autofocus="true" />
     <div>
-        <x-auth-field id="login_password" name="password" type="password" icon="lock" :label="__('auth.password')" autocomplete="current-password" required />
+        <x-auth-field id="login_password" name="password" type="password" icon="lock" :label="__('auth.password')" autocomplete="current-password" :required="true" />
         <div class="mt-2 flex justify-end">
             <a href="{{ route('password.request') }}" class="text-xs font-bold text-[#0c4a89] underline-offset-4 transition hover:text-[#c58b27] hover:underline dark:text-[#f2c778]">{{ __('auth.forgot_password') }}</a>
         </div>
