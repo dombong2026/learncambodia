@@ -74,3 +74,34 @@ if (shell && sidebar) {
         });
     });
 }
+
+
+// A local-only preference. No external account/profile synchronization or tracking.
+const saver = document.querySelector<HTMLButtonElement>('[data-saver-toggle]');
+const saverBody = document.querySelector<HTMLElement>('[data-workspace-body]');
+if (saver && saverBody) {
+    const storageKey = 'learncambodia.workspace.data-saver.v1';
+    const onLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បើក' : 'Data Saver on';
+    const offLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បិទ' : 'Data Saver off';
+    let enabled = false;
+    try { enabled = window.localStorage.getItem(storageKey) === 'on'; } catch { /* private browser mode */ }
+    const applySaver = (value: boolean): void => {
+        enabled = value;
+        saverBody.dataset.saver = enabled ? 'on' : 'off';
+        saver.setAttribute('aria-pressed', String(enabled));
+        saver.setAttribute('aria-label', enabled ? onLabel : offLabel);
+        saver.title = enabled ? onLabel : offLabel;
+        const span = saver.querySelector<HTMLElement>('[data-saver-label]');
+        if (span) span.textContent = enabled ? onLabel : offLabel;
+        document.querySelectorAll<HTMLVideoElement>('video').forEach(video => {
+            if (enabled) {
+                video.pause();
+                video.autoplay = false;
+                video.preload = 'none';
+            }
+        });
+        try { window.localStorage.setItem(storageKey, enabled ? 'on' : 'off'); } catch { /* local setting only */ }
+    };
+    applySaver(enabled);
+    saver.addEventListener('click', () => applySaver(!enabled));
+}
