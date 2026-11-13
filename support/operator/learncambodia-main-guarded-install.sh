@@ -146,10 +146,16 @@ IFS= read -r DB < /dev/tty
 printf 'Fresh dedicated database user (sql_learncambodia_com or lcam_...): ' > /dev/tty
 IFS= read -r USERNAME < /dev/tty
 [[ "$USERNAME" == 'sql_learncambodia_com' || "$USERNAME" =~ ^lcam_[a-zA-Z0-9_]{3,20}$ ]] || fail 'use dedicated Learn Cambodia database account'
-printf 'Database password (hidden, 24+ characters, letters/digits/-/_ only): ' > /dev/tty
+printf 'Database password (hidden; aaPanel 13 digits or 24+ safe characters): ' > /dev/tty
 IFS= read -r -s PASSWORD < /dev/tty
 printf '\n' > /dev/tty
-[[ "$PASSWORD" =~ ^[a-zA-Z0-9_-]{24,128}$ ]] || fail 'password format invalid'
+if [[ "$PASSWORD" =~ ^[a-zA-Z0-9_-]{24,128}$ ]]; then
+  echo 'DATABASE_PASSWORD_POLICY=LONG'
+elif [[ "$PASSWORD" =~ ^[0-9]{13}$ && "$DB" == 'sql_learncambodia_com' && "$USERNAME" == 'sql_learncambodia_com' ]]; then
+  echo 'DATABASE_PASSWORD_POLICY=AAPANEL_13_DIGIT_SITE_ACCOUNT'
+else
+  fail 'password must be 24-128 safe characters; for the exact aaPanel site account, a system-generated 13-digit numeric password is accepted'
+fi
 
 STAGE="$(mktemp -d /www/wwwroot/.learncambodia-install.XXXXXXXX)"
 cleanup(){ [[ "$STAGE" == /www/wwwroot/.learncambodia-install.* && -d "$STAGE" && ! -L "$STAGE" ]] && rm -rf --one-file-system -- "$STAGE"; :; }
@@ -166,6 +172,19 @@ EOF
 chmod 600 "$STAGE/mysql.cnf"
 COUNT="$("$MYSQL" --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names --database="$DB" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB';" 2>/dev/null || :)"
 [[ "$COUNT" == 0 ]] || fail 'dedicated database login failed or it contains tables'
+
+# 13-digit aaPanel passwords are only acceptable for a DB user that cannot
+# authenticate from arbitrary remote hosts. Verify the actual MySQL account
+# chosen by the server, not the caller-supplied username alone.
+if [[ "$PASSWORD" =~ ^[0-9]{13}$ ]]; then
+  ACCOUNT="$("$MYSQL" --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names \
+      --database="$DB" -e 'SELECT CURRENT_USER();' 2>/dev/null)" || fail 'unable to verify MySQL account host scope'
+  case "$ACCOUNT" in
+    "$USERNAME@localhost"|"$USERNAME@127.0.0.1") echo 'MYSQL_ACCOUNT_HOST=LOCAL_ONLY' ;;
+    *) fail '13-digit system password requires a MySQL account restricted to localhost or 127.0.0.1 (not wildcard host)' ;;
+  esac
+  unset ACCOUNT
+fi
 
 # The database name alone is not evidence of least privilege. Inspect grants
 # using ONLY the dedicated account; reject global privileges, other schemas,
