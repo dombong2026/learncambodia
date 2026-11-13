@@ -38,9 +38,14 @@ test.describe('Actual rendered public pages on isolated QA server', () => {
       if (width.scroll > width.viewport + 2) {
         const offenders = await page.evaluate(() => [...document.querySelectorAll('body *')]
           .map(el => ({ el, bounds: el.getBoundingClientRect() }))
-          .filter(x => x.bounds.right > document.documentElement.clientWidth + 2
-            && x.bounds.width > 0
-            && getComputedStyle(x.el).position !== 'fixed')
+          .filter(x => {
+            if (x.bounds.right <= document.documentElement.clientWidth + 2 || x.bounds.width <= 0
+              || getComputedStyle(x.el).position === 'fixed') return false;
+            for (let parent = x.el.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+              if (['hidden', 'clip', 'scroll', 'auto'].includes(getComputedStyle(parent).overflowX)) return false;
+            }
+            return true;
+          })
           .slice(0, 24)
           .map(x => ({ tag: x.el.tagName, class: String(x.el.className).slice(0, 180),
             text: String(x.el.textContent).trim().slice(0, 80), right: Math.round(x.bounds.right),
