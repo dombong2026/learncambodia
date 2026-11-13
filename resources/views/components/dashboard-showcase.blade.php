@@ -31,7 +31,7 @@
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#f7bc45]"><x-workspace-icon :name="$heroIcon" class="h-6 w-6" /></span>
             </div>
             @if(count($showcase['rings']) > 0)
-                <div class="my-7 grid flex-1 grid-cols-{{ count($showcase['rings']) > 1 ? 2 : 1 }} items-start justify-items-center gap-4">
+                <div class="my-7 grid flex-1 {{ count($showcase['rings']) > 1 ? 'grid-cols-2' : 'grid-cols-1' }} items-start justify-items-center gap-4">
                     @foreach($showcase['rings'] as $ring)
                         <a href="{{ $ring['url'] }}" class="group flex min-w-0 w-full flex-col items-center rounded-2xl px-1 text-center transition hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-[#ffca65]">
                             <p class="mb-3 min-h-[38px] w-full break-words text-xs font-bold leading-[1.55] text-[#e7eef9]">{{ $ring['label'] }}</p>
