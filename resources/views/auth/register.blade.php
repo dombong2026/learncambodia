@@ -4,10 +4,10 @@
 @section('auth_intro', __('auth.register_intro'))
 @section('content')
 <form method="POST" action="{{ route('register.store') }}" class="space-y-3.5">@csrf
-    <x-auth-field id="register_name" name="name" icon="user-round" :label="__('auth.full_name')" autocomplete="name" :value="old('name')" :maxlength="255" required />
-    <x-auth-field id="register_email" name="email" type="email" icon="mail" :label="__('auth.email')" autocomplete="email" :value="old('email')" :maxlength="255" required />
-    <x-auth-field id="register_password" name="password" type="password" icon="lock" :label="__('auth.password')" autocomplete="new-password" :minlength="8" required />
-    <x-auth-field id="register_password_confirmation" name="password_confirmation" type="password" icon="lock" :label="__('auth.confirm_password')" autocomplete="new-password" :minlength="8" required />
+    <x-auth-field id="register_name" name="name" icon="user-round" :label="__('auth.full_name')" autocomplete="name" :value="old('name')" :maxlength="255" :required="true" />
+    <x-auth-field id="register_email" name="email" type="email" icon="mail" :label="__('auth.email')" autocomplete="email" :value="old('email')" :maxlength="255" :required="true" />
+    <x-auth-field id="register_password" name="password" type="password" icon="lock" :label="__('auth.password')" autocomplete="new-password" :minlength="8" :required="true" />
+    <x-auth-field id="register_password_confirmation" name="password_confirmation" type="password" icon="lock" :label="__('auth.confirm_password')" autocomplete="new-password" :minlength="8" :required="true" />
     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 dark:border-[#426084] dark:bg-[#0c2342] dark:text-slate-300">
         <input name="terms" type="checkbox" value="1" @checked(old('terms')) required class="mt-1 rounded border-slate-300">
         <span>{{ __('auth.accept_terms') }} <a href="{{ route('information.show','terms') }}" target="_blank" rel="noopener" class="font-bold text-[#0c4a89] underline dark:text-[#f2c778]">{{ __('auth.terms') }}</a> {{ __('auth.and') }} <a href="{{ route('information.show','privacy') }}" target="_blank" rel="noopener" class="font-bold text-[#0c4a89] underline dark:text-[#f2c778]">{{ __('auth.privacy') }}</a>. <span class="block text-[11px] text-amber-700 dark:text-amber-300">{{ __('auth.policy_draft') }}</span></span>
