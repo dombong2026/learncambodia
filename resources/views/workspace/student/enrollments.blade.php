@@ -3,7 +3,10 @@
 @section('heading', 'My Enrollments')
 @section('description', 'See the status of your course requests. Each request is private to your account.')
 @section('content')
-<div class="mb-5 flex justify-end"><a href="{{ route('account.courses.index') }}" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white">Browse available courses</a></div>
+<div class="mb-5 flex flex-wrap justify-end gap-3">
+    <a href="{{ route('account.saved-courses.index') }}" class="rounded-full border border-blue-700 px-6 py-3 text-sm font-bold text-blue-700 dark:border-blue-400 dark:text-blue-300">{{ __('saved_courses.title') }}</a>
+    <a href="{{ route('account.courses.index') }}" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white">Browse available courses</a>
+</div>
 <div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
 <table class="w-full min-w-[650px] text-left text-sm">
     <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500 dark:border-slate-800 dark:bg-slate-900"><tr><th class="px-5 py-4">Course</th><th class="px-5 py-4">Requested</th><th class="px-5 py-4">Status</th><th class="px-5 py-4 text-right">Action</th></tr></thead>

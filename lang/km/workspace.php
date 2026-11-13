@@ -34,6 +34,7 @@ return [
         'operations' => 'ប្រតិបត្តិការ',
     ],
     'labels' => [
+        'Saved Courses' => 'វគ្គសិក្សាបានរក្សាទុក',
         'Overview' => 'ទិដ្ឋភាពទូទៅ',
         'All Courses' => 'វគ្គសិក្សាទាំងអស់',
         'Create' => 'បង្កើត',
@@ -89,6 +90,7 @@ return [
         'Account Settings' => 'ការកំណត់គណនី',
     ],
     'nav' => [
+        'Saved Courses' => 'វគ្គសិក្សាបានរក្សាទុក',
         'Overview'=>'ទិដ្ឋភាពទូទៅ','Courses'=>'វគ្គសិក្សា',
         'Reviews'=>'ការត្រួតពិនិត្យ','Reports'=>'របាយការណ៍',
         'Profile'=>'ប្រវត្តិរូប','Grading'=>'ការដាក់ពិន្ទុ',

@@ -34,6 +34,7 @@ return [
         'operations' => '运营',
     ],
     'labels' => [
+        'Saved Courses' => '已收藏课程',
         'Overview' => '概览',
         'All Courses' => '所有课程',
         'Course Catalog' => '课程目录',
@@ -90,6 +91,7 @@ return [
         'Account Settings' => '账户设置',
     ],
     'nav' => [
+        'Saved Courses' => '已收藏课程',
         'Overview' => '概览',
         'Courses' => '课程',
         'Reviews' => '审核',

@@ -34,11 +34,13 @@ return [
         'operations' => 'Operations',
     ],
     'labels' => [
+        'Saved Courses' => 'Saved Courses',
         'Overview' => 'Overview',
         'All Courses' => 'All Courses',
         'Course Catalog' => 'Course Catalog',
     ],
     'nav' => [
+        'Saved Courses' => 'Saved Courses',
         'Overview'=>'Overview', 'Courses'=>'Courses', 'Reviews'=>'Reviews',
         'Reports'=>'Reports', 'Profile'=>'Profile', 'Grading'=>'Grading',
         'Homework'=>'Homework', 'APIs'=>'APIs', 'Tokens'=>'Tokens',

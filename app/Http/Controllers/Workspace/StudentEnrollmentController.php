@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\CourseBookmark;
 use App\Models\User;
 use App\Support\ApprovalAudit;
 use Illuminate\Http\RedirectResponse;
@@ -24,12 +25,20 @@ class StudentEnrollmentController extends Controller
         ]);
     }
 
-    public function catalog(): View
+    public function catalog(Request $request): View
     {
+        $courses = Course::discoverable()->with('category')
+            ->orderBy('title')->paginate(10);
+
+        $savedCourseIds = CourseBookmark::query()
+            ->where('student_id', $request->user()->id)
+            ->whereIn('course_id', $courses->getCollection()->pluck('id'))
+            ->pluck('course_id')->all();
+
         return view('workspace.student.course-catalog', [
             'role' => 'student',
-            'courses' => Course::discoverable()->with('category')
-                ->orderBy('title')->paginate(10),
+            'courses' => $courses,
+            'savedCourseIds' => $savedCourseIds,
         ]);
     }
 
