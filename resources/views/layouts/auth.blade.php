@@ -13,11 +13,16 @@
     <div class="absolute inset-x-0 top-0 h-1 bg-[#e7b857]" aria-hidden="true"></div>
     <main id="auth-main" class="grid min-h-screen place-items-center px-4 py-8 sm:px-6">
         <div class="auth-modal w-full max-w-[440px] overflow-hidden rounded-[26px] border border-slate-200/80 bg-white shadow-2xl shadow-[#0c2d5b]/15 dark:border-[#315078] dark:bg-[#122b4b]">
-            <header class="bg-gradient-to-br from-[#0e3263] to-[#09254c] px-6 pb-5 pt-6 text-white sm:px-8">
-                <a href="{{ route('home') }}" class="inline-flex rounded-lg text-base font-black tracking-tight text-white transition hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300">Learn <span class="ml-1 text-[#ffd078]">Cambodia</span></a>
-                <p class="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-[#f3c368]">{{ __('auth.account_access') }}</p>
-                <h1 class="mt-2 text-[1.65rem] font-black tracking-tight">@yield('auth_heading')</h1>
-                <p class="mt-1.5 text-[13px] leading-6 text-[#d2e1f2]">@yield('auth_intro')</p>
+            <header class="relative bg-gradient-to-br from-[#0e3263] to-[#09254c] px-12 pb-6 pt-7 text-center text-white sm:px-12">
+                <a href="{{ route('home') }}" aria-label="{{ __('auth.home') }}" title="{{ __('auth.home') }}" class="absolute left-3 top-4 grid h-9 w-9 place-items-center rounded-lg text-[#ffd078] transition hover:-translate-x-0.5 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd078] sm:left-5 sm:top-5">
+                    <x-workspace-icon name="home" class="h-5 w-5" />
+                </a>
+                <div class="mx-auto flex max-w-xs flex-col items-center text-center">
+                    <span class="inline-flex items-center justify-center text-base font-black tracking-tight text-white">Learn <span class="ml-1 text-[#ffd078]">Cambodia</span></span>
+                    <p class="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-[#f3c368]">{{ __('auth.account_access') }}</p>
+                    <h1 class="mt-2 text-[1.65rem] font-black tracking-tight">@yield('auth_heading')</h1>
+                    <p class="mt-1.5 text-[13px] leading-6 text-[#d2e1f2]">@yield('auth_intro')</p>
+                </div>
             </header>
             <div class="px-6 pb-6 pt-6 sm:px-8">
                 @if(session('status'))
@@ -27,12 +32,6 @@
                     <p role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-6 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{{ __('auth.review_errors') }}</p>
                 @endif
                 @yield('content')
-                <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                    <span>{{ __('auth.secure_session') }}</span>
-                    <a href="{{ route('home') }}" aria-label="{{ __('auth.home') }}" title="{{ __('auth.home') }}" class="grid h-9 w-9 place-items-center rounded-lg text-[#0c2d5b] transition hover:-translate-y-0.5 hover:text-[#bd882a] focus-visible:outline-2 focus-visible:outline-[#bd882a] dark:text-[#e9c77b]">
-                        <x-workspace-icon name="home" class="h-5 w-5" />
-                    </a>
-                </div>
             </div>
         </div>
     </main>

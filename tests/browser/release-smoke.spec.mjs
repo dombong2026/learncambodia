@@ -128,3 +128,32 @@ test('auth UI uses inline floating labels, recovery link and modal home icon', a
   await expect(page).toHaveURL(/\/forgot-password/);
   await expect(page.locator('input[name="email"]')).toBeVisible();
 });
+
+
+test('auth headings are centered and Home is in the top-left on all guest auth screens', async ({ page }) => {
+  for (const [url, copy] of [
+    ['/login?lang=en', 'Learning and Managing Your Account'],
+    ['/register?lang=en', 'Create a student learning account. Instructor access is granted by an administrator.'],
+    ['/forgot-password?lang=en', 'Enter your email address to request a password reset link.'],
+    ['/reset-password/not-a-real-token?lang=en', 'Create a new strong password for your account.'],
+  ]) {
+    await page.goto(url);
+    const modal = page.locator('.auth-modal');
+    const heading = modal.locator('header h1');
+    const introduction = modal.locator('header p').last();
+    const home = modal.locator('header a[aria-label="Back to home"]');
+    await expect(modal).toBeVisible();
+    await expect(introduction).toHaveText(copy);
+    await expect(home).toBeVisible();
+    await expect(modal.getByText('Secure access · Learn Cambodia')).toHaveCount(0);
+    await expect(modal.locator('a[aria-label="Back to home"]')).toHaveCount(1);
+    const positions = await Promise.all([modal, heading, introduction, home].map(x => x.boundingBox()));
+    const [panel, h, intro, back] = positions;
+    expect(panel && h && intro && back).toBeTruthy();
+    const center = panel.x + panel.width / 2;
+    expect(Math.abs((h.x + h.width / 2) - center)).toBeLessThan(8);
+    expect(Math.abs((intro.x + intro.width / 2) - center)).toBeLessThan(8);
+    expect(back.y).toBeLessThan(h.y);
+    expect(back.x).toBeLessThan(center - 35);
+  }
+});

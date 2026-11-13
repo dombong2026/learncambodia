@@ -37,6 +37,46 @@ class PremiumAuthLocaleTest extends TestCase
             ->assertSee(__('auth.resend_confirmation'));
     }
 
+    public function test_shared_auth_header_is_centered_and_home_icon_is_at_top_not_bottom(): void
+    {
+        foreach (['/login', '/register', '/forgot-password', '/reset-password/not-a-real-token'] as $url) {
+            $response = $this->get($url.'?lang=en')->assertOk()
+                ->assertSee('auth-modal', false)
+                ->assertSee('text-center text-white', false)
+                ->assertSee('aria-label="Back to home"', false)
+                ->assertSee('absolute left-3 top-4', false)
+                ->assertDontSee('Secure access · Learn Cambodia')
+                ->assertDontSee('auth.secure_session')
+                ->assertDontSee('mt-6 flex items-center justify-between gap-3 border-t', false);
+            $this->assertSame(1, substr_count($response->getContent(), 'aria-label="Back to home"'));
+        }
+
+        $this->get('/login?lang=en')->assertSee('Learning and Managing Your Account');
+        $this->get('/register?lang=en')
+            ->assertSee('Create a student learning account. Instructor access is granted by an administrator.')
+            ->assertDontSee('Create a student or instructor account');
+        $this->get('/forgot-password?lang=en')
+            ->assertSee('Enter your email address to request a password reset link.');
+
+        $this->actingAs(User::factory()->unverified()->create())
+            ->get('/email/verify?lang=en')->assertOk()
+            ->assertSee('text-center text-white', false)
+            ->assertSee('aria-label="Back to home"', false)
+            ->assertDontSee('Secure access · Learn Cambodia');
+    }
+
+    public function test_auth_header_copy_is_translated_for_khmer_and_chinese(): void
+    {
+        $this->get('/login?lang=km')->assertOk()
+            ->assertSee('សិក្សា និងគ្រប់គ្រងគណនីរបស់អ្នក');
+        $this->get('/register?lang=km')->assertOk()
+            ->assertSee('សិទ្ធិជាគ្រូបង្រៀនត្រូវបានផ្ដល់ដោយអ្នកគ្រប់គ្រង');
+        $this->get('/forgot-password?lang=zh')->assertOk()
+            ->assertSee('输入您的电子邮箱地址，以申请密码重置链接。');
+        $this->get('/register?lang=zh')->assertOk()
+            ->assertSee('教师权限由管理员授予。');
+    }
+
     public function test_password_reset_is_not_falsely_reported_delivered_with_log_mail(): void
     {
         config(['mail.default' => 'log']);
