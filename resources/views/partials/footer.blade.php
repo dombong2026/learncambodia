@@ -3,7 +3,7 @@
         <div><h2 class="mb-5 text-base font-bold text-white">LearnCambodia</h2><ul class="space-y-3 text-sm text-slate-400">
             <li><a class="hover:text-white" href="{{ route('information.show','about') }}">About Us <span lang="km"> (អំពីយើង)</span></a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','instructors') }}">Our Instructors</a></li>
-            <li><a class="hover:text-white" href="{{ route('information.show','blog') }}">Blog &amp; Study Tips</a></li>
+            <li><a class="hover:text-white" href="{{ route('articles.index') }}">{{ __('frontend.articles') }}</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','careers') }}">Careers / Teach With Us</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','partners') }}">Partners &amp; Schools</a></li>
         </ul></div>
@@ -22,7 +22,7 @@
             <li><a class="hover:text-white" href="{{ route('categories.index',['group'=>'teacher-development']) }}">CELTA &amp; TKT</a></li>
         </ul></div>
         <div><h2 class="mb-5 text-base font-bold text-white">Student Support</h2><ul class="space-y-3 text-sm text-slate-400">
-            <li><a class="hover:text-white" href="{{ route('information.show','placement') }}">Free Placement Test</a></li>
+            <li><a class="hover:text-white" href="{{ route('information.show','placement') }}">Placement Test Information</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','scores') }}">Exam Score Guide</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','faq') }}">FAQs</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','contact') }}">Contact Us</a></li>

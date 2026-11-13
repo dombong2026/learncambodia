@@ -1,7 +1,7 @@
 @extends('layouts.public')
 @section('title', 'Learn English with confidence')
 @section('content')
-<section class="relative isolate overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 text-white">
+<section class="relative isolate overflow-hidden bg-gradient-to-br from-[#081f45] via-[#0c3265] to-[#112a52] text-white">
     <div class="pointer-events-none absolute -right-32 top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" aria-hidden="true"></div>
     <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.15fr_.85fr] lg:px-8 lg:py-28">
         <div>
@@ -9,7 +9,7 @@
             <h1 class="max-w-2xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">{{ \App\Support\Appearance::value('home','hero_title') }}</h1>
             <p class="mt-6 max-w-xl text-base leading-8 text-slate-300 sm:text-lg">{{ \App\Support\Appearance::value('home','hero_intro') }}</p>
             <div class="mt-8 flex flex-wrap gap-3">
-                <a class="rounded-full bg-white px-6 py-3 text-sm font-bold text-slate-950 transition hover:-translate-y-0.5 hover:bg-blue-50" href="{{ route('categories.index') }}">{{ __('ui.explore_categories') }}</a>
+                <a class="rounded-full bg-[#eebc5e] px-6 py-3 text-sm font-bold text-[#102c54] transition hover:-translate-y-0.5 hover:bg-blue-50" href="{{ route('categories.index') }}">{{ __('ui.explore_categories') }}</a>
                 <a class="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10" href="{{ route('cefr.index') }}">{{ __('ui.view_cefr') }}</a>
             </div>
         </div>
