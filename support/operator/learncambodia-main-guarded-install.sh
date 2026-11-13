@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+# Learn Cambodia: guarded aaPanel installation for a NEW, password-protected HTTPS site.
+# This is NOT an upgrade tool. No other vhosts, databases or system services are changed.
+# Run modes: check | install | finalize
+set -Eeuo pipefail
+set +x
+umask 077
+MODE="$1"
+REPO='dombong2026/learncambodia'
+MAIN='db2a5cdd6fa3a3b6b2066fdb8c95084e4dbb387e'
+TREE='588b4af180b446bec48189863bb2c84e322028ad'
+TESTED='c2eec3680d2b69e5e5ee2bea30ccc66ac404e96e'
+PHPLOCK='043948df6390f037947781244dcf2f39aa678a37fbdfc9879f0640ecd313b260'
+NPMLOCK='f4e670ae3cd90e0e6ab27be86adf5d09558bd5ccc904f784f7d595b13d7b52c7'
+ASSET_RUN='43428045424'
+ASSET_ID='14038232950'
+NAME='learncambodia-pinned-qa-vite-assets'
+DOMAIN='learncambodia.com'
+APP='/www/wwwroot/learncambodia.com'
+VHOST='/www/server/panel/vhost/nginx/learncambodia.com.conf'
+PHP='/www/server/php/85/bin/php'
+TOKEN='/root/learncambodia-setup-token'
+fail(){ echo "INSTALL=BLOCKED: $*" >&2; exit 2; }
+[[ "$(id -u)" == 0 ]] || fail 'requires root'
+[[ "$MODE" == check || "$MODE" == install || "$MODE" == finalize ]] || fail 'mode must be check/install/finalize'
+for cmd in gh git dig curl awk grep python3 sha256sum tar mysql mktemp runuser; do
+  command -v "$cmd" >/dev/null || fail "missing $cmd"
+done
+[[ -x "$PHP" && -d /www/wwwroot && ! -L /www/wwwroot ]] || fail 'aaPanel PHP or directory absent'
+if [[ "$MODE" == finalize ]]; then
+  [[ -f "$APP/storage/app/private/learncambodia.installed" && -f "$APP/.env" ]] || fail 'installer did not finish'
+  printf '%s  %s\n' "$PHPLOCK" "$APP/composer.lock" | sha256sum -c --status || fail 'unexpected application source'
+  python3 - "$APP/.env" <<'PY'
+import pathlib,sys
+p=pathlib.Path(sys.argv[1])
+text=p.read_text()
+for key,value in [('INSTALLER_ENABLED','false'),('INSTALLER_TOKEN','')]:
+    lines=[line for line in text.splitlines() if not line.startswith(key+'=')]
+    lines.append(key+'='+value)
+    text='\n'.join(lines)+'\n'
+p.write_text(text)
+PY
+  chmod 640 "$APP/.env"
+  cd "$APP"
+  runuser -u www -- "$PHP" artisan config:clear --no-interaction >/dev/null
+  runuser -u www -- "$PHP" artisan config:cache --no-interaction >/dev/null
+  rm -f -- "$TOKEN"
+  echo 'INSTALLER_LOCK=VERIFIED'
+  echo 'INSTALLER=DISABLED'
+  echo 'PUBLIC_ACCESS_RESTRICTION=KEEP_UNTIL_INDEPENDENT_RELEASE_APPROVAL'
+  exit 0
+fi
+
+echo '========== VERIFIED MERGED RELEASE =========='
+[[ "$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')" == "$MAIN" ]] || fail 'main changed; repin reviewed release'
+[[ "$(gh api "repos/$REPO/git/commits/$MAIN" --jq '.tree.sha')" == "$TREE" ]] || fail 'unexpected release tree'
+[[ "$(gh api "repos/$REPO/git/commits/$TESTED" --jq '.tree.sha')" == "$TREE" ]] || fail 'tested feature tree mismatch'
+for run in 43428045507 43428045455 43428045424; do
+  [[ "$(gh api "repos/$REPO/actions/runs/$run" --jq '.head_sha')" == "$TESTED" ]] || fail 'unexpected CI SHA'
+  [[ "$(gh api "repos/$REPO/actions/runs/$run" --jq '.conclusion')" == success ]] || fail 'CI is not green'
+done
+[[ "$(gh api "repos/$REPO/actions/artifacts/$ASSET_ID" --jq '.name')" == "$NAME" ]] || fail 'asset identity mismatch'
+[[ "$(gh api "repos/$REPO/actions/artifacts/$ASSET_ID" --jq '.expired')" == false ]] || fail 'asset expired; rebuild and repin'
+echo 'RELEASE_AND_CI=PASS'
+
+echo '========== DOMAIN AND HTTPS PROTECTION =========='
+[[ -n "$(dig @a.gtld-servers.net "$DOMAIN" NS +short +time=4 +tries=1 || :)" ]] || fail 'learncambodia.com not delegated in .com; register domain first'
+[[ -n "$(dig @1.1.1.1 "$DOMAIN" A +short +time=4 +tries=1 || :)" ]] || fail 'learncambodia.com has no A record; set correct DNS first'
+[[ -f "$VHOST" && ! -L "$VHOST" ]] || fail 'create a separate HTTPS website using aaPanel first'
+awk -v root="$APP/public;" '$1=="root" && $2==root {ok=1} END{exit !ok}' "$VHOST" || fail 'Nginx root must be new application public/'
+grep -Eq 'auth_basic[[:space:]]+|deny[[:space:]]+all' "$VHOST" || fail 'require site password protection or private allowlist'
+[[ -x /www/server/nginx/sbin/nginx ]] || fail 'aaPanel Nginx binary absent'
+/www/server/nginx/sbin/nginx -t >/dev/null 2>&1 || fail 'Nginx configuration invalid'
+STATUS="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 12 --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/")" || fail 'local HTTPS certificate invalid'
+[[ "$STATUS" == 401 || "$STATUS" == 403 ]] || fail 'site not restricted: require actual HTTP 401/403 before installer'
+[[ ! -e "$APP" && ! -L "$APP" ]] || fail 'website directory already exists; never overwrite a site or placeholder'
+[[ ! -e "$TOKEN" && ! -L "$TOKEN" ]] || fail 'installer token already exists'
+echo 'DOMAIN_TLS_ACCESS_GATES=PASS'
+
+echo '========== PHP / DATABASE SAFETY =========='
+"$PHP" -r '$ext=["ctype","curl","dom","fileinfo","mbstring","openssl","pdo_mysql","tokenizer","xml"];foreach($ext as $x){if(!extension_loaded($x)) exit(1);}' || fail 'PHP extensions missing'
+[[ -S /tmp/php-cgi-85.sock || -S /www/server/php/85/var/run/php-cgi-85.sock ]] || fail 'PHP 8.5-FPM socket missing'
+command -v composer >/dev/null || fail 'Composer CLI absent'
+if [[ "$MODE" == check ]]; then
+  echo 'READ_ONLY_PREFLIGHT=PASS'
+  echo 'NEXT=CREATE_NEW_EMPTY_aaPANEL_MYSQL_DATABASE_AND_RUN_INSTALL'
+  exit 0
+fi
+[[ -r /dev/tty && -w /dev/tty ]] || fail 'interactive terminal required'
+printf 'Fresh database name (learncambodia_...): ' > /dev/tty
+IFS= read -r DB < /dev/tty
+[[ "$DB" =~ ^learncambodia_[a-zA-Z0-9_]{2,40}$ ]] || fail 'use dedicated new database'
+printf 'Fresh dedicated database user (lcam_...): ' > /dev/tty
+IFS= read -r USERNAME < /dev/tty
+[[ "$USERNAME" =~ ^lcam_[a-zA-Z0-9_]{3,20}$ ]] || fail 'use least-privilege new database user'
+printf 'Database password (hidden, 24+ characters, letters/digits/-/_ only): ' > /dev/tty
+IFS= read -r -s PASSWORD < /dev/tty
+printf '\n' > /dev/tty
+[[ "$PASSWORD" =~ ^[a-zA-Z0-9_-]{24,128}$ ]] || fail 'password format invalid'
+
+STAGE="$(mktemp -d /www/wwwroot/.learncambodia-install.XXXXXXXX)"
+cleanup(){ [[ "$STAGE" == /www/wwwroot/.learncambodia-install.* && -d "$STAGE" && ! -L "$STAGE" ]] && rm -rf --one-file-system -- "$STAGE"; :; }
+trap cleanup EXIT
+chmod 700 "$STAGE"
+cat > "$STAGE/mysql.cnf" <<EOF
+[client]
+user=$USERNAME
+password=$PASSWORD
+host=127.0.0.1
+port=3306
+protocol=tcp
+EOF
+chmod 600 "$STAGE/mysql.cnf"
+COUNT="$(mysql --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names --database="$DB" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB';" 2>/dev/null || :)"
+[[ "$COUNT" == 0 ]] || fail 'dedicated database login failed or it contains tables'
+printf 'Type INSTALL NEW LEARNCAMBODIA to continue: ' > /dev/tty
+IFS= read -r ACK < /dev/tty
+[[ "$ACK" == 'INSTALL NEW LEARNCAMBODIA' ]] || fail 'not confirmed'
+echo 'EMPTY_DATABASE=PASS'
+
+echo '========== FETCH PINNED GITHUB SOURCE =========='
+git clone -q --depth 1 --single-branch -b main "https://github.com/$REPO.git" "$STAGE/repo"
+[[ "$(git -C "$STAGE/repo" rev-parse HEAD)" == "$MAIN" ]] || fail 'main moved during clone'
+[[ "$(git -C "$STAGE/repo" rev-parse HEAD^{tree})" == "$TREE" ]] || fail 'source tree mismatch'
+mkdir -m 700 "$STAGE/app"
+git -C "$STAGE/repo" archive --format=tar "$MAIN" | tar -xf - -C "$STAGE/app"
+printf '%s  %s\n' "$PHPLOCK" "$STAGE/app/composer.lock" | sha256sum -c --status || fail 'composer.lock changed'
+printf '%s  %s\n' "$NPMLOCK" "$STAGE/app/package-lock.json" | sha256sum -c --status || fail 'package-lock.json changed'
+
+echo '========== PINNED CI ASSETS =========='
+mkdir -m 700 "$STAGE/assets"
+gh run download "$ASSET_RUN" --repo "$REPO" --name "$NAME" --dir "$STAGE/assets" >/dev/null
+for expected in "SOURCE_COMMIT=$TESTED" "COMPOSER_LOCK_SHA256=$PHPLOCK" "NPM_LOCK_SHA256=$NPMLOCK"; do
+  grep -Fxq "$expected" "$STAGE/assets/provenance.txt" || fail 'CI artifact provenance incorrect'
+done
+ASSET_SHA="$(sed -n 's/^ASSET_ARCHIVE_SHA256=//p' "$STAGE/assets/provenance.txt")"
+[[ "$ASSET_SHA" =~ ^[a-f0-9]{64}$ ]] || fail 'invalid archive digest'
+printf '%s  %s\n' "$ASSET_SHA" "$STAGE/assets/learncambodia-vite-build.tar.gz" | sha256sum -c --status || fail 'CI asset digest mismatch'
+python3 - "$STAGE/assets/learncambodia-vite-build.tar.gz" "$STAGE/app/public" <<'PY'
+import json,sys,tarfile,pathlib,shutil
+source=pathlib.Path(sys.argv[1]); target=pathlib.Path(sys.argv[2]); dst=target/'build'
+assert not dst.exists()
+with tarfile.open(source,'r:gz') as tar:
+    members=tar.getmembers()
+    assert 1<len(members)<1000 and sum(m.size for m in members)<50_000_000
+    assert len({m.name for m in members})==len(members)
+    for m in members:
+        p=pathlib.PurePosixPath(m.name)
+        assert not p.is_absolute() and p.parts[0]=='build' and '..' not in p.parts
+        assert m.isfile() or m.isdir()
+        out=target.joinpath(*p.parts)
+        if m.isdir(): out.mkdir(parents=True,exist_ok=True)
+        else:
+            out.parent.mkdir(parents=True,exist_ok=True)
+            with out.open('xb') as f: shutil.copyfileobj(tar.extractfile(m),f)
+manifest=json.loads((dst/'manifest.json').read_text())
+assert isinstance(manifest,dict) and manifest
+for item in manifest.values():
+    for p in [item.get('file')]+item.get('css',[])+item.get('assets',[]):
+        if p is not None:
+            a=(dst/p).resolve()
+            assert a.is_relative_to(dst.resolve()) and a.is_file()
+PY
+echo 'GITHUB_SOURCE_AND_CI_ASSETS=PASS'
+
+echo '========== LOCAL COMPOSER VENDOR =========='
+export PATH="/www/server/php/85/bin:$PATH"
+export COMPOSER_ALLOW_SUPERUSER=1
+export COMPOSER_HOME="$STAGE/composer-home"
+mkdir -m 700 "$COMPOSER_HOME"
+(cd "$STAGE/app" && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-plugins --no-scripts) || fail 'Composer failed; no site changed'
+[[ -f "$STAGE/app/vendor/autoload.php" ]] || fail 'vendor autoload missing'
+
+echo '========== PRIVATE LARAVEL CONFIG / GUARDED WEB INSTALLER =========='
+APPKEY="base64:$("$PHP" -r 'echo base64_encode(random_bytes(32));')"
+SETUP="$("$PHP" -r 'echo bin2hex(random_bytes(32));')"
+cat > "$STAGE/app/.env" <<EOF
+APP_NAME="Learn Cambodia"
+APP_ENV=production
+APP_KEY=$APPKEY
+APP_DEBUG=false
+APP_URL=https://$DOMAIN
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+LOG_CHANNEL=stack
+LOG_LEVEL=warning
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=$DB
+DB_USERNAME=$USERNAME
+DB_PASSWORD=$PASSWORD
+SESSION_DRIVER=file
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS=info@$DOMAIN
+INSTALLER_ENABLED=true
+INSTALLER_TOKEN=$SETUP
+PUBLIC_STUDENT_PROFILES_ENABLED=false
+EOF
+mkdir -p "$STAGE/app/storage/app/private" "$STAGE/app/storage/framework/cache/data" "$STAGE/app/storage/framework/sessions" "$STAGE/app/storage/framework/views" "$STAGE/app/storage/logs" "$STAGE/app/bootstrap/cache"
+(cd "$STAGE/app" && "$PHP" artisan package:discover --no-interaction >/dev/null && "$PHP" artisan config:cache --no-interaction >/dev/null) || fail 'Laravel package/config readiness failed'
+chown -R root:www "$STAGE/app"
+find "$STAGE/app" -type d -exec chmod 750 '{}' +
+find "$STAGE/app" -type f -exec chmod 640 '{}' +
+chown -R www:www "$STAGE/app/storage" "$STAGE/app/bootstrap/cache"
+find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type d -exec chmod 770 '{}' +
+find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type f -exec chmod 660 '{}' +
+[[ ! -e "$APP" && ! -L "$APP" ]] || fail 'destination appeared; refusing overwrite'
+mv -- "$STAGE/app" "$APP"
+printf '%s\n' "$SETUP" > "$TOKEN"
+chmod 600 "$TOKEN"
+echo 'NEW_SITE=STAGED_WITH_PROTECTED_INSTALLER'
+echo "SETUP_TOKEN_FILE=$TOKEN"
+echo "INSTALL_URL=https://$DOMAIN/install"
+echo 'NEXT=COMPLETE_ADMIN_WIZARD_THEN_RUN_FINALIZE'
+echo 'KEEP_PRIVATE_NGINX_ACCESS_UNTIL_INDEPENDENT_SECURITY_AND_LEGAL_ACCEPTANCE'
