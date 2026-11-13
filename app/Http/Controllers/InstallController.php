@@ -78,11 +78,15 @@ final class InstallController extends Controller
     {
         $appKey = (string) config('app.key');
         $url = (string) config('app.url');
-        $secure = $request->isSecure() || (bool) config('app.env') !== 'production';
+        $secure = $request->isSecure() || config('app.env') !== 'production';
 
         return [
             'key' => str_starts_with($appKey, 'base64:') && strlen($appKey) > 50,
-            'database' => in_array(config('database.default'), ['mysql', 'mariadb', 'sqlite'], true),
+            'database' => in_array(config('database.default'), ['mysql', 'mariadb', 'sqlite'], true)
+                && (function (): bool {
+                    try { DB::connection()->getPdo(); return true; }
+                    catch (Throwable) { return false; }
+                })(),
             'https' => $secure && (config('app.env') !== 'production' || str_starts_with($url, 'https://')),
             'debug' => config('app.env') !== 'production' || !config('app.debug'),
             'storage' => is_writable(storage_path('app')) && is_writable(storage_path('framework')),
