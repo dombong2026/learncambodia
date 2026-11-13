@@ -1,0 +1,87 @@
+name: QA Vite asset artifact - pinned source (no deployment)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-qa-assets:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact head source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Require pinned source and dependency locks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git ls-files --error-unmatch composer.lock package-lock.json >/dev/null
+          test -s composer.lock
+          test -s package-lock.json
+          test ! -e .env
+          test ! -e public/build/manifest.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+
+      - name: Reproducible npm install and Vite build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          git diff --exit-code -- package-lock.json composer.lock
+
+      - name: Validate asset paths and create provenance
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('public/build').resolve(strict=True)
+          manifest = root / 'manifest.json'
+          data = json.loads(manifest.read_text(encoding='utf-8'))
+          assert isinstance(data, dict) and len(data) > 0, 'empty Vite manifest'
+          for key, entry in data.items():
+              assert isinstance(entry, dict), f'invalid Vite entry: {key}'
+              paths = [entry.get('file')] + entry.get('css', []) + entry.get('assets', [])
+              for path in paths:
+                  if path is None:
+                      continue
+                  assert isinstance(path, str) and path, f'invalid asset name: {key}'
+                  asset = (root / path).resolve()
+                  assert asset.is_relative_to(root), f'asset escapes build root: {path}'
+                  assert asset.is_file(), f'missing referenced asset: {path}'
+          for p in root.rglob('*'):
+              assert not p.is_symlink(), f'unsafe symlink: {p}'
+          print('VITE_ASSET_MANIFEST=PASS')
+          PY
+          mkdir -p qa-asset-evidence
+          tar -czf qa-asset-evidence/learncambodia-vite-build.tar.gz -C public build
+          {
+            printf 'SOURCE_COMMIT=%s\n' "$(git rev-parse HEAD)"
+            printf 'COMPOSER_LOCK_SHA256=%s\n' "$(sha256sum composer.lock | cut -d' ' -f1)"
+            printf 'NPM_LOCK_SHA256=%s\n' "$(sha256sum package-lock.json | cut -d' ' -f1)"
+            printf 'ASSET_ARCHIVE_SHA256=%s\n' "$(sha256sum qa-asset-evidence/learncambodia-vite-build.tar.gz | cut -d' ' -f1)"
+          } > qa-asset-evidence/provenance.txt
+          test "$(tar -tzf qa-asset-evidence/learncambodia-vite-build.tar.gz | grep -c '^build/manifest.json$')" -eq 1
+          echo "QA_ASSET_PACKAGE=PASS"
+
+      - name: Publish reviewed-head QA assets (not a release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: learncambodia-pinned-qa-vite-assets
+          path: |
+            qa-asset-evidence/learncambodia-vite-build.tar.gz
+            qa-asset-evidence/provenance.txt
+          if-no-files-found: error
+          retention-days: 7
