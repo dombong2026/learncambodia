@@ -80,7 +80,7 @@ class ReferenceDashboardVisualTest extends TestCase
     {
         $student = $this->account('student');
         $this->actingAs($student)->post('/language',['locale'=>'zh'])
-            ->assertRedirect('/account');
+            ->assertRedirect('/account?lang=zh');
 
         $this->get('/account')->assertOk()
             ->assertSee('lang="zh"',false)
@@ -92,13 +92,13 @@ class ReferenceDashboardVisualTest extends TestCase
             ->assertSee('aria-label="简体中文"',false);
 
         $this->get('/dashboard')->assertForbidden();
-        $this->post('/language',['locale'=>'km'])->assertRedirect('/account');
+        $this->post('/language',['locale'=>'km'])->assertRedirect('/account?lang=km');
         $this->get('/account')->assertOk()
             ->assertSee('lang="km"',false)
             ->assertSee('ផ្ទាំងការសិក្សារបស់ខ្ញុំ')
             ->assertSee('សួស្តី');
 
-        $this->post('/language',['locale'=>'en'])->assertRedirect('/account');
+        $this->post('/language',['locale'=>'en'])->assertRedirect('/account?lang=en');
         $this->get('/account')->assertOk()
             ->assertSee('lang="en"',false)
             ->assertSee('My Learning Dashboard')
@@ -162,7 +162,7 @@ class ReferenceDashboardVisualTest extends TestCase
             $this->flushSession();
             $this->actingAs($this->account($role))->post('/language',[
                 'locale'=>'zh',
-            ])->assertRedirect($url);
+            ])->assertRedirect($url.'?lang=zh');
             $this->get($url)->assertOk()->assertSee($expected)
                 ->assertSee('lang="zh"',false)
                 ->assertSee('数据',false);
