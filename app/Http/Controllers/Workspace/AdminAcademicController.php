@@ -107,7 +107,7 @@ class AdminAcademicController extends Controller
             abort_unless($enrollment->status === 'approved',409);
             if ($data['decision'] === 'reviewed') {
                 $fresh = AcademicEvidence::summary($enrollment);
-                abort_unless($fresh === $record->evidence_snapshot,409,
+                abort_unless(AcademicEvidence::matchesSnapshot($fresh, $record->evidence_snapshot),409,
                     'Student evidence changed. Request a new academic review snapshot.');
             }
             $record->update([
