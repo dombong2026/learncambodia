@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Course;
+use App\Models\ContentEntry;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
@@ -15,7 +17,12 @@ class CatalogController extends Controller
             ->whereIn('code', ['GE', 'IELTS', 'TOEFL', 'TEFL', 'TESOL', 'CEFR'])
             ->orderBy('sort_order')->get();
 
-        return view('home', compact('featuredCategories'));
+        $featuredCourses = Course::discoverable()->with('category')
+            ->withCount('lessons')->orderByDesc('published_at')->limit(6)->get();
+        $latestArticles = ContentEntry::query()->where('type','post')
+            ->where('status','published')->orderByDesc('id')->limit(3)->get();
+
+        return view('home', compact('featuredCategories','featuredCourses','latestArticles'));
     }
 
     public function index(Request $request): View

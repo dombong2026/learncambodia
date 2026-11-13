@@ -48,4 +48,32 @@
         <a href="{{ route('cefr.index') }}" class="self-start rounded-full bg-blue-700 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-800">Explore A1–C2 levels</a>
     </div>
 </section>
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+        <div><p class="text-xs font-black uppercase tracking-[.16em] text-[#b27b24] dark:text-[#f2c46c]">{{ __('frontend.public_featured') }}</p><h2 class="mt-2 text-3xl font-black tracking-tight text-[#0c2d5b] dark:text-white">{{ __('frontend.available_courses') }}</h2></div>
+        <a href="{{ route('courses.index') }}" class="rounded-full border border-[#e3b864] px-5 py-2.5 text-sm font-bold text-[#0c2d5b] hover:bg-amber-50 dark:text-[#f2c46c] dark:hover:bg-slate-900">{{ __('frontend.courses_title') }} →</a>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    @forelse($featuredCourses as $course)
+        <x-public-course-card :course="$course" />
+    @empty
+        <p class="col-span-full rounded-3xl border border-dashed border-slate-300 p-8 text-sm leading-7 text-slate-500 dark:border-slate-700">{{ __('frontend.no_courses') }} <a class="font-bold text-blue-700 hover:underline dark:text-blue-400" href="{{ route('categories.index') }}">{{ __('frontend.explore_categories') }}</a></p>
+    @endforelse
+    </div>
+</section>
+<section class="border-y border-[#dce5ef] bg-white py-16 dark:border-slate-800 dark:bg-[#0c213f]">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-7 flex flex-wrap items-end justify-between gap-3">
+            <div><p class="text-xs font-black uppercase tracking-[.16em] text-[#b27b24]">{{ __('frontend.study_resources') }}</p><h2 class="mt-2 text-3xl font-black text-[#0c2d5b] dark:text-white">{{ __('frontend.articles') }}</h2></div>
+            <a href="{{ route('articles.index') }}" class="text-sm font-bold text-blue-700 hover:underline dark:text-[#f0c274]">{{ __('frontend.all_articles') }} →</a>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @forelse($latestArticles as $article)
+                <a href="{{ route('articles.show',$article->slug) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 shadow-sm hover:border-[#d6b16d] dark:border-slate-700 dark:bg-[#163458]"><h3 class="text-xl font-black leading-snug text-[#0c2d5b] group-hover:underline dark:text-white">{{ $article->title }}</h3><p class="mt-4 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p><span class="mt-5 text-xs font-bold text-blue-700 dark:text-[#f5c974]">{{ __('frontend.read_article') }} →</span></a>
+            @empty
+                <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-8 text-sm text-slate-500 dark:border-slate-700">{{ __('frontend.no_articles') }}</p>
+            @endforelse
+        </div>
+    </div>
+</section>
 @endsection

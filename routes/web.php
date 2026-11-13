@@ -45,7 +45,7 @@ Route::get('/', [CatalogController::class, 'home'])->name('home');
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
-Route::get('/articles/{article:slug}', [PublicArticleController::class, 'show'])->name('articles.show');
+Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [CatalogController::class, 'show'])->name('categories.show');
 Route::get('/cefr', [CefrController::class, 'index'])->name('cefr.index');
