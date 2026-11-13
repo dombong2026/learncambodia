@@ -21,6 +21,7 @@ use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
 use App\Http\Controllers\Workspace\AdminEditorialController;
+use App\Http\Controllers\Workspace\AdminEditorialReviewController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
 use App\Http\Controllers\Workspace\ProfileController;
@@ -129,6 +130,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
         Route::patch('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
         Route::prefix('editorial/{kind}')->name('editorial.')->group(function (): void {
+            Route::get('/reviews', [AdminEditorialReviewController::class, 'index'])->name('reviews');
+            Route::post('/reviews/{entry}', [AdminEditorialReviewController::class, 'review'])->name('review');
+            Route::post('/{entry}/submit', [AdminEditorialReviewController::class, 'submit'])->name('submit');
             Route::get('/', [AdminEditorialController::class, 'index'])->name('index');
             Route::get('/create', [AdminEditorialController::class, 'create'])->name('create');
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');
