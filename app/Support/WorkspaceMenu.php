@@ -57,6 +57,7 @@ final class WorkspaceMenu
                         continue; // Dedicated, genuinely functional bottom-of-sidebar action.
                     }
                     $item['section_title'] = $sections[$sectionKey]['title'];
+                    $item['icon'] = self::iconFor($sectionKey, $item['key']);
                     $items[] = $item;
                 }
             }
@@ -72,6 +73,67 @@ final class WorkspaceMenu
      * Keeps legacy direct links resolvable without showing disabled
      * integrations as active navigation.
      */
+    public static function iconFor(string $section, string $item): string
+    {
+        // Matching icon names are mapped to original inline SVG drawings.
+        return [
+            'dashboard/overview' => 'layout',
+            'appearance/all' => 'swatches',
+            'appearance/header' => 'panel-top',
+            'appearance/menu' => 'list-tree',
+            'appearance/footer' => 'panel-bottom',
+            'appearance/typography' => 'type',
+            'appearance/home' => 'house',
+            'appearance/about' => 'info',
+            'appearance/contact' => 'mail',
+            'appearance/course' => 'presentation',
+            'appearance/catalog' => 'library',
+            'appearance/auth' => 'lock',
+            'page-manager/all' => 'files',
+            'page-manager/create' => 'file-plus-2',
+            'post-manager/all' => 'newspaper',
+            'post-manager/create' => 'pen-square',
+            'policy-center/all' => 'scale',
+            'policy-center/create' => 'shield-plus',
+            'user-manager/all' => 'user-round',
+            'category/all' => 'tags',
+            'category/create' => 'tag',
+            'category/cefr' => 'graduation',
+            'courses/all' => 'book-open',
+            'courses/create' => 'book-plus',
+            'courses/instructors' => 'school',
+            'courses/enrollments' => 'user-check',
+            'courses/quizzes' => 'brain',
+            'courses/homework' => 'clipboard-check',
+            'approvals/course-reviews' => 'check-check',
+            'approvals/appearance-reviews' => 'eye',
+            'approvals/enrollment-reviews' => 'user-round-check',
+            'learning-insights/overview' => 'chart-column',
+            'academic-quality/gradebook' => 'chart-line',
+            'academic-quality/evidence' => 'badge-check',
+            'learning/categories' => 'compass',
+            'learning/courses' => 'library-big',
+            'learning/progress' => 'chart-pie',
+            'learning/cefr' => 'award',
+            'learning/course-catalog' => 'book-marked',
+            'homework/available' => 'notebook-pen',
+            'homework/submissions' => 'send',
+            'assessments/practice' => 'list-check',
+            'assessments/practice-history' => 'history',
+            'support/help' => 'life-buoy',
+            'teaching/courses' => 'book-open-check',
+            'teaching/assignments' => 'file-pen',
+            'assessment/submissions' => 'clipboard-list',
+            'assessment/review' => 'shield-check',
+            'api-center/endpoints' => 'terminal',
+            'api-center/docs' => 'file-code',
+            'api-center/catalog' => 'braces',
+            'credentials/tokens' => 'key-round',
+            'credentials/new' => 'key-square',
+            'operations/usage' => 'gauge',
+        ][$section.'/'.$item] ?? 'file';
+    }
+
     public static function find(string $role, string $section, string $item): ?array
     {
         foreach (config('workspaces.'.$role, []) as $group) {
