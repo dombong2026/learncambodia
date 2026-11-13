@@ -162,13 +162,13 @@ final class SevenPublicPagesTest extends TestCase
     public function test_three_languages_render_headings_for_new_pages(): void
     {
         $this->seed(CategorySeeder::class);
-        $this->post('/language',['locale'=>'zh'])->assertRedirect('/');
+        $this->post('/language',['locale'=>'zh'])->assertRedirect('/?lang=zh');
         $this->get('/')->assertOk()->assertSee('学习角与 CEFR 等级');
         $this->get('/courses')->assertOk()->assertSee('探索课程和学习科目');
         $this->get('/instructors')->assertOk()->assertSee('认识我们的教师');
         $this->get('/students')->assertOk()->assertSee('学生生活与学习历程');
 
-        $this->post('/language',['locale'=>'km'])->assertRedirect('/');
+        $this->post('/language',['locale'=>'km'])->assertRedirect('/?lang=km');
         $this->get('/')->assertOk()->assertSee('មគ្គុទ្ទេសក៍សិក្សា');
         $this->get('/courses')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា និងមុខវិជ្ជា');
         $this->get('/instructors')->assertOk()->assertSee('ស្គាល់គ្រូបង្រៀនរបស់យើង');
