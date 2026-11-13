@@ -51,3 +51,7 @@ The source tree currently does **not** track composer.lock or package-lock.json.
 - Browser engines: 100/100 Playwright checks on Linux Chromium desktop/mobile/tablet and WebKit desktop/mobile; the corrected responsive home grid no longer overflows the mobile viewport.
 - Dependency/source review workflow: green, but only on dynamically resolved dependencies due to missing source lockfiles.
 - aaPanel real host installation, physical Safari/iOS/Android, reviewed restore of real staging data, and independent penetration/security signoff remain **NOT DONE**.
+
+## Before creating the isolated QA directory
+
+Run `support/qa/aapanel-host-readiness.sh` as root to inspect PHP 8.4/8.5 extensions, Nginx syntax, Node/npm/Composer, aaPanel vhost names and available disk *before the app exists*. This command performs no modifications, never connects to a database and does not print credentials. A passing inventory alone does not authorize installation or prove QA DNS/TLS readiness.
