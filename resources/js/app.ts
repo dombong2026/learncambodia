@@ -67,3 +67,50 @@ function initPasswordVisibility(): void {
 }
 
 initPasswordVisibility();
+
+
+// Keep language visible as a validated ?lang= code on the current URL and
+// carry it through same-origin navigational links, without rewriting route
+// parameters or breaking existing server-side Laravel route names.
+// The middleware still remembers the language when JavaScript is disabled.
+function initLocaleUrls(): void {
+    const path = window.location.pathname;
+    if (path === '/install' || path.startsWith('/install/') ||
+        path.startsWith('/api/') || path === '/up') return;
+
+    const supported = ['en', 'km', 'zh'];
+    const documentLocale = document.documentElement.lang.toLowerCase().split('-')[0];
+    const current = new URL(window.location.href);
+    const explicit = current.searchParams.get('lang');
+    const locale = explicit && supported.includes(explicit) ? explicit :
+        (supported.includes(documentLocale) ? documentLocale : 'en');
+
+    if (explicit !== locale) {
+        current.searchParams.set('lang', locale);
+        window.history.replaceState(window.history.state, '', current.pathname + current.search + current.hash);
+    }
+
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href]')) {
+        if (link.hasAttribute('download')) continue;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#') || /^(mailto:|tel:|javascript:)/i.test(href)) continue;
+        try {
+            const destination = new URL(href, window.location.href);
+            if (destination.origin !== window.location.origin ||
+                destination.pathname === '/install' ||
+                destination.pathname.startsWith('/install/')) continue;
+            destination.searchParams.set('lang', locale);
+            link.setAttribute('href', destination.pathname + destination.search + destination.hash);
+        } catch { /* Ignore malformed external URLs; no unsafe navigation. */ }
+    }
+
+    for (const form of document.querySelectorAll<HTMLFormElement>('form[method="GET"],form[method="get"]')) {
+        if (form.querySelector('[name="lang"]')) continue;
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'lang';
+        hidden.value = locale;
+        form.append(hidden);
+    }
+}
+initLocaleUrls();
