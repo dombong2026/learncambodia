@@ -38,7 +38,7 @@
                 <p class="mt-2 text-xs font-bold text-slate-500 dark:text-slate-300">{{ count($completedIds) }} / {{ $totalLessons }} lessons marked complete</p>
                 <nav class="mt-5 space-y-3" aria-label="Protected course curriculum">
                     @foreach($course->modules as $module)
-                        <details class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#0e2c4c]" @if($module->lessons->contains('id',$lesson->id))open@endif>
+                        <details class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#0e2c4c]" {{ $module->lessons->contains('id',$lesson->id) ? 'open' : '' }}>
                             <summary class="cursor-pointer text-xs font-black">{{ $module->title }}</summary>
                             <div class="mt-3 space-y-2">
                                 @foreach($module->lessons as $item)
