@@ -1,0 +1,148 @@
+name: Release acceptance - isolated MySQL, browser engines and security
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mysql-rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-disposable-not-production
+          MYSQL_DATABASE: learncambodia_qa_primary
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent -h 127.0.0.1 -u root -pci-disposable-not-production"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      CI: "true"
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_DATABASE: learncambodia_qa_primary
+      DB_USERNAME: root
+      DB_PASSWORD: ci-disposable-not-production
+      DB_URL: ""
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: null
+      MAIL_MAILER: array
+      INSTALLER_ENABLED: "false"
+      PUBLIC_STUDENT_PROFILES_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, curl, fileinfo, pdo_mysql, dom
+          coverage: none
+      - name: MySQL backup client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq default-mysql-client
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Isolated Laravel application key
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+      - name: MySQL PHPUnit configuration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("phpunit.xml").read_text()
+          s=s.replace('name="DB_CONNECTION" value="sqlite"','name="DB_CONNECTION" value="mysql"')
+          s=s.replace('name="DB_DATABASE" value=":memory:"','name="DB_DATABASE" value="learncambodia_qa_primary"')
+          assert 'name="DB_CONNECTION" value="mysql"' in s
+          Path("phpunit.mysql.xml").write_text(s)
+          PY
+      - name: Full MySQL 8 feature suite
+        run: php artisan test --configuration=phpunit.mysql.xml
+      - name: Recreate ONLY disposable test MySQL schema
+        run: php artisan migrate:fresh --seed --force --no-interaction
+      - name: Backup/restore complete MySQL schema and row payload
+        run: bash support/qa/mysql-backup-restore-ci.sh
+
+  browser-emulation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: "true"
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      INSTALLER_ENABLED: "false"
+      PUBLIC_STUDENT_PROFILES_ENABLED: "false"
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+      BROWSER_BASE_URL: http://127.0.0.1:8000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Start isolated Laravel browser fixture
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          touch database/database.sqlite
+          php artisan migrate --seed --force --no-interaction
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/learncambodia-browser.log 2>&1 &
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/up >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          tail -n 40 /tmp/learncambodia-browser.log
+          exit 1
+      - name: Install browser engines
+        run: |
+          npm install --no-save --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium webkit
+      - name: Chromium desktop/mobile/tablet and WebKit browser acceptance
+        run: npx playwright test --config=tests/browser/playwright.config.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: learncambodia-browser-evidence
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  dependency-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+      - run: composer install --prefer-dist --no-progress --no-interaction
+      - run: npm install --no-audit --no-fund
+      - name: PHP vulnerability advisories
+        run: composer audit --no-dev
+      - name: NPM vulnerability advisories
+        run: npm audit --audit-level=high
+      - name: Source security and disabled integration gates
+        run: bash support/qa/release-source-security-gates.sh
