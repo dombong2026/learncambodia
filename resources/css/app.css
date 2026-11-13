@@ -32,7 +32,7 @@ body { font-family: var(--font-sans); }
 /* Low-bandwidth dashboard UX: no autoplay, animated backgrounds or forced graphics. */
 html[lang="km"] body { font-family: "Noto Sans Khmer", "Battambang", "Hanuman", system-ui, sans-serif; line-height: 1.75; }
 html[lang="km"] .workspace-nav, html[lang="km"] [data-workspace-body] { letter-spacing: normal; }
-[data-workspace-body][data-saver="on"] video, [data-workspace-body][data-saver="on"] canvas { visibility: hidden; }
+/* Manual playback remains available when Data Saver is active. */
 [data-workspace-body][data-saver="on"] .dashboard-decorative { display: none; }
 [data-workspace-body][data-saver="on"] *, [data-workspace-body][data-saver="on"] *::before, [data-workspace-body][data-saver="on"] *::after { animation: none !important; transition-duration: .01ms !important; }
 @media (prefers-reduced-motion: reduce) {

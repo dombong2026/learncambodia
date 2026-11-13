@@ -18,6 +18,7 @@ return [
     'approved_courses'=>'Approved enrollment','lessons_completed'=>'Lessons Completed',
     'self_reported'=>'Marked complete by you','practice_attempts'=>'Practice Attempts',
     'practice_only'=>'Unofficial practice','study_streak'=>'Study Activity Streak',
+    'streak_window'=>'Consecutive study-activity days, within the latest 35 days',
     'activity_days'=>'Consecutive activity days','uncategorized'=>'Uncategorized',
     'assigned_courses'=>'Assigned Courses','assigned_access'=>'Active teaching access',
     'active_students'=>'Active Students','distinct_learners'=>'Distinct enrolled learners',
