@@ -75,6 +75,8 @@ class AdminEditorialController extends Controller
     public function update(Request $request, string $kind, ContentEntry $entry): RedirectResponse
     {
         abort_unless($entry->type === $this->type($kind), 404);
+        abort_unless(in_array($entry->status, ['draft','rejected'], true), 409,
+            'Submitted and published content cannot be edited.');
 
         $validated = $this->validateEntry($request, $entry->type, $entry);
         $entry->update($validated + ['updated_by' => $request->user()->id]);

@@ -7,6 +7,7 @@ use App\Models\ContentEntry;
 use App\Models\Course;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
+use Database\Seeders\CefrLevelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,7 +17,7 @@ class FrontendAuthMilestoneTest extends TestCase
 
     private function publishedCourse(): Course
     {
-        $this->seed(CategorySeeder::class);
+        $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);
 
         return Course::create([
             'category_id'=>Category::where('code','GE')->firstOrFail()->id,
