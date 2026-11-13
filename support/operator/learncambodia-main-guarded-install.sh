@@ -140,12 +140,12 @@ if [[ "$MODE" == check ]]; then
   exit 0
 fi
 [[ -r /dev/tty && -w /dev/tty ]] || fail 'interactive terminal required'
-printf 'Fresh database name (learncambodia_...): ' > /dev/tty
+printf 'Fresh database name (sql_learncambodia_com or learncambodia_...): ' > /dev/tty
 IFS= read -r DB < /dev/tty
-[[ "$DB" =~ ^learncambodia_[a-zA-Z0-9_]{2,40}$ ]] || fail 'use dedicated new database'
-printf 'Fresh dedicated database user (lcam_...): ' > /dev/tty
+[[ "$DB" == 'sql_learncambodia_com' || "$DB" =~ ^learncambodia_[a-zA-Z0-9_]{2,40}$ ]] || fail 'database must be dedicated to Learn Cambodia'
+printf 'Fresh dedicated database user (sql_learncambodia_com or lcam_...): ' > /dev/tty
 IFS= read -r USERNAME < /dev/tty
-[[ "$USERNAME" =~ ^lcam_[a-zA-Z0-9_]{3,20}$ ]] || fail 'use least-privilege new database user'
+[[ "$USERNAME" == 'sql_learncambodia_com' || "$USERNAME" =~ ^lcam_[a-zA-Z0-9_]{3,20}$ ]] || fail 'use dedicated Learn Cambodia database account'
 printf 'Database password (hidden, 24+ characters, letters/digits/-/_ only): ' > /dev/tty
 IFS= read -r -s PASSWORD < /dev/tty
 printf '\n' > /dev/tty
@@ -166,6 +166,33 @@ EOF
 chmod 600 "$STAGE/mysql.cnf"
 COUNT="$("$MYSQL" --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names --database="$DB" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB';" 2>/dev/null || :)"
 [[ "$COUNT" == 0 ]] || fail 'dedicated database login failed or it contains tables'
+
+# The database name alone is not evidence of least privilege. Inspect grants
+# using ONLY the dedicated account; reject global privileges, other schemas,
+# grant options and accounts with no database grants. Do not echo credentials.
+GRANTS="$("$MYSQL" --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names \
+    --database="$DB" -e 'SHOW GRANTS FOR CURRENT_USER();' 2>/dev/null)" || fail 'unable to inspect dedicated database grants'
+LEARN_DB="$DB" LEARN_GRANTS="$GRANTS" python3 - <<'PY'
+import os
+import re
+
+database = os.environ['LEARN_DB']
+lines = os.environ['LEARN_GRANTS'].strip().splitlines()
+assert lines, 'no MySQL privileges returned'
+schema_grants = 0
+for line in lines:
+    assert line.startswith('GRANT ') and ' ON ' in line and ' TO ' in line, 'unrecognized grant'
+    privileges, rest = line.split(' ON ', 1)
+    target = rest.split(' TO ', 1)[0].strip().replace('`', '')
+    assert 'GRANT OPTION' not in line.upper(), 'user can grant privileges'
+    if target == '*.*':
+        assert privileges == 'GRANT USAGE', 'global MySQL privileges prohibited'
+    else:
+        assert target == database + '.*', 'MySQL privileges extend to another database'
+        schema_grants += 1
+assert schema_grants > 0, 'no site-specific database grant'
+print('MYSQL_LEAST_PRIVILEGE=PASS')
+PY
 printf 'Type INSTALL NEW LEARNCAMBODIA to continue: ' > /dev/tty
 IFS= read -r ACK < /dev/tty
 [[ "$ACK" == 'INSTALL NEW LEARNCAMBODIA' ]] || fail 'not confirmed'
