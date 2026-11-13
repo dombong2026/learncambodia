@@ -301,7 +301,11 @@ INSTALLER_TOKEN=$SETUP
 PUBLIC_STUDENT_PROFILES_ENABLED=false
 EOF
 mkdir -p "$STAGE/app/storage/app/private" "$STAGE/app/storage/framework/cache/data" "$STAGE/app/storage/framework/sessions" "$STAGE/app/storage/framework/views" "$STAGE/app/storage/logs" "$STAGE/app/bootstrap/cache"
-(cd "$STAGE/app" && "$PHP" artisan package:discover --no-interaction >/dev/null && "$PHP" artisan config:cache --no-interaction >/dev/null) || fail 'Laravel package/config readiness failed'
+# Config caches encode absolute storage/session/installer paths. NEVER build
+# config.php before relocating $STAGE/app to $APP. Without this cache,
+# Laravel loads the real .env at its final location; finalize mode builds the
+# cache only after the browser installer has completed.
+(cd "$STAGE/app" && "$PHP" artisan package:discover --no-interaction >/dev/null) || fail 'Laravel package discovery failed'
 chown -R root:www "$STAGE/app"
 find "$STAGE/app" -type d -exec chmod 750 '{}' +
 find "$STAGE/app" -type f -exec chmod 640 '{}' +
