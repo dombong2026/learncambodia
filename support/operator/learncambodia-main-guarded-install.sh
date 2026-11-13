@@ -23,10 +23,14 @@ TOKEN='/root/learncambodia-setup-token'
 fail(){ echo "INSTALL=BLOCKED: $*" >&2; exit 2; }
 [[ "$(id -u)" == 0 ]] || fail 'requires root'
 [[ "$MODE" == check || "$MODE" == install || "$MODE" == finalize ]] || fail 'mode must be check/install/finalize'
-for cmd in gh git dig curl awk grep python3 sha256sum tar mysql mktemp runuser; do
+for cmd in gh git dig curl awk grep python3 sha256sum tar mktemp runuser; do
   command -v "$cmd" >/dev/null || fail "missing $cmd"
 done
 [[ -x "$PHP" && -d /www/wwwroot && ! -L /www/wwwroot ]] || fail 'aaPanel PHP or directory absent'
+id -u www >/dev/null 2>&1 || fail 'aaPanel www account absent'
+MYSQL="$(command -v mysql || :)"
+if [[ -z "$MYSQL" && -x /www/server/mysql/bin/mysql ]]; then MYSQL='/www/server/mysql/bin/mysql'; fi
+[[ -n "$MYSQL" ]] || fail 'MySQL CLI not found'
 if [[ "$MODE" == finalize ]]; then
   [[ -f "$APP/storage/app/private/learncambodia.installed" && -f "$APP/.env" ]] || fail 'installer did not finish'
   printf '%s  %s\n' "$PHPLOCK" "$APP/composer.lock" | sha256sum -c --status || fail 'unexpected application source'
@@ -79,8 +83,12 @@ echo 'DOMAIN_TLS_ACCESS_GATES=PASS'
 
 echo '========== PHP / DATABASE SAFETY =========='
 "$PHP" -r '$ext=["ctype","curl","dom","fileinfo","mbstring","openssl","pdo_mysql","tokenizer","xml"];foreach($ext as $x){if(!extension_loaded($x)) exit(1);}' || fail 'PHP extensions missing'
-[[ -S /tmp/php-cgi-85.sock || -S /www/server/php/85/var/run/php-cgi-85.sock ]] || fail 'PHP 8.5-FPM socket missing'
+[[ -S /tmp/php-cgi-85.sock || -S /www/server/php/85/var/run/php-cgi-85.sock || -S /www/server/php/85/var/run/php-fpm.sock ]] || fail 'PHP 8.5-FPM socket missing'
 command -v composer >/dev/null || fail 'Composer CLI absent'
+if composer --no-ansi --version | grep -Eq 'Composer (version )?2\.2\.'; then
+  echo 'COMPOSER_VERSION=OLD_2_2_REVIEW_ISOLATED_UPGRADE_BEFORE_INSTALL'
+  fail 'aaPanel Composer 2.2 is too old for an approved production dependency installation'
+fi
 if [[ "$MODE" == check ]]; then
   echo 'READ_ONLY_PREFLIGHT=PASS'
   echo 'NEXT=CREATE_NEW_EMPTY_aaPANEL_MYSQL_DATABASE_AND_RUN_INSTALL'
@@ -111,7 +119,7 @@ port=3306
 protocol=tcp
 EOF
 chmod 600 "$STAGE/mysql.cnf"
-COUNT="$(mysql --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names --database="$DB" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB';" 2>/dev/null || :)"
+COUNT="$("$MYSQL" --defaults-extra-file="$STAGE/mysql.cnf" --batch --skip-column-names --database="$DB" -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$DB';" 2>/dev/null || :)"
 [[ "$COUNT" == 0 ]] || fail 'dedicated database login failed or it contains tables'
 printf 'Type INSTALL NEW LEARNCAMBODIA to continue: ' > /dev/tty
 IFS= read -r ACK < /dev/tty
