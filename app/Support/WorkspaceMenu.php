@@ -129,6 +129,7 @@ final class WorkspaceMenu
             'learning/course-catalog' => 'book-marked',
             'learning/saved-courses' => 'bookmark-check',
             'learning/study-planner' => 'calendar-check',
+            'learning/lesson-notes' => 'notebook-text',
             'homework/available' => 'notebook-pen',
             'homework/submissions' => 'send',
             'assessments/practice' => 'list-check',

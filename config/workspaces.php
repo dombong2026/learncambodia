@@ -588,6 +588,11 @@ return json_decode(<<<'JSON'
           "key": "study-planner",
           "label": "Study Planner",
           "route": "account.planner.index"
+        },
+        {
+          "key": "lesson-notes",
+          "label": "Lesson Notes",
+          "route": "account.notes.index"
         }
       ]
     },

@@ -4,7 +4,7 @@
 @section('description', 'Your approved course curriculum. Lesson materials are for your own learning account.')
 @section('content')
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-    <a href="{{ route('account.enrollments.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">← My Enrollments</a>
+    <div class="flex flex-wrap gap-3"><a href="{{ route('account.enrollments.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">← My Enrollments</a><a href="{{ route('account.notes.index',['enrollment'=>$enrollment->id]) }}" class="rounded-full border border-blue-400 px-5 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-300">My Lesson Notes</a></div>
     <span class="rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Enrollment approved</span>
 </div>
 @php $totalLessons = $course->modules->sum(fn ($module) => $module->lessons->count()); @endphp

@@ -25,6 +25,7 @@ use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
 use App\Http\Controllers\Workspace\StudentPlannerController;
+use App\Http\Controllers\Workspace\StudentNoteController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -198,6 +199,12 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/notes', [StudentNoteController::class, 'index'])->name('notes.index');
+        Route::post('/enrollments/{enrollment}/lessons/{lesson}/notes', [StudentNoteController::class, 'store'])
+            ->middleware('throttle:20,1')->name('notes.store');
+        Route::patch('/notes/{note}', [StudentNoteController::class, 'update'])
+            ->middleware('throttle:20,1')->name('notes.update');
+        Route::delete('/notes/{note}', [StudentNoteController::class, 'destroy'])->name('notes.destroy');
         Route::get('/planner', [StudentPlannerController::class, 'index'])->name('planner.index');
         Route::post('/planner/goals', [StudentPlannerController::class, 'storeGoal'])->middleware('throttle:20,1')->name('planner.goals.store');
         Route::patch('/planner/goals/{goal}', [StudentPlannerController::class, 'updateGoal'])->middleware('throttle:20,1')->name('planner.goals.update');

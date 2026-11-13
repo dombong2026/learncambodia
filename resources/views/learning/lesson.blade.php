@@ -26,6 +26,22 @@
                 <input type="hidden" name="complete" value="{{ $done?'0':'1' }}">
                 <button type="submit" class="rounded-xl px-6 py-3 text-xs font-black {{ $done?'border border-[#d6a660] text-[#a47625] dark:text-[#f2c575]':'bg-[#123a67] text-white' }}">{{ $done?'Mark for more study':'Mark this lesson complete' }}</button>
             </form>
+            <section class="mt-9 border-t border-slate-200 pt-7 dark:border-slate-700">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-lg font-black">My private lesson notes</h3>
+                    <a href="{{ route('account.notes.index') }}" class="text-xs font-bold text-blue-700 dark:text-blue-300">All notes</a>
+                </div>
+                <p class="mt-2 text-xs leading-6 text-slate-500">Notes are visible only to you, while your approved course access remains active.</p>
+                <form method="POST" action="{{ $studyNote ? route('account.notes.update',$studyNote) : route('account.notes.store',[$enrollment,$lesson]) }}" class="mt-5 space-y-3">
+                    @csrf @if($studyNote)@method('PATCH')@endif
+                    <label class="block text-xs font-bold" for="lesson-note-title">Note title</label>
+                    <input id="lesson-note-title" name="title" maxlength="140" required value="{{ old('title',$studyNote?->title ?? $lesson->title) }}" class="w-full rounded-xl border border-slate-300 p-3 dark:border-slate-700 dark:bg-[#0e2c4c]">
+                    <label class="block text-xs font-bold" for="lesson-note-body">Private note</label>
+                    <textarea id="lesson-note-body" name="body" maxlength="10000" rows="5" required class="w-full rounded-xl border border-slate-300 p-3 text-sm leading-7 dark:border-slate-700 dark:bg-[#0e2c4c]">{{ old('body',$studyNote?->body) }}</textarea>
+                    <label class="flex items-center gap-2 text-xs"><input type="hidden" name="is_pinned" value="0"><input type="checkbox" name="is_pinned" value="1" @checked(old('is_pinned',$studyNote?->is_pinned ?? false))> Pin in my notes</label>
+                    <button class="rounded-xl bg-blue-700 px-5 py-3 text-xs font-bold text-white">Save private note</button>
+                </form>
+            </section>
             <div class="mt-7 flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-6 dark:border-slate-700">
                 @if($previous)<a href="{{ route('account.lessons.watch',[$enrollment,$previous]) }}" class="rounded-xl border border-slate-300 px-5 py-3 text-xs font-bold dark:border-slate-600">← Previous lesson</a>@else<span></span>@endif
                 @if($next)<a href="{{ route('account.lessons.watch',[$enrollment,$next]) }}" class="rounded-xl bg-[#10355e] px-5 py-3 text-xs font-black text-white">Next lesson →</a>@endif
