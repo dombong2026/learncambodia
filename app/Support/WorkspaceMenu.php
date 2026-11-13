@@ -128,6 +128,7 @@ final class WorkspaceMenu
             'learning/cefr' => 'award',
             'learning/course-catalog' => 'book-marked',
             'learning/saved-courses' => 'bookmark-check',
+            'learning/study-planner' => 'calendar-check',
             'homework/available' => 'notebook-pen',
             'homework/submissions' => 'send',
             'assessments/practice' => 'list-check',

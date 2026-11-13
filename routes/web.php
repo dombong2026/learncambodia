@@ -24,6 +24,7 @@ use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
+use App\Http\Controllers\Workspace\StudentPlannerController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -197,6 +198,15 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/planner', [StudentPlannerController::class, 'index'])->name('planner.index');
+        Route::post('/planner/goals', [StudentPlannerController::class, 'storeGoal'])->middleware('throttle:20,1')->name('planner.goals.store');
+        Route::patch('/planner/goals/{goal}', [StudentPlannerController::class, 'updateGoal'])->middleware('throttle:20,1')->name('planner.goals.update');
+        Route::delete('/planner/goals/{goal}', [StudentPlannerController::class, 'destroyGoal'])->name('planner.goals.destroy');
+        Route::post('/planner/goals/{goal}/tasks', [StudentPlannerController::class, 'storeTask'])->middleware('throttle:30,1')->name('planner.tasks.store');
+        Route::patch('/planner/tasks/{task}', [StudentPlannerController::class, 'toggleTask'])->name('planner.tasks.toggle');
+        Route::delete('/planner/tasks/{task}', [StudentPlannerController::class, 'destroyTask'])->name('planner.tasks.destroy');
+        Route::post('/planner/sessions', [StudentPlannerController::class, 'storeSession'])->middleware('throttle:20,1')->name('planner.sessions.store');
+        Route::delete('/planner/sessions/{session}', [StudentPlannerController::class, 'destroySession'])->name('planner.sessions.destroy');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
