@@ -31,6 +31,6 @@
     </div>
     <div class="mx-auto flex max-w-7xl flex-col gap-3 border-t border-slate-800 px-4 py-6 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <p>© {{ date('Y') }} Learn Cambodia. Original educational content and branding reserved.</p>
-        <p>Independent preparation information. Third-party exams and qualifications belong to their respective organizations.</p>
+        <p>{{ \App\Support\Appearance::value('footer','footer_note') }}</p>
     </div>
 </footer>

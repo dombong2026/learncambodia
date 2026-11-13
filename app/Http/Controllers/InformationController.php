@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\View\View;
+use App\Support\Appearance;
 
 class InformationController extends Controller
 {
@@ -25,6 +26,10 @@ class InformationController extends Controller
         abort_unless(array_key_exists($page, self::PAGES), 404);
 
         [$title, $lede, $body] = self::PAGES[$page];
+        if (in_array($page, ['about', 'contact'], true)) {
+            $title = Appearance::value($page, 'heading');
+            $lede = Appearance::value($page, 'intro');
+        }
 
         return view('information.show', compact('title', 'lede', 'body', 'page'));
     }

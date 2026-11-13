@@ -1,7 +1,7 @@
 @extends('layouts.auth')
 @section('title', 'Sign In')
 @section('content')
-<h1 class="text-center text-2xl font-extrabold">Welcome back</h1>
+<h1 class="text-center text-2xl font-extrabold">{{ \App\Support\Appearance::value('auth','login_heading') }}</h1>
 <p class="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">Sign in to your learning account.</p>
 <form method="POST" action="{{ route('login.store') }}" class="mt-8 space-y-5">@csrf
     <div><label for="email" class="mb-2 block text-sm font-semibold">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="255" required value="{{ old('email') }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-800">@error('email')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror</div>

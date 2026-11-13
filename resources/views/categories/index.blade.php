@@ -3,8 +3,8 @@
 @section('content')
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <p class="text-sm font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Learning directory</p>
-    <h1 class="mt-2 text-4xl font-extrabold tracking-tight">Explore learning categories</h1>
-    <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-400">Find English study, proficiency-test preparation, professional teacher development and language-learning frameworks.</p>
+    <h1 class="mt-2 text-4xl font-extrabold tracking-tight">{{ \App\Support\Appearance::value('catalog','heading') }}</h1>
+    <p class="mt-3 max-w-3xl text-slate-600 dark:text-slate-400">{{ \App\Support\Appearance::value('catalog','intro') }}</p>
     <div class="mt-8 flex flex-wrap gap-2">
         <a href="{{ route('categories.index') }}" class="rounded-full border px-4 py-2 text-sm font-semibold {{ !$group ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900' }}">All categories</a>
         @foreach (\App\Models\Category::GROUPS as $slug => $name)

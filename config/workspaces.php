@@ -49,44 +49,89 @@ return json_decode(<<<'JSON'
       "icon": "palette",
       "items": [
         {
+          "key": "all",
+          "label": "Appearance Overview",
+          "route": "admin.appearance.index"
+        },
+        {
           "key": "header",
-          "label": "Header"
+          "label": "Header",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "header"
+          }
         },
         {
           "key": "menu",
-          "label": "Menu"
+          "label": "Menu",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "menu"
+          }
         },
         {
           "key": "footer",
-          "label": "Footer"
+          "label": "Footer",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "footer"
+          }
         },
         {
           "key": "typography",
-          "label": "Typography"
+          "label": "Typography",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "typography"
+          }
         },
         {
           "key": "home",
-          "label": "Home"
+          "label": "Home",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "home"
+          }
         },
         {
           "key": "about",
-          "label": "About"
+          "label": "About",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "about"
+          }
         },
         {
           "key": "contact",
-          "label": "Contact"
+          "label": "Contact",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "contact"
+          }
         },
         {
           "key": "course",
-          "label": "Course"
+          "label": "Course",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "course"
+          }
         },
         {
           "key": "catalog",
-          "label": "Catalog"
+          "label": "Catalog",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "catalog"
+          }
         },
         {
           "key": "auth",
-          "label": "Authentication"
+          "label": "Authentication",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "auth"
+          }
         }
       ]
     },
@@ -397,7 +442,8 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "create",
-          "label": "Create"
+          "label": "Create",
+          "route": "admin.course-builder.create"
         },
         {
           "key": "instructors",
@@ -405,7 +451,42 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "enrollments",
-          "label": "Enrollments"
+          "label": "Enrollments",
+          "route": "admin.reviews.index",
+          "parameters": {
+            "focus": "enrollments"
+          }
+        }
+      ]
+    },
+    {
+      "key": "approvals",
+      "title": "Review & Approvals",
+      "icon": "shield",
+      "items": [
+        {
+          "key": "course-reviews",
+          "label": "Course Reviews",
+          "route": "admin.reviews.index",
+          "parameters": {
+            "focus": "courses"
+          }
+        },
+        {
+          "key": "appearance-reviews",
+          "label": "Appearance Reviews",
+          "route": "admin.reviews.index",
+          "parameters": {
+            "focus": "appearance"
+          }
+        },
+        {
+          "key": "enrollment-reviews",
+          "label": "Enrollment Reviews",
+          "route": "admin.reviews.index",
+          "parameters": {
+            "focus": "enrollments"
+          }
         }
       ]
     }
@@ -440,7 +521,8 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "courses",
-          "label": "My Courses"
+          "label": "My Enrollments",
+          "route": "account.enrollments.index"
         },
         {
           "key": "progress",
@@ -450,6 +532,11 @@ return json_decode(<<<'JSON'
           "key": "cefr",
           "label": "CEFR Guide",
           "route": "account.cefr"
+        },
+        {
+          "key": "course-catalog",
+          "label": "Available Courses",
+          "route": "account.courses.index"
         }
       ]
     },
