@@ -3,6 +3,7 @@
 @section('heading', 'My Assigned Courses')
 @section('description', 'Only courses explicitly assigned to you by a school administrator are accessible in this teaching workspace.')
 @section('content')
+<div class="mb-5 flex flex-wrap gap-3"><a href="{{ route('instructor.insights.index') }}" class="rounded-xl border border-blue-600 px-5 py-3 text-sm font-bold text-blue-700 dark:text-blue-300">Teaching insights</a><a href="{{ route('instructor.feedback-templates.index') }}" class="rounded-xl border border-blue-600 px-5 py-3 text-sm font-bold text-blue-700 dark:text-blue-300">Feedback templates</a></div>
 <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
 @forelse($assignments as $assignment)
     <article class="flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">

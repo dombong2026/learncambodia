@@ -24,6 +24,11 @@ use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
+use App\Http\Controllers\Workspace\StudentPlannerController;
+use App\Http\Controllers\Workspace\StudentNoteController;
+use App\Http\Controllers\Workspace\InstructorInsightsController;
+use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
+use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -123,6 +128,9 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::get('/{course}/history', [AdminCurriculumHistoryController::class, 'index'])->name('history.index');
+            Route::post('/{course}/modules/{module}/duplicate', [AdminCurriculumController::class, 'duplicateModule'])->name('modules.duplicate');
+            Route::post('/{course}/modules/{module}/lessons/{lesson}/duplicate', [AdminCurriculumController::class, 'duplicateLesson'])->name('lessons.duplicate');
             Route::post('/{course}/revise', [AdminCourseRevisionController::class, 'store'])
                 ->middleware('throttle:3,1')->name('revise');
 
@@ -197,6 +205,21 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/notes', [StudentNoteController::class, 'index'])->name('notes.index');
+        Route::post('/enrollments/{enrollment}/lessons/{lesson}/notes', [StudentNoteController::class, 'store'])
+            ->middleware('throttle:20,1')->name('notes.store');
+        Route::patch('/notes/{note}', [StudentNoteController::class, 'update'])
+            ->middleware('throttle:20,1')->name('notes.update');
+        Route::delete('/notes/{note}', [StudentNoteController::class, 'destroy'])->name('notes.destroy');
+        Route::get('/planner', [StudentPlannerController::class, 'index'])->name('planner.index');
+        Route::post('/planner/goals', [StudentPlannerController::class, 'storeGoal'])->middleware('throttle:20,1')->name('planner.goals.store');
+        Route::patch('/planner/goals/{goal}', [StudentPlannerController::class, 'updateGoal'])->middleware('throttle:20,1')->name('planner.goals.update');
+        Route::delete('/planner/goals/{goal}', [StudentPlannerController::class, 'destroyGoal'])->name('planner.goals.destroy');
+        Route::post('/planner/goals/{goal}/tasks', [StudentPlannerController::class, 'storeTask'])->middleware('throttle:30,1')->name('planner.tasks.store');
+        Route::patch('/planner/tasks/{task}', [StudentPlannerController::class, 'toggleTask'])->name('planner.tasks.toggle');
+        Route::delete('/planner/tasks/{task}', [StudentPlannerController::class, 'destroyTask'])->name('planner.tasks.destroy');
+        Route::post('/planner/sessions', [StudentPlannerController::class, 'storeSession'])->middleware('throttle:20,1')->name('planner.sessions.store');
+        Route::delete('/planner/sessions/{session}', [StudentPlannerController::class, 'destroySession'])->name('planner.sessions.destroy');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
@@ -234,6 +257,14 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:5,1')->name('profile.password');
         Route::get('/courses', [InstructorTeachingController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [InstructorTeachingController::class, 'show'])->name('courses.show');
+        Route::get('/insights', [InstructorInsightsController::class, 'index'])->name('insights.index');
+        Route::get('/feedback-templates', [InstructorFeedbackTemplateController::class, 'index'])->name('feedback-templates.index');
+        Route::post('/feedback-templates', [InstructorFeedbackTemplateController::class, 'store'])
+            ->middleware('throttle:12,1')->name('feedback-templates.store');
+        Route::patch('/feedback-templates/{template}', [InstructorFeedbackTemplateController::class, 'update'])
+            ->middleware('throttle:12,1')->name('feedback-templates.update');
+        Route::delete('/feedback-templates/{template}', [InstructorFeedbackTemplateController::class, 'destroy'])
+            ->name('feedback-templates.destroy');
         Route::get('/assignments', [InstructorHomeworkController::class, 'index'])->name('homework.index');
         Route::post('/courses/{course}/assignments', [InstructorHomeworkController::class, 'store'])->name('homework.store');
         Route::get('/assignments/{assignment}/edit', [InstructorHomeworkController::class, 'edit'])->name('homework.edit');

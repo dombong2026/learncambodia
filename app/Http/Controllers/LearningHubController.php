@@ -9,6 +9,7 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseInstructorAssignment;
 use App\Models\CourseLesson;
 use App\Models\LessonProgress;
+use App\Models\LessonNote;
 use App\Models\PracticeAttempt;
 use App\Models\PublicProfile;
 use App\Models\User;
@@ -157,8 +158,10 @@ final class LearningHubController extends Controller
         $position=$lessons->search(fn($entry)=>$entry->id===$lesson->id);
         $previous=$position!==false && $position>0 ? $lessons[$position-1] : null;
         $next=$position!==false && $position+1<$lessons->count() ? $lessons[$position+1] : null;
+        $studyNote=LessonNote::query()->where('student_id',$request->user()->id)
+            ->where('enrollment_id',$enrollment->id)->where('lesson_id',$lesson->id)->first();
         return view('learning.lesson',compact(
-            'course','lesson','enrollment','completedIds','previous','next'
+            'course','lesson','enrollment','completedIds','previous','next','studyNote'
         ));
     }
 

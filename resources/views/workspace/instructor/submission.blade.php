@@ -15,6 +15,18 @@
         @endif
     </div>
     @if($submission->status === 'submitted')
+    <div class="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h3 class="text-lg font-extrabold">My reusable feedback templates</h3>
+        <p class="mt-2 text-xs text-slate-500">Select a private template, then customize the feedback before submitting. No grade is automatically posted.</p>
+        <form method="GET" action="{{ route('instructor.grading.show',$submission) }}" class="mt-4 flex flex-wrap gap-3">
+            <select name="template" aria-label="Feedback template" class="min-w-0 flex-1 rounded-xl border p-3 dark:bg-slate-950">
+                <option value="">Choose my template</option>
+                @foreach($templates as $template)<option value="{{ $template->id }}" @selected($selectedTemplate?->id===$template->id)>{{ $template->title }}</option>@endforeach
+            </select>
+            <button class="rounded-xl border border-blue-600 px-5 py-3 text-xs font-bold text-blue-700 dark:text-blue-300">Use template</button>
+            <a href="{{ route('instructor.feedback-templates.index') }}" class="rounded-xl border px-5 py-3 text-xs font-bold">Edit templates</a>
+        </form>
+    </div>
     <div class="grid gap-5 lg:grid-cols-2">
         <form method="POST" action="{{ route('instructor.grading.review',$submission) }}" class="rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900">@csrf
             <input type="hidden" name="decision" value="grade">
@@ -22,7 +34,7 @@
             <label for="score" class="mt-4 block text-sm font-bold">Score (0–100)</label>
             <input id="score" name="score" type="number" min="0" max="100" required class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
             <label for="grading-feedback" class="mt-4 block text-sm font-bold">Instructor feedback</label>
-            <textarea id="grading-feedback" name="feedback" rows="5" minlength="5" maxlength="3000" required class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea>
+            <textarea id="grading-feedback" name="feedback" rows="5" minlength="5" maxlength="3000" required class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old('feedback',$selectedTemplate?->body) }}</textarea>
             <div class="mt-5 flex justify-end"><button type="submit" class="rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Record grade</button></div>
         </form>
         <form method="POST" action="{{ route('instructor.grading.review',$submission) }}" class="rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900">@csrf
@@ -30,7 +42,7 @@
             <h3 class="text-lg font-extrabold">Return for revision</h3>
             <p class="mt-2 text-sm leading-7 text-slate-500">The student may resubmit before the approved deadline, up to three versions total.</p>
             <label for="return-feedback" class="mt-4 block text-sm font-bold">Required revision guidance</label>
-            <textarea id="return-feedback" name="feedback" rows="5" minlength="5" maxlength="3000" required class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea>
+            <textarea id="return-feedback" name="feedback" rows="5" minlength="5" maxlength="3000" required class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old('feedback',$selectedTemplate?->body) }}</textarea>
             <div class="mt-5 flex justify-end"><button type="submit" class="rounded-full border border-amber-400 px-5 py-3 text-sm font-bold text-amber-700 dark:text-amber-300">Return assignment</button></div>
         </form>
     </div>

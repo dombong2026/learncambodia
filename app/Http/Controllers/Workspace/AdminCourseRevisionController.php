@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CurriculumLessonRevision;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,13 +52,14 @@ class AdminCourseRevisionController extends Controller
                     'position' => $module->position,
                 ]);
                 foreach ($module->lessons as $lesson) {
-                    $copied->lessons()->create([
+                    $copiedLesson=$copied->lessons()->create([
                         'title' => $lesson->title,
                         'content' => $lesson->content,
                         'position' => $lesson->position,
                         'duration_minutes' => $lesson->duration_minutes,
                         'is_preview' => $lesson->is_preview,
                     ]);
+                    CurriculumLessonRevision::capture($new,$copiedLesson,$request->user(),'copied');
                 }
             }
 

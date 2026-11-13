@@ -10,6 +10,7 @@ use App\Support\InstructorAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class InstructorHomeworkController extends Controller
@@ -26,13 +27,20 @@ class InstructorHomeworkController extends Controller
 
     public function index(Request $request): View
     {
+        $data=$request->validate([
+            'status'=>['nullable',Rule::in(['draft','rejected','pending_review','published'])],
+            'q'=>['nullable','string','max:80'],
+        ]);
         $instructorId = $request->user()->id;
+        $search=trim((string)($data['q']??''));
 
         return view('workspace.instructor.assignments', [
-            'role' => 'instructor',
+            'role' => 'instructor','filters'=>$data,
             'assignments' => CourseHomeworkAssignment::query()
-                ->where('author_id', $instructorId)->with('course')
-                ->orderByDesc('id')->paginate(10),
+                ->where('author_id', $instructorId)
+                ->when($data['status']??null,fn($q,$status)=>$q->where('status',$status))
+                ->when($search!=='',fn($q)=>$q->where('title','like','%'.$search.'%'))
+                ->with('course')->orderByDesc('id')->paginate(10)->withQueryString(),
         ]);
     }
 

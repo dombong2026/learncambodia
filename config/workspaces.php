@@ -583,6 +583,16 @@ return json_decode(<<<'JSON'
           "key": "saved-courses",
           "label": "Saved Courses",
           "route": "account.saved-courses.index"
+        },
+        {
+          "key": "study-planner",
+          "label": "Study Planner",
+          "route": "account.planner.index"
+        },
+        {
+          "key": "lesson-notes",
+          "label": "Lesson Notes",
+          "route": "account.notes.index"
         }
       ]
     },
@@ -757,6 +767,11 @@ return json_decode(<<<'JSON'
           "key": "assignments",
           "label": "Homework Builder",
           "route": "instructor.homework.index"
+        },
+        {
+          "key": "insights",
+          "label": "Teaching Insights",
+          "route": "instructor.insights.index"
         }
       ]
     },
@@ -769,6 +784,11 @@ return json_decode(<<<'JSON'
           "key": "submissions",
           "label": "Submitted Assignments",
           "route": "instructor.grading.index"
+        },
+        {
+          "key": "feedback-templates",
+          "label": "Feedback Templates",
+          "route": "instructor.feedback-templates.index"
         },
         {
           "key": "review",
