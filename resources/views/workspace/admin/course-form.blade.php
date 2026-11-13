@@ -9,6 +9,7 @@
     @if($course->exists)
         <div class="flex flex-wrap items-center gap-3">
             <span class="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ ucwords(str_replace('_',' ', $course->status)) }} · Edition {{ $course->revision_number }}</span>
+            <a href="{{ route('admin.course-builder.history.index',$course) }}" class="rounded-full border border-blue-400 px-4 py-2.5 text-xs font-bold text-blue-700 dark:text-blue-300">History & readiness</a>
             @if($course->status === 'published' && $course->superseded_at === null)
             <form method="POST" action="{{ route('admin.course-builder.revise', $course) }}">@csrf
                 <button type="submit" class="rounded-full border border-blue-400 px-4 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:text-blue-400">Create next edition</button>
@@ -32,6 +33,15 @@
 </form>
 @if($course->exists)
     @if($course->review_note)<div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200"><strong>Reviewer note:</strong> {{ $course->review_note }}</div>@endif
+    <section class="mt-8 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 class="text-lg font-extrabold">Academic review readiness</h2>
+        <p class="mt-2 text-sm text-slate-500">All checks must pass before submitting for independent approval.</p>
+        <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+        @foreach($reviewChecklist as $label=>$passed)
+            <li class="rounded-xl border px-4 py-3 text-sm {{ $passed ? 'border-emerald-200 text-emerald-700' : 'border-amber-200 text-amber-700' }}">{{ $passed ? '✓ Ready:' : 'Needs attention:' }} {{ $label }}</li>
+        @endforeach
+        </ul>
+    </section>
     <h2 class="mt-10 text-2xl font-extrabold">Curriculum modules & lessons</h2>
     <p class="mt-2 text-sm text-slate-500">Each module requires at least one lesson before course submission. Lesson content is plain text and does not run scripts or embedded media.</p>
     @foreach($course->modules as $module)
@@ -44,6 +54,7 @@
                 <input type="hidden" name="summary" value="{{ $module->summary }}">
                 <button class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white">Save</button>
             </form>
+            <form method="POST" action="{{ route('admin.course-builder.modules.duplicate',[$course,$module]) }}" class="mt-2 flex justify-end">@csrf<button type="submit" class="text-xs font-bold text-blue-700 dark:text-blue-300">Duplicate draft module</button></form>
             <form method="POST" action="{{ route('admin.course-builder.modules.destroy',[$course,$module]) }}" class="mt-2 flex justify-end">@csrf @method('DELETE')<button type="submit" class="text-xs font-semibold text-red-600">Delete module & lessons</button></form>
             @endif
             <div class="mt-5 space-y-4">
@@ -61,6 +72,7 @@
                         <label class="flex items-center gap-2 text-xs font-semibold"><input type="hidden" name="is_preview" value="0"><input type="checkbox" name="is_preview" value="1" @checked($lesson->is_preview)> Preview lesson</label>
                         <div class="flex justify-end"><button type="submit" class="rounded-full border border-blue-400 px-5 py-2 text-xs font-bold text-blue-700 dark:text-blue-400">Save lesson</button></div>
                     </form>
+                    <form method="POST" action="{{ route('admin.course-builder.lessons.duplicate',[$course,$module,$lesson]) }}" class="mt-2 flex justify-end">@csrf<button type="submit" class="text-xs font-bold text-blue-700 dark:text-blue-300">Duplicate draft lesson</button></form>
                     <form method="POST" action="{{ route('admin.course-builder.lessons.destroy',[$course,$module,$lesson]) }}" class="mt-2 flex justify-end">@csrf @method('DELETE')<button type="submit" class="text-xs font-semibold text-red-600">Delete lesson</button></form>
                     @else<p class="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $lesson->content }}</p>@endif
                 </div>

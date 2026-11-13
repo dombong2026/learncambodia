@@ -14,7 +14,7 @@
         <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div><p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Course #{{ $course->id }}</p><h2 class="mt-2 text-xl font-extrabold">{{ $course->title }}</h2><p class="mt-2 text-sm text-slate-500">{{ $course->category?->name }} · submitted {{ $course->submitted_at?->format('Y-m-d H:i') }}</p></div>
-                <a href="{{ route('admin.course-builder.edit', $course) }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Inspect curriculum</a>
+                <div class="flex flex-wrap gap-2"><a href="{{ route('admin.course-builder.edit', $course) }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Inspect curriculum</a><a href="{{ route('admin.course-builder.history.index',$course) }}" class="rounded-full border border-blue-400 px-5 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-300">Review history & evidence</a></div>
             </div>
             <p class="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
             <p class="mt-3 text-xs font-semibold text-slate-500">Created by account #{{ $course->created_by ?? 'Unknown' }} · Reviewer must be a different administrator.</p>
