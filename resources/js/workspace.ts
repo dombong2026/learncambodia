@@ -83,7 +83,7 @@ if (saver && saverBody) {
     const storageKey = 'learncambodia.workspace.data-saver.v1';
     const onLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បើក' : 'Data Saver on';
     const offLabel = document.documentElement.lang === 'km' ? 'សន្សំទិន្នន័យ៖ បិទ' : 'Data Saver off';
-    const priorVideoSettings = new WeakMap<HTMLVideoElement, { autoplay: boolean, preload: string }>();
+    const priorVideoSettings = new WeakMap<HTMLVideoElement, { autoplay: boolean, preload: HTMLMediaElement['preload'] }>();
     let enabled = false;
     try { enabled = window.localStorage.getItem(storageKey) === 'on'; } catch { /* private browser mode */ }
     const applySaver = (value: boolean): void => {
