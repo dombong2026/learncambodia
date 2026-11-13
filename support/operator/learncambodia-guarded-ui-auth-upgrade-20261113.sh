@@ -157,7 +157,33 @@ while IFS= read -r f; do
 done <<< "$FILES"
 cp -a "$APP/public/build" "$BACKUP/build"
 cp -p "$APP/bootstrap/cache/config.php" "$BACKUP/config.php"
-echo 'BACKUP_FILES_AND_PREVIOUS_BUILD=PASS'
+DUMP="$(command -v mysqldump || :)"
+[[ -x "$DUMP" ]] || DUMP="/www/server/mysql/bin/mysqldump"
+[[ -x "$DUMP" ]] || fail 'MySQL backup tool missing; abort before site changes'
+python3 - "$APP/.env" "$STAGE/site-mysql.cnf" <<'PY'
+from pathlib import Path
+import re, sys
+env, cnf = map(Path, sys.argv[1:])
+settings = {}
+for line in env.read_text().splitlines():
+    if '=' in line and not line.startswith('#'):
+        name, value = line.split('=', 1)
+        settings[name] = value.strip().strip('"').strip("'")
+assert settings.get('DB_CONNECTION') == 'mysql'
+assert settings.get('DB_DATABASE') == 'sql_learncambodia_com'
+assert settings.get('DB_USERNAME') == 'sql_learncambodia_com'
+assert settings.get('DB_HOST') == '127.0.0.1'
+assert re.fullmatch(r'[A-Za-z0-9_-]{24,128}', settings.get('DB_PASSWORD', ''))
+cnf.write_text('[client]\nprotocol=tcp\nhost=127.0.0.1\nport=3306\nuser=' +
+    settings['DB_USERNAME'] + '\npassword=' + settings['DB_PASSWORD'] + '\n')
+cnf.chmod(0o600)
+PY
+"$DUMP" --defaults-extra-file="$STAGE/site-mysql.cnf" --single-transaction --quick --no-tablespaces   sql_learncambodia_com > "$BACKUP/database.sql" ||
+  fail 'read-only database backup failed; no files changed'
+rm -f -- "$STAGE/site-mysql.cnf"
+[[ -s "$BACKUP/database.sql" ]] || fail 'database backup is empty'
+chmod 600 "$BACKUP/database.sql"
+echo 'PRIVATE_SOURCE_VITE_AND_DATABASE_BACKUP=PASS'
 
 echo '========== APPLY MERGED SOURCE AND FRONTEND =========='
 ROLLBACK=1
@@ -177,19 +203,26 @@ chown -R root:www "$STAGE/extracted/build"
 find "$STAGE/extracted/build" -type d -exec chmod 750 '{}' +
 find "$STAGE/extracted/build" -type f -exec chmod 640 '{}' +
 mv "$STAGE/extracted/build" "$APP/public/build"
-(cd "$APP";
- runuser -u www -- "$PHP" artisan route:clear --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan view:clear --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan config:clear --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan config:cache --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan view:cache --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan route:list --path=forgot-password --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan route:list --path=email/verify --no-interaction >/dev/null;
- runuser -u www -- "$PHP" artisan up --no-interaction >/dev/null) || fail 'Laravel post-upgrade acceptance failed'
+(
+ cd "$APP"
+ runuser -u www -- "$PHP" artisan route:clear --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan view:clear --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan config:clear --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan config:cache --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan view:cache --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan route:list --path=forgot-password --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan route:list --path=email/verify --no-interaction >/dev/null &&
+ runuser -u www -- "$PHP" artisan up --no-interaction >/dev/null
+) || fail 'Laravel post-upgrade acceptance failed'
 [[ -f "$APP/storage/app/private/learncambodia.installed" ]] || fail 'installer lock changed'
 code="$(curl -sS --noproxy '*' --resolve learncambodia.com:443:127.0.0.1 -o /dev/null -w '%{http_code}:%{ssl_verify_result}' https://learncambodia.com/login)" || fail 'origin TLS failed'
 [[ "$code" == '401:0' ]] || fail 'private Basic Auth no longer enforced'
 ROLLBACK=0
+if mv -- "$OLD_BUILD" "$BACKUP/previous-live-build" 2>/dev/null; then
+  echo 'OLD_COMPILED_ASSETS=BACKED_UP_OUTSIDE_WEB_ROOT'
+else
+  echo 'OLD_COMPILED_ASSETS=RETAINED_IN_PRIVATE_DOT_DIRECTORY'
+fi
 echo "DEPLOYED_MAIN=$NEW"
 echo 'NO_DATABASE_MIGRATIONS=PASS'
 echo 'OTHER_SITES=UNCHANGED'
