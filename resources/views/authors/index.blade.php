@@ -19,7 +19,7 @@
                     ['newspaper',$articleCount,__('longpage.published_articles')],
                     ['users',$authors->count(),__('longpage.opted_in_authors')],
                     ['book-open',$courseCount,__('longpage.published_courses')],
-                    ['shield-check',1,__('longpage.review_required')],
+                    ['tags',$categoryCount,__('longpage.published_categories')],
                 ] as [$icon,$count,$label])
                     <div class="relative min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5"><x-workspace-icon :name="$icon" class="absolute right-4 top-4 h-6 w-6 text-[#f3c46c]"/>
                         <p class="mt-8 text-4xl font-black tabular-nums" title="{{ number_format($count) }}">{{ \App\Support\DashboardNumber::compact($count) }}</p>

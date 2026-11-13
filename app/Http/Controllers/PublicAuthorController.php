@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\PublicProfile;
 use Illuminate\Http\Request;
@@ -31,8 +32,9 @@ final class PublicAuthorController extends Controller
         $articleCount=ContentEntry::query()->where('type','post')
             ->where('status','published')->count();
         $courseCount=Course::discoverable()->count();
+        $categoryCount=Category::published()->count();
 
-        return view('authors.index',compact('articles','authors','articleCount','courseCount','search'));
+        return view('authors.index',compact('articles','authors','articleCount','courseCount','categoryCount','search'));
     }
 
     public function show(PublicProfile $profile): View

@@ -7,7 +7,6 @@ use App\Models\Course;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
 use App\Models\CourseInstructorAssignment;
-use App\Models\PublicProfile;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
