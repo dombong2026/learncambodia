@@ -20,10 +20,12 @@ APP='/www/wwwroot/learncambodia.com'
 VHOST='/www/server/panel/vhost/nginx/learncambodia.com.conf'
 PHP='/www/server/php/85/bin/php'
 TOKEN='/root/learncambodia-setup-token'
+COMPOSER_PHAR='/root/learncambodia-tools/composer-2.11.2.phar'
+COMPOSER_SHA='dd158c0afd41d15fac89e1b4e47b5d42911fe316c3687cd5edac98319b25d028'
 fail(){ echo "INSTALL=BLOCKED: $*" >&2; exit 2; }
 [[ "$(id -u)" == 0 ]] || fail 'requires root'
 [[ "$MODE" == check || "$MODE" == install || "$MODE" == finalize ]] || fail 'mode must be check/install/finalize'
-for cmd in gh git dig curl awk grep python3 sha256sum tar mktemp runuser find cp; do
+for cmd in gh git dig curl awk grep python3 sha256sum tar mktemp runuser find cp cmp; do
   command -v "$cmd" >/dev/null || fail "missing $cmd"
 done
 [[ -x "$PHP" && -d /www/wwwroot && ! -L /www/wwwroot ]] || fail 'aaPanel PHP or directory absent'
@@ -31,6 +33,44 @@ id -u www >/dev/null 2>&1 || fail 'aaPanel www account absent'
 MYSQL="$(command -v mysql || :)"
 if [[ -z "$MYSQL" && -x /www/server/mysql/bin/mysql ]]; then MYSQL='/www/server/mysql/bin/mysql'; fi
 [[ -n "$MYSQL" ]] || fail 'MySQL CLI not found'
+
+# Accept only the aaPanel-created placeholder: root .user.ini and an optional
+# public/ folder containing at most its matching .user.ini. Never purge unknown data.
+verify_site_placeholder() {
+  [[ ! -L "$APP" ]] || fail 'website root symlink prohibited'
+  if [[ ! -e "$APP" ]]; then echo 'AAPANEL_SITE_ROOT=ABSENT'; return 0; fi
+  [[ -d "$APP" ]] || fail 'website root is not a directory'
+  local unexpected
+  unexpected="$(find "$APP" -mindepth 1 -maxdepth 1 ! -name '.user.ini' ! -name 'public' -print -quit)"
+  [[ -z "$unexpected" ]] || fail 'site contains files other than aaPanel .user.ini and public/; do not overwrite'
+  if [[ -e "$APP/.user.ini" || -L "$APP/.user.ini" ]]; then
+    [[ -f "$APP/.user.ini" && ! -L "$APP/.user.ini" ]] || fail 'unsafe .user.ini'
+    python3 - "$APP/.user.ini" "$APP" <<'PY'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1])
+site=sys.argv[2]
+assert p.stat().st_size < 4096, 'unexpectedly large .user.ini'
+lines=[x.strip() for x in p.read_text(encoding='utf-8').splitlines() if x.strip() and not x.lstrip().startswith(';') and not x.lstrip().startswith('#')]
+assert len(lines)==1 and lines[0].split('=',1)[0].strip()=='open_basedir','review custom PHP directives before installation'
+paths=lines[0].split('=',1)[1].strip().split(':')
+assert paths[0] == site+'/' and all(x in {site+'/', '/tmp/', '/tmp'} for x in paths), 'review aaPanel open_basedir paths before installation'
+print('AAPANEL_OPEN_BASEDIR=REVIEWED_SITE_AND_TMP_ONLY')
+PY
+  fi
+  if [[ -e "$APP/public" || -L "$APP/public" ]]; then
+    [[ -d "$APP/public" && ! -L "$APP/public" ]] || fail 'public path is not a plain directory'
+    unexpected="$(find "$APP/public" -mindepth 1 -maxdepth 1 ! -name '.user.ini' -print -quit)"
+    [[ -z "$unexpected" ]] || fail 'public directory contains files; never overwrite'
+    if [[ -e "$APP/public/.user.ini" || -L "$APP/public/.user.ini" ]]; then
+      [[ -f "$APP/public/.user.ini" && ! -L "$APP/public/.user.ini" ]] || fail 'unsafe public .user.ini'
+      [[ -f "$APP/.user.ini" ]] || fail 'public .user.ini exists without reviewed original'
+      cmp -s "$APP/.user.ini" "$APP/public/.user.ini" || fail 'public .user.ini differs from original'
+    fi
+  fi
+  echo 'AAPANEL_SITE_ROOT=ONLY_REVIEWED_PLACEHOLDER'
+}
+
 if [[ "$MODE" == finalize ]]; then
   [[ -f "$APP/storage/app/private/learncambodia.installed" && -f "$APP/.env" ]] || fail 'installer did not finish'
   printf '%s  %s\n' "$PHPLOCK" "$APP/composer.lock" | sha256sum -c --status || fail 'unexpected application source'
@@ -78,30 +118,22 @@ echo 'REGISTRY_DELEGATION=PASS'
 [[ -n "$(dig @1.1.1.1 "$DOMAIN" A +short +time=4 +tries=1 || :)" ]] || fail 'learncambodia.com has no A record; set correct DNS first'
 [[ -f "$VHOST" && ! -L "$VHOST" ]] || fail 'create a separate HTTPS website using aaPanel first'
 awk -v root="$APP/public;" '$1=="root" && $2==root {ok=1} END{exit !ok}' "$VHOST" || fail 'Nginx root must be new application public/'
-grep -Eq 'auth_basic[[:space:]]+|deny[[:space:]]+all' "$VHOST" || fail 'require site password protection or private allowlist'
+grep -Eq '^[[:space:]]*auth_basic[[:space:]]+[^;]+;' "$VHOST" || fail 'enable aaPanel Nginx site password protection (auth_basic)'
 [[ -x /www/server/nginx/sbin/nginx ]] || fail 'aaPanel Nginx binary absent'
 /www/server/nginx/sbin/nginx -t >/dev/null 2>&1 || fail 'Nginx configuration invalid'
 STATUS="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 12 --resolve "$DOMAIN:443:127.0.0.1" "https://$DOMAIN/")" || fail 'local HTTPS certificate invalid'
-[[ "$STATUS" == 401 || "$STATUS" == 403 ]] || fail 'site not restricted: require actual HTTP 401/403 before installer'
-[[ ! -L "$APP" ]] || fail 'website path is a symlink'
-if [[ -e "$APP" ]]; then
-  [[ -d "$APP" ]] || fail 'website root is not a directory'
-  [[ -z "$(find "$APP" -mindepth 1 -maxdepth 1 -print -quit)" ]] || fail 'website directory contains files; do not overwrite any aaPanel default or existing site'
-  echo 'AAPANEL_SITE_ROOT=VERIFIED_EMPTY'
-else
-  echo 'AAPANEL_SITE_ROOT=ABSENT'
-fi
+[[ "$STATUS" == 401 ]] || fail 'require direct-origin HTTP 401: 403 can be a missing index, not valid access protection'
+verify_site_placeholder
 [[ ! -e "$TOKEN" && ! -L "$TOKEN" ]] || fail 'installer token already exists'
 echo 'DOMAIN_TLS_ACCESS_GATES=PASS'
 
 echo '========== PHP / DATABASE SAFETY =========='
 "$PHP" -r '$ext=["ctype","curl","dom","fileinfo","mbstring","openssl","pdo_mysql","tokenizer","xml"];foreach($ext as $x){if(!extension_loaded($x)) exit(1);}' || fail 'PHP extensions missing'
 [[ -S /tmp/php-cgi-85.sock || -S /www/server/php/85/var/run/php-cgi-85.sock || -S /www/server/php/85/var/run/php-fpm.sock ]] || fail 'PHP 8.5-FPM socket missing'
-command -v composer >/dev/null || fail 'Composer CLI absent'
-if composer --no-ansi --version | grep -Eq 'Composer (version )?2\.2\.'; then
-  echo 'COMPOSER_VERSION=OLD_2_2_REVIEW_ISOLATED_UPGRADE_BEFORE_INSTALL'
-  fail 'aaPanel Composer 2.2 is too old for an approved production dependency installation'
-fi
+[[ -f "$COMPOSER_PHAR" && ! -L "$COMPOSER_PHAR" ]] || fail 'install pinned standalone Composer 2.11.2 in /root/learncambodia-tools/; do not replace global composer'
+printf '%s  %s\n' "$COMPOSER_SHA" "$COMPOSER_PHAR" | sha256sum -c --status || fail 'isolated Composer SHA256 mismatch'
+"$PHP" "$COMPOSER_PHAR" --no-ansi --version | grep -Fq 'Composer version 2.11.2' || fail 'unexpected isolated Composer version'
+echo 'ISOLATED_COMPOSER=2.11.2_SHA256_PASS'
 if [[ "$MODE" == check ]]; then
   echo 'READ_ONLY_PREFLIGHT=PASS'
   echo 'NEXT=CREATE_NEW_EMPTY_aaPANEL_MYSQL_DATABASE_AND_RUN_INSTALL'
@@ -189,7 +221,7 @@ export PATH="/www/server/php/85/bin:$PATH"
 export COMPOSER_ALLOW_SUPERUSER=1
 export COMPOSER_HOME="$STAGE/composer-home"
 mkdir -m 700 "$COMPOSER_HOME"
-(cd "$STAGE/app" && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-plugins --no-scripts) || fail 'Composer failed; no site changed'
+(cd "$STAGE/app" && "$PHP" "$COMPOSER_PHAR" install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader --no-plugins --no-scripts) || fail 'Composer failed; no site changed'
 [[ -f "$STAGE/app/vendor/autoload.php" ]] || fail 'vendor autoload missing'
 
 echo '========== PRIVATE LARAVEL CONFIG / GUARDED WEB INSTALLER =========='
@@ -230,12 +262,20 @@ find "$STAGE/app" -type f -exec chmod 640 '{}' +
 chown -R www:www "$STAGE/app/storage" "$STAGE/app/bootstrap/cache"
 find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type d -exec chmod 770 '{}' +
 find "$STAGE/app/storage" "$STAGE/app/bootstrap/cache" -type f -exec chmod 660 '{}' +
-[[ ! -L "$APP" ]] || fail 'destination became a symlink'
+verify_site_placeholder
 if [[ -d "$APP" ]]; then
-  [[ -z "$(find "$APP" -mindepth 1 -maxdepth 1 -print -quit)" ]] || fail 'destination is no longer empty; refuse overwrite'
   cp -a -- "$STAGE/app/." "$APP/"
   chown root:www "$APP"
   chmod 750 "$APP"
+  # aaPanel's original .user.ini lives above the new public document root.
+  # Copy its reviewed open_basedir safety net into public/, never overwrite it.
+  if [[ -f "$APP/.user.ini" ]]; then
+    if [[ ! -e "$APP/public/.user.ini" ]]; then
+      cp -p -- "$APP/.user.ini" "$APP/public/.user.ini"
+    fi
+    chown root:www "$APP/public/.user.ini"
+    chmod 640 "$APP/public/.user.ini"
+  fi
 elif [[ ! -e "$APP" ]]; then
   mv -- "$STAGE/app" "$APP"
 else
