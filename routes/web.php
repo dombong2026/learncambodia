@@ -5,6 +5,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\PublicContactController;
+use App\Http\Controllers\PublicAuthorController;
 use App\Http\Controllers\Workspace\AdminContactInquiryController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\InstallController;
@@ -54,6 +55,8 @@ Route::get('/students', [PublicPeopleController::class, 'students'])->name('stud
 Route::get('/students/{profile}', [PublicPeopleController::class, 'student'])->name('students.show');
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
+Route::get('/authors', [PublicAuthorController::class, 'index'])->name('authors.index');
+Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name('authors.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');

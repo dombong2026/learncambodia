@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\View\View;
 use App\Support\Appearance;
+use App\Models\Course;
+use App\Models\Category;
+use App\Models\ContentEntry;
+use App\Models\PublicProfile;
 
 class InformationController extends Controller
 {
@@ -29,6 +33,22 @@ class InformationController extends Controller
         if (in_array($page, ['about', 'contact'], true)) {
             $title = Appearance::value($page, 'heading');
             $lede = Appearance::value($page, 'intro');
+        }
+
+        if ($page==='about') {
+            $courseCount=Course::discoverable()->count();
+            $categoryCount=Category::published()->count();
+            $publishedArticles=ContentEntry::query()->where('type','post')->where('status','published')->count();
+            $instructors=PublicProfile::visible()->where('kind','instructor')
+                ->orderBy('display_name')->limit(4)->get();
+
+            return view('information.about',compact(
+                'title','lede','body','page','courseCount','categoryCount','publishedArticles','instructors'
+            ));
+        }
+
+        if ($page==='contact') {
+            return view('information.contact',compact('title','lede','body','page'));
         }
 
         return view('information.show', compact('title', 'lede', 'body', 'page'));
