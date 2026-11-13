@@ -44,6 +44,11 @@ jobs:
       PUBLIC_STUDENT_PROFILES_ENABLED: "false"
     steps:
       - uses: actions/checkout@v4
+      - name: Require source-tracked dependency lockfiles
+        run: |
+          git ls-files --error-unmatch composer.lock package-lock.json >/dev/null
+          test -s composer.lock
+          test -s package-lock.json
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
@@ -59,7 +64,7 @@ jobs:
           node-version: "22.16.0"
       - name: Build Vite assets needed by MySQL feature tests
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npm run build
       - name: Isolated Laravel application key
         run: |
@@ -96,6 +101,11 @@ jobs:
       BROWSER_BASE_URL: http://127.0.0.1:8000
     steps:
       - uses: actions/checkout@v4
+      - name: Require source-tracked dependency lockfiles
+        run: |
+          git ls-files --error-unmatch composer.lock package-lock.json >/dev/null
+          test -s composer.lock
+          test -s package-lock.json
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
@@ -105,7 +115,7 @@ jobs:
         with:
           node-version: "22.16.0"
       - run: composer install --prefer-dist --no-interaction --no-progress
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run build
       - name: Start isolated Laravel browser fixture
         run: |
@@ -122,7 +132,7 @@ jobs:
           exit 1
       - name: Install browser engines
         run: |
-          npm install --no-save --no-audit --no-fund @playwright/test@1.55.0
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
           npx playwright install --with-deps chromium webkit
       - name: Chromium desktop/mobile/tablet and WebKit browser acceptance
         run: npx playwright test --config=tests/browser/playwright.config.mjs
@@ -139,6 +149,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Require source-tracked dependency lockfiles
+        run: |
+          git ls-files --error-unmatch composer.lock package-lock.json >/dev/null
+          test -s composer.lock
+          test -s package-lock.json
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
@@ -146,25 +161,19 @@ jobs:
         with:
           node-version: "22.16.0"
       - run: composer install --prefer-dist --no-progress --no-interaction
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - name: PHP vulnerability advisories
         run: composer audit --no-dev
       - name: NPM vulnerability advisories
         run: npm audit --audit-level=high
       - name: Source security and disabled integration gates
         run: bash support/qa/release-source-security-gates.sh
-      - name: Identify whether dependency versions are reproducibly pinned
-        run: |
-          if ! git ls-files --error-unmatch composer.lock >/dev/null 2>&1; then
-            echo "::warning title=Release blocker::composer.lock is not tracked. Review and commit a generated PHP lockfile before installation."
-          fi
-          if ! git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            echo "::warning title=Release blocker::package-lock.json is not tracked. Review and commit a generated Node lockfile before installation."
-          fi
-      - name: Collect resolved lockfiles for separate maintainer review
+      - name: Verify dependency installs preserved reviewed locks
+        run: git diff --exit-code -- composer.lock package-lock.json
+      - name: Retain committed lockfiles as acceptance evidence
         uses: actions/upload-artifact@v4
         with:
-          name: learncambodia-resolved-dependency-locks
+          name: learncambodia-committed-dependency-locks
           path: |
             composer.lock
             package-lock.json
