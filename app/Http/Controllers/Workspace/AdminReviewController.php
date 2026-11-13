@@ -60,7 +60,19 @@ class AdminReviewController extends Controller
                 $modules = $locked->modules()->withCount('lessons')->get();
                 abort_unless($modules->isNotEmpty()
                     && $modules->every(fn ($module) => $module->lessons_count > 0)
-                    && filled($locked->description), 422);
+                    && filled($locked->description)
+                    && $locked->quizzes()->withCount('questions')->get()
+                        ->every(fn ($quiz) => $quiz->questions_count > 0), 422);
+            }
+
+            // A replacement must not supersede an edition that was already withdrawn.
+            $source = null;
+            if ($data['decision'] === 'approve' && $locked->source_course_id) {
+                $source = Course::whereKey($locked->source_course_id)
+                    ->lockForUpdate()->firstOrFail();
+                abort_unless($source->status === 'published'
+                    && $source->superseded_at === null, 409,
+                    'The source edition is no longer current.');
             }
 
             $status = $data['decision'] === 'approve' ? 'published' : 'rejected';
@@ -73,6 +85,12 @@ class AdminReviewController extends Controller
             ]);
             ApprovalAudit::record('course', $locked->id, $request->user(),
                 $data['decision'], 'pending_review', $status, $data['note'] ?? null);
+            if ($source !== null) {
+                $source->update(['superseded_at' => now()]);
+                ApprovalAudit::record('course', $source->id, $request->user(),
+                    'superseded', 'published', 'published',
+                    'Replaced by approved edition '.$locked->id);
+            }
         });
 
         return back()->with('status', 'Course review decision recorded.');
@@ -120,7 +138,7 @@ class AdminReviewController extends Controller
             abort_unless($locked->status === 'pending', 409);
 
             if ($data['decision'] === 'approve') {
-                abort_unless(Course::published()->whereKey($locked->course_id)->exists(), 422,
+                abort_unless(Course::discoverable()->whereKey($locked->course_id)->exists(), 422,
                     'Only published courses may accept enrollments.');
                 abort_unless(User::query()->whereKey($locked->student_id)
                     ->where('role', User::ROLE_STUDENT)->exists(), 422);

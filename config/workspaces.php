@@ -456,6 +456,11 @@ return json_decode(<<<'JSON'
           "parameters": {
             "focus": "enrollments"
           }
+        },
+        {
+          "key": "quizzes",
+          "label": "Practice Quizzes",
+          "route": "admin.quizzes.index"
         }
       ]
     },
@@ -487,6 +492,18 @@ return json_decode(<<<'JSON'
           "parameters": {
             "focus": "enrollments"
           }
+        }
+      ]
+    },
+    {
+      "key": "learning-insights",
+      "title": "Learning Reports",
+      "icon": "activity",
+      "items": [
+        {
+          "key": "overview",
+          "label": "Learning Analytics",
+          "route": "admin.learning.report"
         }
       ]
     }
@@ -526,7 +543,8 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "progress",
-          "label": "Learning Progress"
+          "label": "Learning Progress",
+          "route": "account.progress.index"
         },
         {
           "key": "cefr",
@@ -552,6 +570,16 @@ return json_decode(<<<'JSON'
         {
           "key": "results",
           "label": "My Results"
+        },
+        {
+          "key": "practice",
+          "label": "Practice Quizzes",
+          "route": "account.practice.index"
+        },
+        {
+          "key": "practice-history",
+          "label": "Practice Results",
+          "route": "account.practice.history"
         }
       ]
     },

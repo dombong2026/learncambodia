@@ -12,7 +12,7 @@
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         @forelse($courses as $course)
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td class="px-5 py-4 font-bold">{{ $course->title }}</td>
+                <td class="px-5 py-4 font-bold">{{ $course->title }}<p class="mt-1 text-xs font-medium text-slate-500">Edition {{ $course->revision_number }} {{ $course->superseded_at ? '· Superseded' : '' }}</p></td>
                 <td class="px-5 py-4 text-slate-500">{{ $course->category?->name }}</td>
                 <td class="px-5 py-4">{{ $course->cefr_level ?? 'All' }}</td>
                 <td class="px-5 py-4 tabular-nums">{{ $course->modules_count }}</td>

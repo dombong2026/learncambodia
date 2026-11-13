@@ -8,10 +8,15 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
+use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
+use App\Http\Controllers\Workspace\StudentProgressController;
+use App\Http\Controllers\Workspace\StudentPracticeController;
+use App\Http\Controllers\Workspace\AdminQuizController;
+use App\Http\Controllers\Workspace\AdminLearningReportController;
 use App\Http\Controllers\Workspace\AdminEditorialController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
@@ -44,6 +49,8 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
+        Route::get('/practice-quizzes', [AdminQuizController::class, 'index'])->name('quizzes.index');
+        Route::get('/learning-report', [AdminLearningReportController::class, 'index'])->name('learning.report');
 
         Route::prefix('course-builder')->name('course-builder.')->group(function (): void {
             Route::get('/create', [AdminCourseController::class, 'create'])->name('create');
@@ -51,6 +58,16 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::post('/{course}/revise', [AdminCourseRevisionController::class, 'store'])
+                ->middleware('throttle:3,1')->name('revise');
+
+            Route::post('/{course}/quizzes', [AdminQuizController::class, 'store'])->name('quizzes.store');
+            Route::get('/{course}/quizzes/{quiz}/edit', [AdminQuizController::class, 'edit'])->name('quizzes.edit');
+            Route::patch('/{course}/quizzes/{quiz}', [AdminQuizController::class, 'update'])->name('quizzes.update');
+            Route::delete('/{course}/quizzes/{quiz}', [AdminQuizController::class, 'destroy'])->name('quizzes.destroy');
+            Route::post('/{course}/quizzes/{quiz}/questions', [AdminQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
+            Route::patch('/{course}/quizzes/{quiz}/questions/{question}', [AdminQuizController::class, 'updateQuestion'])->name('quizzes.questions.update');
+            Route::delete('/{course}/quizzes/{quiz}/questions/{question}', [AdminQuizController::class, 'destroyQuestion'])->name('quizzes.questions.destroy');
 
             Route::post('/{course}/modules', [AdminCurriculumController::class, 'storeModule'])->name('modules.store');
             Route::patch('/{course}/modules/{module}', [AdminCurriculumController::class, 'updateModule'])->name('modules.update');
@@ -100,6 +117,16 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
+        Route::post('/enrollments/{enrollment}/lessons/{lesson}/progress', [StudentProgressController::class, 'update'])
+            ->middleware('throttle:30,1')->name('progress.update');
+        Route::get('/practice', [StudentPracticeController::class, 'index'])->name('practice.index');
+        Route::get('/practice/history', [StudentPracticeController::class, 'history'])->name('practice.history');
+        Route::get('/enrollments/{enrollment}/quizzes/{quiz}', [StudentPracticeController::class, 'show'])->name('practice.show');
+        Route::post('/enrollments/{enrollment}/quizzes/{quiz}/attempts', [StudentPracticeController::class, 'store'])
+            ->middleware('throttle:6,1')->name('practice.store');
+        Route::get('/enrollments/{enrollment}/quizzes/{quiz}/attempts/{attempt}', [StudentPracticeController::class, 'result'])
+            ->name('practice.result');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 
