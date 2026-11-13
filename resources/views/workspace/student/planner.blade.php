@@ -47,10 +47,21 @@
     @forelse($goals as $goal)
     <article class="mt-5 rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
         <p class="mb-3 text-xs font-bold text-blue-700 dark:text-blue-300">{{ $goal->enrollment->course->title }}</p>
-        <form method="POST" action="{{ route('account.planner.goals.update', $goal) }}" class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">@csrf @method('PATCH')
+        <form method="POST" action="{{ route('account.planner.goals.update', $goal) }}" class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+            @csrf
+            @method('PATCH')
             <input name="title" maxlength="160" required aria-label="Goal title" value="{{ $goal->title }}" class="min-w-0 rounded-xl border p-3 dark:bg-slate-950">
             <input name="target_date" type="date" value="{{ $goal->target_date?->format('Y-m-d') }}" aria-label="Target date" class="rounded-xl border p-3 dark:bg-slate-950">
-            <div><input type="hidden" name="complete" value="{{ $goal->completed_at ? 0 : 1 }}"><button class="rounded-xl bg-blue-700 px-4 py-3 text-xs font-bold text-white">{{ $goal->completed_at ? 'Reopen goal' : 'Complete goal' }} / Save</button></div>
+            <input type="hidden" name="complete" value="{{ $goal->completed_at ? 1 : 0 }}">
+            <button class="rounded-xl bg-blue-700 px-4 py-3 text-xs font-bold text-white">Save goal</button>
+        </form>
+        <form method="POST" action="{{ route('account.planner.goals.update', $goal) }}" class="mt-3">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="title" value="{{ $goal->title }}">
+            <input type="hidden" name="target_date" value="{{ $goal->target_date?->format('Y-m-d') }}">
+            <input type="hidden" name="complete" value="{{ $goal->completed_at ? 0 : 1 }}">
+            <button class="rounded-xl border border-blue-500 px-4 py-2 text-xs font-bold text-blue-700 dark:text-blue-300">{{ $goal->completed_at ? 'Reopen goal' : 'Mark goal complete' }}</button>
         </form>
         <ul class="mt-4 space-y-2">
         @foreach($goal->tasks as $task)
