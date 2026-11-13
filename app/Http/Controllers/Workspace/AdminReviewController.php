@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AppearanceRevision;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
+use App\Models\CourseReviewSnapshot;
+use App\Support\CourseReadiness;
 use App\Models\User;
 use App\Support\ApprovalAudit;
 use Illuminate\Http\RedirectResponse;
@@ -55,14 +57,16 @@ class AdminReviewController extends Controller
             abort_unless($locked->created_by && $locked->created_by !== $request->user()->id,
                 403, 'A separate administrator must review the submitted course.');
 
+            $submission=CourseReviewSnapshot::where('course_id',$locked->id)->latest('id')->first();
             if ($data['decision'] === 'approve') {
-                abort_unless($locked->category()->where('is_published', true)->exists(), 422);
-                $modules = $locked->modules()->withCount('lessons')->get();
-                abort_unless($modules->isNotEmpty()
-                    && $modules->every(fn ($module) => $module->lessons_count > 0)
-                    && filled($locked->description)
-                    && $locked->quizzes()->withCount('questions')->get()
-                        ->every(fn ($quiz) => $quiz->questions_count > 0), 422);
+                abort_unless(CourseReadiness::ready($locked),422,
+                    'Academic readiness checklist failed.');
+                // Legacy pending records without a snapshot retain the existing review
+                // mechanism. New submissions require an unchanged content fingerprint.
+                if ($submission !== null) {
+                    abort_unless(hash_equals($submission->fingerprint,CourseReadiness::fingerprint($locked)),
+                        409,'Submitted academic content changed; reject and resubmit.');
+                }
             }
 
             // A replacement must not supersede an edition that was already withdrawn.
@@ -83,6 +87,12 @@ class AdminReviewController extends Controller
                 'reviewed_by' => $request->user()->id,
                 'review_note' => $data['note'] ?? null,
             ]);
+            if ($submission !== null) {
+                $submission->update([
+                    'decision'=>$data['decision'],'reviewed_by'=>$request->user()->id,
+                    'reviewed_at'=>now(),
+                ]);
+            }
             ApprovalAudit::record('course', $locked->id, $request->user(),
                 $data['decision'], 'pending_review', $status, $data['note'] ?? null);
             if ($source !== null) {

@@ -28,6 +28,7 @@ use App\Http\Controllers\Workspace\StudentPlannerController;
 use App\Http\Controllers\Workspace\StudentNoteController;
 use App\Http\Controllers\Workspace\InstructorInsightsController;
 use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
+use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -127,6 +128,9 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::get('/{course}/history', [AdminCurriculumHistoryController::class, 'index'])->name('history.index');
+            Route::post('/{course}/modules/{module}/duplicate', [AdminCurriculumController::class, 'duplicateModule'])->name('modules.duplicate');
+            Route::post('/{course}/modules/{module}/lessons/{lesson}/duplicate', [AdminCurriculumController::class, 'duplicateLesson'])->name('lessons.duplicate');
             Route::post('/{course}/revise', [AdminCourseRevisionController::class, 'store'])
                 ->middleware('throttle:3,1')->name('revise');
 

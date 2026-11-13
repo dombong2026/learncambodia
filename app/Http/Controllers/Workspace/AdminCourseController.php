@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
+use App\Models\CourseReviewSnapshot;
+use App\Support\CourseReadiness;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +43,7 @@ class AdminCourseController extends Controller
             'course' => $course,
             'categories' => Category::orderBy('sort_order')->get(),
             'levels' => CefrLevel::orderBy('sort_order')->get(),
+            'reviewChecklist' => $course->exists ? CourseReadiness::checklist($course) : [],
         ]);
     }
 
@@ -95,16 +98,10 @@ class AdminCourseController extends Controller
             $locked = Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->isMutable(), 409);
 
-            abort_unless($locked->category()->where('is_published', true)->exists(), 422,
-                'Course category must be published first.');
-            $modules = $locked->modules()->withCount('lessons')->get();
-            abort_unless($modules->isNotEmpty() && $modules->every(fn ($m) => $m->lessons_count > 0),
-                422, 'Every submitted course must have at least one module and lesson per module.');
-            abort_unless(filled($locked->description), 422,
-                'Complete the course description before requesting review.');
-            $quizzes = $locked->quizzes()->withCount('questions')->get();
-            abort_unless($quizzes->every(fn ($quiz) => $quiz->questions_count > 0), 422,
-                'Every practice quiz must include at least one complete question.');
+            $checklist=CourseReadiness::checklist($locked);
+            abort_unless(!in_array(false,$checklist,true), 422,
+                'Complete the academic readiness checklist before review.');
+            $fingerprint=CourseReadiness::fingerprint($locked);
 
             $from = $locked->status;
             $locked->update([
@@ -114,6 +111,10 @@ class AdminCourseController extends Controller
                 'reviewed_at' => null,
                 'review_note' => null,
                 'published_at' => null,
+            ]);
+            CourseReviewSnapshot::create([
+                'course_id'=>$locked->id,'submitted_by'=>$request->user()->id,
+                'checklist'=>$checklist,'fingerprint'=>$fingerprint,'created_at'=>now(),
             ]);
             \App\Support\ApprovalAudit::record('course', $locked->id,
                 $request->user(), 'submitted', $from, 'pending_review');
