@@ -36,7 +36,20 @@
         <h2 class="text-lg font-black">{{ __('frontend.start_learning') }}</h2>
         <p class="mt-3 text-sm leading-7 text-slate-500">{{ __('frontend.enrollment_note') }}</p>
         @auth
-            <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-5 block rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#1c4a83]">{{ __('frontend.open_my_workspace') }}</a>
+            @if(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
+                @if($existingEnrollment?->status === 'approved')
+                    <a href="{{ route('account.enrollments.show',$existingEnrollment) }}" class="mt-5 block rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#1c4a83]">{{ __('dashboard.resume_learning') }}</a>
+                @elseif($existingEnrollment)
+                    <p class="mt-5 rounded-xl bg-amber-50 p-4 text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">{{ __('frontend.enrollment_requested') }}: {{ ucfirst($existingEnrollment->status) }}</p>
+                    <a href="{{ route('account.enrollments.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-sm font-bold text-[#0c2d5b] dark:text-[#f6ca74]">{{ __('frontend.view_my_enrollments') }}</a>
+                @else
+                    <form method="POST" action="{{ route('account.enrollments.store',$course) }}" class="mt-5">@csrf
+                        <button type="submit" class="block w-full rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#1c4a83]">{{ __('frontend.request_enrollment') }}</button>
+                    </form>
+                @endif
+            @else
+                <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-5 block rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#1c4a83]">{{ __('frontend.open_my_workspace') }}</a>
+            @endif
         @else
             <a href="{{ route('register') }}" class="mt-5 block rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white hover:bg-[#1c4a83]">{{ __('frontend.create_account') }}</a>
             <a href="{{ route('login') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-sm font-bold text-[#0c2d5b] hover:bg-amber-50 dark:text-[#f6ca74] dark:hover:bg-slate-800">{{ __('frontend.sign_in') }}</a>

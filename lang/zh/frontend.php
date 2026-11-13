@@ -39,4 +39,7 @@ return [
     'nav_courses' => '课程',
     'nav_articles' => '文章',
     'nav_cefr' => 'CEFR 指南',
+    'request_enrollment' => '申请入学',
+    'enrollment_requested' => '入学申请状态',
+    'view_my_enrollments' => '查看我的入学申请',
 ];

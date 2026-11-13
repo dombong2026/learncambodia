@@ -53,6 +53,10 @@ class PublicCourseController extends Controller
             'modules' => fn ($query) => $query->withCount('lessons'),
         ])->loadCount('lessons');
 
-        return view('courses.show',['course'=>$course]);
+        $existingEnrollment = auth()->check() && auth()->user()->role === \App\Models\User::ROLE_STUDENT
+            ? $course->enrollments()->where('student_id', auth()->id())->first()
+            : null;
+
+        return view('courses.show',compact('course','existingEnrollment'));
     }
 }

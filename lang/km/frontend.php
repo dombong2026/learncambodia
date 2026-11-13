@@ -39,4 +39,7 @@ return [
     'nav_courses' => 'វគ្គសិក្សា',
     'nav_articles' => 'អត្ថបទ',
     'nav_cefr' => 'មគ្គុទ្ទេសក៍ CEFR',
+    'request_enrollment' => 'ស្នើសុំចុះឈ្មោះ',
+    'enrollment_requested' => 'ស្ថានភាពចុះឈ្មោះ',
+    'view_my_enrollments' => 'មើលការចុះឈ្មោះរបស់ខ្ញុំ',
 ];

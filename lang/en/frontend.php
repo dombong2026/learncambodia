@@ -39,4 +39,7 @@ return [
     'nav_courses' => 'Courses',
     'nav_articles' => 'Articles',
     'nav_cefr' => 'CEFR guide',
+    'request_enrollment' => 'Request enrollment',
+    'enrollment_requested' => 'Enrollment status',
+    'view_my_enrollments' => 'View my enrollments',
 ];
