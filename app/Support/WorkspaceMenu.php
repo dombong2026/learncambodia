@@ -127,7 +127,7 @@ final class WorkspaceMenu
             'learning/progress' => 'chart-pie',
             'learning/cefr' => 'award',
             'learning/course-catalog' => 'book-marked',
-            'learning/saved-courses' => 'book-marked',
+            'learning/saved-courses' => 'bookmark-check',
             'homework/available' => 'notebook-pen',
             'homework/submissions' => 'send',
             'assessments/practice' => 'list-check',
@@ -226,7 +226,6 @@ final class WorkspaceMenu
             default => [
                 ['account.overview','Overview','layout'],
                 ['account.enrollments.index','Courses','book'],
-                ['account.saved-courses.index','Saved Courses','book'],
                 ['account.homework.index','Homework','file'],
                 ['account.progress.index','Progress','activity'],
                 ['account.profile.edit','Profile','settings'],
