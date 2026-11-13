@@ -5,6 +5,9 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\InstallController;
+use App\Http\Controllers\PublicCourseController;
+use App\Http\Controllers\PublicArticleController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
@@ -18,6 +21,7 @@ use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
 use App\Http\Controllers\Workspace\AdminEditorialController;
+use App\Http\Controllers\Workspace\AdminEditorialReviewController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
 use App\Http\Controllers\Workspace\ProfileController;
@@ -32,7 +36,17 @@ use App\Http\Controllers\Workspace\InstructorGradingController;
 use App\Http\Controllers\Workspace\StudentHomeworkController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/install', [InstallController::class, 'index'])->name('install.index');
+Route::post('/install/unlock', [InstallController::class, 'unlock'])
+    ->middleware('throttle:5,1')->name('install.unlock');
+Route::post('/install/complete', [InstallController::class, 'complete'])
+    ->middleware('throttle:3,1')->name('install.complete');
+
 Route::get('/', [CatalogController::class, 'home'])->name('home');
+Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
+Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
+Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [CatalogController::class, 'show'])->name('categories.show');
 Route::get('/cefr', [CefrController::class, 'index'])->name('cefr.index');
@@ -116,6 +130,9 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/categories/{category}/edit', [AdminCategoryController::class, 'edit'])->name('categories.edit');
         Route::patch('/categories/{category}', [AdminCategoryController::class, 'update'])->name('categories.update');
         Route::prefix('editorial/{kind}')->name('editorial.')->group(function (): void {
+            Route::get('/reviews', [AdminEditorialReviewController::class, 'index'])->name('reviews');
+            Route::post('/reviews/{entry}', [AdminEditorialReviewController::class, 'review'])->name('review');
+            Route::post('/{entry}/submit', [AdminEditorialReviewController::class, 'submit'])->name('submit');
             Route::get('/', [AdminEditorialController::class, 'index'])->name('index');
             Route::get('/create', [AdminEditorialController::class, 'create'])->name('create');
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'account_access' => 'Secure account access',
+    'login_title' => 'Welcome back',
+    'login_intro' => 'Sign in to continue learning and managing your approved courses.',
+    'email' => 'Email address',
+    'password' => 'Password',
+    'confirm_password' => 'Confirm password',
+    'remember' => 'Remember me on this device',
+    'show_password' => 'Show password',
+    'hide_password' => 'Hide password',
+    'sign_in' => 'Sign in',
+    'new_account' => 'New to Learn Cambodia?',
+    'create_account' => 'Create account',
+    'register_intro' => 'Create a student learning account. Instructor and staff roles are assigned by authorized operators only.',
+    'full_name' => 'Full name',
+    'accept_terms' => 'I have read and accept the',
+    'terms' => 'draft Terms',
+    'and' => 'and',
+    'privacy' => 'draft Privacy Notice',
+    'policy_draft' => 'Final policies require legal approval before public launch.',
+    'have_account' => 'Already have an account?',
+    'home' => 'Back to home',
+    'review_errors' => 'Please review the highlighted fields and try again.',
+];

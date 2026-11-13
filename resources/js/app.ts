@@ -46,3 +46,24 @@ function initCategoryTray(): void {
 
 initMenus();
 initCategoryTray();
+
+
+function initPasswordVisibility(): void {
+    document.querySelectorAll<HTMLButtonElement>('[data-password-toggle]').forEach((button) => {
+        const id = button.dataset.passwordFor;
+        const input = id ? document.getElementById(id) : null;
+        if (!(input instanceof HTMLInputElement)) return;
+
+        button.addEventListener('click', () => {
+            const showing = input.type === 'password';
+            input.type = showing ? 'text' : 'password';
+            button.setAttribute('aria-pressed', String(showing));
+            button.setAttribute('aria-label',
+                showing ? button.dataset.hideLabel ?? 'Hide password' :
+                button.dataset.showLabel ?? 'Show password');
+            input.focus({ preventScroll: true });
+        });
+    });
+}
+
+initPasswordVisibility();

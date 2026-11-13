@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'account_access' => '安全账户登录',
+    'login_title' => '欢迎回来',
+    'login_intro' => '登录后继续学习并查看已批准的课程。',
+    'email' => '电子邮箱',
+    'password' => '密码',
+    'confirm_password' => '确认密码',
+    'remember' => '在此设备上记住我',
+    'show_password' => '显示密码',
+    'hide_password' => '隐藏密码',
+    'sign_in' => '登录',
+    'new_account' => '还没有 Learn Cambodia 账户？',
+    'create_account' => '创建账户',
+    'register_intro' => '创建学生学习账户。教师及工作人员权限仅由授权管理员授予。',
+    'full_name' => '姓名',
+    'accept_terms' => '我已阅读并接受',
+    'terms' => '使用条款草案',
+    'and' => '及',
+    'privacy' => '隐私政策草案',
+    'policy_draft' => '正式公开前须完成法律审查。',
+    'have_account' => '已有账户？',
+    'home' => '返回首页',
+    'review_errors' => '请检查输入的信息后重试。',
+];
