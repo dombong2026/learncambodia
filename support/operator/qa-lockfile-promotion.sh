@@ -7,7 +7,7 @@ umask 077
 
 REPO='dombong2026/learncambodia'
 BRANCH='qa/mysql-aapanel-browser-security-acceptance'
-BASE='3e4a43b84d2360a8253460b3d5aaf6672d954b5'
+BASE='3e4a43b84d2360a8253460b8cfb335431ac6eb4b'
 QA='/www/wwwroot/learncambodia-qa-20261113'
 RUN='43405041249'
 ARTIFACT_ID='14026513358'
