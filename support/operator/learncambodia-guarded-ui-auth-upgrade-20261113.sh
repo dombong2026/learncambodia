@@ -60,6 +60,8 @@ grep -Fxq 'INSTALLER_ENABLED=false' "$APP/.env" || fail 'installer unexpectedly 
 [[ ! -e /root/learncambodia-setup-token ]] || fail 'setup token still present'
 [[ ! -e "$APP/storage/framework/down" ]] || fail 'site already in maintenance'
 [[ -d "$APP/public/build" && ! -L "$APP/public/build" ]] || fail 'existing assets unsafe'
+printf '%s  %s\n' '043948df6390f037947781244dcf2f39aa678a37fbdfc9879f0640ecd313b260' "$APP/composer.lock" | sha256sum -c --status || fail 'live Composer lock changed'
+printf '%s  %s\n' 'f4e670ae3cd90e0e6ab27be86adf5d09558bd5ccc904f784f7d595b13d7b52c7' "$APP/package-lock.json" | sha256sum -c --status || fail 'live npm lock changed'
 grep -Fq "$APP/.private-nginx-auth/learncambodia.htpasswd" /www/server/panel/vhost/nginx/learncambodia.com.conf || fail 'site private Basic Auth differs'
 /www/server/nginx/sbin/nginx -t >/dev/null 2>&1 || fail 'Nginx invalid'
 code="$(curl -sS --noproxy '*' --resolve learncambodia.com:443:127.0.0.1 -o /dev/null -w '%{http_code}:%{ssl_verify_result}' https://learncambodia.com/login)" || fail 'origin TLS failed'
@@ -79,6 +81,7 @@ STAGE="$(mktemp -d /root/learncambodia-ui-qa.XXXXXXXX)"
 git clone -q --single-branch --depth 1 -b main "https://github.com/$R.git" "$STAGE/src"
 [[ "$(git -C "$STAGE/src" rev-parse HEAD)" == "$NEW" ]] || fail 'cloned main drift'
 git -C "$STAGE/src" fetch -q --depth 1 origin "$OLD"
+[[ "$(git -C "$STAGE/src" rev-parse "$OLD^{tree}")" == '588b4af180b446bec48189863bb2c84e322028ad' ]] || fail 'unexpected previous main tree'
 [[ "$(git -C "$STAGE/src" rev-parse HEAD^{tree})" == "$TREE" ]] || fail 'wrong release tree'
 diff="$(git -C "$STAGE/src" diff --name-only "$OLD" "$NEW")"
 [[ "$(printf '%s\n' "$diff" | grep -c .)" == 29 ]] || fail 'unreviewed source diff'
@@ -117,6 +120,8 @@ echo '========== DOWNLOAD PINNED FRONTEND BUILD =========='
 mkdir -m 700 "$STAGE/assets" "$STAGE/extracted"
 gh run download 43464089125 --repo "$R" --name learncambodia-pinned-qa-vite-assets --dir "$STAGE/assets" >/dev/null
 grep -Fxq "SOURCE_COMMIT=$TESTED" "$STAGE/assets/provenance.txt" || fail 'Vite commit mismatch'
+grep -Fxq 'COMPOSER_LOCK_SHA256=043948df6390f037947781244dcf2f39aa678a37fbdfc9879f0640ecd313b260' "$STAGE/assets/provenance.txt" || fail 'Vite Composer provenance mismatch'
+grep -Fxq 'NPM_LOCK_SHA256=f4e670ae3cd90e0e6ab27be86adf5d09558bd5ccc904f784f7d595b13d7b52c7' "$STAGE/assets/provenance.txt" || fail 'Vite npm provenance mismatch'
 sha="$(sed -n 's/^ASSET_ARCHIVE_SHA256=//p' "$STAGE/assets/provenance.txt")"
 [[ "$sha" =~ ^[a-f0-9]{64}$ ]] || fail 'invalid Vite digest'
 printf '%s  %s\n' "$sha" "$STAGE/assets/learncambodia-vite-build.tar.gz" | sha256sum -c --status || fail 'Vite checksum mismatch'
