@@ -34,8 +34,12 @@ class SessionController extends Controller
         ]);
 
         $key = hash('sha256', Str::lower($credentials['email']).'|'.$request->ip());
+        // Shared IP throttle stops password spraying across many distinct
+        // accounts; the per-account throttle remains active independently.
+        $ipKey = 'login-ip:'.hash('sha256', (string) $request->ip());
 
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        if (RateLimiter::tooManyAttempts($key, 5)
+            || RateLimiter::tooManyAttempts($ipKey, 20)) {
             throw ValidationException::withMessages([
                 'email' => 'Too many attempts. Please try again later.',
             ]);
@@ -43,6 +47,7 @@ class SessionController extends Controller
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($key, 60);
+            RateLimiter::hit($ipKey, 60);
 
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
