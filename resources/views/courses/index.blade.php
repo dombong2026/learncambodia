@@ -25,6 +25,16 @@
 </section>
 
 <div class="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[210px_minmax(0,1.2fr)_minmax(245px,.8fr)]">
+    <section data-course-cefr-section class="col-span-full min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#142f51]">
+        <h2 class="text-lg font-black text-[#0d315c] dark:text-white">{{ __('pages.study_levels') }}</h2>
+        <p class="mt-2 text-xs leading-6 text-slate-500">{{ __('pages.cefr_guide_note') }}</p>
+        <div data-course-cefr-row role="group" aria-label="{{ __('pages.study_levels') }}" class="mt-4 flex w-full min-w-0 max-w-full flex-nowrap gap-3 overflow-x-auto overscroll-x-contain snap-x snap-mandatory pb-2">
+            @foreach(['A1','A2','B1','B2','C1','C2'] as $lvl)
+                <a data-course-cefr-level="{{ $lvl }}" href="{{ route('courses.index',['level'=>$lvl]) }}" class="premium-card min-w-[5.75rem] flex-1 shrink-0 snap-start rounded-xl border border-[#c7d8ed] bg-white/90 py-5 text-center text-xl font-black text-[#173b67] transition hover:border-[#d8a74d] hover:bg-[#fff7e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:border-[#36516e] dark:bg-white/10 dark:text-white dark:hover:border-[#f3c064] dark:hover:bg-[#24518a]">{{ $lvl }}</a>
+            @endforeach
+        </div>
+        <a href="{{ route('cefr.index') }}" class="mt-4 block text-center text-xs font-bold text-[#b27e2e] hover:underline">{{ __('pages.read_cefr') }} →</a>
+    </section>
     <aside data-course-filters class="self-start rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-[#142f51]">
         <div class="flex items-center justify-between"><h2 class="text-lg font-black text-[#10345f] dark:text-white">{{ __('pages.filters') }}</h2><a href="{{ route('courses.index') }}" class="text-xs font-bold text-[#ab7627] hover:underline">{{ __('pages.clear') }}</a></div>
         <form method="GET" action="{{ route('courses.index') }}" class="mt-5 space-y-5">
@@ -81,16 +91,6 @@
         </section>
     </main>
     <aside class="min-w-0 space-y-5 lg:col-span-2 xl:col-span-1">
-        <section class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#142f51]">
-            <h2 class="text-lg font-black text-[#0d315c] dark:text-white">{{ __('pages.study_levels') }}</h2>
-            <p class="mt-2 text-xs leading-6 text-slate-500">{{ __('pages.cefr_guide_note') }}</p>
-            <div data-course-cefr-row role="group" aria-label="{{ __('pages.study_levels') }}" class="mt-4 flex w-full min-w-0 max-w-full flex-nowrap gap-3 overflow-x-auto overscroll-x-contain pb-2">
-                @foreach(['A1','A2','B1','B2','C1','C2'] as $lvl)
-                    <a data-course-cefr-level="{{ $lvl }}" href="{{ route('courses.index',['level'=>$lvl]) }}" class="premium-card min-w-[5.75rem] flex-1 shrink-0 snap-start rounded-xl border border-[#c7d8ed] bg-[#f8fafc] py-5 text-center text-xl font-black text-[#173b67] transition hover:border-[#d8a74d] hover:bg-[#fff7e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:border-[#36516e] dark:bg-[#234469] dark:text-white dark:hover:border-[#f3c064] dark:hover:bg-[#24518a]">{{ $lvl }}</a>
-                @endforeach
-            </div>
-            <a href="{{ route('cefr.index') }}" class="mt-4 block text-center text-xs font-bold text-[#b27e2e] hover:underline">{{ __('pages.read_cefr') }} →</a>
-        </section>
         <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#142f51]">
             <h2 class="text-lg font-black text-[#0d315c] dark:text-white">{{ __('pages.featured_instructors') }}</h2>
             <div class="mt-4 space-y-3">
