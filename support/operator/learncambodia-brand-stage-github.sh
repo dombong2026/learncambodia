@@ -27,8 +27,8 @@ trap cleanup EXIT
 echo "========== VERIFY OPERATOR AND EXACT APPROVED DESIGN =========="
 [[ "$(id -u)" == 0 ]] || fail 'root required'
 [[ "$MODE" == check || "$MODE" == publish ]] || fail 'mode is check or publish'
-[[ "$ARCHIVE" == /root/* && -f "$ARCHIVE" && ! -L "$ARCHIVE" ]] ||
-  fail 'upload ZIP under /root, without symlinks'
+[[ ( "$ARCHIVE" == /root/* || "$ARCHIVE" == /www/backup/* ) && -f "$ARCHIVE" && ! -L "$ARCHIVE" ]] ||
+  fail 'upload ZIP to /root or private /www/backup, without symlinks'
 for cmd in python3 sha256sum git gh mktemp; do command -v "$cmd" >/dev/null || fail "missing $cmd"; done
 printf '%s  %s\n' "$ZIP_SHA" "$ARCHIVE" | sha256sum -c --status ||
   fail 'ZIP SHA mismatch; wrong or modified logo package'
