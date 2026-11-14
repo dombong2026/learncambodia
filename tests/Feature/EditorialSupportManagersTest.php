@@ -169,4 +169,44 @@ final class EditorialSupportManagersTest extends TestCase
             'body'=>'Late admin message',
         ])->assertStatus(409);
     }
+
+    public function test_page_and_policy_crud_remain_private_and_are_not_silently_published(): void
+    {
+        $this->actingAs($admin=$this->admin());
+        foreach (['pages'=>'page','policies'=>'policy'] as $kind=>$type) {
+            $this->get('/dashboard/editorial/'.$kind)->assertOk();
+            $this->get('/dashboard/editorial/'.$kind.'/create')->assertOk();
+            $this->post('/dashboard/editorial/'.$kind,[
+                'title'=>'Private '.$type.' entry','body'=>'Controlled page or policy content.',
+            ])->assertRedirect();
+            $entry=ContentEntry::where('type',$type)->firstOrFail();
+            $this->get('/dashboard/editorial/'.$kind.'/'.$entry->id.'/edit')->assertOk();
+            $this->patch('/dashboard/editorial/'.$kind.'/'.$entry->id,[
+                'title'=>'Updated '.$type.' entry','slug'=>$entry->slug,
+                'body'=>'Revised content in its original private state.',
+            ])->assertRedirect();
+            $this->assertSame('draft',$entry->fresh()->status);
+            $this->delete('/dashboard/editorial/'.$kind.'/'.$entry->id)->assertRedirect();
+            $this->assertSoftDeleted('content_entries',['id'=>$entry->id]);
+        }
+    }
+
+    public function test_contact_messages_use_existing_inbox_and_support_private_archiving(): void
+    {
+        $this->post('/contact',[
+            'name'=>'Example Learner','email'=>'learner@example.test','topic'=>'general',
+            'subject'=>'Enrollment question','message'=>'Please assist with course information.',
+            'consent'=>'1',
+        ])->assertRedirect();
+        $inquiry=\App\Models\ContactInquiry::firstOrFail();
+
+        $this->actingAs(User::factory()->create())
+            ->get('/dashboard/contact-inquiries')->assertForbidden();
+        $this->actingAs($this->admin())
+            ->get('/dashboard/contact-inquiries')->assertOk()->assertSee('Enrollment question');
+        $this->delete('/dashboard/contact-inquiries/'.$inquiry->id)->assertRedirect();
+        $this->assertSoftDeleted('contact_inquiries',['id'=>$inquiry->id]);
+        $this->get('/dashboard/contact-inquiries')->assertOk()->assertDontSee('Enrollment question');
+    }
+
 }
