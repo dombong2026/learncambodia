@@ -104,10 +104,7 @@
                     </div>
                 </a>
             @empty
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-sm leading-8 text-slate-600 dark:border-slate-700 dark:bg-[#123052] dark:text-slate-300">
-                    {{ __('longpage.empty_category_results') }}
-                    <a href="{{ route('categories.index') }}" class="ml-2 font-black text-[#ad7825] underline">{{ __('longpage.clear_filters') }}</a>
-                </div>
+                <x-public-empty-state :title="__('longpage.empty_category_results')" icon="search" :href="route('categories.index')" :action="__('longpage.clear_filters')" />
             @endforelse
         </div>
         <div class="mt-8">{{ $categories->links() }}</div>
