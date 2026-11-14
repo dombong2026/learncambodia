@@ -18,8 +18,9 @@
 
 @if($role === 'student')
     <div class="mt-7 grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
-            <div class="flex flex-wrap items-start justify-between gap-3">
+        <section class="premium-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
+            <div class="premium-card-content flex flex-wrap items-start justify-between gap-3">
                 <div><h2 class="text-lg font-extrabold">{{ __('dashboard.course_progress') }}</h2><p class="mt-1 text-xs leading-6 text-slate-500">{{ __('dashboard.self_reported') }}</p></div>
                 <a href="{{ route('account.enrollments.index') }}" class="rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400">{{ __('workspace.my_learning') }}</a>
             </div>
@@ -39,9 +40,9 @@
                         <span class="text-lg font-extrabold tabular-nums" aria-label="{{ $percent }} percent {{ __('dashboard.completion') }}">{{ $percent }}%</span>
                     </div>
                     <div class="min-w-[140px] flex-1">
-                        <h3 class="text-sm font-extrabold leading-6">{{ $enrollment->course?->title }}</h3>
+                        <h3 class="text-sm font-extrabold leading-6"><a href="{{ route('account.enrollments.show',$enrollment) }}" class="rounded hover:underline focus-visible:outline-2 focus-visible:outline-blue-600">{{ $enrollment->course?->title }}</a></h3>
                         <p class="mt-1 text-xs text-slate-500">{{ $done }} / {{ $total }} {{ __('dashboard.lessons_completed') }}</p>
-                        <a href="{{ route('account.enrollments.show',$enrollment) }}" class="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-blue-700 hover:underline dark:text-blue-400">{{ __('dashboard.resume_learning') }} <x-workspace-icon name="arrow-up-right" class="h-3 w-3" /></a>
+                        <a href="{{ route('account.enrollments.show',$enrollment) }}" class="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-blue-700 hover:underline dark:text-blue-400">{{ __('dashboard.resume_learning') }}</a>
                     </div>
                 </article>
             @empty
@@ -52,10 +53,10 @@
             @endforelse
             </div>
         </section>
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
-            <div class="flex flex-wrap items-center justify-between gap-2">
+        <section class="premium-card rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="calendar" /></span>
+            <div class="premium-card-content flex flex-wrap items-center justify-between gap-2">
                 <h2 class="text-lg font-extrabold">{{ __('dashboard.upcoming_work') }}</h2>
-                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><x-workspace-icon name="calendar" class="h-5 w-5" /></span>
             </div>
             <ol class="mt-5 max-h-[470px] space-y-3 overflow-y-auto">
             @forelse($upcoming as $assignment)
@@ -68,7 +69,6 @@
                         <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {{ $today ? 'bg-red-500' : ($thisWeek ? 'bg-amber-500' : 'bg-blue-500') }}"></span>
                         <span class="min-w-0 flex-1"><strong class="block text-sm leading-6">{{ $assignment->title }}</strong><span class="block text-xs text-slate-500">{{ $assignment->course?->title }}</span>
                         <span class="mt-2 block text-xs font-semibold {{ $today ? 'text-red-700 dark:text-red-400' : ($thisWeek ? 'text-amber-700 dark:text-amber-400' : 'text-blue-700 dark:text-blue-400') }}">{{ $today ? __('dashboard.today') : ($thisWeek ? __('dashboard.this_week') : __('dashboard.later')) }} · {{ $assignment->due_at->format('M j, H:i') }}</span></span>
-                        <x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-slate-400" />
                     </a>
                 </li>
             @empty
@@ -77,7 +77,8 @@
             </ol>
         </section>
     </div>
-    <section class="mt-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+    <section class="premium-card mt-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-7">
+        <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="chart-line" /></span>
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div><h2 class="text-lg font-extrabold">{{ __('dashboard.practice_subjects') }}</h2><p class="mt-1 text-xs leading-6 text-slate-500">{{ __('dashboard.practice_only') }} · {{ __('dashboard.activity_not_attendance') }}</p></div>
             <a href="{{ route('account.practice.history') }}" class="rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400">{{ __('dashboard.practice_attempts') }}</a>
