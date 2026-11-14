@@ -16,5 +16,5 @@
     </label>
     <button type="submit" class="auth-primary w-full rounded-xl bg-[#0c2d5b] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#19467c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dbad57]">{{ __('auth.sign_in') }}</button>
 </form>
-<p class="mt-5 text-center text-xs leading-6 text-slate-600 dark:text-slate-300">{{ __('auth.new_account') }} <a href="{{ route('register') }}" class="font-extrabold text-[#0c4a89] transition hover:underline dark:text-[#f2c778]">{{ __('auth.create_account') }}</a></p>
+<p class="mt-5 text-center text-xs leading-6 text-slate-600 dark:text-slate-300">{{ __('auth.new_account') }} <a href="{{ route('register', $authReturnTo ? ['next' => $authReturnTo] : []) }}" class="font-extrabold text-[#0c4a89] transition hover:underline dark:text-[#f2c778]">{{ __('auth.create_account') }}</a></p>
 @endsection

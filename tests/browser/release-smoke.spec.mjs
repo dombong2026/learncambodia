@@ -581,3 +581,43 @@ test('footer social icons are transparent and borderless on phone and desktop', 
     }
   }
 });
+
+test('guest profile dropdown has real icon-prefixed actions on desktop and mobile', async ({ page }) => {
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?lang=en');
+    await page.locator('button[aria-controls="profile-menu"]').click();
+    const menu = page.locator('#profile-menu');
+    await expect(menu).toBeVisible();
+    for (const [selector, icon] of [
+      ['[data-profile-sign-in]', '[data-profile-sign-in-icon]'],
+      ['[data-profile-register]', '[data-profile-register-icon]'],
+    ]) {
+      const link = menu.locator(selector);
+      await expect(link).toBeVisible();
+      await expect(link.locator(icon)).toBeVisible();
+      await expect(link.locator('svg')).toHaveCount(1);
+    }
+    await expect(menu.locator('[data-theme-toggle] svg')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+  }
+});
+
+test('exam catalog sign-in preserves validated reading destination instead of losing context', async ({ page }) => {
+  await page.goto('/exam-catalog?lang=en');
+  await page.locator('button[aria-controls="profile-menu"]').click();
+  const link = page.locator('#profile-menu [data-profile-sign-in]');
+  const href = await link.getAttribute('href');
+  const query = new URL(href, 'https://learncambodia.com').searchParams;
+  expect(query.get('next')).toBe('/exam-catalog?lang=en');
+
+  await link.click();
+  await expect(page).toHaveURL(/\/login\?/);
+  const next = new URL(page.url()).searchParams.get('next');
+  expect(next).toBe('/exam-catalog?lang=en');
+
+  const register = page.getByRole('link', { name: /create account/i });
+  const registration = new URL(await register.getAttribute('href'), 'https://learncambodia.com');
+  expect(registration.searchParams.get('next')).toBe('/exam-catalog?lang=en');
+});

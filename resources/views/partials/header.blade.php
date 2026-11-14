@@ -17,19 +17,8 @@
                 <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="profile-menu" aria-label="{{ __('ui.account') }}" class="premium-header-trigger grid h-10 w-10 place-items-center rounded-full bg-slate-900 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-700">
                     <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
                 </button>
-                <div id="profile-menu" data-dropdown-panel hidden class="premium-header-panel absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                    @auth
-                        <p class="truncate border-b border-slate-100 px-3 py-2 text-xs font-semibold text-slate-500 dark:border-slate-700">{{ auth()->user()->name }}</p>
-                        <a href="{{ route(auth()->user()->homeRouteName()) }}" class="premium-menu-option block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.dashboard') }}</a>
-                        @if(! auth()->user()->hasVerifiedEmail())
-                            <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
-                        @endif
-                        <form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="premium-menu-option block w-full rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_out') }}</button></form>
-                    @else
-                        <a href="{{ route('login') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_in') }}</a>
-                        <a href="{{ route('register') }}" class="premium-menu-option block rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-800">{{ __('ui.create_account') }}</a>
-                    @endauth
-                    @include('partials.theme-toggle')
+                <div id="profile-menu" data-dropdown-panel hidden class="premium-header-panel absolute right-0 mt-2 max-h-[min(75vh,650px)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                    @include('partials.profile-menu-content', ['profileRole' => auth()->user()?->role])
                 </div>
             </div>
         </div>
