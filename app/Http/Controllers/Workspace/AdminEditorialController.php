@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
+use App\Models\PostTerm;
+use App\Support\ApprovalAudit;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -16,6 +19,8 @@ class AdminEditorialController extends Controller
         'pages' => 'page',
         'posts' => 'post',
         'policies' => 'policy',
+        'faqs' => 'faq',
+        'help-articles' => 'help_article',
     ];
 
     private function type(string $kind): string
@@ -33,7 +38,7 @@ class AdminEditorialController extends Controller
 
         $entries = ContentEntry::query()->where('type', $type)
             ->when($query !== '', fn ($builder) => $builder->where('title', 'like', '%'.$query.'%'))
-            ->orderByDesc('updated_at')->paginate(10)->withQueryString();
+            ->with('terms')->orderByDesc('updated_at')->paginate(10)->withQueryString();
 
         return view('workspace.admin.editorial-index', compact('entries', 'kind', 'query'));
     }
@@ -44,6 +49,8 @@ class AdminEditorialController extends Controller
 
         return view('workspace.admin.editorial-form', [
             'kind' => $kind, 'entry' => new ContentEntry(), 'editing' => false,
+            'categories' => $kind === 'posts' ? PostTerm::where('kind','category')->orderBy('name')->get() : collect(),
+            'tags' => $kind === 'posts' ? PostTerm::where('kind','tag')->orderBy('name')->get() : collect(),
         ]);
     }
 
@@ -52,12 +59,15 @@ class AdminEditorialController extends Controller
         $type = $this->type($kind);
         $validated = $this->validateEntry($request, $type);
 
+        $terms = $this->validatedTerms($request, $type);
         $entry = ContentEntry::create($validated + [
             'type' => $type,
             'status' => 'draft',
             'created_by' => $request->user()->id,
             'updated_by' => $request->user()->id,
         ]);
+
+        if ($type === 'post') $entry->terms()->sync($terms);
 
         return redirect()->route('admin.editorial.edit', ['kind' => $kind, 'entry' => $entry])
             ->with('status', 'Draft created. It is not public.');
@@ -69,6 +79,8 @@ class AdminEditorialController extends Controller
 
         return view('workspace.admin.editorial-form', [
             'kind' => $kind, 'entry' => $entry, 'editing' => true,
+            'categories' => $kind === 'posts' ? PostTerm::where('kind','category')->orderBy('name')->get() : collect(),
+            'tags' => $kind === 'posts' ? PostTerm::where('kind','tag')->orderBy('name')->get() : collect(),
         ]);
     }
 
@@ -79,9 +91,39 @@ class AdminEditorialController extends Controller
             'Submitted and published content cannot be edited.');
 
         $validated = $this->validateEntry($request, $entry->type, $entry);
-        $entry->update($validated + ['updated_by' => $request->user()->id]);
+        $terms = $this->validatedTerms($request, $entry->type);
+        DB::transaction(function () use ($entry, $validated, $terms, $request): void {
+            $entry->update($validated + ['updated_by' => $request->user()->id]);
+            if ($entry->type === 'post') $entry->terms()->sync($terms);
+        });
 
         return back()->with('status', 'Draft updated. It remains unpublished.');
+    }
+
+    public function destroy(Request $request, string $kind, ContentEntry $entry): RedirectResponse
+    {
+        abort_unless($entry->type === $this->type($kind), 404);
+        abort_unless(in_array($entry->status, ['draft','rejected','published'], true), 409);
+        DB::transaction(function () use ($request, $entry): void {
+            $before = $entry->status;
+            $entry->delete();
+            ApprovalAudit::record('editorial_'.$entry->type, $entry->id,
+                $request->user(), 'deleted', $before, 'deleted');
+        });
+        return redirect()->route('admin.editorial.index', ['kind'=>$kind])
+            ->with('status', 'Entry removed from listings and public pages.');
+    }
+
+    private function validatedTerms(Request $request, string $type): array
+    {
+        if ($type !== 'post') return [];
+        $data = $request->validate([
+            'category_ids' => ['sometimes','array','max:40'],
+            'category_ids.*' => ['integer',Rule::exists('post_terms','id')->where('kind','category')],
+            'tag_ids' => ['sometimes','array','max:60'],
+            'tag_ids.*' => ['integer',Rule::exists('post_terms','id')->where('kind','tag')],
+        ]);
+        return array_values(array_unique(array_merge($data['category_ids'] ?? [], $data['tag_ids'] ?? [])));
     }
 
     private function validateEntry(Request $request, string $type, ?ContentEntry $entry = null): array
