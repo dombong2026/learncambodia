@@ -42,7 +42,7 @@
                 ['shield-check','longpage.author_step_review','longpage.author_step_review_note'],
                 ['newspaper','longpage.author_step_publish','longpage.author_step_publish_note'],
             ] as [$icon,$heading,$description])
-                <article class="rounded-3xl border border-slate-200 bg-[#f7f9fc] p-7 dark:border-slate-700 dark:bg-[#193b5e]"><x-workspace-icon :name="$icon" class="h-9 w-9 text-[#b27d26]"/>
+                <article class="premium-card rounded-3xl border border-slate-200 bg-[#f7f9fc] p-7 dark:border-slate-700 dark:bg-[#193b5e]"><span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-5 text-xl font-black text-[#10355f] dark:text-white">{{ __($heading) }}</h3>
                     <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ __($description) }}</p>
                 </article>
@@ -67,11 +67,11 @@
         </form>
         <div class="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#e0b766] hover:shadow-lg dark:border-slate-700 dark:bg-[#193653]">
-                    <div class="flex items-center justify-between gap-4"><span class="rounded-full bg-[#f8ecd3] px-3 py-1 text-xs font-black text-[#946b22]">{{ __('longpage.approved_article') }}</span><x-workspace-icon name="arrow-up-right" class="h-5 w-5 text-[#a67b32]"/></div>
+                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#e0b766] hover:shadow-lg dark:border-slate-700 dark:bg-[#193653]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><div class="premium-card-content flex items-center justify-between gap-4"><span class="rounded-full bg-[#f8ecd3] px-3 py-1 text-xs font-black text-[#946b22]">{{ __('longpage.approved_article') }}</span></div>
                     <h3 class="mt-5 break-words text-xl font-black text-[#12345e] group-hover:underline dark:text-white">{{ $article->title }}</h3>
                     <p class="mt-3 flex-1 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p>
-                    <span class="mt-6 text-xs font-black text-[#a67b32]">{{ __('frontend.read_article') }} →</span>
+                    <span class="mt-6 text-xs font-black text-[#a67b32]">{{ __('frontend.read_article') }}</span>
                 </a>
             @empty
                 <p class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-9 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#193653]">{{ __('longpage.no_published_articles') }}</p>
@@ -90,11 +90,11 @@
         </div><a href="{{ route('instructors.index') }}" class="rounded-xl bg-[#efc26c] px-5 py-3 text-sm font-black text-[#0e315d]">{{ __('longpage.view_instructors') }}</a></div>
         <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @forelse($authors as $profile)
-                <a href="{{ route('authors.show',$profile) }}" class="group flex min-h-52 flex-col rounded-3xl border border-white/15 bg-white p-6 text-[#12335e] transition hover:border-[#edc774] hover:shadow-xl dark:bg-[#1b3b5e] dark:text-white">
-                    <div class="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#154b82] to-[#0e2d57] text-2xl font-black text-[#f4c774]">{{ mb_strtoupper(mb_substr($profile->display_name,0,1)) }}</div>
+                <a href="{{ route('authors.show',$profile) }}" class="premium-card group flex min-h-52 flex-col rounded-3xl border border-white/15 bg-white p-6 text-[#12335e] transition hover:border-[#edc774] hover:shadow-xl dark:bg-[#1b3b5e] dark:text-white">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="user-round" /></span><div class="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#154b82] to-[#0e2d57] text-2xl font-black text-[#f4c774]">{{ mb_strtoupper(mb_substr($profile->display_name,0,1)) }}</div>
                     <h3 class="mt-5 break-words text-lg font-black">{{ $profile->display_name }}</h3>
                     <p class="mt-2 flex-1 text-xs leading-7 text-slate-500 dark:text-slate-300">{{ $profile->headline }}</p>
-                    <span class="mt-5 text-xs font-bold text-[#ad7d29]">{{ __('longpage.view_contributions') }} →</span>
+                    <span class="mt-5 text-xs font-bold text-[#ad7d29]">{{ __('longpage.view_contributions') }}</span>
                 </a>
             @empty
                 <p class="col-span-full rounded-2xl border border-white/20 bg-white/10 p-8 text-sm text-[#d5e4f0]">{{ __('longpage.no_consented_authors') }}</p>
@@ -113,11 +113,11 @@
                 ['award','longpage.author_cefr_tool','longpage.author_cefr_tool_note',route('cefr.index')],
                 ['users','longpage.author_teacher_tool','longpage.author_teacher_tool_note',route('instructors.index')],
             ] as [$icon,$heading,$note,$url])
-                <a href="{{ $url }}" class="group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:border-[#d7ae64] dark:border-slate-700 dark:bg-[#193757]">
-                    <x-workspace-icon :name="$icon" class="h-9 w-9 text-[#ae7b25]"/>
+                <a href="{{ $url }}" class="premium-card group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:border-[#d7ae64] dark:border-slate-700 dark:bg-[#193757]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-5 text-xl font-black text-[#11345d] dark:text-white">{{ __($heading) }}</h3>
                     <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ __($note) }}</p>
-                    <span class="mt-5 inline-block text-xs font-black text-[#b07b22]">{{ __('longpage.explore') }} →</span>
+                    <span class="mt-5 inline-block text-xs font-black text-[#b07b22]">{{ __('longpage.explore') }}</span>
                 </a>
             @endforeach
         </div>
