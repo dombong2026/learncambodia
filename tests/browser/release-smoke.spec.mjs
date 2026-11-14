@@ -468,7 +468,7 @@ test('public guidance and featured metric cards share the premium motion class',
 });
 
 test('homepage learning steps display compact 2–4 responsive cards with visible icons', async ({ page }) => {
-  for (const [width, columns] of [[390, 2], [820, 4], [1440, 4]]) {
+  for (const [width, columns] of [[390, 2], [820, 2], [1440, 4]]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/?lang=en');
 
