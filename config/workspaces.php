@@ -249,7 +249,7 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Pages",
+          "label": "All",
           "route": "admin.editorial.index",
           "parameters": {
             "kind": "pages"
@@ -262,10 +262,6 @@ return json_decode(<<<'JSON'
           "parameters": {
             "kind": "pages"
           }
-        },
-        {
-          "key": "settings",
-          "label": "Settings"
         }
       ]
     },
@@ -276,7 +272,7 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Posts",
+          "label": "All",
           "route": "admin.editorial.index",
           "parameters": {
             "kind": "posts"
@@ -292,15 +288,19 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "category",
-          "label": "Categories"
+          "label": "Category",
+          "route": "admin.post-terms.index",
+          "parameters": {
+            "kind": "categories"
+          }
         },
         {
           "key": "tag",
-          "label": "Tags"
-        },
-        {
-          "key": "settings",
-          "label": "Settings"
+          "label": "Tag",
+          "route": "admin.post-terms.index",
+          "parameters": {
+            "kind": "tags"
+          }
         }
       ]
     },
@@ -311,15 +311,40 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "contact",
-          "label": "Contact"
+          "label": "Contact",
+          "route": "admin.contact-inquiries.index"
         },
         {
-          "key": "ticketing",
-          "label": "Ticketing"
+          "key": "faqs",
+          "label": "FAQs",
+          "route": "admin.editorial.index",
+          "parameters": {
+            "kind": "faqs"
+          }
+        },
+        {
+          "key": "help-articles",
+          "label": "Help Articles",
+          "route": "admin.editorial.index",
+          "parameters": {
+            "kind": "help-articles"
+          }
         },
         {
           "key": "live-chat",
-          "label": "Live Chat"
+          "label": "Live Chat",
+          "route": "admin.support.index",
+          "parameters": {
+            "kind": "chats"
+          }
+        },
+        {
+          "key": "ticketing",
+          "label": "Ticket",
+          "route": "admin.support.index",
+          "parameters": {
+            "kind": "tickets"
+          }
         }
       ]
     },
@@ -330,7 +355,7 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Policies",
+          "label": "All",
           "route": "admin.editorial.index",
           "parameters": {
             "kind": "policies"
@@ -343,10 +368,6 @@ return json_decode(<<<'JSON'
           "parameters": {
             "kind": "policies"
           }
-        },
-        {
-          "key": "settings",
-          "label": "Settings"
         }
       ]
     },

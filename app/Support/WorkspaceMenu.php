@@ -17,7 +17,11 @@ final class WorkspaceMenu
         $definitions = match ($role) {
             'admin' => [
                 ['overview','Overview','layout',['dashboard']],
-                ['content','Content & Appearance','palette',['appearance','page-manager','post-manager','policy-center']],
+                ['content','Content & Appearance','palette',['appearance']],
+                ['page-manager','Page Manager','files',['page-manager']],
+                ['post-manager','Post Manager','newspaper',['post-manager']],
+                ['policy-center','Policy Center','shield',['policy-center']],
+                ['support-center','Support Center','headphones',['support-center']],
                 ['programs','Academic Programs','book',['category','courses']],
                 ['people','People & Accounts','users',['user-manager']],
                 ['review','Reviews & Quality','shield',['approvals','academic-quality']],
@@ -61,10 +65,6 @@ final class WorkspaceMenu
                     $items[] = $item;
                 }
             }
-            if ($role === 'admin' && $key === 'content' && Route::has('admin.contact-inquiries.index')) {
-                $items[]=['key'=>'inquiries','label'=>'Contact Inquiries','route'=>'admin.contact-inquiries.index',
-                    'icon'=>'inbox','section_title'=>'Support & Content'];
-            }
             if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {
                 $items[] = [
                     'key'=>'public-profiles','label'=>'Public Profile Reviews',
@@ -104,6 +104,13 @@ final class WorkspaceMenu
             'page-manager/create' => 'file-plus-2',
             'post-manager/all' => 'newspaper',
             'post-manager/create' => 'pen-square',
+            'post-manager/category' => 'tags',
+            'post-manager/tag' => 'tag',
+            'support-center/contact' => 'inbox',
+            'support-center/faqs' => 'help-circle',
+            'support-center/help-articles' => 'book-open',
+            'support-center/live-chat' => 'messages-square',
+            'support-center/ticketing' => 'ticket',
             'policy-center/all' => 'scale',
             'policy-center/create' => 'shield-plus',
             'user-manager/all' => 'user-round',

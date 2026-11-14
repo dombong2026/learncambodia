@@ -36,6 +36,7 @@ use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
 use App\Http\Controllers\Workspace\AdminEditorialController;
+use App\Http\Controllers\Workspace\AdminPostTermController;
 use App\Http\Controllers\Workspace\AdminEditorialReviewController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
@@ -196,6 +197,15 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');
             Route::get('/{entry}/edit', [AdminEditorialController::class, 'edit'])->name('edit');
             Route::patch('/{entry}', [AdminEditorialController::class, 'update'])->name('update');
+            Route::delete('/{entry}', [AdminEditorialController::class, 'destroy'])->name('destroy');
+        });
+        Route::prefix('post-terms/{kind}')->name('post-terms.')->group(function (): void {
+            Route::get('/', [AdminPostTermController::class,'index'])->name('index');
+            Route::get('/create', [AdminPostTermController::class,'create'])->name('create');
+            Route::post('/', [AdminPostTermController::class,'store'])->name('store');
+            Route::get('/{term}/edit', [AdminPostTermController::class,'edit'])->name('edit');
+            Route::patch('/{term}', [AdminPostTermController::class,'update'])->name('update');
+            Route::delete('/{term}', [AdminPostTermController::class,'destroy'])->name('destroy');
         });
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
