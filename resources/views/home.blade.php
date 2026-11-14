@@ -131,7 +131,7 @@
         ] as $step)
             <a href="{{ $step[3] }}" class="premium-card rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$step[0]" /></span>
-                <h3 class="premium-card-content mt-16 text-sm font-black">{{ $step[1] }}</h3><p class="premium-card-content mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
+                <h3 class="premium-card-content mt-20 text-sm font-black">{{ $step[1] }}</h3><p class="premium-card-content mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
             </a>
         @endforeach
     </div>
