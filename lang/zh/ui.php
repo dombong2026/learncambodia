@@ -5,6 +5,7 @@ return [
     'search' => '搜索课程与学习路径',
     'search_placeholder' => '搜索课程、IELTS、TEFL、CEFR…',
     'language' => '切换语言',
+    'dark_mode' => '深色模式',
     'account' => '您的账户',
     'dashboard' => '仪表盘',
     'sign_out' => '退出登录',

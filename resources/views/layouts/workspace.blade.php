@@ -7,6 +7,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title>@yield('title', 'Overview') · Learn Cambodia</title>
     @include('partials.brand-head')
+    @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
 </head>
 <body data-workspace-body class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
@@ -86,6 +87,7 @@
                                 <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
                             @endif
                             <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.overview') }}</a>
+                            @include('partials.theme-toggle')
                             <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">{{ __('workspace.sign_out') }}</button></form>
                         </div>
                     </div>

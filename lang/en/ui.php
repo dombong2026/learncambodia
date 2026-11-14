@@ -4,6 +4,7 @@ return [
     'search' => 'Search courses and pathways',
     'search_placeholder' => 'Search courses, IELTS, TEFL, CEFR…',
     'language' => 'Change language',
+    'dark_mode' => 'Dark mode',
     'account' => 'Your account',
     'dashboard' => 'Dashboard',
     'sign_out' => 'Sign out',
