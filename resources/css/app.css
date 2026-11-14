@@ -388,3 +388,20 @@ a.premium-card:hover, a.premium-card:focus-visible {
     .workspace-content :is(input,textarea,select),
     .information-page .information-surface { transition: none !important; }
 }
+
+
+/* Learning focus group cards: icon / title / count share a centered vertical axis.
+   This deliberately does not change individual category directory cards, whose
+   description, code and link require their existing information hierarchy. */
+.learning-focus-card .learning-focus-icon svg {
+    width: 5rem;
+    height: 5rem;
+    stroke-width: 1.65;
+    transition: transform .22s ease, color .22s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+    .learning-focus-card:hover .learning-focus-icon svg { transform: translateY(-2px) scale(1.055); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .learning-focus-card .learning-focus-icon svg { transition: none !important; transform: none !important; }
+}

@@ -118,4 +118,27 @@ final class FrontendExperienceRefinementTest extends TestCase
                 ->assertDontSee('longpage.category_many');
         }
     }
+    public function test_learning_focus_cards_center_large_icons_titles_and_real_group_counts(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $response = $this->get('/categories?lang=en')->assertOk()
+            ->assertSee('data-learning-focus-card', false)
+            ->assertSee('data-learning-focus-icon', false)
+            ->assertSee('data-learning-focus-name', false)
+            ->assertSee('data-learning-focus-count', false)
+            ->assertSee('learning-focus-card', false)
+            ->assertSee('h-20 w-20', false);
+
+        $this->assertSame(5, substr_count($response->getContent(), 'data-learning-focus-card'));
+        $this->assertSame(5, substr_count($response->getContent(), 'data-learning-focus-count'));
+        $this->assertSame(5, substr_count($response->getContent(), 'data-learning-focus-icon'));
+        $this->assertSame(5, substr_count($response->getContent(), 'data-learning-focus-name'));
+
+        // Each group remains a single link; counts still reflect the seeded database.
+        $this->assertMatchesRegularExpression('/4 Categories/', $response->getContent());
+        $this->assertMatchesRegularExpression('/1 Category/', $response->getContent());
+        $this->get('/categories?q=IELTS&lang=en')->assertOk()
+            ->assertSee('q=IELTS', false);
+    }
+
 }

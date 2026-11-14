@@ -327,23 +327,37 @@ test('disabled or aria-disabled controls never misleadingly show the hand cursor
 });
 
 
-test('category focus art never overlaps headings on desktop or mobile', async ({ page }) => {
-  for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+test('learning focus cards center a large visible icon, name and count on desktop/mobile', async ({ page }) => {
+  for (const size of [
+    { width: 1440, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
     await page.setViewportSize(size);
     await page.goto('/categories?lang=en');
-    const cards = page.locator('#learning-focus a.premium-card');
+    const cards = page.locator('#learning-focus [data-learning-focus-card]');
     await expect(cards).toHaveCount(5);
 
     for (const card of await cards.all()) {
-      const icon = card.locator('.premium-corner-icon svg');
-      const heading = card.locator('h3');
+      const icon = card.locator('[data-learning-focus-icon] svg');
+      const name = card.locator('[data-learning-focus-name]');
+      const count = card.locator('[data-learning-focus-count]');
       await expect(icon).toBeVisible();
-      await expect(heading).toBeVisible();
-      const svg = await icon.boundingBox();
-      const text = await heading.boundingBox();
-      expect(svg).not.toBeNull();
-      expect(text).not.toBeNull();
-      expect(text.y).toBeGreaterThan(svg.y + svg.height - 3);
+      await expect(name).toBeVisible();
+      await expect(count).toBeVisible();
+      const [cardBox, svg, heading, counter] = await Promise.all(
+        [card, icon, name, count].map(item => item.boundingBox())
+      );
+      expect(cardBox && svg && heading && counter).toBeTruthy();
+      const centerX = cardBox.x + cardBox.width / 2;
+      for (const rect of [svg, heading, counter]) {
+        expect(Math.abs(rect.x + rect.width / 2 - centerX)).toBeLessThan(4);
+      }
+      expect(svg.width).toBeGreaterThanOrEqual(70);
+      expect(svg.height).toBeGreaterThanOrEqual(70);
+      expect(heading.y).toBeGreaterThanOrEqual(svg.y + svg.height - 3);
+      expect(counter.y).toBeGreaterThanOrEqual(heading.y + heading.height - 3);
+      expect(counter.y + counter.height).toBeLessThanOrEqual(cardBox.y + cardBox.height);
     }
   }
 });

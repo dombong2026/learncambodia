@@ -55,10 +55,12 @@
         <div class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             @foreach(\App\Models\Category::GROUPS as $slug=>$label)
                 @php $icon = \App\Support\CategoryVisual::groupIcon($slug); @endphp
-                <a href="{{ route('categories.index', array_merge($directoryParams, ['group' => $slug])) }}#category-directory" class="premium-card group flex min-h-52 flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 transition hover:-translate-y-0.5 hover:border-[#e2b867] hover:shadow-xl dark:border-slate-700 dark:bg-[#163456]">
-                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
-                    <h3 class="premium-card-content mt-20 text-lg font-black leading-7 text-[#12345f] dark:text-white">{{ $label }}</h3>
-                    <p class="premium-card-content mt-3 text-xs font-semibold text-slate-500 dark:text-slate-300">{{ number_format((int) ($groupCounts[$slug] ?? 0)) }} {{ (int) ($groupCounts[$slug] ?? 0) === 1 ? __('longpage.category_one') : __('longpage.category_many') }}</p>
+                <a data-learning-focus-card href="{{ route('categories.index', array_merge($directoryParams, ['group' => $slug])) }}#category-directory" class="premium-card learning-focus-card group flex min-h-[258px] flex-col items-center rounded-3xl border border-slate-200 bg-[#f8fafc] px-5 py-6 text-center transition hover:-translate-y-0.5 hover:border-[#e2b867] hover:shadow-xl dark:border-slate-700 dark:bg-[#163456]">
+                    <span data-learning-focus-icon class="premium-card-content learning-focus-icon flex h-[88px] w-full shrink-0 items-center justify-center text-[#4677ac] dark:text-[#b5d7f7]" aria-hidden="true">
+                        <x-workspace-icon :name="$icon" class="h-20 w-20" />
+                    </span>
+                    <h3 data-learning-focus-name class="premium-card-content flex min-h-[72px] w-full flex-1 items-center justify-center break-words text-center text-lg font-black leading-7 text-[#12345f] dark:text-white">{{ $label }}</h3>
+                    <p data-learning-focus-count class="premium-card-content mt-2 w-full text-center text-xs font-bold leading-5 text-slate-600 dark:text-slate-200">{{ number_format((int) ($groupCounts[$slug] ?? 0)) }} {{ (int) ($groupCounts[$slug] ?? 0) === 1 ? __('longpage.category_one') : __('longpage.category_many') }}</p>
                 </a>
             @endforeach
         </div>
