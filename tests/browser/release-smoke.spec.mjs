@@ -409,3 +409,60 @@ test('informational pages keep legal drafts visible and match the theme switch',
   expect(dark).not.toEqual(original);
   await expect(section.locator('[role="note"]')).toContainText('preliminary draft');
 });
+
+test('CEFR information cards have consistent pointer motion and do not pretend to be links', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+  await page.goto('/cefr?lang=en#A1');
+  const cards = page.locator('[data-cefr-level-card]');
+  await expect(cards).toHaveCount(6);
+  const a1 = page.locator('article#A1[data-cefr-level-card]');
+  await expect(a1).toBeVisible();
+  await expect(a1).toHaveCSS('cursor', 'auto');
+  await expect(a1.locator('a[href]')).toHaveCount(0);
+
+  const pointerHover = await page.evaluate(() =>
+    matchMedia('(hover: hover) and (pointer: fine)').matches
+  );
+  if (pointerHover) {
+    await a1.hover();
+    await expect.poll(() => a1.evaluate(el => getComputedStyle(el).transform))
+      .not.toBe('none');
+
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    await a1.hover();
+    await expect.poll(() => a1.evaluate(el => getComputedStyle(el).transform))
+      .not.toBe('none');
+  }
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await a1.hover();
+  await expect(a1).toHaveCSS('transform', 'none');
+  await expect(a1).toHaveCSS('translate', 'none');
+});
+
+test('public guidance and featured metric cards share the premium motion class', async ({ page }) => {
+  for (const [path, selector] of [
+    ['/information/about?lang=en', '#about-mission article.premium-card'],
+    ['/information/about?lang=en', 'div.premium-card-on-navy'],
+    ['/authors?lang=en', 'div.premium-card-on-navy'],
+    ['/reading?lang=en', 'div.premium-card:has-text("Read with a purpose")'],
+    ['/exam-catalog?lang=en', 'div.premium-card:has-text("Choose a reviewed course")'],
+    ['/leaderboard?lang=en', 'div.premium-card:has-text("Enrollment milestone")'],
+    ['/recommendations?lang=en', 'div.premium-card:has-text("Own learning interests")'],
+  ]) {
+    await page.goto(path);
+    const card = page.locator(selector).first();
+    await expect(card).toBeVisible();
+    await expect(card).toHaveCSS('cursor', 'auto');
+    if (await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)) {
+      await card.hover();
+      await expect.poll(() => card.evaluate(el => getComputedStyle(el).transform))
+        .not.toBe('none');
+    }
+  }
+
+  await page.goto('/categories?lang=en');
+  const linked = page.locator('#learning-focus a.premium-card').first();
+  await expect(linked).toHaveAttribute('href', /group=/);
+  await expect(linked).toHaveCSS('cursor', 'pointer');
+});
