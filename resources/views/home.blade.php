@@ -60,13 +60,13 @@
             </a>
             <a href="{{ route('cefr.index') }}" class="premium-card flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" /></span>
-                <h2 class="premium-card-content mt-16 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
+                <h2 class="premium-card-content mt-20 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
                 <p class="mt-2 text-sm leading-7 text-slate-500">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
         <section class="premium-card premium-card-on-navy min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
             <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span><p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
-            <h2 class="premium-card-content mt-16 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
+            <h2 class="premium-card-content mt-20 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
             <p class="mt-4 text-sm leading-8 text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
             <div class="mt-6 grid grid-cols-3 gap-2">
                 @foreach([['school',__('pages.courses')],['clipboard-check',__('pages.assignments')],['chart-line',__('pages.progress')]] as [$icon,$label])
