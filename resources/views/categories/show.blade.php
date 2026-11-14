@@ -52,11 +52,7 @@
             @forelse($courses as $course)
                 <x-public-course-card :course="$course"/>
             @empty
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-white p-10 dark:border-slate-700 dark:bg-[#133051]">
-                    <h3 class="text-lg font-bold">{{ __('longpage.no_approved_courses') }}</h3>
-                    <p class="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ __('longpage.no_approved_courses_note') }}</p>
-                    <a href="{{ route('courses.index') }}" class="mt-5 inline-block rounded-xl bg-[#143866] px-5 py-3 text-sm font-black text-white">{{ __('longpage.browse_course_catalog') }}</a>
-                </div>
+                <x-public-empty-state icon="book-open" :title="__('longpage.no_approved_courses')" :description="__('longpage.no_approved_courses_note')" :href="route('courses.index')" :action="__('longpage.browse_course_catalog')" />
             @endforelse
         </div>
         <div class="mt-8">{{ $courses->links() }}</div>
