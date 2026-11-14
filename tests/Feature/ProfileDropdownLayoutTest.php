@@ -57,7 +57,7 @@ final class ProfileDropdownLayoutTest extends TestCase
         $this->assertIsString($profile);
         $this->assertIsString($theme);
         $this->assertStringContainsString("@include('partials.theme-toggle', ['showDivider' => false])", $profile);
-        $this->assertStringContainsString("($showDivider ?? true)", $theme);
+        $this->assertStringContainsString('($showDivider ?? true)', $theme);
         $this->assertStringNotContainsString('data-profile-nav-group="{{ $group[\'key\'] }}" class="mt-2 border-t', $profile);
     }
 }
