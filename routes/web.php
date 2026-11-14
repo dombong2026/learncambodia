@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/contact-inquiries', [AdminContactInquiryController::class, 'index'])->name('contact-inquiries.index');
         Route::patch('/contact-inquiries/{inquiry}', [AdminContactInquiryController::class, 'update'])
             ->middleware('throttle:30,1')->name('contact-inquiries.update');
+        Route::delete('/contact-inquiries/{inquiry}', [AdminContactInquiryController::class, 'destroy'])->name('contact-inquiries.destroy');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
         Route::get('/instructors', [AdminInstructorController::class, 'index'])->name('instructors.index');
         Route::get('/public-profiles', [AdminPublicProfileController::class, 'index'])->name('public-profiles.index');

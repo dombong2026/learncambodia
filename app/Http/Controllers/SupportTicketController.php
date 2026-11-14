@@ -81,15 +81,17 @@ final class SupportTicketController extends Controller
 
     public function startChat(Request $request): RedirectResponse
     {
-        $chat = SupportTicket::where('user_id',$request->user()->id)
-            ->where('kind','chat')->whereNotIn('status',['closed','resolved'])
-            ->orderByDesc('id')->first();
-        if (!$chat) {
-            $chat=SupportTicket::create([
+        // Serialize chat creation per account to avoid two simultaneous active chats.
+        $chat = DB::transaction(function () use ($request): SupportTicket {
+            \App\Models\User::query()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+            $active = SupportTicket::where('user_id',$request->user()->id)
+                ->where('kind','chat')->whereNotIn('status',['closed','resolved'])
+                ->orderByDesc('id')->first();
+            return $active ?? SupportTicket::create([
                 'user_id'=>$request->user()->id,'kind'=>'chat',
                 'subject'=>'Live chat','priority'=>'normal','status'=>'open',
             ]);
-        }
+        });
         return redirect()->route('support.tickets.show',$chat);
     }
 

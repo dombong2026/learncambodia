@@ -24,6 +24,7 @@
             <button type="submit" name="status" value="reviewed" class="rounded-xl border border-[#d5aa61] px-5 py-3 text-xs font-bold text-[#b17b27]">Mark reviewed</button>
             <button type="submit" name="status" value="closed" class="rounded-xl bg-[#12365f] px-5 py-3 text-xs font-black text-white">Close</button>
         </form>
+        <form class="mt-3" method="POST" action="{{ route('admin.contact-inquiries.destroy',$inquiry) }}" onsubmit="return confirm('Archive this contact inquiry?')">@csrf @method('DELETE')<button class="rounded-xl border border-red-300 px-5 py-3 text-xs font-bold text-red-700">Archive Inquiry</button></form>
     </section>
 @empty
     <p class="rounded-2xl border border-dashed border-slate-300 bg-white p-9 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#152e4d]">No inquiries match this filter.</p>

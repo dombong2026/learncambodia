@@ -15,6 +15,10 @@ $inquiries=ContactInquiry::query()->when($status,fn($q)=>$q->where('status',$sta
 ->orderByDesc('id')->paginate(10)->withQueryString();
 return view('workspace.admin.contact-inquiries',compact('inquiries','status')+['role'=>'admin']);
 }
+public function destroy(ContactInquiry $inquiry): RedirectResponse {
+$inquiry->delete();
+return redirect()->route('admin.contact-inquiries.index')->with('status','Inquiry archived.');
+}
 public function update(Request $request, ContactInquiry $inquiry): RedirectResponse {
 $data=$request->validate([
 'status'=>['required',Rule::in(['reviewed','closed'])],

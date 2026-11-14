@@ -294,7 +294,7 @@ final class WorkspaceMenu
                 default => null,
             };
             if ($route && Route::has($route)) {
-                $params = $route === 'admin.editorial.index' ? ['kind' => 'posts'] : [];
+                $params = $route === 'admin.editorial.index' ? ['kind' => (request()->route('kind') ?? 'posts')] : [];
                 $parent = ['label' => __('workspace.back_to_section'), 'url' => route($route, $params)];
             }
         }
