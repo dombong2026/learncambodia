@@ -32,10 +32,13 @@ if (shell && sidebar) {
         link.addEventListener('click', () => setSidebar(false));
     });
 
-    const search = document.querySelector<HTMLInputElement>('[data-workspace-search]');
+    // Desktop and mobile search share one filtering state; entering text inside the
+    // mobile sidebar must never steal input focus by reopening the navigation.
+    const searches = Array.from(document.querySelectorAll<HTMLInputElement>('[data-workspace-search]'));
     const noResults = document.querySelector<HTMLElement>('[data-workspace-no-results]');
-    search?.addEventListener('input', () => {
-        const query = search.value.trim().toLocaleLowerCase();
+    const filterNavigation = (value: string, source: HTMLInputElement): void => {
+        searches.forEach(input => { if (input !== source) input.value = value; });
+        const query = value.trim().toLocaleLowerCase();
         let visible = 0;
 
         sidebar.querySelectorAll<HTMLElement>('[data-nav-group]').forEach(group => {
@@ -53,8 +56,10 @@ if (shell && sidebar) {
         });
 
         if (noResults) noResults.hidden = visible > 0;
-        if (query && window.matchMedia('(max-width: 1023px)').matches) setSidebar(true);
-    });
+        if (query && window.matchMedia('(max-width: 1023px)').matches &&
+            overlay?.hidden && source.id !== 'workspace-search-mobile') setSidebar(true);
+    };
+    searches.forEach(input => input.addEventListener('input', () => filterNavigation(input.value, input)));
 
     document.querySelectorAll<HTMLElement>('[data-workspace-toast]').forEach(toast => {
         window.setTimeout(() => toast.remove(), 5000);

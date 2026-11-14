@@ -25,6 +25,13 @@
                 <p class="text-[10px] font-bold uppercase tracking-[.15em] text-[#efbe59]">{{ __('workspace.groups.overview') }} · {{ __('workspace.workspace') }}</p>
                 <p class="mt-1 truncate text-sm font-extrabold text-white">{{ auth()->user()->name }}</p>
             </div>
+            <div class="px-3 pt-3 lg:hidden">
+                <label for="workspace-search-mobile" class="sr-only">{{ __('workspace.search') }}</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/60"><x-workspace-icon name="search" class="h-4 w-4" /></span>
+                    <input id="workspace-search-mobile" data-workspace-search type="search" autocomplete="off" placeholder="{{ __('workspace.search') }}…" class="w-full rounded-xl border border-white/20 bg-white/10 py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/60 focus:border-[#f1c36a] focus:outline-none focus:ring-2 focus:ring-[#f1c36a]/30" />
+                </div>
+            </div>
             <nav data-workspace-nav class="workspace-nav scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Account navigation">
                 @foreach(\App\Support\WorkspaceMenu::groups($role) as $group)
                     <details data-nav-group class="mb-2 rounded-xl" {{ $loop->first ? 'open' : '' }}>
@@ -83,7 +90,7 @@
                     </div>
                 </div>
             </header>
-            <main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
+            <main data-workspace-main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
                 @php
                     $workspaceHeading = trim($__env->yieldContent('heading', __('workspace.overview')));
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);
@@ -101,7 +108,7 @@
                         @endif
                     @endforeach
                 </nav>
-                <div class="mb-7 flex flex-wrap items-start justify-between gap-4">
+                <div data-workspace-heading class="mb-7 flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <p class="mb-1 text-[11px] font-bold uppercase tracking-[.15em] text-blue-700 dark:text-blue-400">{{ ucfirst($role) }} {{ __('workspace.workspace') }}</p>
                         <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">@yield('heading', 'Overview')</h1>
@@ -118,7 +125,7 @@
                 @if(session('status'))
                     <div role="status" aria-live="polite" data-workspace-toast class="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-800 shadow-xl dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300">{{ session('status') }}</div>
                 @endif
-                @yield('content')
+                <div data-workspace-content class="workspace-content min-w-0">@yield('content')</div>
             </main>
         </div>
         <nav class="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.08)] backdrop-blur-xl lg:hidden dark:border-slate-800 dark:bg-slate-900/95" aria-label="Mobile workspace navigation">

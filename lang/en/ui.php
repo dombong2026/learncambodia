@@ -14,4 +14,12 @@ return [
     'all_categories' => 'All categories',
     'explore_categories' => 'Explore categories',
     'view_cefr' => 'View CEFR levels',
+
+    'information' => 'Information & guidance',
+    'page_overview' => 'Overview',
+    'continue_learning' => 'Explore learning',
+    'draft_legal_notice' => 'This document is a preliminary draft and requires legal review before launching the registration system publicly.',
+    'empty_workspace' => 'Nothing here yet',
+    'empty_courses' => 'No courses available yet',
+    'empty_editorial' => 'No drafts found',
 ];
