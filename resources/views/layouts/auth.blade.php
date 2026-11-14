@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#0c2d5b">
     <meta name="robots" content="noindex,nofollow">
     <title>@yield('title') · Learn Cambodia</title>
+    @include('partials.brand-head')
     @vite(['resources/css/app.css','resources/js/app.ts'])
 </head>
 <body data-auth-body class="min-h-screen bg-gradient-to-br from-[#e9eef5] via-[#f7f9fc] to-[#dfe9f6] text-slate-900 antialiased dark:from-[#071d3b] dark:via-[#0e274a] dark:to-[#0b2446] dark:text-white">
@@ -18,7 +19,7 @@
                     <x-workspace-icon name="home" class="h-5 w-5" />
                 </a>
                 <div class="mx-auto flex max-w-xs flex-col items-center text-center">
-                    <span class="inline-flex items-center justify-center text-base font-black tracking-tight text-white">Learn <span class="ml-1 text-[#ffd078]">Cambodia</span></span>
+                    <x-brand-logo surface="dark" height="h-9" imageClass="max-w-[225px]" />
                     <p class="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-[#f3c368]">{{ __('auth.account_access') }}</p>
                     <h1 class="mt-2 text-[1.65rem] font-black tracking-tight">@yield('auth_heading')</h1>
                     <p class="mt-1.5 text-[13px] leading-6 text-[#d2e1f2]">@yield('auth_intro')</p>
