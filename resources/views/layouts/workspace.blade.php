@@ -65,30 +65,20 @@
                         <x-workspace-icon name="activity" />
                         <span class="hidden xl:inline" data-saver-label>{{ __('workspace.data_saver_off') }}</span>
                     </button>
-                    <div class="flex h-10 shrink-0 items-center rounded-full border border-transparent bg-transparent p-1" role="group" aria-label="{{ __('workspace.languages') }}">
-                        <form method="POST" action="{{ route('language.update') }}">@csrf
-                            <button type="submit" name="locale" value="en" title="English" aria-label="English" aria-pressed="{{ app()->getLocale()==='en' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='en' ? 'text-blue-700 underline decoration-amber-500 underline-offset-4 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇬🇧</span><span class="hidden xl:inline">EN</span></button>
-                        </form>
-                        <form method="POST" action="{{ route('language.update') }}">@csrf
-                            <button type="submit" name="locale" value="km" title="ភាសាខ្មែរ" aria-label="ភាសាខ្មែរ" aria-pressed="{{ app()->getLocale()==='km' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='km' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇰🇭</span><span class="hidden xl:inline">ខ្មែរ</span></button>
-                        </form>
-                        <form method="POST" action="{{ route('language.update') }}">@csrf
-                            <button type="submit" name="locale" value="zh" title="简体中文" aria-label="简体中文" aria-pressed="{{ app()->getLocale()==='zh' ? 'true' : 'false' }}" class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-bold transition {{ app()->getLocale()==='zh' ? 'bg-white text-blue-700 shadow-sm dark:bg-slate-800 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700' }}"><span aria-hidden="true">🇨🇳</span><span class="hidden xl:inline">中文</span></button>
-                        </form>
-                    </div>
-                    <div class="relative ml-auto" data-dropdown>
-                        <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="workspace-profile" aria-label="Account menu" class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-700 font-bold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+                    @include('partials.language-menu')
+                    <div class="relative ml-auto" data-dropdown data-header-control>
+                        <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="workspace-profile" aria-label="Account menu" class="premium-header-trigger grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-700 font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
                             {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
                         </button>
-                        <div id="workspace-profile" data-dropdown-panel hidden class="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        <div id="workspace-profile" data-dropdown-panel hidden class="premium-header-panel absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                             <div class="border-b border-slate-100 px-3 py-2 dark:border-slate-800"><p class="truncate text-sm font-bold">{{ auth()->user()->name }}</p><p class="truncate text-xs text-slate-500">{{ auth()->user()->email }}</p></div>
-                            <a href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="mt-1 block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.profile_security') }}</a>
+                            <a href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="premium-menu-option mt-1 block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.profile_security') }}</a>
                             @if(! auth()->user()->hasVerifiedEmail())
-                                <a href="{{ route('verification.notice') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
+                                <a href="{{ route('verification.notice') }}" class="premium-menu-option block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('auth.confirm_email') }}</a>
                             @endif
                             <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('workspace.overview') }}</a>
                             @include('partials.theme-toggle')
-                            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">{{ __('workspace.sign_out') }}</button></form>
+                            <form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="premium-menu-option w-full rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950">{{ __('workspace.sign_out') }}</button></form>
                         </div>
                     </div>
                 </div>
@@ -121,7 +111,7 @@
                         @hasSection('heading_action')
                             @yield('heading_action')
                         @else
-                            <a href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm"><x-workspace-icon name="arrow-up-right" class="h-4 w-4" />{{ $workspaceAction['label'] }}</a>
+                            <a href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
                         @endif
                     </div>
                 </div>

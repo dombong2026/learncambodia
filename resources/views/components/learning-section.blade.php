@@ -15,7 +15,7 @@
                 <h2 class="mt-2 break-words text-2xl font-black leading-tight sm:text-3xl {{ $tone==='navy'?'text-white':'text-[#10345e] dark:text-white' }}">{{ $title }}</h2>
                 @if($subtitle)<p class="mt-3 max-w-4xl text-sm leading-8 {{ $tone==='navy'?'text-[#d7e4f2]':'text-slate-600 dark:text-slate-300' }}">{{ $subtitle }}</p>@endif
             </div>
-            @if($actionUrl && $actionLabel)<a href="{{ $actionUrl }}" class="rounded-xl border px-5 py-3 text-xs font-black transition hover:shadow-md {{ $tone==='navy'?'border-[#d8b875] text-[#f7d491]':'border-[#dbb76c] text-[#a7772a] dark:text-[#f4c978]' }}">{{ $actionLabel }} →</a>@endif
+            @if($actionUrl && $actionLabel)<a href="{{ $actionUrl }}" class="rounded-xl border px-5 py-3 text-xs font-black transition hover:shadow-md {{ $tone==='navy'?'border-[#d8b875] text-[#f7d491]':'border-[#dbb76c] text-[#a7772a] dark:text-[#f4c978]' }}">{{ $actionLabel }}</a>@endif
         </div>
         <div class="mt-8 min-w-0">{{ $slot }}</div>
     </div>

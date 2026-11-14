@@ -45,8 +45,8 @@
                 ['eye',$appearance['vision_heading'],$appearance['vision_body']],
                 ['shield-check',__('longpage.values_heading'),__('longpage.values_body')],
             ] as [$icon,$heading,$description])
-                <article class="flex flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 shadow-sm dark:border-slate-700 dark:bg-[#183759]">
-                    <span class="grid h-16 w-16 place-items-center rounded-2xl bg-[#f7e4bc] text-[#ad7a26] dark:bg-[#51412a]"><x-workspace-icon :name="$icon" class="h-8 w-8"/></span>
+                <article class="premium-card flex flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 shadow-sm dark:border-slate-700 dark:bg-[#183759]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-6 text-2xl font-black text-[#12355e] dark:text-white">{{ $heading }}</h3>
                     <p class="mt-4 flex-1 whitespace-pre-line text-sm leading-9 text-slate-600 dark:text-slate-300">{{ $description }}</p>
                 </article>
@@ -66,11 +66,11 @@
                 ['book-open','longpage.about_method_study','longpage.about_method_study_note',route('courses.index')],
                 ['chart-line','longpage.about_method_progress','longpage.about_method_progress_note',route('login')],
             ] as [$icon,$heading,$note,$url])
-                <a href="{{ $url }}" class="group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#dcae57] hover:shadow-lg dark:border-slate-700 dark:bg-[#163758]">
-                    <x-workspace-icon :name="$icon" class="h-10 w-10 text-[#b17e27]"/>
+                <a href="{{ $url }}" class="premium-card group rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#dcae57] hover:shadow-lg dark:border-slate-700 dark:bg-[#163758]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-5 text-lg font-black text-[#12345f] dark:text-white">{{ __($heading) }}</h3>
                     <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ __($note) }}</p>
-                    <span class="mt-5 inline-block text-xs font-black text-[#b4852b]">{{ __('longpage.explore') }} →</span>
+                    <span class="mt-5 inline-block text-xs font-black text-[#b4852b]">{{ __('longpage.explore') }}</span>
                 </a>
             @endforeach
         </div>
@@ -100,8 +100,8 @@
                 ['lock','longpage.trust_privacy','longpage.trust_privacy_desc'],
                 ['users','longpage.trust_review','longpage.trust_review_desc'],
             ] as [$icon,$title,$note])
-                <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#163656]">
-                    <x-workspace-icon :name="$icon" class="h-9 w-9 text-[#b4822d]"/>
+                <div class="premium-card rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#163656]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-5 text-xl font-black">{{ __($title) }}</h3>
                     <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ __($note) }}</p>
                 </div>

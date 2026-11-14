@@ -60,11 +60,8 @@
                         'frameworks'=>'award',
                     ][$slug] ?? 'book';
                 @endphp
-                <a href="{{ route('categories.index',['group'=>$slug]) }}#category-directory" class="group flex min-h-52 flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 transition hover:-translate-y-0.5 hover:border-[#e2b867] hover:shadow-xl dark:border-slate-700 dark:bg-[#163456]">
-                    <span class="flex items-start justify-between gap-3">
-                        <span class="grid h-14 w-14 place-items-center rounded-2xl bg-[#f8e6bc] text-[#aa7929] dark:bg-[#4d4027]"><x-workspace-icon :name="$icon" class="h-7 w-7"/></span>
-                        <x-workspace-icon name="arrow-up-right" class="h-5 w-5 text-[#a4aebf] group-hover:text-[#c38c2f]"/>
-                    </span>
+                <a href="{{ route('categories.index',['group'=>$slug]) }}#category-directory" class="premium-card group flex min-h-52 flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 transition hover:-translate-y-0.5 hover:border-[#e2b867] hover:shadow-xl dark:border-slate-700 dark:bg-[#163456]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-6 text-lg font-black leading-7 text-[#12345f] dark:text-white">{{ $label }}</h3>
                     <p class="mt-3 text-xs font-semibold text-slate-500 dark:text-slate-300">{{ number_format((int)($groupCounts[$slug]??0)) }} {{ __('longpage.categories') }}</p>
                 </a>
@@ -94,17 +91,18 @@
         @endif
         <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @forelse($categories as $category)
-                <a href="{{ route('categories.show',$category) }}" class="group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#ddb15e] hover:shadow-xl dark:border-slate-700 dark:bg-[#132e52]">
-                    <div class="flex items-center justify-between gap-3">
+                <a href="{{ route('categories.show',$category) }}" class="premium-card group flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#ddb15e] hover:shadow-xl dark:border-slate-700 dark:bg-[#132e52]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="tags" /></span>
+                    <div class="premium-card-content flex items-center justify-between gap-3">
                         <span class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-[#123b70] to-[#0d2a50] text-xs font-black text-[#f4cf87]">{{ $category->code }}</span>
-                        <x-workspace-icon name="arrow-up-right" class="h-5 w-5 text-[#c59643]"/>
+                        
                     </div>
                     <p class="mt-5 text-[11px] font-bold uppercase tracking-wider text-[#a47321] dark:text-[#f2c46e]">{{ \App\Models\Category::GROUPS[$category->group] ?? $category->group }}</p>
                     <h3 class="mt-2 break-words text-xl font-black text-[#12335d] dark:text-white">{{ $category->name }}</h3>
                     <p class="mt-3 line-clamp-4 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ $category->description }}</p>
                     <div class="mt-6 flex items-center justify-between border-t border-slate-100 pt-4 text-xs dark:border-slate-700">
                         <span class="font-bold text-slate-500">{{ number_format($category->published_courses_count) }} {{ __('longpage.courses') }}</span>
-                        <strong class="text-[#a77728] dark:text-[#f6c56e]">{{ __('longpage.explore') }} →</strong>
+                        <strong class="text-[#a77728] dark:text-[#f6c56e]">{{ __('longpage.explore') }}</strong>
                     </div>
                 </a>
             @empty
@@ -132,10 +130,10 @@
                 ['award',__('longpage.cefr_path_title'),__('longpage.cefr_path_description'),route('cefr.index')],
                 ['school',__('longpage.teachers_path_title'),__('longpage.teachers_path_description'),route('instructors.index')],
             ] as [$icon,$heading,$description,$url])
-                <a href="{{ $url }}" class="group flex flex-col rounded-3xl border border-white/15 bg-white/10 p-7 hover:border-[#f0c672] hover:bg-white/15">
-                    <x-workspace-icon :name="$icon" class="h-9 w-9 text-[#f1c770]"/>
+                <a href="{{ $url }}" class="premium-card group premium-card-on-navy flex flex-col rounded-3xl border border-white/15 bg-white/10 p-7 hover:border-[#f0c672] hover:bg-white/15">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
                     <h3 class="mt-5 text-xl font-black">{{ $heading }}</h3><p class="mt-3 flex-1 text-sm leading-8 text-[#d1e2f2]">{{ $description }}</p>
-                    <span class="mt-5 text-xs font-black text-[#f2ca7a]">{{ __('longpage.explore') }} →</span>
+                    <span class="mt-5 text-xs font-black text-[#f2ca7a]">{{ __('longpage.explore') }}</span>
                 </a>
             @endforeach
         </div>
@@ -144,7 +142,7 @@
 
 <section class="bg-white py-16 dark:bg-[#0c2646]">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
-        <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl font-black text-[#10335e] dark:text-white">{{ __('longpage.featured_educators') }}</h2><a href="{{ route('instructors.index') }}" class="font-bold text-[#a77725] hover:underline">{{ __('longpage.view_instructors') }} →</a></div>
+        <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl font-black text-[#10335e] dark:text-white">{{ __('longpage.featured_educators') }}</h2><a href="{{ route('instructors.index') }}" class="font-bold text-[#a77725] hover:underline">{{ __('longpage.view_instructors') }}</a></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @forelse($featuredInstructors as $profile)
                 <x-public-person-card :profile="$profile" kind="instructor"/>
@@ -157,13 +155,13 @@
 
 <section class="border-y border-slate-200 bg-[#f1f4f8] py-16 dark:border-slate-800 dark:bg-[#102c4c]">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
-        <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl font-black text-[#10335e] dark:text-white">{{ __('longpage.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="font-bold text-[#a77725] hover:underline">{{ __('longpage.view_resources') }} →</a></div>
+        <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl font-black text-[#10335e] dark:text-white">{{ __('longpage.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="font-bold text-[#a77725] hover:underline">{{ __('longpage.view_resources') }}</a></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dfb465] dark:border-slate-700 dark:bg-[#163656]">
-                    <p class="text-xs font-black uppercase tracking-[.14em] text-[#ac782a]">{{ __('longpage.approved_article') }}</p>
+                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dfb465] dark:border-slate-700 dark:bg-[#163656]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><p class="premium-card-content text-xs font-black uppercase tracking-[.14em] text-[#ac782a]">{{ __('longpage.approved_article') }}</p>
                     <h3 class="mt-4 text-lg font-black text-[#11345e] group-hover:underline dark:text-white">{{ $article->title }}</h3><p class="mt-3 flex-1 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p>
-                    <span class="mt-5 text-xs font-black text-[#aa782c]">{{ __('frontend.read_article') }} →</span>
+                    <span class="mt-5 text-xs font-black text-[#aa782c]">{{ __('frontend.read_article') }}</span>
                 </a>
             @empty
                 <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-8 text-sm text-slate-500 dark:border-slate-700">{{ __('frontend.no_articles') }}</p>

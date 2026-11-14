@@ -12,16 +12,16 @@
             @if($subtitle)<p class="mt-5 max-w-3xl text-base leading-9 text-[#d9e6f3]">{{ $subtitle }}</p>@endif
             @if($actionUrl && $actionLabel)
                 <a href="{{ $actionUrl }}" class="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#f0bf64] px-6 py-3.5 text-sm font-black text-[#0c305a] transition hover:bg-[#ffda94]">
-                    <x-workspace-icon name="arrow-up-right" class="h-4 w-4"/>{{ $actionLabel }}
+                    {{ $actionLabel }}
                 </a>
             @endif
         </div>
         <div class="grid min-w-0 grid-cols-2 gap-4">
             @foreach($stats as $stat)
-                <div class="relative flex min-h-36 flex-col justify-end rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
-                    <x-workspace-icon :name="$stat['icon'] ?? $icon" class="absolute right-4 top-4 h-6 w-6 text-[#f3c974]"/>
-                    <strong class="text-3xl font-black tabular-nums sm:text-4xl">{{ $stat['value'] ?? '—' }}</strong>
-                    <span class="mt-2 text-xs font-bold leading-5 text-[#d6e5f2]">{{ $stat['label'] ?? '' }}</span>
+                <div class="premium-card premium-card-on-navy relative flex min-h-36 flex-col justify-end rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$stat['icon'] ?? $icon" /></span>
+                    <strong class="premium-card-content text-3xl font-black tabular-nums sm:text-4xl">{{ $stat['value'] ?? '—' }}</strong>
+                    <span class="premium-card-content mt-2 text-xs font-bold leading-5 text-[#d6e5f2]">{{ $stat['label'] ?? '' }}</span>
                 </div>
             @endforeach
             @if(count($stats)===0)
