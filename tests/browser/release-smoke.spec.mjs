@@ -748,3 +748,42 @@ test('homepage feature icons stay unboxed and cards follow light/dark appearance
     }
   }
 });
+
+test('course Filters sidebar scrolls with page without covering other sections or footer', async ({ page }) => {
+  for (const width of [390, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ['light', 'dark']) {
+      await page.goto('/courses?lang=en');
+      await page.evaluate(mode => document.documentElement.classList.toggle('dark', mode === 'dark'), theme);
+      const sidebar = page.locator('[data-course-filters]');
+      await expect(sidebar).toHaveCount(1);
+      await expect(sidebar).toHaveCSS('position', 'static');
+      await expect(sidebar.locator('form[action*="/courses"]')).toBeVisible();
+      await expect(sidebar.getByRole('button', { name: /Apply/i })).toBeVisible();
+
+      const before = await sidebar.evaluate(el => ({ top: el.getBoundingClientRect().top, scrollY: window.scrollY }));
+      const after = await page.evaluate(() => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo(0, Math.min(850, Math.max(0, maxScroll)));
+        return {
+          top: document.querySelector('[data-course-filters]').getBoundingClientRect().top,
+          scrollY: window.scrollY,
+        };
+      });
+      const scrollAmount = after.scrollY - before.scrollY;
+      expect(scrollAmount).toBeGreaterThan(100);
+      // A sticky/fixed filter would move less than the document and cover later sections.
+      expect(Math.abs((before.top - after.top) - scrollAmount)).toBeLessThan(3);
+
+      await page.locator('footer').scrollIntoViewIfNeeded();
+      const geometry = await page.evaluate(() => {
+        const filterRect = document.querySelector('[data-course-filters]').getBoundingClientRect();
+        const footerRect = document.querySelector('footer').getBoundingClientRect();
+        return { filterBottom: filterRect.bottom, footerTop: footerRect.top };
+      });
+      expect(geometry.filterBottom).toBeLessThanOrEqual(geometry.footerTop + 2);
+      await expect(page.locator('footer')).toBeVisible();
+    }
+  }
+});

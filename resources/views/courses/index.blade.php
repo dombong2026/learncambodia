@@ -25,7 +25,7 @@
 </section>
 
 <div class="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[230px_minmax(0,1fr)] lg:px-8 xl:grid-cols-[210px_minmax(0,1.2fr)_minmax(245px,.8fr)]">
-    <aside class="self-start rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-[#142f51] lg:sticky lg:top-32">
+    <aside data-course-filters class="self-start rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-[#142f51]">
         <div class="flex items-center justify-between"><h2 class="text-lg font-black text-[#10345f] dark:text-white">{{ __('pages.filters') }}</h2><a href="{{ route('courses.index') }}" class="text-xs font-bold text-[#ab7627] hover:underline">{{ __('pages.clear') }}</a></div>
         <form method="GET" action="{{ route('courses.index') }}" class="mt-5 space-y-5">
             <div><label for="catalog-q" class="mb-2 block text-xs font-bold">{{ __('frontend.search_courses') }}</label><input id="catalog-q" name="q" type="search" maxlength="80" value="{{ $search }}" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs dark:border-slate-700 dark:bg-[#0a2749]"></div>
