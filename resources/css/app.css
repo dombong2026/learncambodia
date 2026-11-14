@@ -144,11 +144,9 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 .premium-header-trigger:hover {
     transform: translateY(-2px) scale(1.09);
     box-shadow: 0 6px 18px rgba(13, 52, 105, .16);
-    background-color: rgba(59, 130, 246, .09);
 }
 .dark .premium-header-trigger:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, .22);
-    background-color: rgba(148, 163, 184, .13);
 }
 .premium-header-trigger:active {
     transform: translateY(1px) scale(.94);
@@ -156,7 +154,12 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 .premium-header-trigger[aria-expanded="true"] {
     transform: translateY(-1px) scale(1.04);
     box-shadow: 0 0 0 2px rgba(245, 187, 69, .75);
+}
+.premium-language-trigger:hover, .premium-language-trigger[aria-expanded="true"] {
     background-color: rgba(59, 130, 246, .10);
+}
+.dark .premium-language-trigger:hover, .dark .premium-language-trigger[aria-expanded="true"] {
+    background-color: rgba(148, 163, 184, .14);
 }
 .premium-language-flag {
     display: inline-block;
