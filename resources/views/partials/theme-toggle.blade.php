@@ -1,5 +1,5 @@
 {{-- One accessible, local-only light/dark preference, shared by guest and member profiles. --}}
-<div class="mt-1 border-t border-slate-200 pt-1 dark:border-slate-700">
+<div class="{{ ($showDivider ?? true) ? 'mt-1 border-t border-slate-200 pt-1 dark:border-slate-700' : 'mt-1 pt-1' }}">
     <button type="button" data-theme-toggle role="switch" aria-checked="false"
         aria-label="{{ __('ui.dark_mode') }}"
         class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:text-slate-200 dark:hover:bg-slate-800">

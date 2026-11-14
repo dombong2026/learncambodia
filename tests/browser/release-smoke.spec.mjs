@@ -621,3 +621,27 @@ test('exam catalog sign-in preserves validated reading destination instead of lo
   const registration = new URL(await register.getAttribute('href'), 'https://learncambodia.com');
   expect(registration.searchParams.get('next')).toBe('/exam-catalog?lang=en');
 });
+
+test('guest profile menu has one divider and a compact responsive tray', async ({ page }) => {
+  for (const [width, maxTray] of [[390, 266], [1440, 266]]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?lang=en');
+    await page.locator('button[aria-controls="profile-menu"]').click();
+    const menu = page.locator('#profile-menu');
+    await expect(menu).toBeVisible();
+    await expect(menu.locator('[data-profile-divider]')).toHaveCount(1);
+    await expect(menu.locator('[data-profile-sign-in] svg')).toBeVisible();
+    await expect(menu.locator('[data-profile-register] svg')).toBeVisible();
+    await expect(menu.locator('[data-theme-toggle] svg')).toBeVisible();
+
+    const tray = await menu.boundingBox();
+    expect(tray).not.toBeNull();
+    expect(tray.width).toBeLessThanOrEqual(maxTray);
+    expect(tray.x).toBeGreaterThanOrEqual(0);
+    expect(tray.x + tray.width).toBeLessThanOrEqual(width);
+
+    const themeWrapper = menu.locator('[data-theme-toggle]').locator('..');
+    await expect(themeWrapper).toHaveCSS('border-top-width', '0px');
+    await expect(menu.locator('[data-profile-divider]')).toHaveCSS('border-top-width', '1px');
+  }
+});
