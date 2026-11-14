@@ -1,0 +1,90 @@
+{
+  "android-chrome-192x192.png": {
+    "sha256": "24272fb41f73efa52abf5e18b0d7ca3151aa875f60f9db4c247006bb4fbd87fa",
+    "bytes": 42235
+  },
+  "android-chrome-512x512.png": {
+    "sha256": "16f778b450fb2a19beb6131365fd682039b3876270a2a480a266ad8356183ce8",
+    "bytes": 230620
+  },
+  "app-icon-512.png": {
+    "sha256": "16f778b450fb2a19beb6131365fd682039b3876270a2a480a266ad8356183ce8",
+    "bytes": 230620
+  },
+  "app-icon-source.png": {
+    "sha256": "65eee0f3b0bd82095b66adaa5be33d1bee346d6fbe27210f7290987e8a936763",
+    "bytes": 1167841
+  },
+  "apple-touch-icon.png": {
+    "sha256": "af432a59faa8976fcd6bc691293274bacc22a9f0fbd73b0bf46a20e46d7ae8f5",
+    "bytes": 27608
+  },
+  "favicon-128.png": {
+    "sha256": "22a92237f42e0a54611cd245b70c8f383267873b1c298eb6929a7b747faf6c1e",
+    "bytes": 14046
+  },
+  "favicon-16.png": {
+    "sha256": "5d53bd7d88052b1eae3d1a9f85b2a67fb2b0959176477bbcc3cd5f468f551eaf",
+    "bytes": 649
+  },
+  "favicon-192.png": {
+    "sha256": "e66e580fc99341c3c462fba3acff925dd94f903de2d916f5cfd1cf6e5f4ea109",
+    "bytes": 25829
+  },
+  "favicon-256.png": {
+    "sha256": "2e3f2ffceb0ad2f7936d3f9b5638a641c5fa6ca4467294d25b45a73fbab1a8b6",
+    "bytes": 40848
+  },
+  "favicon-32.png": {
+    "sha256": "0825dabb175a9b5aca159ffe23d2c4734d15af87f34ad751952455f182280aa5",
+    "bytes": 1850
+  },
+  "favicon-48.png": {
+    "sha256": "4b912a15bd22fc6549d06b7fd2d0933ab624d3bd53b3344ceabd5eef85cde3ff",
+    "bytes": 3166
+  },
+  "favicon-512.png": {
+    "sha256": "958ae88f25a727e939ea82f4147a678af1091e71c5bd4e10ca5ee63db53df042",
+    "bytes": 135307
+  },
+  "favicon-96.png": {
+    "sha256": "1081c200264dcaab1a6436c750de948946b18ee538bf74e2357fbae98c102bb2",
+    "bytes": 9166
+  },
+  "favicon.ico": {
+    "sha256": "488ebc01d36686d48e1c932dc6a1f91b566841a218e8c0e7217a19ac48c22b51",
+    "bytes": 64202
+  },
+  "favicon.png": {
+    "sha256": "dd9e4a83bd833f5523c723c09ed6177ef8ca7e76e1b1222882280173608c55c6",
+    "bytes": 5264
+  },
+  "logo-dark.png": {
+    "sha256": "5ca0b912923decf9975e77cb36b437ea9b93ebeb883b8c752cb04159df5d2d80",
+    "bytes": 487148
+  },
+  "logo-light.png": {
+    "sha256": "343b91b564a3a8d8bb6cc8980f5806f67d96295d8feac42f1c6c039b2a51e26c",
+    "bytes": 301755
+  },
+  "mark-source.png": {
+    "sha256": "a9620d3499fe4c3fecd070a19c1e769678e3ad375fd2d9f7fcc0ce8bd6f58d96",
+    "bytes": 444586
+  },
+  "maskable-192x192.png": {
+    "sha256": "d8c08a62d889138fe0d55439e9b583f39c1b4ebc0d8a113ee8dacc7cda4848fe",
+    "bytes": 20327
+  },
+  "maskable-512x512.png": {
+    "sha256": "bc329d0eb87c0cb8d992f6eac55a2924f49340a8b6d538b0374185287beac9b6",
+    "bytes": 104564
+  },
+  "mstile-144x144.png": {
+    "sha256": "ddd4b971f3d35f35350b863417ae8ff547e7d1d1db9e39d3f811808f208c8311",
+    "bytes": 26387
+  },
+  "site.webmanifest": {
+    "sha256": "68608f41ba7d0ee4e26b8b7f1603d9bd5ea50eb8a869267ff1885adbb547635c",
+    "bytes": 827
+  }
+}

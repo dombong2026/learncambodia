@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="description" content="@yield('meta_description', 'Learn Cambodia — English learning, international exam preparation and teacher development.')">
     <title>@yield('title', 'Learn Cambodia') · Learn Cambodia</title>
+    @include('partials.brand-head')
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
 </head>
 @php

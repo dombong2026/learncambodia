@@ -4,10 +4,7 @@
     @endif
     <header class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6 lg:px-8">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" aria-label="Learn Cambodia home">
-            <span class="grid h-10 w-10 place-items-center rounded-xl bg-blue-700 text-white shadow-sm">
-                <svg viewBox="0 0 24 24" class="h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"><path d="m3 7 9-4 9 4-9 4-9-4Z"/><path d="M7 10v6c3.3 2.8 6.7 2.8 10 0v-6"/><path d="M21 7v8"/></svg>
-            </span>
-            <span class="text-base font-extrabold tracking-tight sm:text-lg">Learn<span class="text-blue-700 dark:text-blue-400">Cambodia</span></span>
+            <x-brand-logo height="h-8 sm:h-10" imageClass="max-w-[164px] sm:max-w-[210px]" />
         </a>
         <form action="{{ route('courses.index') }}" method="GET" role="search" class="relative mx-auto hidden min-w-0 w-full max-w-[440px] flex-1 sm:block">
             <label for="global-search" class="sr-only">{{ __('ui.search') }}</label>
