@@ -72,7 +72,7 @@
             ] as [$icon,$title,$note,$url])
                 <a href="{{ $url }}" class="premium-card group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:border-[#e1b662] hover:shadow-lg dark:border-slate-700 dark:bg-[#183657]">
                     <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
-                    <h3 class="premium-card-content mt-16 text-xl font-black text-[#12345f] group-hover:underline dark:text-white">{{ $title }}</h3>
+                    <h3 class="premium-card-content mt-20 text-xl font-black text-[#12345f] group-hover:underline dark:text-white">{{ $title }}</h3>
                     <p class="premium-card-content mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ $note }}</p>
                     <p class="premium-card-content mt-6 text-xs font-black text-[#b27e2b]">{{ __('longpage.explore') }}</p>
                 </a>
