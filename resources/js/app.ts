@@ -114,3 +114,55 @@ function initLocaleUrls(): void {
     }
 }
 initLocaleUrls();
+
+
+// Shared site-wide theme: guest menu, account menu, public/auth/workspace pages.
+// Stored only in this browser. No account changes, cookies or server requests.
+function initThemeToggle(): void {
+    const storageKey = 'learncambodia.theme.v1';
+    const system = window.matchMedia('(prefers-color-scheme: dark)');
+    const controls = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]'));
+
+    const savedTheme = (): 'light' | 'dark' | null => {
+        try {
+            const value = window.localStorage.getItem(storageKey);
+            return value === 'light' || value === 'dark' ? value : null;
+        } catch {
+            return null; // Local storage may be unavailable in private browsers.
+        }
+    };
+
+    const apply = (dark: boolean): void => {
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+            ?.setAttribute('content', dark ? '#0b1d39' : '#f8fafc');
+        for (const control of controls) control.setAttribute('aria-checked', String(dark));
+    };
+
+    const refresh = (): void => {
+        const choice = savedTheme();
+        apply(choice === 'dark' || (choice === null && system.matches));
+    };
+
+    refresh();
+
+    for (const control of controls) {
+        control.addEventListener('click', () => {
+            const dark = !document.documentElement.classList.contains('dark');
+            try { window.localStorage.setItem(storageKey, dark ? 'dark' : 'light'); }
+            catch { /* Keep working for this page even without storage. */ }
+            apply(dark);
+        });
+    }
+
+    system.addEventListener('change', () => {
+        if (savedTheme() === null) refresh();
+    });
+
+    window.addEventListener('storage', (event: StorageEvent) => {
+        if (event.key === storageKey || event.key === null) refresh();
+    });
+}
+
+initThemeToggle();
