@@ -820,6 +820,8 @@ test('Courses CEFR cards share one row with homepage premium styling and respons
       for (const [index, level] of metrics.labels.entries()) {
         expect(new URL(metrics.links[index], 'https://learncambodia.com').searchParams.get('level')).toBe(level);
       }
+      const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(pageWidth).toBeLessThanOrEqual(width + 2);
       if (width === 390) {
         expect(metrics.horizontalOverflow).toBeTruthy();
         await row.evaluate(el => { el.scrollLeft = el.scrollWidth; });
