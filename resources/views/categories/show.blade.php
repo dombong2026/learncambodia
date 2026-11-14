@@ -28,10 +28,10 @@
                     ['school',$featuredInstructors->count(),__('longpage.public_educators')],
                     ['award',$cefrLevelCount,__('longpage.cefr_levels')],
                 ] as [$icon,$value,$label])
-                    <div class="relative min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5">
-                        <x-workspace-icon :name="$icon" class="absolute right-4 top-4 h-6 w-6 text-[#f3ca75]"/>
-                        <p class="mt-8 text-4xl font-black tabular-nums" title="{{ number_format($value) }}">{{ \App\Support\DashboardNumber::compact($value) }}</p>
-                        <p class="mt-2 text-xs font-bold text-[#d2e2f1]">{{ $label }}</p>
+                    <div class="premium-card premium-card-on-navy min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5">
+                        <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
+                        <p class="premium-card-content mt-8 text-4xl font-black tabular-nums" title="{{ number_format($value) }}">{{ \App\Support\DashboardNumber::compact($value) }}</p>
+                        <p class="premium-card-content mt-2 text-xs font-bold text-[#d2e2f1]">{{ $label }}</p>
                     </div>
                 @endforeach
             </div>
@@ -52,11 +52,7 @@
             @forelse($courses as $course)
                 <x-public-course-card :course="$course"/>
             @empty
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-white p-10 dark:border-slate-700 dark:bg-[#133051]">
-                    <h3 class="text-lg font-bold">{{ __('longpage.no_approved_courses') }}</h3>
-                    <p class="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ __('longpage.no_approved_courses_note') }}</p>
-                    <a href="{{ route('courses.index') }}" class="mt-5 inline-block rounded-xl bg-[#143866] px-5 py-3 text-sm font-black text-white">{{ __('longpage.browse_course_catalog') }}</a>
-                </div>
+                <x-public-empty-state icon="book-open" :title="__('longpage.no_approved_courses')" :description="__('longpage.no_approved_courses_note')" :href="route('courses.index')" :action="__('longpage.browse_course_catalog')" />
             @endforelse
         </div>
         <div class="mt-8">{{ $courses->links() }}</div>
@@ -74,16 +70,18 @@
                 ['award',__('longpage.cefr_reference'),__('longpage.cefr_reference_note'),route('cefr.index')],
                 ['newspaper',__('longpage.reading_resources'),__('longpage.reading_resources_note'),route('articles.index')],
             ] as [$icon,$title,$note,$url])
-                <a href="{{ $url }}" class="group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:border-[#e1b662] hover:shadow-lg dark:border-slate-700 dark:bg-[#183657]">
-                    <span class="grid h-14 w-14 place-items-center rounded-2xl bg-[#f9e8c0] text-[#ae7c24] dark:bg-[#463c27]"><x-workspace-icon :name="$icon" class="h-8 w-8"/></span>
-                    <h3 class="mt-5 text-xl font-black text-[#12345f] dark:text-white">{{ $title }}</h3><p class="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ $note }}</p>
-                    <p class="mt-6 text-xs font-black text-[#b27e2b]">{{ __('longpage.explore') }} →</p>
+                <a href="{{ $url }}" class="premium-card group rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 transition hover:border-[#e1b662] hover:shadow-lg dark:border-slate-700 dark:bg-[#183657]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
+                    <h3 class="premium-card-content mt-20 text-xl font-black text-[#12345f] group-hover:underline dark:text-white">{{ $title }}</h3>
+                    <p class="premium-card-content mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ $note }}</p>
+                    <p class="premium-card-content mt-6 text-xs font-black text-[#b27e2b]">{{ __('longpage.explore') }}</p>
                 </a>
             @endforeach
         </div>
     </div>
 </section>
 
+@if($featuredInstructors->isNotEmpty())
 <section class="bg-[#0d315e] py-16 text-white">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div class="flex flex-wrap items-end justify-between gap-5"><div>
@@ -100,19 +98,19 @@
         </div>
     </div>
 </section>
+@endif
 
 @if($relatedCategories->isNotEmpty())
 <section class="bg-white py-16 dark:bg-[#0c2847]">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div class="flex flex-wrap items-end justify-between gap-5"><h2 class="text-3xl font-black text-[#12345f] dark:text-white">{{ $appearance['related_heading'] }}</h2>
-            <a href="{{ route('categories.index',['group'=>$category->group]) }}" class="text-sm font-bold text-[#ab792a] hover:underline">{{ __('longpage.all_related_categories') }} →</a></div>
+            <a href="{{ route('categories.index',['group'=>$category->group]) }}" class="text-sm font-bold text-[#ab792a] hover:underline">{{ __('longpage.all_related_categories') }}</a></div>
         <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($relatedCategories as $related)
-                <a href="{{ route('categories.show',$related) }}" class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-[#f7f9fc] p-5 transition hover:border-[#d6ad63] dark:border-slate-700 dark:bg-[#183754]">
+                <a href="{{ route('categories.show',$related) }}" class="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-[#f7f9fc] p-5 transition hover:-translate-y-0.5 hover:border-[#d6ad63] hover:shadow-md dark:border-slate-700 dark:bg-[#183754]">
                     <span class="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#133766] text-xs font-black text-[#edc06b]">{{ $related->code }}</span>
-                    <div class="min-w-0 flex-1"><h3 class="break-words text-sm font-black text-[#12355e] dark:text-white">{{ $related->name }}</h3>
+                    <div class="min-w-0 flex-1"><h3 class="break-words text-sm font-black text-[#12355e] group-hover:underline dark:text-white">{{ $related->name }}</h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ \App\Models\Category::GROUPS[$related->group] ?? $related->group }}</p></div>
-                    <x-workspace-icon name="arrow-up-right" class="h-5 w-5 shrink-0 text-[#b48736]"/>
                 </a>
             @endforeach
         </div>
@@ -120,17 +118,18 @@
 </section>
 @endif
 
+@if($articles->isNotEmpty())
 <section class="border-y border-slate-200 bg-[#f1f4f9] py-16 dark:border-slate-800 dark:bg-[#102e50]">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div class="flex flex-wrap items-end justify-between gap-5"><h2 class="text-3xl font-black text-[#10325a] dark:text-white">{{ __('longpage.latest_articles') }}</h2>
-            <a href="{{ route('articles.index') }}" class="text-sm font-black text-[#b17b22]">{{ __('longpage.view_resources') }} →</a></div>
+            <a href="{{ route('articles.index') }}" class="text-sm font-black text-[#b17b22]">{{ __('longpage.view_resources') }}</a></div>
         <div class="mt-8 grid gap-5 md:grid-cols-3">
             @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dcb25e] dark:border-slate-700 dark:bg-[#183b60]">
+                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dcb25e] dark:border-slate-700 dark:bg-[#183b60]"><span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span>
                     <p class="text-xs font-extrabold uppercase tracking-widest text-[#ad7624]">{{ __('longpage.approved_article') }}</p>
                     <h3 class="mt-4 text-xl font-black text-[#12345e] group-hover:underline dark:text-white">{{ $article->title }}</h3>
                     <p class="mt-3 flex-1 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ $article->summary }}</p>
-                    <span class="mt-5 text-xs font-black text-[#b0812d]">{{ __('frontend.read_article') }} →</span>
+                    <span class="mt-5 text-xs font-black text-[#b0812d]">{{ __('frontend.read_article') }}</span>
                 </a>
             @empty
                 <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-8 text-sm text-slate-500 dark:border-slate-700">{{ __('frontend.no_articles') }}</p>
@@ -138,6 +137,7 @@
         </div>
     </div>
 </section>
+@endif
 
 <section class="bg-gradient-to-br from-[#092651] to-[#153e6f] py-14 text-white">
     <div class="mx-auto flex max-w-[1600px] flex-col justify-between gap-6 px-4 sm:px-8 lg:flex-row lg:items-center lg:px-12">

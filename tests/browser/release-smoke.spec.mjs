@@ -323,3 +323,58 @@ test('disabled or aria-disabled controls never misleadingly show the hand cursor
   await expect(page.locator('#pointer-disabled-test')).toHaveCSS('cursor', 'not-allowed');
   await expect(page.locator('#pointer-aria-disabled-test')).toHaveCSS('cursor', 'not-allowed');
 });
+
+
+test('category focus art never overlaps headings on desktop or mobile', async ({ page }) => {
+  for (const size of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(size);
+    await page.goto('/categories?lang=en');
+    const cards = page.locator('#learning-focus a.premium-card');
+    await expect(cards).toHaveCount(5);
+
+    for (const card of await cards.all()) {
+      const icon = card.locator('.premium-corner-icon svg');
+      const heading = card.locator('h3');
+      await expect(icon).toBeVisible();
+      await expect(heading).toBeVisible();
+      const svg = await icon.boundingBox();
+      const text = await heading.boundingBox();
+      expect(svg).not.toBeNull();
+      expect(text).not.toBeNull();
+      expect(text.y).toBeGreaterThan(svg.y + svg.height - 3);
+    }
+  }
+});
+
+test('category filter and reset preserve query, link destinations and focus', async ({ page }) => {
+  await page.goto('/categories?q=IELTS&group=exam-preparation&lang=en');
+  const nav = page.locator('nav[aria-label]').filter({ has: page.locator('a[href*="group="]') }).last();
+  const nextGroup = nav.locator('a[href*="group=english-courses"]');
+  await expect(nextGroup).toHaveAttribute('href', /q=IELTS/);
+  await expect(nextGroup).toHaveAttribute('href', /lang=en/);
+
+  await nextGroup.click();
+  await expect(page).toHaveURL(/group=english-courses/);
+  await expect(page).toHaveURL(/q=IELTS/);
+  const clear = page.locator('#category-directory').locator('a').filter({ hasText: 'Clear filters' });
+  await expect(clear).toHaveCount(1);
+  await clear.click();
+  await expect(page).toHaveURL(/\/categories\?lang=en/);
+  await expect(page).not.toHaveURL(/group=|q=/);
+
+  const footer = page.locator('footer');
+  await expect(footer.locator('a').filter({ hasText: /^TOEFL$/ })).toHaveAttribute('href', /q=TOEFL/);
+  await expect(footer.locator('a').filter({ hasText: /^TOEIC$/ })).toHaveAttribute('href', /q=TOEIC/);
+});
+
+test('category directory cards have blended unique art and one working link each', async ({ page }) => {
+  await page.goto('/categories?lang=en');
+  const cards = page.locator('#category-directory a.premium-card[href]');
+  expect(await cards.count()).toBeGreaterThan(5);
+  const icons = await cards.locator('.premium-corner-icon svg path').evaluateAll(nodes =>
+    [...new Set(nodes.map(node => node.getAttribute('d')))]
+  );
+  expect(icons.length).toBeGreaterThan(2);
+  await cards.first().click();
+  await expect(page).toHaveURL(/\/categories\/[^/?]+/);
+});
