@@ -157,3 +157,51 @@ test('auth headings are centered and Home is in the top-left on all guest auth s
     expect(back.x).toBeLessThan(center - 35);
   }
 });
+
+
+test('profile dropdown light/dark switch persists on public and auth pages', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/?lang=en');
+  const profile = page.locator('button[aria-controls="profile-menu"]');
+  await profile.click();
+  const switcher = page.locator('#profile-menu [data-theme-toggle]');
+  await expect(switcher).toBeVisible();
+  await expect(switcher).toHaveAttribute('role', 'switch');
+  await expect(switcher).toHaveAttribute('aria-checked', 'false');
+  const lightBackground = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
+  await switcher.click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(switcher).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('header img[src*="/brand/logo-dark.png"]').first()).toBeVisible();
+  const darkBackground = await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(darkBackground).not.toBe(lightBackground);
+
+  await page.goto('/login?lang=en');
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(page.locator('.auth-modal')).toBeVisible();
+
+  await page.goto('/?lang=en');
+  await profile.click();
+  await expect(switcher).toHaveAttribute('aria-checked', 'true');
+  await switcher.click();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await expect(switcher).toHaveAttribute('aria-checked', 'false');
+  await expect(page.locator('header img[src*="/brand/logo-light.png"]').first()).toBeVisible();
+
+  await page.reload();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await profile.click();
+  await expect(switcher).toHaveAttribute('aria-checked', 'false');
+});
+
+test('profile theme preference is manual and overrides operating system color scheme', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/?lang=en');
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await page.locator('button[aria-controls="profile-menu"]').click();
+  const switcher = page.locator('#profile-menu [data-theme-toggle]');
+  await switcher.click();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await page.reload();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+});
