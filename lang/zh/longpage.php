@@ -2,6 +2,8 @@
 
 return [
     'home' => '首页',
+    'category_one' => '个类别',
+    'category_many' => '个类别',
     'categories' => '课程类别',
     'about' => '关于我们',
     'contact' => '联系我们',
