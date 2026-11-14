@@ -104,7 +104,7 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
                     ->assertSee('data-profile-settings', false)
                     ->assertSee('data-profile-link-icon', false)
                     ->assertSee('data-profile-link-icon', false)
-                    ->assertSee('href="'.route('logout').'"', false)
+                    ->assertSee('action="'.route('logout').'"', false)
                     ->assertSee('data-theme-toggle', false)
                     ->assertSee('href="'.route($user->homeRouteName()).'"', false)
                     ->assertSee('href="'.WorkspaceMenu::profile($role).'"', false)
