@@ -15,6 +15,6 @@
         <img src="{{ asset('brand/logo-light.png') }}" width="1924" height="383"
              class="{{ $base }} dark:hidden" alt="LearnCambodia" decoding="async">
         <img src="{{ asset('brand/logo-dark.png') }}" width="1902" height="375"
-             class="{{ $base }} hidden dark:block" alt="" aria-hidden="true" decoding="async">
+             class="{{ $base }} hidden dark:block" alt="LearnCambodia" decoding="async">
     @endif
 </span>
