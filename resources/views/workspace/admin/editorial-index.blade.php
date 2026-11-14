@@ -12,7 +12,7 @@
     @if($kind==='posts')<a href="{{ route('admin.editorial.reviews',['kind'=>'posts']) }}" class="rounded-full border border-blue-400 px-5 py-2.5 text-sm font-bold text-blue-700 dark:text-blue-400">Review queue</a>@endif
     <a href="{{ route('admin.editorial.create', ['kind' => $kind]) }}" class="rounded-full bg-blue-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-blue-800">New draft</a>
 </div>
-<div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div class="workspace-panel overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <table class="w-full min-w-[650px] text-left text-sm">
         <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500 dark:border-slate-800 dark:bg-slate-900">
             <tr><th scope="col" class="px-5 py-4">Title</th><th scope="col" class="px-5 py-4">Slug</th><th scope="col" class="px-5 py-4">Status</th><th scope="col" class="px-5 py-4">Updated</th><th scope="col" class="px-5 py-4 text-right">Actions</th></tr>
@@ -27,7 +27,9 @@
                 <td class="px-5 py-4 text-right"><a href="{{ route('admin.editorial.edit', ['kind' => $kind, 'entry' => $entry]) }}" class="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold hover:border-blue-500 dark:border-slate-700">{{ in_array($entry->status,['draft','rejected'],true) ? 'Edit draft' : 'View locked entry' }}</a></td>
             </tr>
         @empty
-            <tr><td colspan="5" class="px-5 py-12 text-center text-slate-500">No {{ $kind }} drafts have been created.</td></tr>
+            <tr><td colspan="5" class="p-4">
+                <x-workspace-empty-state :title="__('ui.empty_editorial')" :description="'No '.$kind.' drafts have been created.'" icon="file" :href="route('admin.editorial.create', ['kind' => $kind])" action="New draft" />
+            </td></tr>
         @endforelse
         </tbody>
     </table>
