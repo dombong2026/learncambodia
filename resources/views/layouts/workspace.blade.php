@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#f8fafc">
     <meta name="robots" content="noindex,nofollow">
     <title>@yield('title', 'Overview') · Learn Cambodia</title>
+    @include('partials.brand-head')
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
 </head>
 <body data-workspace-body class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
@@ -15,7 +16,7 @@
         <aside id="workspace-sidebar" data-sidebar class="workspace-sidebar fixed inset-y-0 left-0 z-50 flex w-[266px] -translate-x-full flex-col border-r border-[#304f7d] bg-[#0c2d5b] text-white shadow-xl transition-transform duration-200 lg:translate-x-0 lg:shadow-none" aria-label="Workspace sidebar">
             <div class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
                 <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 font-extrabold tracking-tight">
-                    <span class="truncate text-base font-black tracking-tight text-white">Learn <span class="text-[#fbbf48]">Cambodia</span></span>
+                    <x-brand-logo surface="dark" height="h-8" imageClass="max-w-[186px]" />
                 </a>
                 <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 lg:hidden"><x-workspace-icon name="close" /></button>
             </div>
