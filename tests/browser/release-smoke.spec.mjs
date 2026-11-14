@@ -357,6 +357,7 @@ test('category filter and reset preserve query, link destinations and focus', as
   await expect(page).toHaveURL(/group=english-courses/);
   await expect(page).toHaveURL(/q=IELTS/);
   const clear = page.locator('#category-directory').locator('a').filter({ hasText: 'Clear filters' });
+  await expect(clear).toHaveCount(1);
   await clear.click();
   await expect(page).toHaveURL(/\/categories\?lang=en/);
   await expect(page).not.toHaveURL(/group=|q=/);
