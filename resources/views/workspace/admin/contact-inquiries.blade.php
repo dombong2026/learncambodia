@@ -2,6 +2,9 @@
 @section('title','Contact Inquiries')
 @section('heading','Contact Inquiries')
 @section('description','Private inquiries can only be read and reviewed by authorized administrators. No external notifications are sent.')
+@section('heading_action')
+<a href="{{ route('information.show','contact') }}" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Contact Form</a>
+@endsection
 @section('content')
 <form action="{{ route('admin.contact-inquiries.index') }}" method="GET" class="mb-6 flex flex-wrap items-end justify-end gap-3">
     <div><label for="inquiry-filter" class="mb-1 block text-xs font-bold">Status</label><select id="inquiry-filter" name="status" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs dark:border-slate-700 dark:bg-[#11284a]"><option value="">All</option>@foreach(['new','reviewed','closed'] as $choice)<option value="{{ $choice }}" @selected($status===$choice)>{{ ucfirst($choice) }}</option>@endforeach</select></div>
