@@ -24,7 +24,6 @@ NGINX="/www/server/nginx/sbin/nginx"
 BRAND_DIR="$SITE/public/brand"
 GH_DIR="/root/learncambodia-github-auth/gh"
 GIT_CFG="/root/learncambodia-github-auth/gitconfig"
-VALIDATOR="/root/learncambodia-brand-stage-v1.sh"
 STAGE=""
 BACKUP=""
 OLD_BUILD=""
@@ -100,8 +99,66 @@ grep -Fq "$SITE/.private-nginx-auth/learncambodia.htpasswd" "$VHOST" || fail 'si
 "$NGINX" -t >/dev/null 2>&1 || fail 'Nginx syntax'
 [[ ! -e "$BRAND_DIR" && ! -L "$BRAND_DIR" && ! -e "$SITE/public/favicon.ico" && ! -e "$SITE/public/apple-touch-icon.png" ]] || fail 'brand already exists or unknown existing file'
 [[ -f "$ZIP" && ! -L "$ZIP" && "$(sha256sum "$ZIP" | awk '{print $1}')" == "$ZIP_SHA" ]] || fail 'approved uploaded ZIP missing or altered'
-[[ -f "$VALIDATOR" && ! -L "$VALIDATOR" && "$(git hash-object "$VALIDATOR")" == dd604f5c93513547f694de4fd626246efb938c38 ]] || fail 'original approved ZIP validator missing'
-bash "$VALIDATOR" check "$ZIP" || fail 'approved image package validation failed'
+# The old asset *publisher* is pinned to the pre-merge Main and must NOT be
+# reused as a production validator after PR #18 is merged. Instead validate the
+# immutable, operator-approved archive offline against its exact SHA-256 above.
+# GitHub blob-by-blob comparison against the merged reviewed tree runs later.
+python3 - "$ZIP" <<'PY'
+from pathlib import PurePosixPath
+import hashlib
+import json
+import struct
+import sys
+import zipfile
+
+names = {
+    'SHA256SUMS.json', 'android-chrome-192x192.png',
+    'android-chrome-512x512.png', 'app-icon-512.png',
+    'app-icon-source.png', 'apple-touch-icon.png',
+    'favicon-128.png', 'favicon-16.png', 'favicon-192.png',
+    'favicon-256.png', 'favicon-32.png', 'favicon-48.png',
+    'favicon-512.png', 'favicon-96.png', 'favicon.ico',
+    'favicon.png', 'logo-dark.png', 'logo-light.png',
+    'mark-source.png', 'maskable-192x192.png',
+    'maskable-512x512.png', 'mstile-144x144.png',
+    'site.webmanifest',
+}
+approved = {
+    'logo-dark.png': '5ca0b912923decf9975e77cb36b437ea9b93ebeb883b8c752cb04159df5d2d80',
+    'logo-light.png': '343b91b564a3a8d8bb6cc8980f5806f67d96295d8feac42f1c6c039b2a51e26c',
+    'favicon.ico': '488ebc01d36686d48e1c932dc6a1f91b566841a218e8c0e7217a19ac48c22b51',
+}
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    members = archive.infolist()
+    paths = {m.filename for m in members}
+    assert len(members) == len(names) == len(paths)
+    assert paths == {'brand/' + name for name in names}
+    assert sum(m.file_size for m in members) < 8_000_000
+    for member in members:
+        path = PurePosixPath(member.filename)
+        assert len(path.parts) == 2 and path.parts[0] == 'brand'
+        assert not member.is_dir()
+        assert ((member.external_attr >> 16) & 0o170000) != 0o120000
+    checks = json.loads(archive.read('brand/SHA256SUMS.json'))
+    assert set(checks) == names - {'SHA256SUMS.json'}
+    for name in names - {'SHA256SUMS.json'}:
+        data = archive.read('brand/' + name)
+        actual = hashlib.sha256(data).hexdigest()
+        assert actual == checks[name]['sha256'] and len(data) == checks[name]['bytes']
+        if name in approved:
+            assert actual == approved[name], 'Approved identity mismatch: ' + name
+        if name.endswith('.png'):
+            assert data[:8] == b'\x89PNG\r\n\x1a\n'
+            width, height = struct.unpack('>II', data[16:24])
+            assert 0 < width <= 4000 and 0 < height <= 4000
+        elif name.endswith('.ico'):
+            assert data[:4] == b'\0\0\x1\0'
+    manifest = json.loads(archive.read('brand/site.webmanifest'))
+    assert manifest['name'] == 'LearnCambodia'
+    assert {i.get('purpose') for i in manifest['icons']} == {'any','maskable'}
+print('APPROVED_PACKAGE_SHA256_AND_PER_ASSET_HASHES=PASS')
+print('EXACT_APPROVED_BRAND_FILES=23')
+PY
 printf '%s  %s\n' "$PHPLOCK" "$SITE/composer.lock" | sha256sum -c --status || fail 'Composer dependency lock drift'
 printf '%s  %s\n' "$NPMLOCK" "$SITE/package-lock.json" | sha256sum -c --status || fail 'npm dependency lock drift'
 CODE="$(curl --noproxy '*' -sS --connect-timeout 5 --max-time 12 \
