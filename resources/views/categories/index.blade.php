@@ -57,7 +57,7 @@
                 @php $icon = \App\Support\CategoryVisual::groupIcon($slug); @endphp
                 <a href="{{ route('categories.index', array_merge($directoryParams, ['group' => $slug])) }}#category-directory" class="premium-card group flex min-h-52 flex-col rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 transition hover:-translate-y-0.5 hover:border-[#e2b867] hover:shadow-xl dark:border-slate-700 dark:bg-[#163456]">
                     <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
-                    <h3 class="premium-card-content mt-16 text-lg font-black leading-7 text-[#12345f] dark:text-white">{{ $label }}</h3>
+                    <h3 class="premium-card-content mt-20 text-lg font-black leading-7 text-[#12345f] dark:text-white">{{ $label }}</h3>
                     <p class="premium-card-content mt-3 text-xs font-semibold text-slate-500 dark:text-slate-300">{{ number_format((int) ($groupCounts[$slug] ?? 0)) }} {{ (int) ($groupCounts[$slug] ?? 0) === 1 ? __('longpage.category_one') : __('longpage.category_many') }}</p>
                 </a>
             @endforeach
