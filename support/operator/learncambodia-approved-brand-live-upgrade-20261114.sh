@@ -152,7 +152,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
             width, height = struct.unpack('>II', data[16:24])
             assert 0 < width <= 4000 and 0 < height <= 4000
         elif name.endswith('.ico'):
-            assert data[:4] == b'\0\0\x1\0'
+            assert data[:4] == bytes((0, 0, 1, 0))
     manifest = json.loads(archive.read('brand/site.webmanifest'))
     assert manifest['name'] == 'LearnCambodia'
     assert {i.get('purpose') for i in manifest['icons']} == {'any','maskable'}
