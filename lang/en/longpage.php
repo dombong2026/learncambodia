@@ -2,6 +2,8 @@
 
 return [
     'home' => 'Home',
+    'category_one' => 'Category',
+    'category_many' => 'Categories',
     'categories' => 'Categories',
     'about' => 'About',
     'contact' => 'Contact',
