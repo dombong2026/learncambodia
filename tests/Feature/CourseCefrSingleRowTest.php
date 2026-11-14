@@ -34,6 +34,16 @@ final class CourseCefrSingleRowTest extends TestCase
         $view = file_get_contents(resource_path('views/courses/index.blade.php'));
         $this->assertIsString($view);
         $this->assertStringContainsString('data-course-cefr-row', $view);
+        $this->assertStringContainsString('data-course-cefr-section', $view);
+        $this->assertStringContainsString('class="col-span-full min-w-0 rounded-3xl', $view);
+        $this->assertStringContainsString('snap-x snap-mandatory', $view);
+        $this->assertStringContainsString('bg-white/90', $view);
+        $this->assertStringContainsString('dark:bg-white/10', $view);
+        $this->assertLessThan(
+            strpos($view, 'data-course-filters'),
+            strpos($view, 'data-course-cefr-section'),
+            'The learning-level cards should span the catalog above its narrow sidebars.'
+        );
         $this->assertStringContainsString('class="min-w-0 space-y-5 lg:col-span-2 xl:col-span-1"', $view);
         $this->assertStringContainsString('flex w-full min-w-0 max-w-full flex-nowrap gap-3 overflow-x-auto', $view);
         $this->assertStringNotContainsString('mt-4 grid grid-cols-3 gap-2', $view);
