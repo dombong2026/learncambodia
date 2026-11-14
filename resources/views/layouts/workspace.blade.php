@@ -77,7 +77,7 @@
                         <button type="button" data-dropdown-trigger aria-expanded="false" aria-controls="workspace-profile" aria-label="Account menu" class="premium-header-trigger grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-700 font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
                             {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
                         </button>
-                        <div id="workspace-profile" data-dropdown-panel hidden class="premium-header-panel absolute right-0 mt-2 max-h-[min(75vh,650px)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        <div id="workspace-profile" data-dropdown-panel hidden class="premium-header-panel absolute right-0 mt-2 max-h-[min(75vh,650px)] w-[min(18rem,calc(100vw-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
                             @include('partials.profile-menu-content', ['profileRole' => $role])
                         </div>
                     </div>

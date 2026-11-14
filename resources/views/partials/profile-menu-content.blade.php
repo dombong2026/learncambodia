@@ -6,7 +6,7 @@
         $roleIsKnown = in_array($profileRole, $allowedRoles, true) && $profileRole === auth()->user()->role;
         $navGroups = $roleIsKnown ? \App\Support\WorkspaceMenu::groups($profileRole) : [];
     @endphp
-    <div class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+    <div data-profile-divider class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
         <p class="truncate text-sm font-extrabold text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
         <p class="truncate text-xs text-slate-500 dark:text-slate-300">{{ auth()->user()->email }}</p>
     </div>
@@ -26,7 +26,7 @@
                 </a>
             @endif
             @foreach($navGroups as $group)
-                <div data-profile-nav-group="{{ $group['key'] }}" class="mt-2 border-t border-slate-200 pt-2 dark:border-slate-700">
+                <div data-profile-nav-group="{{ $group['key'] }}" class="mt-2 pt-2">
                     <h3 class="flex items-center gap-2 px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                         <x-workspace-icon :name="$group['icon']" class="h-4 w-4" />
                         <span>{{ app()->getLocale()!=='en' && __('workspace.groups.'.$group['key'])!=='workspace.groups.'.$group['key'] ? __('workspace.groups.'.$group['key']) : $group['title'] }}</span>
@@ -56,13 +56,13 @@
         </a>
     </nav>
 @endauth
-<div class="mt-1 border-t border-slate-200 pt-1 dark:border-slate-700">
+<div data-profile-divider class="mt-1 border-t border-slate-200 pt-1 dark:border-slate-700">
     @auth
         <a href="{{ route('home') }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-amber-500 dark:hover:bg-slate-800">
             <x-workspace-icon data-profile-link-icon name="home" class="h-5 w-5 text-slate-500 dark:text-slate-300" /><span>{{ __('workspace.home') }}</span>
         </a>
     @endauth
-    @include('partials.theme-toggle')
+    @include('partials.theme-toggle', ['showDivider' => false])
     @auth
         <form method="POST" action="{{ route('logout') }}">@csrf
             <button type="submit" class="premium-menu-option flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-amber-500 dark:text-red-400 dark:hover:bg-red-950">
