@@ -13,13 +13,21 @@ use Illuminate\View\View;
 
 class AdminEditorialReviewController extends Controller
 {
+    private const KINDS = ['posts'=>'post', 'faqs'=>'faq', 'help-articles'=>'help_article'];
+
+    private function type(string $kind): string
+    {
+        abort_unless(isset(self::KINDS[$kind]), 404);
+        return self::KINDS[$kind];
+    }
+
     public function index(string $kind): View
     {
-        abort_unless($kind === 'posts',404);
+        $type = $this->type($kind);
 
         return view('workspace.admin.editorial-reviews',[
             'role'=>'admin','kind'=>$kind,
-            'entries'=>ContentEntry::query()->where('type','post')
+            'entries'=>ContentEntry::query()->where('type',$type)
                 ->where('status','pending_review')
                 ->with('creator:id,name')
                 ->orderBy('id')->paginate(10),
@@ -28,7 +36,7 @@ class AdminEditorialReviewController extends Controller
 
     public function submit(Request $request, string $kind, ContentEntry $entry): RedirectResponse
     {
-        abort_unless($kind === 'posts' && $entry->type === 'post',404);
+        abort_unless($entry->type === $this->type($kind),404);
         DB::transaction(function() use ($request,$entry): void {
             $post=ContentEntry::query()->whereKey($entry->id)->lockForUpdate()->firstOrFail();
             abort_unless(in_array($post->status,['draft','rejected'],true),409);
@@ -36,17 +44,17 @@ class AdminEditorialReviewController extends Controller
 
             $before=$post->status;
             $post->update(['status'=>'pending_review','updated_by'=>$request->user()->id]);
-            ApprovalAudit::record('editorial_post',$post->id,$request->user(),
+            ApprovalAudit::record('editorial_'.$post->type,$post->id,$request->user(),
                 'submitted',$before,'pending_review');
         });
 
-        return redirect()->route('admin.editorial.index',['kind'=>'posts'])
+        return redirect()->route('admin.editorial.index',['kind'=>$kind])
             ->with('status','Article submitted for independent editorial approval.');
     }
 
     public function review(Request $request, string $kind, ContentEntry $entry): RedirectResponse
     {
-        abort_unless($kind === 'posts' && $entry->type === 'post',404);
+        abort_unless($entry->type === $this->type($kind),404);
         $data=$request->validate([
             'decision'=>['required',Rule::in(['approve','reject'])],
             'note'=>['nullable','string','max:500','required_if:decision,reject'],
@@ -61,7 +69,7 @@ class AdminEditorialReviewController extends Controller
 
             $next=$data['decision']==='approve' ? 'published' : 'rejected';
             $post->update(['status'=>$next]);
-            ApprovalAudit::record('editorial_post',$post->id,$request->user(),
+            ApprovalAudit::record('editorial_'.$post->type,$post->id,$request->user(),
                 $data['decision'],'pending_review',$next,$data['note']??null);
         });
 

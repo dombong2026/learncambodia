@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\PublicHelpController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -75,6 +77,8 @@ Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learn
 Route::get('/upload-studio', [LearningHubController::class,'studio'])->name('learning.studio');
 Route::get('/authors', [PublicAuthorController::class, 'index'])->name('authors.index');
 Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name('authors.show');
+Route::get('/help-center', [PublicHelpController::class,'index'])->name('help.index');
+Route::get('/help-center/{kind}/{entry}', [PublicHelpController::class,'show'])->name('help.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
@@ -111,6 +115,18 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
         ->middleware('throttle:3,1')->name('verification.send');
 
+    Route::prefix('support')->name('support.')->group(function (): void {
+        Route::get('/tickets', [SupportTicketController::class,'index'])->name('tickets.index');
+        Route::get('/tickets/create', [SupportTicketController::class,'create'])->name('tickets.create');
+        Route::post('/tickets', [SupportTicketController::class,'store'])->middleware('throttle:6,1')->name('tickets.store');
+        Route::post('/chat/start', [SupportTicketController::class,'startChat'])->middleware('throttle:5,1')->name('chat.start');
+        Route::get('/tickets/{ticket}', [SupportTicketController::class,'show'])->name('tickets.show');
+        Route::patch('/tickets/{ticket}', [SupportTicketController::class,'update'])->name('tickets.update');
+        Route::delete('/tickets/{ticket}', [SupportTicketController::class,'destroy'])->name('tickets.destroy');
+        Route::get('/tickets/{ticket}/messages', [SupportTicketController::class,'messages'])->middleware('throttle:120,1')->name('messages.index');
+        Route::post('/tickets/{ticket}/messages', [SupportTicketController::class,'reply'])->middleware('throttle:30,1')->name('messages.store');
+    });
+
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {
@@ -119,6 +135,9 @@ Route::middleware('auth')->group(function (): void {
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
+        Route::get('/support/{kind}', [SupportTicketController::class,'adminIndex'])->name('support.index');
+        Route::patch('/support/{kind}/{ticket}', [SupportTicketController::class,'adminUpdate'])->name('support.update');
+        Route::delete('/support/{kind}/{ticket}', [SupportTicketController::class,'adminDestroy'])->name('support.destroy');
         Route::get('/contact-inquiries', [AdminContactInquiryController::class, 'index'])->name('contact-inquiries.index');
         Route::patch('/contact-inquiries/{inquiry}', [AdminContactInquiryController::class, 'update'])
             ->middleware('throttle:30,1')->name('contact-inquiries.update');
