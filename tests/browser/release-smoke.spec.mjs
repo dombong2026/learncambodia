@@ -254,9 +254,6 @@ test('card corner SVGs are large and decorative; card names and actions stay usa
   expect(size.height).toBeGreaterThanOrEqual(39);
   await expect(icon.locator('xpath=..')).toHaveAttribute('aria-hidden', 'true');
 
-  const pathway = page.locator('.premium-card').filter({ hasText: 'General English' }).first();
-  await expect(pathway.locator('a[href]')).toHaveCount(0).catch(() => {}); // Cards may themselves be anchors.
-  const firstTile = cards.locator('a[href]').first();
   const homeCard = page.locator('a.premium-card[href]').first();
   await expect(homeCard).toHaveAttribute('href', /\/courses|\/categories|\/articles|\/cefr/);
   await homeCard.click();
