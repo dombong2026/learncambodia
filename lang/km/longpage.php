@@ -2,6 +2,8 @@
 
 return [
     'home' => 'ទំព័រដើម',
+    'category_one' => 'ប្រភេទ',
+    'category_many' => 'ប្រភេទ',
     'categories' => 'ប្រភេទវគ្គសិក្សា',
     'about' => 'អំពីយើង',
     'contact' => 'ទំនាក់ទំនង',
