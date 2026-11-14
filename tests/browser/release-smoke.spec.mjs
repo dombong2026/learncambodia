@@ -787,3 +787,46 @@ test('course Filters sidebar scrolls with page without covering other sections o
     }
   }
 });
+
+test('Courses CEFR cards share one row with homepage premium styling and responsive overflow', async ({ page }) => {
+  for (const width of [390, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const theme of ['light', 'dark']) {
+      await page.goto('/courses?lang=en');
+      await page.evaluate(mode => document.documentElement.classList.toggle('dark', mode === 'dark'), theme);
+
+      const row = page.locator('[data-course-cefr-row]');
+      await expect(row).toHaveCount(1);
+      await row.scrollIntoViewIfNeeded();
+      await expect(row).toHaveCSS('flex-wrap', 'nowrap');
+      await expect(row).toHaveCSS('overflow-x', 'auto');
+
+      const metrics = await row.evaluate(el => {
+        const cards = [...el.querySelectorAll('[data-course-cefr-level]')];
+        const positions = cards.map(card => card.getBoundingClientRect());
+        return {
+          labels: cards.map(card => card.textContent.trim()),
+          links: cards.map(card => card.getAttribute('href')),
+          premium: cards.every(card => card.classList.contains('premium-card')),
+          yPositions: positions.map(pos => pos.y),
+          widths: positions.map(pos => pos.width),
+          horizontalOverflow: el.scrollWidth > el.clientWidth + 2,
+        };
+      });
+      expect(metrics.labels).toEqual(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+      expect(metrics.premium).toBeTruthy();
+      expect(Math.max(...metrics.yPositions) - Math.min(...metrics.yPositions)).toBeLessThan(2);
+      expect(Math.min(...metrics.widths)).toBeGreaterThanOrEqual(90);
+      for (const [index, level] of metrics.labels.entries()) {
+        expect(new URL(metrics.links[index], 'https://learncambodia.com').searchParams.get('level')).toBe(level);
+      }
+      if (width === 390) {
+        expect(metrics.horizontalOverflow).toBeTruthy();
+        await row.evaluate(el => { el.scrollLeft = el.scrollWidth; });
+        await expect(row.locator('[data-course-cefr-level="C2"]')).toBeVisible();
+      } else if (width >= 1280) {
+        expect(metrics.horizontalOverflow).toBeFalsy();
+      }
+    }
+  }
+});
