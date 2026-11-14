@@ -27,8 +27,10 @@
                 <a href="{{ route('account.enrollments.show',$enrollment) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Open approved course</a>
             @elseif(auth()->check() && auth()->user()->role==='student')
                 <a href="{{ route('courses.show',$course->slug) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Request enrollment</a>
+            @elseif(auth()->guest())
+                <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Sign in to learn</a>
             @else
-                <a href="{{ route('login') }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Sign in to learn</a>
+                <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Open your workspace</a>
             @endif
         </aside>
     </div>

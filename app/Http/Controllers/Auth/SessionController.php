@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\ReadingReturn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,14 +17,27 @@ use Illuminate\View\View;
 
 class SessionController extends Controller
 {
-    public function loginForm(): View
+    public function loginForm(Request $request): View
     {
-        return view('auth.login');
+        $returnTo = ReadingReturn::valid($request->query('next'));
+        // Clear stale targets when opening sign-in from an ordinary page.
+        $request->session()->forget('auth.reading_return');
+        if ($returnTo !== null) {
+            $request->session()->put('auth.reading_return', $returnTo);
+        }
+
+        return view('auth.login', ['authReturnTo' => $returnTo]);
     }
 
-    public function registerForm(): View
+    public function registerForm(Request $request): View
     {
-        return view('auth.register');
+        $returnTo = ReadingReturn::valid($request->query('next'));
+        $request->session()->forget('auth.reading_return');
+        if ($returnTo !== null) {
+            $request->session()->put('auth.reading_return', $returnTo);
+        }
+
+        return view('auth.register', ['authReturnTo' => $returnTo]);
     }
 
     public function login(Request $request): RedirectResponse
@@ -57,7 +71,13 @@ class SessionController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
 
-        return redirect()->route($request->user()->homeRouteName());
+        // Explicit public reading journeys return to the same article/exam.
+        // All other successful sign-ins go to the user's own role dashboard.
+        $returnTo = ReadingReturn::valid($request->session()->pull('auth.reading_return'));
+
+        return $returnTo !== null
+            ? redirect()->to($returnTo)
+            : redirect()->route($request->user()->homeRouteName());
     }
 
     public function register(Request $request): RedirectResponse
@@ -80,7 +100,11 @@ class SessionController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route($user->homeRouteName());
+        $returnTo = ReadingReturn::valid($request->session()->pull('auth.reading_return'));
+
+        return $returnTo !== null
+            ? redirect()->to($returnTo)
+            : redirect()->route($user->homeRouteName());
     }
 
     public function logout(Request $request): RedirectResponse
