@@ -34,7 +34,8 @@ final class CourseCefrSingleRowTest extends TestCase
         $view = file_get_contents(resource_path('views/courses/index.blade.php'));
         $this->assertIsString($view);
         $this->assertStringContainsString('data-course-cefr-row', $view);
-        $this->assertStringContainsString('flex flex-nowrap gap-3 overflow-x-auto', $view);
+        $this->assertStringContainsString('class="min-w-0 space-y-5 lg:col-span-2 xl:col-span-1"', $view);
+        $this->assertStringContainsString('flex w-full min-w-0 max-w-full flex-nowrap gap-3 overflow-x-auto', $view);
         $this->assertStringNotContainsString('mt-4 grid grid-cols-3 gap-2', $view);
         $this->assertStringContainsString('data-course-filters', $view);
         $this->assertStringContainsString("name=\"level\"", $view);
