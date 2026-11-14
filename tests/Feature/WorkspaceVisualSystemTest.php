@@ -77,8 +77,8 @@ final class WorkspaceVisualSystemTest extends TestCase
     public function test_information_labels_are_translated_without_changing_legal_review_status(): void
     {
         foreach (['en', 'km', 'zh'] as $locale) {
-            app()->setLocale($locale);
-            $this->get(route('information.show','privacy'))->assertOk()
+            // The SetLocale middleware honors explicit URL language per request.
+            $this->get(route('information.show','privacy').'?lang='.$locale)->assertOk()
                 ->assertSee(__('ui.information'))
                 ->assertSee(__('ui.draft_legal_notice'))
                 ->assertSee(__('ui.page_overview'));
