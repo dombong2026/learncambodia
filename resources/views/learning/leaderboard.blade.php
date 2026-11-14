@@ -14,7 +14,7 @@
     @if($student)
         <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @foreach($milestones as $milestone)
-                <div class="flex min-h-60 flex-col rounded-3xl border p-7 shadow-sm {{ $milestone['earned']?'border-[#e1bb70] bg-[#fff8e9] dark:bg-[#45371f]':'border-slate-200 bg-[#f7f9fc] dark:border-slate-700 dark:bg-[#173657]' }}">
+                <div class="premium-card flex min-h-60 flex-col rounded-3xl border p-7 shadow-sm {{ $milestone['earned']?'border-[#e1bb70] bg-[#fff8e9] dark:bg-[#45371f]':'border-slate-200 bg-[#f7f9fc] dark:border-slate-700 dark:bg-[#173657]' }}">
                     <span class="grid h-16 w-16 place-items-center rounded-full {{ $milestone['earned']?'bg-[#dba447] text-[#11335b]':'bg-slate-200 text-slate-500 dark:bg-[#36506c]' }}"><x-workspace-icon :name="$milestone['icon']" class="h-8 w-8"/></span>
                     <h3 class="mt-6 flex-1 text-lg font-black text-[#10345c] dark:text-white">{{ $milestone['label'] }}</h3>
                     <span class="mt-4 text-xs font-black {{ $milestone['earned']?'text-[#8f681f] dark:text-[#f6cd75]':'text-slate-500' }}">{{ $milestone['earned']?'Completed from your learning records':'Not yet recorded' }}</span>
@@ -41,7 +41,7 @@
             ['clipboard-check','Practice milestone','You submitted at least one actual practice quiz in the authorized course.'],
             ['award','Passing practice milestone','A submitted quiz reached the course quiz passing threshold. It is not an external exam result.'],
         ] as [$icon,$name,$explain])
-            <div class="rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-700 dark:bg-[#18395a]">
+            <div class="premium-card rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-700 dark:bg-[#18395a]">
                 <x-workspace-icon :name="$icon" class="h-10 w-10 text-[#ae7c26]"/>
                 <h3 class="mt-5 text-lg font-black text-[#12345d] dark:text-white">{{ $name }}</h3>
                 <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $explain }}</p>
