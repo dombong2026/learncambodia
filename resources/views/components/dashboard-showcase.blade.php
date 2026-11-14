@@ -17,18 +17,17 @@
         <a href="{{ $showcase['feature_url'] }}" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8e9d9] bg-[#edf8ee] px-4 py-2.5 text-xs font-extrabold text-[#227248] transition hover:border-[#8dc89d] hover:bg-[#def1df] focus-visible:outline-2 focus-visible:outline-[#227248] dark:border-[#356c55] dark:bg-[#1e4938] dark:text-[#aff0c2]">
             <span class="h-2.5 w-2.5 rounded-full bg-[#31a064]" aria-hidden="true"></span>
             <span>{{ $showcase['status'] }}: <span class="tabular-nums">{{ \App\Support\DashboardNumber::compact($showcase['status_count']) }}</span></span>
-            <x-workspace-icon name="arrow-up-right" class="h-3.5 w-3.5" />
         </a>
     </div>
     <div class="grid items-stretch gap-5 xl:grid-cols-[1.26fr_1fr_1fr]">
-        <section class="learning-dashboard-panel learning-dashboard-navy flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['feature_title'] }}">
+        <section class="premium-card premium-card-on-navy learning-dashboard-panel learning-dashboard-navy flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['feature_title'] }}">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-[11px] font-extrabold uppercase tracking-[.12em] text-[#ffd476]">{{ __('dashboard.feature_overview') }}</p>
-                    <h3 class="mt-2 text-lg font-black leading-6 text-white sm:text-xl">{{ $showcase['feature_title'] }}</h3>
+                    <h3 class="premium-card-content mt-2 text-lg font-black leading-6 text-white sm:text-xl">{{ $showcase['feature_title'] }}</h3>
                     <p class="mt-1 text-xs leading-5 text-[#b7cce5]">{{ $showcase['feature_description'] }}</p>
                 </div>
-                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/10 text-[#f7bc45]"><x-workspace-icon :name="$heroIcon" class="h-6 w-6" /></span>
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$heroIcon" /></span>
             </div>
             @if(count($showcase['rings']) > 0)
                 <div class="my-7 grid flex-1 {{ count($showcase['rings']) > 1 ? 'grid-cols-2' : 'grid-cols-1' }} items-start justify-items-center gap-4">
@@ -58,18 +57,17 @@
             <div class="flex justify-center">
                 <a href="{{ $showcase['feature_url'] }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f4f6fb] px-5 py-2.5 text-xs font-black text-[#0c2d5b] transition hover:bg-[#ffdf9c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffd474]">
                     {{ $showcase['feature_link'] }}
-                    <x-workspace-icon name="arrow-up-right" class="h-4 w-4" />
                 </a>
             </div>
         </section>
 
-        <section class="learning-dashboard-panel flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['timeline_title'] }}">
+        <section class="premium-card learning-dashboard-panel flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['timeline_title'] }}">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-[.1em] text-slate-500 dark:text-slate-400">{{ __('dashboard.recent_activity') }}</p>
                     <h3 class="mt-2 text-lg font-black leading-6 text-[#0d2d5b] dark:text-[#fce0a7]">{{ $showcase['timeline_title'] }}</h3>
                 </div>
-                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#f0f4fa] text-[#1d467e] dark:bg-[#214067] dark:text-[#f7c36b]"><x-workspace-icon name="calendar" class="h-5 w-5" /></span>
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="calendar" /></span>
             </div>
             <ol class="mt-5 flex-1 space-y-1">
                 @forelse($showcase['timeline'] as $item)
@@ -93,7 +91,7 @@
                     <p class="text-[11px] font-bold uppercase tracking-[.1em] text-slate-500 dark:text-slate-400">{{ __('dashboard.feature_detail') }}</p>
                     <h3 class="mt-2 text-lg font-black leading-6 text-[#0d2d5b] dark:text-[#fce0a7]">{{ $showcase['actions_title'] }}</h3>
                 </div>
-                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#fff6df] text-[#ac7822] dark:bg-[#4c3a1e] dark:text-[#ffd581]"><x-workspace-icon name="clipboard-check" class="h-5 w-5" /></span>
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="clipboard-check" /></span>
             </div>
             <div class="mt-6 flex flex-1 flex-col gap-3">
                 @foreach($showcase['actions'] as $action)
@@ -101,7 +99,6 @@
                         <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff0c9] text-[#ba8021] dark:bg-[#4d3f27] dark:text-[#ffd37b]"><x-workspace-icon :name="$action['icon']" class="h-5 w-5" /></span>
                         <span class="min-w-0 flex-1 text-xs font-bold leading-5 text-[#203552] dark:text-[#e7effb]">{{ $action['label'] }}</span>
                         <span class="text-xl font-black tabular-nums text-[#0d2d5b] dark:text-white" title="{{ number_format($action['count']) }}">{{ \App\Support\DashboardNumber::compact($action['count']) }}</span>
-                        <x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-[#8a9fb9] transition group-hover:text-[#b57a20]" />
                     </a>
                 @endforeach
             </div>
