@@ -7,6 +7,7 @@
     <meta name="robots" content="noindex,nofollow">
     <title>@yield('title') · Learn Cambodia</title>
     @include('partials.brand-head')
+    @include('partials.theme-boot')
     @vite(['resources/css/app.css','resources/js/app.ts'])
 </head>
 <body data-auth-body class="min-h-screen bg-gradient-to-br from-[#e9eef5] via-[#f7f9fc] to-[#dfe9f6] text-slate-900 antialiased dark:from-[#071d3b] dark:via-[#0e274a] dark:to-[#0b2446] dark:text-white">
