@@ -39,6 +39,7 @@
                         <a href="{{ route('login') }}" class="block rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">{{ __('ui.sign_in') }}</a>
                         <a href="{{ route('register') }}" class="block rounded-xl px-3 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-slate-800">{{ __('ui.create_account') }}</a>
                     @endauth
+                    @include('partials.theme-toggle')
                 </div>
             </div>
         </div>
