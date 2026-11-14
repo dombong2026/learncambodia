@@ -26,10 +26,10 @@
                 ['icon'=>'newspaper','value'=>$publishedArticleCount,'label'=>__('pages.published_articles'),'url'=>route('articles.index')],
                 ['icon'=>'award','value'=>6,'label'=>__('pages.cefr_levels'),'url'=>route('cefr.index')],
             ] as $tile)
-                <a href="{{ $tile['url'] }}" class="group rounded-2xl border border-white/15 bg-[#173c68]/80 p-5 shadow-lg transition hover:border-[#f4c36e] hover:bg-[#234e80]">
-                    <span class="flex justify-between gap-2"><x-workspace-icon :name="$tile['icon']" class="h-6 w-6 text-[#eebc61]" /><x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-[#a6c6e6]" /></span>
-                    <p class="mt-4 text-3xl font-black tabular-nums text-white" title="{{ number_format($tile['value']) }}">{{ \App\Support\DashboardNumber::compact($tile['value']) }}</p>
-                    <p class="mt-1 text-xs font-semibold leading-5 text-[#c5d8ee]">{{ $tile['label'] }}</p>
+                <a href="{{ $tile['url'] }}" class="premium-card premium-card-on-navy group rounded-2xl border border-white/15 bg-[#173c68]/80 p-5 shadow-lg transition hover:border-[#f4c36e] hover:bg-[#234e80]">
+                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$tile['icon']" /></span>
+                    <p class="premium-card-content mt-4 text-3xl font-black tabular-nums text-white" title="{{ number_format($tile['value']) }}">{{ \App\Support\DashboardNumber::compact($tile['value']) }}</p>
+                    <p class="premium-card-content mt-1 text-xs font-semibold leading-5 text-[#c5d8ee]">{{ $tile['label'] }}</p>
                 </a>
             @endforeach
         </div>
@@ -38,14 +38,13 @@
 
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <section class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
-            <div class="flex items-center justify-between gap-3"><h2 class="text-lg font-black text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2><a href="{{ route('categories.index') }}" class="text-xs font-bold text-[#b98223] hover:underline">{{ __('pages.view_all') }}</a></div>
-            <div class="mt-5 space-y-3">
+        <section class="premium-card min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="tags" /></span><div class="premium-card-content flex items-center justify-between gap-3"><h2 class="text-lg font-black text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2><a href="{{ route('categories.index') }}" class="text-xs font-bold text-[#b98223] hover:underline">{{ __('pages.view_all') }}</a></div>
+            <div class="premium-card-content mt-5 space-y-3">
                 @forelse($featuredCategories->take(5) as $category)
                     <a href="{{ route('categories.show',$category) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
                         <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f8ebce] text-xs font-black text-[#795018] dark:bg-[#4c4026] dark:text-[#ffe5aa]">{{ $category->code }}</span>
                         <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#133761] dark:text-white">{{ $category->name }}</strong><small class="mt-1 block text-[11px] text-slate-500">{{ \App\Models\Category::GROUPS[$category->group] ?? __('pages.study_pathway') }}</small></span>
-                        <x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-[#bc902e]" />
                     </a>
                 @empty
                     <p class="text-sm leading-7 text-slate-500">{{ __('pages.empty_pathways') }}</p>
@@ -53,20 +52,20 @@
             </div>
         </section>
         <section class="flex min-w-0 flex-col gap-4">
-            <a href="{{ route('courses.index') }}" class="flex-1 rounded-3xl bg-gradient-to-br from-[#123b6b] to-[#0a2854] p-6 text-white shadow-lg transition hover:from-[#1c4a7e]">
-                <x-workspace-icon name="book-open" class="h-8 w-8 text-[#edbf68]" />
+            <a href="{{ route('courses.index') }}" class="premium-card premium-card-on-navy flex-1 rounded-3xl bg-gradient-to-br from-[#123b6b] to-[#0a2854] p-6 text-white shadow-lg transition hover:from-[#1c4a7e]">
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
                 <h2 class="mt-4 text-xl font-black">{{ __('pages.flexible_learning') }}</h2>
                 <p class="mt-3 text-sm leading-7 text-[#cbdcf1]">{{ __('pages.flexible_learning_desc') }}</p>
-                <span class="mt-4 inline-block text-xs font-black text-[#ffd480]">{{ __('pages.browse_courses') }} →</span>
+                <span class="mt-4 inline-block text-xs font-black text-[#ffd480]">{{ __('pages.browse_courses') }}</span>
             </a>
-            <a href="{{ route('cefr.index') }}" class="flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
-                <x-workspace-icon name="award" class="h-8 w-8 text-[#d29a38]" />
+            <a href="{{ route('cefr.index') }}" class="premium-card flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" /></span>
                 <h2 class="mt-4 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
                 <p class="mt-2 text-sm leading-7 text-slate-500">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
-        <section class="min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
-            <p class="text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
+        <section class="premium-card premium-card-on-navy min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span><p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
             <h2 class="mt-5 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
             <p class="mt-4 text-sm leading-8 text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
             <div class="mt-6 grid grid-cols-3 gap-2">
@@ -93,7 +92,7 @@
 <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.approved_courses') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.start_a_course') }}</h2></div>
-        <a href="{{ route('courses.index') }}" class="rounded-xl border border-[#e0b764] px-5 py-2.5 text-xs font-bold text-[#153b64] dark:text-[#f5ce82]">{{ __('pages.view_all') }} →</a>
+        <a href="{{ route('courses.index') }}" class="rounded-xl border border-[#e0b764] px-5 py-2.5 text-xs font-bold text-[#153b64] dark:text-[#f5ce82]">{{ __('pages.view_all') }}</a>
     </div>
     <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @forelse($featuredCourses as $course)
@@ -106,7 +105,7 @@
 
 <section class="border-y border-slate-200 bg-white py-14 dark:border-slate-800 dark:bg-[#10294a]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.verified_profiles') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.featured_instructors') }}</h2></div><a href="{{ route('instructors.index') }}" class="text-xs font-bold text-[#b98027] hover:underline">{{ __('pages.meet_instructors') }} →</a></div>
+        <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.verified_profiles') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.featured_instructors') }}</h2></div><a href="{{ route('instructors.index') }}" class="text-xs font-bold text-[#b98027] hover:underline">{{ __('pages.meet_instructors') }}</a></div>
         <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @forelse($featuredInstructors as $profile)
                 <x-public-person-card :profile="$profile" kind="instructor" />
@@ -126,8 +125,8 @@
             ['user-check',__('pages.step_approval'),__('pages.step_approval_desc'),auth()->check() ? route(auth()->user()->homeRouteName()) : route('login')],
             ['book-open-check',__('pages.step_study'),__('pages.step_study_desc'),route('cefr.index')],
         ] as $step)
-            <a href="{{ $step[3] }}" class="rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
-                <span class="grid h-14 w-14 place-items-center rounded-full bg-[#f8eccd]"><x-workspace-icon :name="$step[0]" class="h-7 w-7 text-[#ae7724]" /></span>
+            <a href="{{ $step[3] }}" class="premium-card rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
+                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$step[0]" /></span>
                 <h3 class="mt-5 text-sm font-black">{{ $step[1] }}</h3><p class="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
             </a>
         @endforeach
@@ -136,10 +135,10 @@
 
 <section class="border-t border-slate-200 bg-[#f3f5fa] py-14 dark:border-slate-800 dark:bg-[#0d2444]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-2xl font-black text-[#0b2e58] dark:text-white">{{ __('pages.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="text-xs font-extrabold text-[#b17c23]">{{ __('pages.view_all') }} →</a></div>
+        <div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-2xl font-black text-[#0b2e58] dark:text-white">{{ __('pages.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="text-xs font-extrabold text-[#b17c23]">{{ __('pages.view_all') }}</a></div>
         <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @forelse($latestArticles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#d8ad5b] dark:border-slate-700 dark:bg-[#153052]"><span class="text-[11px] font-black uppercase tracking-widest text-[#b17c23]">{{ __('frontend.study_resources') }}</span><h3 class="mt-3 text-lg font-black text-[#11325e] dark:text-white">{{ $article->title }}</h3><p class="mt-3 flex-1 text-sm leading-7 text-slate-500">{{ $article->summary }}</p><span class="mt-5 text-xs font-bold text-[#b17c23]">{{ __('frontend.read_article') }} →</span></a>
+                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#d8ad5b] dark:border-slate-700 dark:bg-[#153052]"><span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><span class="premium-card-content text-[11px] font-black uppercase tracking-widest text-[#b17c23]">{{ __('frontend.study_resources') }}</span><h3 class="mt-3 text-lg font-black text-[#11325e] dark:text-white">{{ $article->title }}</h3><p class="mt-3 flex-1 text-sm leading-7 text-slate-500">{{ $article->summary }}</p><span class="mt-5 text-xs font-bold text-[#b17c23]">{{ __('frontend.read_article') }}</span></a>
             @empty
                 <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-7 text-sm text-slate-500">{{ __('frontend.no_articles') }}</p>
             @endforelse
