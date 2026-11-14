@@ -19,7 +19,7 @@ return [
     'flexible_learning' => 'Flexible study pathways',
     'flexible_learning_desc' => 'Access course outlines and self-paced lesson progress after school-approved enrollment. No unofficial exam credentials are issued.',
     'level_guidance' => 'Level guidance',
-    'level_guidance_desc' => 'Explore CEFR descriptors from A1 to C2 and choose a pathway appropriate to your goals.',
+    'level_guidance_desc' => 'Explore CEFR levels from A1 to C2, understand the skills expected at each stage, and compare learning goals. Choose a pathway that matches your current ability and helps you progress toward future goals.',
     'educator_workspace' => 'For educators',
     'instructor_support' => 'Teach with an organized workspace',
     'instructor_support_desc' => 'Authorized instructors manage assigned courses, homework and grading through their own secure workspaces.',

@@ -19,7 +19,7 @@ return [
     'flexible_learning' => '灵活的学习路径',
     'flexible_learning_desc' => '学校批准入学后，学生可学习课程内容并追踪进度。平台不会发放未经授权的考试证书。',
     'level_guidance' => '等级指南',
-    'level_guidance_desc' => '了解 CEFR A1 至 C2 等级描述，选择合适的学习路径。',
+    'level_guidance_desc' => '了解 CEFR 从 A1 到 C2 的各等级，以及每个阶段需要掌握的语言技能。比较不同等级的学习目标，选择符合当前能力的学习路径，并逐步实现未来的学习计划。',
     'educator_workspace' => '教师工作区',
     'instructor_support' => '使用清晰有序的教学工作区',
     'instructor_support_desc' => '授权教师可以在独立安全的工作区管理所授课程、作业和评分。',

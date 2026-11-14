@@ -36,12 +36,12 @@
     </div>
 </section>
 
-<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+<section data-home-featured-section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
         <section data-home-pathways class="premium-card min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
             <div class="premium-card-content flex flex-wrap items-center justify-between gap-3">
                 <div class="flex min-w-0 items-center gap-3">
-                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#eaf3ff] text-[#316ea8] dark:bg-[#24466c] dark:text-[#acd2f5]" aria-hidden="true"><x-workspace-icon name="tags" class="h-6 w-6" /></span>
+                    <span data-home-pathways-icon class="grid h-11 w-11 shrink-0 place-items-center bg-transparent text-[#3475ac] dark:text-[#a6d0f1]" aria-hidden="true"><x-workspace-icon name="tags" class="h-8 w-8" /></span>
                     <h2 class="min-w-0 text-lg font-black leading-6 text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2>
                 </div>
                 <a href="{{ route('categories.index') }}" class="inline-flex min-h-9 shrink-0 items-center rounded-lg border border-[#e5bd76] px-3 py-2 text-xs font-bold text-[#9e6e23] transition hover:bg-[#fff4d9] hover:text-[#754b0b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d29a3f] dark:border-[#896d3c] dark:text-[#f4ca76] dark:hover:bg-[#294663]">{{ __('pages.view_all') }}</a>
@@ -50,46 +50,47 @@
                 @forelse($featuredCategories->take(5) as $category)
                     <a href="{{ route('categories.show',$category) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
                         <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f8ebce] text-xs font-black text-[#795018] dark:bg-[#4c4026] dark:text-[#ffe5aa]">{{ $category->code }}</span>
-                        <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#133761] dark:text-white">{{ $category->name }}</strong><small class="mt-1 block text-[11px] text-slate-500">{{ \App\Models\Category::GROUPS[$category->group] ?? __('pages.study_pathway') }}</small></span>
+                        <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#133761] dark:text-white">{{ $category->name }}</strong><small class="mt-1 block text-[11px] text-slate-500 dark:text-slate-400">{{ \App\Models\Category::GROUPS[$category->group] ?? __('pages.study_pathway') }}</small></span>
                     </a>
                 @empty
-                    <p class="text-sm leading-7 text-slate-500">{{ __('pages.empty_pathways') }}</p>
+                    <p class="text-sm leading-7 text-slate-500 dark:text-slate-300">{{ __('pages.empty_pathways') }}</p>
                 @endforelse
             </div>
         </section>
         <section class="flex min-w-0 flex-col gap-4">
-            <a href="{{ route('courses.index') }}" class="premium-card premium-card-on-navy flex-1 rounded-3xl bg-gradient-to-br from-[#123b6b] to-[#0a2854] p-6 text-white shadow-lg transition hover:from-[#1c4a7e]">
+            <a data-home-feature="flexible" href="{{ route('courses.index') }}" class="premium-card flex-1 rounded-3xl border border-[#d3e0ef] bg-gradient-to-br from-[#f8fbff] to-[#e5effb] p-6 text-[#12355f] shadow-sm transition hover:border-[#e2b76d] dark:border-[#416187] dark:from-[#123b6b] dark:to-[#0a2854] dark:text-white dark:shadow-lg">
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
-                <h2 class="mt-4 text-xl font-black">{{ __('pages.flexible_learning') }}</h2>
-                <p class="mt-3 text-sm leading-7 text-[#cbdcf1]">{{ __('pages.flexible_learning_desc') }}</p>
-                <span class="mt-4 inline-block text-xs font-black text-[#ffd480]">{{ __('pages.browse_courses') }}</span>
+                <h2 class="premium-card-content mt-4 text-xl font-black">{{ __('pages.flexible_learning') }}</h2>
+                <p class="premium-card-content mt-3 text-sm leading-7 text-slate-600 dark:text-[#cbdcf1]">{{ __('pages.flexible_learning_desc') }}</p>
+                <span class="premium-card-content mt-4 inline-block text-xs font-black text-[#9a681e] dark:text-[#ffd480]">{{ __('pages.browse_courses') }}</span>
             </a>
-            <a data-home-level-guidance href="{{ route('cefr.index') }}" class="premium-card group flex min-h-48 flex-1 flex-col justify-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
-                <span class="premium-card-content mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#eaf3ff] text-[#326fa8] transition group-hover:bg-[#dceeff] dark:bg-[#24466c] dark:text-[#afd7f9] dark:group-hover:bg-[#2c537e]" aria-hidden="true"><x-workspace-icon name="award" class="h-9 w-9" /></span>
+            <a data-home-level-guidance data-home-feature="level" href="{{ route('cefr.index') }}" class="premium-card flex min-h-56 flex-1 flex-col justify-center rounded-3xl border border-slate-200 bg-white px-6 pb-6 pt-16 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
+                <span data-home-level-icon class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" class="h-9 w-9" /></span>
                 <h2 class="premium-card-content text-lg font-black leading-6 text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
                 <p class="premium-card-content mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
-        <section class="premium-card premium-card-on-navy min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
-            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span><p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
+        <section data-home-feature="educator" class="premium-card min-w-0 rounded-3xl border border-[#d5b26b] bg-white p-6 text-[#12355f] shadow-sm dark:border-[#cda95d] dark:bg-[#10345f] dark:text-white">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span>
+            <p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#97651b] dark:text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
             <h2 class="premium-card-content mt-20 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
-            <p class="mt-4 text-sm leading-8 text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
-            <div class="mt-6 grid grid-cols-3 gap-2">
+            <p class="premium-card-content mt-4 text-sm leading-8 text-slate-600 dark:text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
+            <div class="premium-card-content mt-6 grid grid-cols-3 gap-2">
                 @foreach([['school',__('pages.courses')],['clipboard-check',__('pages.assignments')],['chart-line',__('pages.progress')]] as [$icon,$label])
-                    <div class="rounded-xl bg-white/10 px-2 py-4 text-center"><x-workspace-icon :name="$icon" class="mx-auto h-6 w-6 text-[#edbf68]" /><p class="mt-2 text-[11px] font-bold">{{ $label }}</p></div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-2 py-4 text-center dark:border-white/10 dark:bg-white/10"><x-workspace-icon :name="$icon" class="mx-auto h-6 w-6 text-[#ac7720] dark:text-[#edbf68]" /><p class="mt-2 text-[11px] font-bold">{{ $label }}</p></div>
                 @endforeach
             </div>
-            <a href="{{ route('login') }}" class="mt-6 block rounded-xl bg-[#eebd64] px-4 py-3 text-center text-xs font-black text-[#123461] hover:bg-[#ffd78e]">{{ __('pages.sign_in_to_workspace') }}</a>
+            <a href="{{ route('login') }}" class="premium-card-content mt-6 block rounded-xl bg-[#eebd64] px-4 py-3 text-center text-xs font-black text-[#123461] transition hover:bg-[#ffd78e]">{{ __('pages.sign_in_to_workspace') }}</a>
         </section>
     </div>
 </section>
 
-<section class="bg-[#0d2c57] py-12 text-white">
+<section data-home-study-corner class="border-y border-slate-200 bg-[#eaf2fb] py-12 text-[#12355f] dark:border-slate-800 dark:bg-[#0d2c57] dark:text-white">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#e7b456]">{{ __('pages.find_your_level') }}</p><h2 class="mt-2 text-2xl font-black">{{ __('pages.study_corner') }}</h2></div><a href="{{ route('cefr.index') }}" class="text-xs font-bold text-[#f9ce7b] hover:underline">{{ __('pages.read_cefr') }}</a></div>
+        <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#98691f] dark:text-[#e7b456]">{{ __('pages.find_your_level') }}</p><h2 class="mt-2 text-2xl font-black">{{ __('pages.study_corner') }}</h2></div><a href="{{ route('cefr.index') }}" class="text-xs font-bold text-[#95651d] hover:underline dark:text-[#f9ce7b]">{{ __('pages.read_cefr') }}</a></div>
         <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
             @foreach(['A1','A2','B1','B2','C1','C2'] as $level)
-                <a href="{{ route('cefr.index') }}#{{ $level }}" class="rounded-xl border border-white/20 bg-white/10 py-5 text-center text-xl font-black transition hover:border-[#f3c064] hover:bg-[#24518a]">{{ $level }}</a>
+                <a href="{{ route('cefr.index') }}#{{ $level }}" class="premium-card rounded-xl border border-[#c7d8ed] bg-white/90 py-5 text-center text-xl font-black text-[#173b67] transition hover:border-[#d8a74d] hover:bg-[#fff7e7] dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:border-[#f3c064] dark:hover:bg-[#24518a]">{{ $level }}</a>
             @endforeach
         </div>
     </div>

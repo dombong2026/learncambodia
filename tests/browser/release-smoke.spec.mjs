@@ -498,9 +498,11 @@ test('homepage learning steps display compact 2–4 responsive cards with visibl
     const heading = level.locator('h2');
     await expect(level).toBeVisible();
     await expect(icon).toBeVisible();
-    const [svg, h2] = await Promise.all([icon.boundingBox(), heading.boundingBox()]);
-    expect(svg && h2).toBeTruthy();
-    expect(h2.y - (svg.y + svg.height)).toBeLessThan(90);
+    const [svg, h2, cardBox] = await Promise.all([icon.boundingBox(), heading.boundingBox(), level.boundingBox()]);
+    expect(svg && h2 && cardBox).toBeTruthy();
+    expect(svg.x).toBeGreaterThan(cardBox.x + cardBox.width * 0.55);
+    expect(svg.y).toBeLessThan(cardBox.y + 70);
+    expect(h2.y).toBeGreaterThan(cardBox.y + 25);
 
     const pathways = page.locator('[data-home-pathways]');
     const header = pathways.locator('h2').first();
@@ -687,4 +689,62 @@ test('short category navigation does not shorten catalog cards or full search te
   await page.goto('/categories?q=English%20as%20a%20Second%20Language&lang=en');
   await expect(page.locator('[data-category-tray] [data-category-short="ESL"]')).toHaveText('ESL');
   await expect(page.locator('#main-content')).toContainText('English as a Second Language');
+});
+
+test('homepage feature icons stay unboxed and cards follow light/dark appearance', async ({ page }) => {
+  const rgb = (s) => [...s.matchAll(/[0-9.]+/g)].slice(0, 3).map(m => Number(m[0]));
+  const brightness = (s) => {
+    const [r, g, b] = rgb(s);
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  };
+
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const scheme of ['light', 'dark']) {
+      await page.goto('/?lang=en');
+      await page.evaluate(scheme => document.documentElement.classList.toggle('dark', scheme === 'dark'), scheme);
+
+      const pathways = page.locator('[data-home-pathways-icon]');
+      const level = page.locator('[data-home-level-guidance]');
+      const levelArt = level.locator('[data-home-level-icon]');
+      await expect(pathways.locator('svg')).toBeVisible();
+      await expect(levelArt.locator('svg')).toBeVisible();
+      await expect(pathways).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await expect(levelArt).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+
+      const [card, art] = await Promise.all([level.boundingBox(), levelArt.boundingBox()]);
+      expect(card && art).toBeTruthy();
+      expect(art.x).toBeGreaterThan(card.x + card.width * 0.6);
+      expect(art.y).toBeLessThan(card.y + 30);
+
+      for (const selector of [
+        '[data-home-pathways]',
+        '[data-home-feature="flexible"]',
+        '[data-home-feature="level"]',
+        '[data-home-feature="educator"]',
+        '[data-home-study-corner]',
+      ]) {
+        const surface = page.locator(selector);
+        await expect(surface).toBeVisible();
+        const background = await surface.evaluate(el => getComputedStyle(el).backgroundColor);
+        if (selector !== '[data-home-feature="flexible"]') {
+          if (scheme === 'light') expect(brightness(background)).toBeGreaterThan(180);
+          else expect(brightness(background)).toBeLessThan(110);
+        } else {
+          const cardText = await surface.evaluate(el => getComputedStyle(el).color);
+          if (scheme === 'light') expect(brightness(cardText)).toBeLessThan(120);
+          else expect(brightness(cardText)).toBeGreaterThan(200);
+        }
+      }
+
+      const paragraph = level.locator('p');
+      await expect(paragraph).toContainText('CEFR');
+      await expect(paragraph).toContainText('current ability');
+      const lines = await paragraph.evaluate(el => {
+        const style = getComputedStyle(el);
+        return el.getBoundingClientRect().height / parseFloat(style.lineHeight);
+      });
+      expect(lines).toBeGreaterThanOrEqual(3);
+    }
+  }
 });
