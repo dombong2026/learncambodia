@@ -17,7 +17,7 @@
                 <span>{{ __('ui.dashboard') }}</span>
             </a>
             <a data-profile-settings href="{{ \App\Support\WorkspaceMenu::profile($profileRole) }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-amber-500 dark:hover:bg-slate-800">
-                <x-workspace-icon data-profile-link-icon name="settings" class="h-5 w-5 text-slate-500 dark:text-slate-300" />
+                <x-workspace-icon data-profile-link-icon name="shield-check" class="h-5 w-5 text-slate-500 dark:text-slate-300" />
                 <span>{{ __('workspace.profile_security') }}</span>
             </a>
             @if(! auth()->user()->hasVerifiedEmail())
