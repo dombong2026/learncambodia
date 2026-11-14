@@ -104,7 +104,7 @@
                     </div>
                 </a>
             @empty
-                <x-public-empty-state :title="__('longpage.empty_category_results')" icon="search" :href="route('categories.index')" :action="__('longpage.clear_filters')" />
+                <x-public-empty-state :title="__('longpage.empty_category_results')" icon="search" />
             @endforelse
         </div>
         <div class="mt-8">{{ $categories->links() }}</div>
