@@ -289,3 +289,102 @@ a.premium-card:hover, a.premium-card:focus-visible {
     .premium-header-trigger[aria-expanded="true"], .premium-menu-option:hover,
     .premium-menu-option:active, a.premium-card:hover { transform: none; }
 }
+
+
+/* Frontend Experience 3 · shared, scoped UI tokens across all four account roles.
+   Keep these presentation rules out of authentication and public course pages. */
+[data-workspace-body] {
+    --ws-border: #dde6f0;
+    --ws-divider: #edf1f6;
+    --ws-hover: #f5f9ff;
+    --ws-input: #ffffff;
+    background: #f5f8fc;
+}
+.dark [data-workspace-body] {
+    --ws-border: #314660;
+    --ws-divider: #293c55;
+    --ws-hover: #203752;
+    --ws-input: #10243d;
+    background: #081b31;
+}
+[data-workspace-main] { min-width: 0; }
+[data-workspace-heading] { padding-bottom: 1.25rem; border-bottom: 1px solid var(--ws-border); }
+[data-workspace-heading] h1 { line-height: 1.22; text-wrap: balance; }
+.workspace-content { min-width: 0; }
+.workspace-content .workspace-panel,
+.workspace-content .workspace-empty-state {
+    border: 1px solid var(--ws-border);
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 4px 18px rgba(15, 45, 82, .045);
+}
+.dark .workspace-content .workspace-panel,
+.dark .workspace-content .workspace-empty-state { background: #142b47; }
+.workspace-content .workspace-panel { min-width: 0; overflow: hidden; }
+.workspace-content :is(input[type="text"],input[type="search"],input[type="email"],input[type="url"],input[type="number"],input[type="date"],input[type="datetime-local"],textarea,select) {
+    max-width: 100%;
+    min-height: 42px;
+    border-radius: .8rem;
+    border-color: var(--ws-border);
+    background-color: var(--ws-input);
+    color: inherit;
+    accent-color: #1d4f89;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+.workspace-content :is(input,textarea,select):focus-visible {
+    outline: 2px solid #d5a746;
+    outline-offset: 2px;
+    border-color: #2a5e99;
+    box-shadow: 0 0 0 3px rgba(45, 103, 168, .13);
+}
+.workspace-content input::placeholder,
+.workspace-content textarea::placeholder { color: #64748b; opacity: 1; }
+.dark .workspace-content input::placeholder,
+.dark .workspace-content textarea::placeholder { color: #b0c0d3; }
+.workspace-content :is(table) { border-collapse: separate; border-spacing: 0; }
+.workspace-content table th { font-weight: 750; vertical-align: middle; }
+.workspace-content table td { vertical-align: middle; overflow-wrap: anywhere; }
+.workspace-content table thead { background: #f1f5fa; }
+.dark .workspace-content table thead { background: #1b3453; }
+.dark .workspace-content table thead th { color: #d4e1f1; }
+.workspace-content table tbody tr { transition: background-color .16s ease; }
+.workspace-content table tbody tr:hover { background: var(--ws-hover); }
+.workspace-content table tbody tr:last-child td { border-bottom: 0; }
+.workspace-content .workspace-empty-state {
+    display: flex;
+    min-height: 185px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    text-align: center;
+    box-shadow: none;
+    border-style: dashed;
+}
+.workspace-empty-state .workspace-empty-icon {
+    display: grid;
+    width: 3rem; height: 3rem; place-items: center;
+    border-radius: 1rem;
+    background: #edf4fd;
+    color: #20548d;
+}
+.dark .workspace-empty-state .workspace-empty-icon { background: #27466c; color: #d7e8fc; }
+.workspace-content .premium-card:has(.premium-corner-icon) { isolation: isolate; }
+.workspace-content .premium-card .premium-card-content { min-width: 0; }
+.workspace-content .premium-card .premium-card-content p { overflow-wrap: anywhere; }
+.workspace-content :is(a,button):focus-visible { outline-offset: 3px; }
+.workspace-content a:where(:not(.premium-card)):hover { text-decoration-thickness: 1px; }
+.information-page { background: #f5f8fc; }
+.dark .information-page { background: #0a1f39; }
+.information-page .information-surface { transition: border-color .18s ease; }
+.information-page .information-quick-link:focus-visible { outline: 2px solid #e1b34d; outline-offset: 3px; }
+@media (max-width: 640px) {
+    [data-workspace-heading] { padding-bottom: 1rem; }
+    .workspace-content .workspace-empty-state { padding: 1.5rem 1rem; }
+    .workspace-content table { font-size: .8125rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .workspace-content table tbody tr,
+    .workspace-content :is(input,textarea,select),
+    .information-page .information-surface { transition: none !important; }
+}

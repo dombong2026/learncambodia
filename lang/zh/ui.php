@@ -15,4 +15,12 @@ return [
     'all_categories' => '所有分类',
     'explore_categories' => '探索课程分类',
     'view_cefr' => '查看 CEFR 等级',
+
+    'information' => '信息与指南',
+    'page_overview' => '概览',
+    'continue_learning' => '探索学习',
+    'draft_legal_notice' => '本文档为初步草案。在公开开放注册系统之前，必须完成法律审核。',
+    'empty_workspace' => '暂无内容',
+    'empty_courses' => '暂无可用课程',
+    'empty_editorial' => '未找到草稿',
 ];

@@ -4,7 +4,7 @@
 @section('description', 'Versioned, read-only Learn Cambodia catalogue endpoints secured with scoped developer tokens.')
 @section('content')
 <div class="grid gap-5 xl:grid-cols-2">
-    <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section class="workspace-panel rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-extrabold">Available endpoints</h2>
         <p class="mt-2 text-sm leading-7 text-slate-500">All requests require Authorization: Bearer TOKEN. Only read-scoped developer tokens are currently supported.</p>
         <div class="mt-6 space-y-3">
@@ -13,7 +13,7 @@
             @endforeach
         </div>
     </section>
-    <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section class="workspace-panel rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-extrabold">Usage guidelines</h2>
         <div class="mt-5 space-y-4 text-sm leading-7 text-slate-600 dark:text-slate-400">
             <p><strong>API version:</strong> v1 · <strong>Token ability:</strong> catalog:read.</p>

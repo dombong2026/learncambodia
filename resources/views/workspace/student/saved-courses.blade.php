@@ -9,7 +9,7 @@
 <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
 @forelse($bookmarks as $bookmark)
     @php($course = $bookmark->course)
-    <article class="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <article class="workspace-panel flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">{{ $course->category?->name }} · {{ $course->cefr_level ?? __('saved_courses.all_levels') }}</p>
         <h2 class="mt-3 text-xl font-extrabold">{{ $course->title }}</h2>
         <p class="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
@@ -22,7 +22,7 @@
         </div>
     </article>
 @empty
-    <div class="col-span-full rounded-3xl border border-slate-200 bg-white p-8 text-sm leading-7 text-slate-500 dark:border-slate-800 dark:bg-slate-900">{{ __('saved_courses.empty') }}</div>
+    <x-workspace-empty-state :title="__('ui.empty_workspace')" :description="__('saved_courses.empty')" icon="book-open" :href="route('account.courses.index')" :action="__('saved_courses.browse')" />
 @endforelse
 </div>
 <div class="mt-7">{{ $bookmarks->links() }}</div>

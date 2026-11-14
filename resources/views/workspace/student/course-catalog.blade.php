@@ -6,7 +6,7 @@
 <div class="mb-5 flex justify-end"><a href="{{ route('account.saved-courses.index') }}" class="rounded-full border border-blue-700 px-5 py-2.5 text-sm font-bold text-blue-700 dark:border-blue-400 dark:text-blue-300">{{ __('saved_courses.title') }}</a></div>
 <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
 @forelse($courses as $course)
-    <article class="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <article class="workspace-panel flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">{{ $course->category?->name }} · {{ $course->cefr_level ?? 'All levels' }}</p>
         <h2 class="mt-3 text-xl font-extrabold">{{ $course->title }}</h2>
         <p class="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
@@ -29,7 +29,7 @@
         </div>
     </article>
 @empty
-    <div class="col-span-full rounded-3xl border border-slate-200 bg-white p-8 text-sm leading-7 text-slate-500 dark:border-slate-800 dark:bg-slate-900">No courses have passed academic review yet. You can explore published learning categories while new courses are prepared.</div>
+    <x-workspace-empty-state :title="__('ui.empty_courses')" description="No courses have passed academic review yet. You can explore published learning categories while new courses are prepared." icon="graduation" :href="route('categories.index')" :action="__('ui.explore_categories')" />
 @endforelse
 </div>
 <div class="mt-7">{{ $courses->links() }}</div>

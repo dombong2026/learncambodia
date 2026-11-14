@@ -11,6 +11,8 @@ const pages = [
   ['authors', '/authors'],
   ['about', '/information/about'],
   ['contact', '/information/contact'],
+  ['information-faq', '/information/faq'],
+  ['information-privacy', '/information/privacy'],
   ['cefr', '/cefr'],
   ['library', '/library'],
   ['reading', '/reading'],
@@ -20,7 +22,7 @@ const pages = [
   ['course-watch', '/course-watch'],
   ['upload-studio', '/upload-studio'],
 ];
-const screenshots = new Set(['home', 'categories', 'library', 'about', 'exam-catalog']);
+const screenshots = new Set(['home', 'categories', 'library', 'about', 'exam-catalog', 'information-faq']);
 
 test.describe('Actual rendered public pages on isolated QA server', () => {
   for (const [name, path] of pages) {
@@ -377,4 +379,19 @@ test('category directory cards have blended unique art and one working link each
   expect(icons.length).toBeGreaterThan(2);
   await cards.first().click();
   await expect(page).toHaveURL(/\/categories\/[^/?]+/);
+});
+
+test('informational pages keep legal drafts visible and match the theme switch', async ({ page }) => {
+  await page.goto('/information/privacy?lang=en');
+  const section = page.locator('[data-information-page="privacy"]');
+  await expect(section).toBeVisible();
+  await expect(section.locator('[role="note"]')).toContainText('preliminary draft');
+  await expect(section.locator('a[href*="/categories"]')).toBeVisible();
+  const original = await section.evaluate(el => getComputedStyle(el).backgroundColor);
+  await page.locator('button[aria-controls="profile-menu"]').click();
+  await page.locator('#profile-menu [data-theme-toggle]').click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  const dark = await section.evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(dark).not.toEqual(original);
+  await expect(section.locator('[role="note"]')).toContainText('preliminary draft');
 });
