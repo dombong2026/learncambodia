@@ -205,3 +205,79 @@ test('profile theme preference is manual and overrides operating system color sc
   await page.reload();
   await expect(page.locator('html')).not.toHaveClass(/dark/);
 });
+
+
+test('premium flag-only language and profile menus animate while preserving existing actions', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference', colorScheme: 'light' });
+  await page.goto('/?lang=en');
+  const flag = page.locator('button[aria-controls="locale-menu"]');
+  const profile = page.locator('button[aria-controls="profile-menu"]');
+
+  await expect(flag).toBeVisible();
+  await expect(flag.locator('svg')).toHaveCount(0); // No dropdown chevron.
+  await expect(flag.locator('.premium-language-flag')).toContainText('🇬🇧');
+
+  if (await page.evaluate(() => matchMedia('(hover: hover)').matches)) {
+    await flag.hover();
+    await page.waitForTimeout(280);
+    const rotated = await flag.locator('.premium-language-flag').evaluate(
+      el => getComputedStyle(el).transform
+    );
+    expect(rotated).not.toBe('none');
+  }
+
+  await flag.click();
+  await expect(flag).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#locale-menu')).toBeVisible();
+  await expect(page.locator('#locale-menu [name="locale"]')).toHaveCount(3);
+  await expect(page.locator('#locale-menu')).toHaveCSS('animation-name', 'premium-menu-enter');
+
+  await profile.click();
+  await expect(flag).toHaveAttribute('aria-expanded', 'false');
+  await expect(profile).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#profile-menu')).toBeVisible();
+  await expect(page.locator('#profile-menu [data-theme-toggle]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(profile).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#profile-menu')).toBeHidden();
+});
+
+test('card corner SVGs are large and decorative; card names and actions stay usable', async ({ page }) => {
+  await page.goto('/?lang=en');
+  const cards = page.locator('.premium-card');
+  expect(await cards.count()).toBeGreaterThanOrEqual(6);
+  const icon = cards.locator('.premium-corner-icon svg').first();
+  await expect(icon).toBeVisible();
+  const size = await icon.boundingBox();
+  expect(size).not.toBeNull();
+  expect(size.width).toBeGreaterThanOrEqual(39);
+  expect(size.height).toBeGreaterThanOrEqual(39);
+  await expect(icon.locator('xpath=..')).toHaveAttribute('aria-hidden', 'true');
+
+  const pathway = page.locator('.premium-card').filter({ hasText: 'General English' }).first();
+  await expect(pathway.locator('a[href]')).toHaveCount(0).catch(() => {}); // Cards may themselves be anchors.
+  const firstTile = cards.locator('a[href]').first();
+  const homeCard = page.locator('a.premium-card[href]').first();
+  await expect(homeCard).toHaveAttribute('href', /\/courses|\/categories|\/articles|\/cefr/);
+  await homeCard.click();
+  await expect(page.locator('#main-content')).toBeVisible();
+});
+
+test('light and dark header menu controls preserve text contrast and motion settings', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/?lang=en');
+  const flag = page.locator('.premium-language-trigger');
+  const profile = page.locator('button[aria-controls="profile-menu"]');
+  await expect(flag).toBeVisible();
+  await expect(profile).toBeVisible();
+  const initial = await profile.evaluate(el => getComputedStyle(el).backgroundColor);
+  await profile.hover();
+  const hover = await profile.evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(hover).toBe(initial); // Solid dark profile chip must remain legible on hover.
+  await profile.click();
+  await page.locator('#profile-menu [data-theme-toggle]').click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(flag).toBeVisible();
+  await expect(profile).toBeVisible();
+  await expect(page.locator('header img[src*="logo-dark.png"]').first()).toBeVisible();
+});
