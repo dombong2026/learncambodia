@@ -11,6 +11,48 @@
 
 html { scroll-behavior: smooth; }
 body { font-family: var(--font-sans); }
+
+/* Site-wide pointer affordances: Tailwind Preflight gives buttons the arrow
+   cursor unless we opt into the native hand pointer. Apply once to public,
+   authentication and every workspace, because all share this stylesheet.
+   Do not mislabel disabled controls or text-entry fields as clickable. */
+@layer base {
+    :where(
+        a[href],
+        button:not(:disabled):not([aria-disabled="true"]),
+        input:is([type="submit"], [type="button"], [type="reset"], [type="checkbox"], [type="radio"], [type="file"]):not(:disabled),
+        select:not(:disabled),
+        details > summary,
+        [role="button"]:not([aria-disabled="true"]),
+        [role="switch"]:not([aria-disabled="true"]),
+        [role="tab"]:not([aria-disabled="true"]),
+        [role="menuitem"]:not([aria-disabled="true"]),
+        [data-dropdown-trigger]:not(:disabled),
+        [data-theme-toggle]:not(:disabled),
+        [data-tray-scroll]:not(:disabled),
+        label:has(input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled))
+    ) {
+        cursor: pointer;
+    }
+    :where(
+        button:disabled, button[aria-disabled="true"],
+        input:disabled, select:disabled,
+        [role="button"][aria-disabled="true"],
+        [role="switch"][aria-disabled="true"],
+        [role="tab"][aria-disabled="true"],
+        [role="menuitem"][aria-disabled="true"]
+    ) {
+        cursor: not-allowed;
+    }
+    :where(
+        input[type="text"], input[type="search"], input[type="email"],
+        input[type="password"], input[type="number"], input[type="tel"],
+        input[type="url"], textarea
+    ):not(:disabled) {
+        cursor: text;
+    }
+}
+
 [hidden] { display: none !important; }
 .scrollbar-hide { scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
