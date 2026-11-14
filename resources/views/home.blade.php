@@ -60,13 +60,13 @@
             </a>
             <a href="{{ route('cefr.index') }}" class="premium-card flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" /></span>
-                <h2 class="mt-4 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
+                <h2 class="premium-card-content mt-16 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
                 <p class="mt-2 text-sm leading-7 text-slate-500">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
         <section class="premium-card premium-card-on-navy min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
             <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span><p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
-            <h2 class="mt-5 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
+            <h2 class="premium-card-content mt-16 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
             <p class="mt-4 text-sm leading-8 text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
             <div class="mt-6 grid grid-cols-3 gap-2">
                 @foreach([['school',__('pages.courses')],['clipboard-check',__('pages.assignments')],['chart-line',__('pages.progress')]] as [$icon,$label])
@@ -89,6 +89,7 @@
     </div>
 </section>
 
+@if($featuredCourses->isNotEmpty())
 <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.approved_courses') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.start_a_course') }}</h2></div>
@@ -102,7 +103,9 @@
         @endforelse
     </div>
 </section>
+@endif
 
+@if($featuredInstructors->isNotEmpty())
 <section class="border-y border-slate-200 bg-white py-14 dark:border-slate-800 dark:bg-[#10294a]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.verified_profiles') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.featured_instructors') }}</h2></div><a href="{{ route('instructors.index') }}" class="text-xs font-bold text-[#b98027] hover:underline">{{ __('pages.meet_instructors') }}</a></div>
@@ -115,6 +118,7 @@
         </div>
     </div>
 </section>
+@endif
 
 <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <h2 class="text-2xl font-black text-[#102f5d] dark:text-white">{{ __('pages.how_it_works') }}</h2>
@@ -127,12 +131,13 @@
         ] as $step)
             <a href="{{ $step[3] }}" class="premium-card rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$step[0]" /></span>
-                <h3 class="mt-5 text-sm font-black">{{ $step[1] }}</h3><p class="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
+                <h3 class="premium-card-content mt-16 text-sm font-black">{{ $step[1] }}</h3><p class="premium-card-content mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
             </a>
         @endforeach
     </div>
 </section>
 
+@if($latestArticles->isNotEmpty())
 <section class="border-t border-slate-200 bg-[#f3f5fa] py-14 dark:border-slate-800 dark:bg-[#0d2444]">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-2xl font-black text-[#0b2e58] dark:text-white">{{ __('pages.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="text-xs font-extrabold text-[#b17c23]">{{ __('pages.view_all') }}</a></div>
@@ -145,4 +150,5 @@
         </div>
     </div>
 </section>
+@endif
 @endsection
