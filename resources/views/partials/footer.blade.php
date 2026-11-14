@@ -1,6 +1,6 @@
 <footer class="mt-16 border-t border-slate-800 bg-slate-950 text-slate-200">
     <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        <div><h2 class="mb-5 text-base font-bold text-white">LearnCambodia</h2><ul class="space-y-3 text-sm text-slate-400">
+        <div><h2 class="mb-5 text-base font-bold text-white"><x-brand-logo surface="dark" height="h-8" imageClass="max-w-[195px]" /></h2><ul class="space-y-3 text-sm text-slate-400">
             <li><a class="hover:text-white" href="{{ route('information.show','about') }}">About Us <span lang="km"> (អំពីយើង)</span></a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','instructors') }}">Our Instructors</a></li>
             <li><a class="hover:text-white" href="{{ route('articles.index') }}">{{ __('frontend.articles') }}</a></li>
