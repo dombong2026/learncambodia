@@ -67,9 +67,7 @@
             @forelse($courses as $course)
                 <x-public-course-card :course="$course" />
             @empty
-                <div class="col-span-full rounded-3xl border border-dashed border-slate-300 p-8 text-sm leading-7 text-slate-500 dark:border-slate-700">{{ __('frontend.no_courses') }}
-                    <p class="mt-4"><a href="{{ route('courses.index') }}" class="font-bold text-[#b18330] underline">{{ __('pages.clear') }}</a></p>
-                </div>
+                <x-public-empty-state icon="book-open" :title="__('frontend.no_courses')" :href="route('courses.index')" :action="__('pages.clear')" />
             @endforelse
         </div>
         <div class="mt-8">{{ $courses->links() }}</div>
