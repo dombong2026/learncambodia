@@ -76,11 +76,11 @@
 </x-learning-section>
 <x-learning-section title="How recommendations are selected" eyebrow="Transparent recommendation rules" tone="white">
     <div class="grid gap-5 md:grid-cols-2">
-        <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#193759]">
+        <div class="premium-card rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#193759]">
             <h3 class="text-lg font-black">Own learning interests</h3>
             <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">Once you enroll, the system suggests other currently published courses from the same approved subject categories. Previously requested courses are excluded from suggestions.</p>
         </div>
-        <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#193759]">
+        <div class="premium-card rounded-3xl border border-slate-200 bg-[#f8fafc] p-7 dark:border-slate-700 dark:bg-[#193759]">
             <h3 class="text-lg font-black">No automated high-stakes profiling</h3>
             <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">No ranking by health, identity, hidden user information, protected characteristics or speculative academic performance. Results are not formal placement recommendations.</p>
         </div>

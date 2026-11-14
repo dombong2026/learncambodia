@@ -75,4 +75,33 @@ final class PremiumHeaderCardMotionTest extends TestCase
         $this->assertStringNotContainsString('arrow-up-right', $learning);
         $this->assertStringNotContainsString(' →', $learning);
     }
+    public function test_static_featured_cards_use_the_same_motion_without_becoming_links(): void
+    {
+        $cefrBlade = file_get_contents(resource_path('views/cefr/index.blade.php'));
+        $workspaceCefr = file_get_contents(resource_path('views/workspace/student/cefr.blade.php'));
+        $this->assertStringContainsString('<article id="{{ $level->code }}" data-cefr-level-card class="premium-card', $cefrBlade);
+        $this->assertStringContainsString('<article data-cefr-level-card class="premium-card', $workspaceCefr);
+
+        foreach ([
+            'information/about.blade.php' => 'premium-card premium-card-on-navy relative min-h-36',
+            'authors/index.blade.php' => 'premium-card premium-card-on-navy relative min-h-36',
+            'learning/exams.blade.php' => 'premium-card rounded-3xl border border-slate-200 bg-white p-8',
+            'learning/reading.blade.php' => 'premium-card rounded-3xl border border-slate-200 bg-white p-8',
+            'learning/leaderboard.blade.php' => 'premium-card flex min-h-60 flex-col',
+            'learning/recommendations.blade.php' => 'premium-card rounded-3xl border border-slate-200',
+        ] as $view => $class) {
+            $content = file_get_contents(resource_path('views/'.$view));
+            $this->assertIsString($content);
+            $this->assertStringContainsString($class, $content);
+        }
+
+        $css = file_get_contents(resource_path('css/app.css'));
+        $this->assertStringContainsString('.premium-card:hover', $css);
+        $this->assertStringContainsString('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)', $css);
+        $this->assertStringContainsString('.premium-card { translate: none !important; }', $css);
+
+        $this->get('/cefr?lang=en')->assertOk();
+        $this->get('/information/about?lang=en')->assertOk();
+    }
+
 }

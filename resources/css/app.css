@@ -242,9 +242,22 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
     overflow: hidden;
     transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
-a.premium-card:hover, a.premium-card:focus-visible {
-    transform: translateY(-3px);
-    box-shadow: 0 16px 34px rgba(12, 43, 87, .13);
+/* One motion system for linked and informational premium cards. Static
+   articles are deliberately not links and retain their normal cursor. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .premium-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 34px rgba(12, 43, 87, .13);
+    }
+    .dark .premium-card:hover {
+        box-shadow: 0 17px 36px rgba(0, 0, 0, .28);
+    }
+}
+/* Preserve keyboard focus feedback for genuinely navigable cards. */
+a.premium-card:focus-visible,
+.premium-card:focus-within:has(a[href]) {
+    outline-offset: 4px;
+    box-shadow: 0 0 0 2px rgba(221, 175, 84, .65), 0 12px 30px rgba(12, 43, 87, .12);
 }
 .premium-corner-icon {
     position: absolute;
@@ -287,7 +300,11 @@ a.premium-card:hover, a.premium-card:focus-visible {
     .premium-header-panel:not([hidden]) { animation: none; }
     .premium-header-trigger:hover, .premium-header-trigger:active,
     .premium-header-trigger[aria-expanded="true"], .premium-menu-option:hover,
-    .premium-menu-option:active, a.premium-card:hover { transform: none; }
+    .premium-menu-option:active, .premium-card:hover, .premium-card:focus-within { transform: none !important; }
+    .premium-card { translate: none !important; }
+    .premium-card:hover .premium-corner-icon, .premium-card:focus-within .premium-corner-icon {
+        transform: rotate(-8deg) !important;
+    }
 }
 
 

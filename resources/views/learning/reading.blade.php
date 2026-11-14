@@ -29,7 +29,7 @@
             ['pen-square','Summarize in your own words','After reading, write a short explanation of the main ideas and any unfamiliar terms.'],
             ['chart-line','Reflect and revisit','Re-read difficult passages, review vocabulary and study in manageable sessions.'],
         ] as [$icon,$heading,$description])
-            <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-[#173757]">
+            <div class="premium-card rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-[#173757]">
                 <span class="grid h-14 w-14 place-items-center rounded-xl bg-[#f8e7bf] text-[#a67b2b] dark:bg-[#493d27]"><x-workspace-icon :name="$icon" class="h-7 w-7"/></span>
                 <h3 class="mt-6 text-xl font-black text-[#11375d] dark:text-white">{{ $heading }}</h3>
                 <p class="mt-4 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $description }}</p>

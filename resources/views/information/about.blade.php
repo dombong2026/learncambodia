@@ -24,7 +24,7 @@
                     ['newspaper',$publishedArticles,__('longpage.published_articles')],
                     ['award',$cefrLevelCount,__('longpage.cefr_levels')],
                 ] as [$icon,$value,$label])
-                    <div class="relative min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5">
+                    <div class="premium-card premium-card-on-navy relative min-h-36 rounded-2xl border border-white/20 bg-white/10 p-5">
                         <x-workspace-icon :name="$icon" class="absolute right-4 top-4 h-6 w-6 text-[#f1c977]"/>
                         <p class="mt-8 text-4xl font-black tabular-nums" title="{{ number_format($value) }}">{{ \App\Support\DashboardNumber::compact($value) }}</p>
                         <p class="mt-2 text-xs font-bold leading-6 text-[#d3e3f3]">{{ $label }}</p>

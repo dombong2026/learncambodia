@@ -7,7 +7,7 @@
     <p class="mt-4 max-w-3xl text-base leading-8 text-slate-600 dark:text-slate-400">The Common European Framework of Reference for Languages (CEFR) describes proficiency from A1 to C2. These descriptors are a learning guide, not a replacement for validated testing.</p>
     <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         @foreach($levels as $level)
-        <article id="{{ $level->code }}" class="scroll-mt-48 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <article id="{{ $level->code }}" data-cefr-level-card class="premium-card scroll-mt-48 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex items-center justify-between"><span class="text-3xl font-black text-blue-700 dark:text-blue-400">{{ $level->code }}</span><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ $level->category }}</span></div>
             <h2 class="mt-5 text-xl font-extrabold">{{ $level->name }}</h2>
             <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $level->description }}</p>
