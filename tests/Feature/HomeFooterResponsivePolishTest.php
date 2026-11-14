@@ -63,4 +63,26 @@ final class HomeFooterResponsivePolishTest extends TestCase
             $this->assertStringNotContainsString('data-footer-social-profile', $html);
         }
     }
+    public function test_footer_social_share_icons_have_no_visible_box_background_or_border(): void
+    {
+        $markup = $this->get('/?lang=en')->assertOk()
+            ->assertSee('data-footer-social', false)
+            ->getContent();
+
+        $footerTemplate = file_get_contents(resource_path('views/partials/footer.blade.php'));
+        $this->assertIsString($footerTemplate);
+
+        $this->assertSame(4, substr_count($footerTemplate, 'rounded-lg border-0 bg-transparent'));
+        $this->assertSame(4, substr_count($markup, 'rounded-lg border-0 bg-transparent'));
+        $this->assertStringNotContainsString('border border-slate-700 bg-white/5', $footerTemplate);
+        $this->assertStringNotContainsString('hover:bg-white/10', $footerTemplate);
+        $this->assertStringNotContainsString('hover:border-amber-400', $footerTemplate);
+
+        // Keep the accessible 40px touch targets, motion preferences, and real share links.
+        $this->assertSame(4, substr_count($footerTemplate, 'inline-flex h-10 w-10'));
+        $this->assertSame(4, substr_count($footerTemplate, 'motion-reduce:transform-none'));
+        $this->assertSame(4, substr_count($footerTemplate, 'focus-visible:outline-amber-400'));
+        $this->assertSame(4, substr_count($footerTemplate, 'aria-label="Share LearnCambodia on '));
+    }
+
 }
