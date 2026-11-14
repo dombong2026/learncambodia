@@ -645,7 +645,8 @@ test('guest profile menu has one divider and a compact responsive tray', async (
     await expect(menu.locator('[data-profile-divider]')).toHaveCSS('border-top-width', '1px');
   }
 });
-\n
+
+
 test('compact public category nav retains full tooltip and accessible names on all viewports', async ({ page }) => {
   for (const width of [390, 820, 1440]) {
     await page.setViewportSize({ width, height: 900 });
