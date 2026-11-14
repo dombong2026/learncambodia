@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* Explicit choice overrides the OS theme. Uses the HTML root .dark class. */
+@custom-variant dark (&:where(.dark, .dark *));
 @source '../views/**/*.blade.php';
 @source '../js/**/*.ts';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
