@@ -29,7 +29,7 @@
             ['user-check','2. Obtain approved enrollment','Students request access and an administrator must approve the enrollment.'],
             ['clipboard-check','3. Practice and review','Answer questions in your student workspace and review your own result history.'],
         ] as [$icon,$title,$desc])
-            <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-[#173656]">
+            <div class="premium-card rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-[#173656]">
                 <span class="grid h-14 w-14 place-items-center rounded-xl bg-[#f7e5bf] p-3.5 text-[#a4762b] dark:bg-[#4f432e]"><x-workspace-icon :name="$icon" class="h-7 w-7"/></span>
                 <h3 class="mt-5 text-xl font-black text-[#11355f] dark:text-white">{{ $title }}</h3><p class="mt-4 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $desc }}</p>
             </div>
