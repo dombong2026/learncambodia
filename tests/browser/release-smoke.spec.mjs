@@ -645,3 +645,46 @@ test('guest profile menu has one divider and a compact responsive tray', async (
     await expect(menu.locator('[data-profile-divider]')).toHaveCSS('border-top-width', '1px');
   }
 });
+
+
+test('compact public category nav retains full tooltip and accessible names on all viewports', async ({ page }) => {
+  for (const width of [390, 820, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?lang=en');
+
+    const tray = page.locator('[data-category-tray]');
+    await expect(tray).toBeVisible();
+    for (const [code, full] of [
+      ['GE', 'General English'],
+      ['ESL', 'English as a Second Language'],
+      ['EFL', 'English as a Foreign Language'],
+      ['BE', 'Business English'],
+      ['EAP', 'English for Academic Purposes'],
+      ['IELTS', 'International English Language Testing System'],
+    ]) {
+      const link = tray.locator('[data-category-short="' + code + '"]');
+      await expect(link).toHaveCount(1);
+      await expect(link).toHaveText(code);
+      await expect(link).toHaveAttribute('title', full);
+      await expect(link).toHaveAttribute('aria-label', code + ' — ' + full);
+      await expect(link).toHaveAttribute('href', /\/categories\/[a-z0-9-]+/);
+    }
+    await expect(tray.getByRole('link', { name: /Courses/i }).first()).toBeVisible();
+
+    const next = page.locator('[data-tray-scroll="1"]');
+    await next.click();
+    await expect(tray).toBeVisible();
+  }
+
+  await page.goto('/?lang=en');
+  const esl = page.locator('[data-category-tray] [data-category-short="ESL"]');
+  await esl.click();
+  await expect(page).toHaveURL(/\/categories\/esl-english-as-a-second-language/);
+  await expect(page.locator('h1')).toContainText('English as a Second Language');
+});
+
+test('short category navigation does not shorten catalog cards or full search terms', async ({ page }) => {
+  await page.goto('/categories?q=English%20as%20a%20Second%20Language&lang=en');
+  await expect(page.locator('[data-category-tray] [data-category-short="ESL"]')).toHaveText('ESL');
+  await expect(page.locator('#main-content')).toContainText('English as a Second Language');
+});
