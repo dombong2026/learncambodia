@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Tests\TestCase;
 
 class BrandIdentityTest extends TestCase
@@ -44,10 +45,7 @@ class BrandIdentityTest extends TestCase
 
     public function test_approved_logo_component_uses_appropriate_light_and_dark_images(): void
     {
-        $html = view('components.brand-logo', [
-            'surface' => 'adaptive',
-            'height' => 'h-9',
-        ])->render();
+        $html = Blade::render('<x-brand-logo surface="adaptive" height="h-9" />');
 
         $this->assertStringContainsString('brand/logo-light.png', $html);
         $this->assertStringContainsString('brand/logo-dark.png', $html);
