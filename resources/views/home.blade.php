@@ -38,8 +38,14 @@
 
 <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <section class="premium-card min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
-            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="tags" /></span><div class="premium-card-content flex items-center justify-between gap-3"><h2 class="text-lg font-black text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2><a href="{{ route('categories.index') }}" class="text-xs font-bold text-[#b98223] hover:underline">{{ __('pages.view_all') }}</a></div>
+        <section data-home-pathways class="premium-card min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
+            <div class="premium-card-content flex flex-wrap items-center justify-between gap-3">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#eaf3ff] text-[#316ea8] dark:bg-[#24466c] dark:text-[#acd2f5]" aria-hidden="true"><x-workspace-icon name="tags" class="h-6 w-6" /></span>
+                    <h2 class="min-w-0 text-lg font-black leading-6 text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2>
+                </div>
+                <a href="{{ route('categories.index') }}" class="inline-flex min-h-9 shrink-0 items-center rounded-lg border border-[#e5bd76] px-3 py-2 text-xs font-bold text-[#9e6e23] transition hover:bg-[#fff4d9] hover:text-[#754b0b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d29a3f] dark:border-[#896d3c] dark:text-[#f4ca76] dark:hover:bg-[#294663]">{{ __('pages.view_all') }}</a>
+            </div>
             <div class="premium-card-content mt-5 space-y-3">
                 @forelse($featuredCategories->take(5) as $category)
                     <a href="{{ route('categories.show',$category) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
@@ -58,10 +64,10 @@
                 <p class="mt-3 text-sm leading-7 text-[#cbdcf1]">{{ __('pages.flexible_learning_desc') }}</p>
                 <span class="mt-4 inline-block text-xs font-black text-[#ffd480]">{{ __('pages.browse_courses') }}</span>
             </a>
-            <a href="{{ route('cefr.index') }}" class="premium-card flex-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
-                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" /></span>
-                <h2 class="premium-card-content mt-20 text-lg font-black text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
-                <p class="mt-2 text-sm leading-7 text-slate-500">{{ __('pages.level_guidance_desc') }}</p>
+            <a data-home-level-guidance href="{{ route('cefr.index') }}" class="premium-card group flex min-h-48 flex-1 flex-col justify-center rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
+                <span class="premium-card-content mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#eaf3ff] text-[#326fa8] transition group-hover:bg-[#dceeff] dark:bg-[#24466c] dark:text-[#afd7f9] dark:group-hover:bg-[#2c537e]" aria-hidden="true"><x-workspace-icon name="award" class="h-9 w-9" /></span>
+                <h2 class="premium-card-content text-lg font-black leading-6 text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
+                <p class="premium-card-content mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ __('pages.level_guidance_desc') }}</p>
             </a>
         </section>
         <section class="premium-card premium-card-on-navy min-w-0 rounded-3xl border border-[#cda95d] bg-[#10345f] p-6 text-white shadow-sm">
@@ -122,16 +128,19 @@
 
 <section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
     <h2 class="text-2xl font-black text-[#102f5d] dark:text-white">{{ __('pages.how_it_works') }}</h2>
-    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div data-home-learning-steps class="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 xl:grid-cols-4">
         @foreach([
             ['compass',__('pages.step_discover'),__('pages.step_discover_desc'),route('courses.index')],
             ['user-round',__('pages.step_account'),__('pages.step_account_desc'),route('register')],
             ['user-check',__('pages.step_approval'),__('pages.step_approval_desc'),auth()->check() ? route(auth()->user()->homeRouteName()) : route('login')],
             ['book-open-check',__('pages.step_study'),__('pages.step_study_desc'),route('cefr.index')],
         ] as $step)
-            <a href="{{ $step[3] }}" class="premium-card rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052]">
-                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$step[0]" /></span>
-                <h3 class="premium-card-content mt-20 text-sm font-black">{{ $step[1] }}</h3><p class="premium-card-content mt-2 text-xs leading-6 text-slate-500 dark:text-slate-300">{{ $step[2] }}</p>
+            <a data-home-step-card href="{{ $step[3] }}" class="premium-card group flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052] sm:rounded-3xl sm:p-5 xl:p-6">
+                <span data-home-step-icon class="premium-card-content mb-4 grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#eaf3ff] text-[#316fa7] transition group-hover:bg-[#d9eaff] dark:bg-[#26466a] dark:text-[#c6e2fb] dark:group-hover:bg-[#31567e] sm:h-14 sm:w-14" aria-hidden="true">
+                    <x-workspace-icon :name="$step[0]" class="h-7 w-7 sm:h-8 sm:w-8" />
+                </span>
+                <h3 class="premium-card-content break-words text-sm font-black leading-6 text-[#12355f] dark:text-white sm:text-base">{{ $step[1] }}</h3>
+                <p class="premium-card-content mt-2 break-words text-xs leading-6 text-slate-600 dark:text-slate-300 sm:text-sm">{{ $step[2] }}</p>
             </a>
         @endforeach
     </div>

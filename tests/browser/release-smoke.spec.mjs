@@ -466,3 +466,82 @@ test('public guidance and featured metric cards share the premium motion class',
   await expect(linked).toHaveAttribute('href', /group=/);
   await expect(linked).toHaveCSS('cursor', 'pointer');
 });
+
+test('homepage learning steps display compact 2–4 responsive cards with visible icons', async ({ page }) => {
+  for (const [width, columns] of [[390, 2], [820, 2], [1440, 4]]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?lang=en');
+
+    const grid = page.locator('[data-home-learning-steps]');
+    const cards = grid.locator('[data-home-step-card]');
+    await expect(cards).toHaveCount(4);
+
+    const count = await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+    expect(count, `homepage grid at ${width}px`).toBe(columns);
+
+    for (const card of await cards.all()) {
+      const icon = card.locator('[data-home-step-icon] svg');
+      const title = card.locator('h3');
+      await expect(icon).toBeVisible();
+      await expect(title).toBeVisible();
+      const [cardBox, iconBox, titleBox] = await Promise.all(
+        [card, icon, title].map(el => el.boundingBox())
+      );
+      expect(cardBox && iconBox && titleBox).toBeTruthy();
+      expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(titleBox.y + 2);
+      expect(iconBox.x).toBeGreaterThanOrEqual(cardBox.x);
+      expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+    }
+
+    const level = page.locator('[data-home-level-guidance]');
+    const icon = level.locator('svg');
+    const heading = level.locator('h2');
+    await expect(level).toBeVisible();
+    await expect(icon).toBeVisible();
+    const [svg, h2] = await Promise.all([icon.boundingBox(), heading.boundingBox()]);
+    expect(svg && h2).toBeTruthy();
+    expect(h2.y - (svg.y + svg.height)).toBeLessThan(90);
+
+    const pathways = page.locator('[data-home-pathways]');
+    const header = pathways.locator('h2').first();
+    const action = pathways.getByRole('link', { name: /view all/i });
+    await expect(action).toBeVisible();
+    const [headingBox, actionBox] = await Promise.all([header.boundingBox(), action.boundingBox()]);
+    expect(headingBox && actionBox).toBeTruthy();
+    const overlaps = headingBox.x < actionBox.x + actionBox.width &&
+      headingBox.x + headingBox.width > actionBox.x &&
+      headingBox.y < actionBox.y + actionBox.height &&
+      headingBox.y + headingBox.height > actionBox.y;
+    expect(overlaps, 'pathways title and View all must not overlap').toBe(false);
+  }
+});
+
+test('footer uses two phone columns, four tablet/desktop columns and accessible social icons', async ({ page }) => {
+  for (const [width, columns] of [[390, 2], [820, 4], [1440, 4]]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?lang=en');
+
+    const grid = page.locator('footer [data-footer-columns]');
+    const count = await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
+    expect(count, `footer grid at ${width}px`).toBe(columns);
+
+    const footer = page.locator('footer');
+    await expect(footer).toContainText('All Rights Reserved.');
+    await expect(footer).not.toContainText('Original educational content and branding reserved.');
+    await expect(footer).not.toContainText('Independent preparation information.');
+    const social = footer.locator('[data-footer-social] a');
+    await expect(social).toHaveCount(4);
+    for (const link of await social.all()) {
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute('aria-label', /Share LearnCambodia on/);
+      await expect(link).toHaveAttribute('rel', /noopener noreferrer/);
+      await expect(link.locator('svg')).toBeVisible();
+    }
+
+    const bounds = await footer.locator('[data-footer-bottom]').boundingBox();
+    const socialBounds = await footer.locator('[data-footer-social]').boundingBox();
+    expect(bounds && socialBounds).toBeTruthy();
+    expect(socialBounds.x).toBeGreaterThanOrEqual(bounds.x - 2);
+    expect(socialBounds.x + socialBounds.width).toBeLessThanOrEqual(bounds.x + bounds.width + 2);
+  }
+});
