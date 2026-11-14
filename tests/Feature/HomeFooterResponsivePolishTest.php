@@ -24,6 +24,8 @@ final class HomeFooterResponsivePolishTest extends TestCase
         $this->assertIsString($template);
         $this->assertStringContainsString('data-home-level-guidance', $template);
         $this->assertStringContainsString('name="award" class="h-9 w-9"', $template);
+        $this->assertStringContainsString('data-home-level-icon', $template);
+        $this->assertStringContainsString('data-home-pathways-icon', $template);
         $this->assertStringNotContainsString('premium-card-content mt-20 text-lg font-black', $template);
         $this->assertStringContainsString('data-home-pathways', $html);
     }
