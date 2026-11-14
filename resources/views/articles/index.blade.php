@@ -9,12 +9,13 @@
     ]"/>
 <x-learning-section :title="$a['feature_heading']" eyebrow="Editorial spotlight" subtitle="The most recently approved public article is featured here. No invented ratings, views or publishing statistics." tone="white">
     @if($featured)
-        <div class="grid overflow-hidden rounded-3xl border border-slate-200 bg-[#f8fafc] shadow-md dark:border-slate-700 dark:bg-[#183658] lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,.85fr)]">
-            <div class="flex flex-col justify-center p-7 sm:p-10 lg:p-12">
+        <div class="premium-card grid overflow-hidden rounded-3xl border border-slate-200 bg-[#f8fafc] shadow-md dark:border-slate-700 dark:bg-[#183658] lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,.85fr)]">
+            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span>
+            <div class="premium-card-content flex flex-col justify-center p-7 sm:p-10 lg:p-12">
                 <span class="text-xs font-black uppercase tracking-widest text-[#b27b24]">Independently reviewed article</span>
-                <h3 class="mt-5 text-2xl font-black leading-tight text-[#0d335d] dark:text-white sm:text-3xl">{{ $featured->title }}</h3>
+                <h3 class="mt-5 text-2xl font-black leading-tight text-[#0d335d] dark:text-white sm:text-3xl"><a href="{{ route('articles.show',$featured->slug) }}" class="rounded hover:underline focus-visible:outline-2 focus-visible:outline-blue-600">{{ $featured->title }}</a></h3>
                 <p class="mt-5 text-sm leading-9 text-slate-600 dark:text-slate-300">{{ $featured->summary }}</p>
-                <a href="{{ route('articles.show',$featured->slug) }}" class="mt-7 self-start rounded-xl bg-[#133967] px-6 py-3.5 text-xs font-black text-white hover:bg-[#235587]">Read the full article →</a>
+                <a href="{{ route('articles.show',$featured->slug) }}" class="mt-7 self-start rounded-xl bg-[#133967] px-6 py-3.5 text-xs font-black text-white hover:bg-[#235587]">Read the full article</a>
             </div>
             <div class="flex min-h-64 flex-col items-center justify-center bg-gradient-to-br from-[#0c315d] to-[#1c5080] p-10 text-center text-white">
                 <x-workspace-icon name="book-open" class="h-20 w-20 text-[#f1c46f]"/>
