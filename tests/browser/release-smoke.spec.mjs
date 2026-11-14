@@ -545,3 +545,39 @@ test('footer uses two phone columns, four tablet/desktop columns and accessible 
     expect(socialBounds.x + socialBounds.width).toBeLessThanOrEqual(bounds.x + bounds.width + 2);
   }
 });
+
+test('footer social icons are transparent and borderless on phone and desktop', async ({ page }) => {
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/?lang=en');
+
+    const social = page.locator('footer [data-footer-social] a');
+    await expect(social).toHaveCount(4);
+    for (const link of await social.all()) {
+      await expect(link).toBeVisible();
+      await expect(link).toHaveAttribute('href', /https:\/\//);
+      await expect(link).toHaveAttribute('aria-label', /Share LearnCambodia on/);
+      await expect(link.locator('svg')).toBeVisible();
+      const originalStyle = await link.evaluate(el => {
+        const computed = getComputedStyle(el);
+        return {
+          background: computed.backgroundColor,
+          borderTop: computed.borderTopWidth,
+          borderRight: computed.borderRightWidth,
+          borderBottom: computed.borderBottomWidth,
+          borderLeft: computed.borderLeftWidth,
+        };
+      });
+      expect(originalStyle.background).toBe('rgba(0, 0, 0, 0)');
+      expect(originalStyle.borderTop).toBe('0px');
+      expect(originalStyle.borderRight).toBe('0px');
+      expect(originalStyle.borderBottom).toBe('0px');
+      expect(originalStyle.borderLeft).toBe('0px');
+
+      await link.hover();
+      await expect(link).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await expect(link).toHaveCSS('border-top-width', '0px');
+    }
+  }
+});
