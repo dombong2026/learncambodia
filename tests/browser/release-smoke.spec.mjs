@@ -278,3 +278,48 @@ test('light and dark header menu controls preserve text contrast and motion sett
   await expect(profile).toBeVisible();
   await expect(page.locator('header img[src*="logo-dark.png"]').first()).toBeVisible();
 });
+
+
+test('all active buttons and dropdown controls show the hand cursor, inputs remain text', async ({ page }) => {
+  await page.goto('/?lang=en');
+  const language = page.locator('button[aria-controls="locale-menu"]');
+  const profile = page.locator('button[aria-controls="profile-menu"]');
+  await expect(language).toHaveCSS('cursor', 'pointer');
+  await expect(profile).toHaveCSS('cursor', 'pointer');
+  await expect(page.locator('header a[aria-label="Learn Cambodia home"]')).toHaveCSS('cursor', 'pointer');
+  await expect(page.locator('input#global-search')).toHaveCSS('cursor', 'text');
+
+  await language.click();
+  await expect(page.locator('#locale-menu button[name="locale"][value="km"]')).toHaveCSS('cursor', 'pointer');
+  await profile.click();
+  await expect(page.locator('#profile-menu [data-theme-toggle]')).toHaveCSS('cursor', 'pointer');
+
+  await page.goto('/categories?lang=en');
+  await expect(page.locator('#category-hero-search')).toHaveCSS('cursor', 'text');
+  await expect(page.locator('form[role="search"] button[type="submit"]').first()).toHaveCSS('cursor', 'pointer');
+
+  await page.goto('/login?lang=en');
+  await expect(page.locator('button[type="submit"]').first()).toHaveCSS('cursor', 'pointer');
+  await expect(page.locator('[data-password-toggle]')).toHaveCSS('cursor', 'pointer');
+  await expect(page.locator('input[type="email"]')).toHaveCSS('cursor', 'text');
+  await expect(page.locator('input[type="password"]')).toHaveCSS('cursor', 'text');
+  await expect(page.locator('input[type="checkbox"]')).toHaveCSS('cursor', 'pointer');
+});
+
+test('disabled or aria-disabled controls never misleadingly show the hand cursor', async ({ page }) => {
+  await page.goto('/?lang=en');
+  await page.evaluate(() => {
+    const disabled = document.createElement('button');
+    disabled.type = 'button';
+    disabled.disabled = true;
+    disabled.id = 'pointer-disabled-test';
+    document.body.appendChild(disabled);
+    const ariaDisabled = document.createElement('button');
+    ariaDisabled.type = 'button';
+    ariaDisabled.setAttribute('aria-disabled', 'true');
+    ariaDisabled.id = 'pointer-aria-disabled-test';
+    document.body.appendChild(ariaDisabled);
+  });
+  await expect(page.locator('#pointer-disabled-test')).toHaveCSS('cursor', 'not-allowed');
+  await expect(page.locator('#pointer-aria-disabled-test')).toHaveCSS('cursor', 'not-allowed');
+});
