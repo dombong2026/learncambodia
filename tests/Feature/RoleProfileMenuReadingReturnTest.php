@@ -73,8 +73,8 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
         $html = $this->get('/?lang=en')->assertOk()
             ->assertSee('data-profile-sign-in', false)
             ->assertSee('data-profile-register', false)
-            ->assertSee('name="log-in"', false)
-            ->assertSee('name="user-plus"', false)
+            ->assertSee('data-profile-sign-in-icon', false)
+            ->assertSee('data-profile-register-icon', false)
             ->assertSee('data-theme-toggle', false)
             ->getContent();
 
@@ -102,6 +102,7 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
                     ->assertSee('data-profile-role-link', false)
                     ->assertSee('data-profile-dashboard', false)
                     ->assertSee('data-profile-settings', false)
+                    ->assertSee('data-profile-link-icon', false)
                     ->assertSee('name="log-out"', false)
                     ->assertSee('data-theme-toggle', false)
                     ->assertSee('href="'.route($user->homeRouteName()).'"', false)
