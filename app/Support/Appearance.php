@@ -221,7 +221,7 @@ final class Appearance
         ],
         'reading' => [
             'hero_heading'=>'Reading and literacy',
-            'hero_intro'=>'Explore published educational reading, language guidance and study tips. All materials pass independent editorial review.',
+            'hero_intro'=>'Explore published educational reading, language guidance and study tips.',
             'articles_heading'=>'Reading and literacy resources',
             'methods_heading'=>'Build a reading routine',
             'pathways_heading'=>'Related learning pathways',

@@ -149,7 +149,7 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
         ])->assertRedirect($returnTo);
 
         $this->assertAuthenticatedAs($student);
-        $this->get($returnTo)->assertOk()->assertSee('Approved editorial article');
+        $this->get($returnTo)->assertOk()->assertSee('data-public-document="post"', false);
     }
 
     public function test_exam_sign_in_preserves_public_exam_while_private_answers_remain_protected(): void

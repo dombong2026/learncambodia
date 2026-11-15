@@ -7,12 +7,12 @@
         ['value'=>number_format($publishedCount),'label'=>'Published articles','icon'=>'newspaper'],
         ['value'=>number_format($articles->total()),'label'=>'Matching published articles','icon'=>'search'],
     ]"/>
-<x-learning-section :title="$a['feature_heading']" eyebrow="Editorial spotlight" subtitle="The most recently approved public article is featured here. No invented ratings, views or publishing statistics." tone="white">
+<x-learning-section :title="$a['feature_heading']" eyebrow="Editorial spotlight" subtitle="The latest published article is featured here." tone="white">
     @if($featured)
         <div class="premium-card grid overflow-hidden rounded-3xl border border-slate-200 bg-[#f8fafc] shadow-md dark:border-slate-700 dark:bg-[#183658] lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,.85fr)]">
             <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span>
             <div class="premium-card-content flex flex-col justify-center p-7 sm:p-10 lg:p-12">
-                <span class="text-xs font-black uppercase tracking-widest text-[#b27b24]">Independently reviewed article</span>
+                <span class="text-xs font-black uppercase tracking-widest text-[#b27b24]">Published article</span>
                 <h3 class="mt-5 text-2xl font-black leading-tight text-[#0d335d] dark:text-white sm:text-3xl"><a href="{{ route('articles.show',$featured->slug) }}" class="rounded hover:underline focus-visible:outline-2 focus-visible:outline-blue-600">{{ $featured->title }}</a></h3>
                 <p class="mt-5 text-sm leading-9 text-slate-600 dark:text-slate-300">{{ $featured->summary }}</p>
                 <a href="{{ route('articles.show',$featured->slug) }}" class="mt-7 self-start rounded-xl bg-[#133967] px-6 py-3.5 text-xs font-black text-white hover:bg-[#235587]">Read the full article</a>
@@ -57,7 +57,7 @@
 <x-learning-section title="Questions about educational articles" eyebrow="Reader guidance" tone="white">
     <div class="grid gap-4 lg:grid-cols-2">
         @foreach([
-            ['Who reviews articles before they are published?','Editorial content must pass the existing independent administrator review process before appearing publicly.'],
+            ['Who publishes articles?','Learn Cambodia administrators manage articles and their publication status.'],
             ['Are article downloads or social groups available?','Only public text articles and links shown as available are supported. Unverified PDF downloads, messaging groups and memberships are not offered.'],
             ['Can I submit a learning question?','You can use the protected inquiry form to contact the platform team. Do not include passwords or private records.'],
             ['Do articles award qualifications?','No. Public education articles do not provide official test scores, certification or institutional accreditation.'],

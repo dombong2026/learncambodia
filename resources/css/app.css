@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './rich-editor.css';
+@import './editorial-media.css';
 /* Explicit choice overrides the OS theme. Uses the HTML root .dark class. */
 @custom-variant dark (&:where(.dark, .dark *));
 @source '../views/**/*.blade.php';

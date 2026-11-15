@@ -2,15 +2,17 @@
 @php
 $labels=['pages'=>'Page','posts'=>'Post','policies'=>'Policy','faqs'=>'FAQ','help-articles'=>'Help Article'];
 $label=$labels[$kind] ?? 'Document';
-$canEdit=!$editing || in_array($entry->status,['draft','rejected'],true);
+$direct = in_array($entry->type, \App\Models\ContentEntry::DIRECT_PUBLICATION_TYPES, true);
+$canEdit = $direct || !$editing || in_array($entry->status, ['draft', 'rejected'], true);
+$published = $editing && $entry->status === 'published';
+$inReview = $editing && $entry->status === 'pending_review';
+$plural = $kind === 'policies' ? 'Policies' : $label.'s';
 $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
 @endphp
 @section('title',($editing?'Edit ':'Create ').$label)
-@section('heading',($editing?'Edit ':'New ').$label.' Draft')
-@section('description',$reviewable ? 'Write and save privately. Publication requires approval by a different administrator.' : 'Manage a private draft. Pages and policies are not automatically published.')
+@section('heading', ($editing ? 'Edit ' : 'New ').$label)
 @section('heading_action')
-@if($canEdit)<button type="submit" form="editorial-form" class="rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-800">Save draft</button>@endif
-<a href="{{ route('admin.editorial.index',['kind'=>$kind]) }}" class="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-bold dark:border-slate-700">All {{ $label }}s</a>
+<a href="{{ route('admin.editorial.index', ['kind' => $kind]) }}" class="rounded-lg border border-slate-300 px-4 py-2.5 text-xs font-bold dark:border-slate-700">All {{ $plural }}</a>
 @endsection
 @section('content')
 <form id="editorial-form" method="POST" action="{{ $editing ? route('admin.editorial.update',['kind'=>$kind,'entry'=>$entry]) : route('admin.editorial.store',['kind'=>$kind]) }}" class="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_318px]">
@@ -27,26 +29,18 @@ $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
             <span class="text-xs text-slate-500 dark:text-slate-400">Text editor · safe HTML · images · audio · video</span>
         </div>
         <x-rich-editor id="rich-editor-document" :value="old('body',$entry->body)" :html="old('body_html',$entry->body_html)" context="editorial"/>
-        @if($canEdit)
-        <div class="flex flex-wrap justify-end gap-2">
-            <a href="{{ route('admin.editorial.index',['kind'=>$kind]) }}" class="rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold dark:border-slate-700">Cancel</a>
-            <button type="submit" class="rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white">Save {{ $label }} Draft</button>
-        </div>
-        @endif
     </fieldset>
-    <aside class="min-w-0 space-y-4 xl:sticky xl:top-24 xl:self-start" aria-label="Document settings">
+    <aside class="min-w-0 space-y-4 xl:self-start" aria-label="Document settings">
+        @include('workspace.admin.editorial-publication')
         <fieldset @disabled(!$canEdit) class="space-y-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-            <div class="flex items-center justify-between gap-3"><h2 class="text-sm font-extrabold">Document settings</h2><span class="text-xs font-bold text-amber-600">{{ ucfirst($entry->status ?: 'draft') }}</span></div>
-            <div>
-                <label for="slug" class="mb-1 block text-xs font-semibold">URL slug</label>
-                <input id="slug" name="slug" data-editor-slug value="{{ old('slug',$entry->slug) }}" maxlength="200" placeholder="Generated from title if empty" class="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-xs dark:border-slate-700">
-                @error('slug')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-            </div>
+            <h2 class="text-sm font-extrabold">Document settings</h2>
+            @include('workspace.admin.editorial-slug')
             <div>
                 <label for="summary" class="mb-1 block text-xs font-semibold">Summary</label>
                 <textarea id="summary" name="summary" data-editor-summary rows="3" maxlength="400" class="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-xs dark:border-slate-700">{{ old('summary',$entry->summary) }}</textarea>
                 @error('summary')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
             </div>
+            @if($kind === 'policies')@include('workspace.admin.editorial-policy-fields')@endif
             <details open class="border-t border-slate-200 pt-3 dark:border-slate-700">
                 <summary class="cursor-pointer text-xs font-bold">Search appearance</summary>
                 <div class="mt-3 space-y-3">
@@ -81,26 +75,14 @@ $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
             </details>
             @endif
         </fieldset>
-        <div class="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
-            <h2 class="text-sm font-extrabold">Preview & workflow</h2>
-            <p data-editor-words-summary class="text-xs text-slate-500">Document word count updates as you write.</p>
-            @if($editing)
-                <a href="{{ route('admin.editorial.preview',['kind'=>$kind,'entry'=>$entry]) }}" class="block rounded-lg border border-slate-300 px-3 py-2 text-center text-xs font-bold dark:border-slate-700">Preview saved document</a>
-            @endif
-            @if($reviewable)
-                <p class="text-xs leading-5 text-slate-500">A different administrator must approve the saved draft before public publication.</p>
-                <a href="{{ route('admin.editorial.reviews',['kind'=>$kind]) }}" class="block text-xs font-semibold text-blue-600 underline">Review queue</a>
-            @else
-                <p class="text-xs leading-5 text-slate-500">Pages and legal policies remain private until a separate approved publishing workflow exists.</p>
-            @endif
-        </div>
+        @if($direct)
+            @include('workspace.admin.editorial-featured-media')
+        @endif
+        <p data-editor-words-summary class="text-xs text-slate-500 dark:text-slate-400">0 words in this document</p>
     </aside>
 </form>
-@if($editing && $reviewable && $canEdit)
-<form method="POST" action="{{ route('admin.editorial.submit',['kind'=>$kind,'entry'=>$entry]) }}" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 px-4 py-3 dark:border-amber-800">
-    @csrf
-    <p class="max-w-xl text-xs leading-5 text-slate-600 dark:text-slate-300">Submit this saved draft for independent review. It stays private until approved.</p>
-    <button type="submit" class="rounded-lg border border-amber-500 px-4 py-2 text-xs font-bold text-amber-800 dark:text-amber-300">Submit for review</button>
-</form>
+@if($direct)@include('workspace.admin.media-picker')@endif
+@if($editing && $reviewable && !$published && !$inReview)
+    <form id="editorial-review-form" method="POST" action="{{ route('admin.editorial.submit', ['kind' => $kind, 'entry' => $entry]) }}">@csrf</form>
 @endif
 @endsection

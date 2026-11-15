@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 use App\Support\Appearance;
 use App\Models\Course;
 use App\Models\Category;
@@ -26,9 +27,14 @@ class InformationController extends Controller
         'terms' => ['Terms of Use — Draft', 'Terms pending legal review.', 'Learn Cambodia provides informational education content and a developing school platform. No third-party certification, exam-centre authorization or assessment result is promised. Final legal terms must be approved before public launch.'],
     ];
 
-    public function show(string $page): View
+    public function show(string $page): View|RedirectResponse
     {
         abort_unless(array_key_exists($page, self::PAGES), 404);
+
+        if (in_array($page, ['terms', 'privacy'], true)
+            && ContentEntry::query()->where('type', 'policy')->where('status', 'published')->where('slug', $page)->exists()) {
+            return redirect()->route('policies.show', $page);
+        }
 
         [$title, $lede, $body] = self::PAGES[$page];
         if (in_array($page, ['about', 'contact'], true)) {
@@ -50,7 +56,9 @@ class InformationController extends Controller
         }
 
         if ($page==='contact') {
-            return view('information.contact',compact('title','lede','body','page'));
+            $publishedPolicies = ContentEntry::publishedLegalPolicies();
+
+            return view('information.contact', compact('title', 'lede', 'body', 'page', 'publishedPolicies'));
         }
 
         return view('information.show', compact('title', 'lede', 'body', 'page'));

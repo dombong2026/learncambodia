@@ -1,4 +1,6 @@
 import './rich-editor';
+import './editorial-media';
+import './featured-video';
 
 const shell = document.querySelector<HTMLElement>('[data-workspace]');
 const sidebar = document.querySelector<HTMLElement>('[data-sidebar]');

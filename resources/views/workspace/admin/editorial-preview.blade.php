@@ -12,6 +12,7 @@
     <p class="text-xs text-slate-500">Search title: {{ $entry->seo_title ?: $entry->title }}</p>
     @if($entry->seo_description)<p class="text-xs text-slate-500">Search description: {{ $entry->seo_description }}</p>@endif
     @if($entry->summary)<p class="text-sm text-slate-500">{{ $entry->summary }}</p>@endif
+    <x-editorial-featured-media :entry="$entry"/>
     <div class="rich-public-content break-words text-sm leading-8">
         @if($entry->body_html){!! \App\Support\EditorHtml::clean($entry->body_html) !!}
         @else<span class="whitespace-pre-line">{{ $entry->body }}</span>@endif
