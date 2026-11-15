@@ -51,6 +51,27 @@ final class RichEditorAndMediaTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Route::has('admin.editorial.preview'));
     }
 
+    public function test_editorial_breadcrumbs_use_correct_manager_instead_of_page_manager(): void
+    {
+        $this->actingAs($this->admin());
+        foreach ([
+            'pages' => 'Page Manager',
+            'posts' => 'Post Manager',
+            'policies' => 'Policy Center',
+            'faqs' => 'Support Center',
+            'help-articles' => 'Support Center',
+        ] as $kind => $parent) {
+            $html = $this->get('/dashboard/editorial/'.$kind.'/create')->assertOk()->getContent();
+            $breadcrumb = (string) (preg_match('/<nav aria-label="Breadcrumb".*?<\\/nav>/s', $html, $matches) ? $matches[0] : '');
+            $this->assertNotSame('', $breadcrumb, 'Missing breadcrumb for '.$kind);
+            $this->assertStringContainsString($parent, $breadcrumb, $kind);
+            if ($kind !== 'pages') $this->assertStringNotContainsString('Page Manager', $breadcrumb, $kind);
+        }
+        $html = $this->get('/support/tickets/create')->assertOk()->getContent();
+        preg_match('/<nav aria-label="Breadcrumb".*?<\\/nav>/s', $html, $matches);
+        $this->assertStringContainsString('Support Center', $matches[0] ?? '');
+    }
+
     public function test_sanitizer_preserves_rich_elements_but_removes_executable_content(): void
     {
         $html = '<h2 style="text-align:center;position:absolute">Grammar</h2>'.
