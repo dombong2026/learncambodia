@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SupportTicket;
 use App\Models\SupportMessage;
+use App\Models\EditorMedia;
+use App\Support\EditorHtml;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,11 +62,17 @@ final class SupportTicketController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $html = EditorHtml::clean($request->input('body_html'));
+        if ($html !== null && trim((string) $request->input('body', '')) === '') {
+            $request->merge(['body' => EditorHtml::text($html)]);
+        }
         $data = $request->validate([
             'subject'=>['required','string','min:3','max:160'],
             'priority'=>['required',Rule::in(['low','normal','high'])],
             'body'=>['required','string','min:3','max:4000'],
+            'body_html'=>['nullable','string','max:24000'],
         ]);
+        $data['body_html'] = $html;
         $ticket = DB::transaction(function() use($request,$data): SupportTicket {
             $ticket = SupportTicket::create([
                 'user_id'=>$request->user()->id,
@@ -73,7 +81,8 @@ final class SupportTicketController extends Controller
                 'priority'=>$data['priority'],
                 'status'=>'open',
             ]);
-            $ticket->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body']]);
+            EditorMedia::claim($data['body_html'], $request->user(), 'ticket', $ticket->id);
+            $ticket->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body'],'body_html'=>$data['body_html']]);
             return $ticket;
         });
         return redirect()->route('support.tickets.show',$ticket)->with('status','Ticket created.');
@@ -107,11 +116,20 @@ final class SupportTicketController extends Controller
     public function reply(Request $request, SupportTicket $ticket): RedirectResponse
     {
         $this->authorizeTicket($request,$ticket);
-        $data=$request->validate(['body'=>['required','string','min:1','max:4000']]);
+        $html = EditorHtml::clean($request->input('body_html'));
+        if ($html !== null && trim((string) $request->input('body', '')) === '') {
+            $request->merge(['body' => EditorHtml::text($html)]);
+        }
+        $data=$request->validate([
+            'body'=>['required','string','min:1','max:4000'],
+            'body_html'=>['nullable','string','max:24000'],
+        ]);
+        $data['body_html'] = $html;
         DB::transaction(function() use($request,$ticket,$data): void {
             $locked=SupportTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
             abort_if($locked->status==='closed',409,'Closed conversations cannot receive messages.');
-            $locked->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body']]);
+            EditorMedia::claim($data['body_html'], $request->user(), 'ticket', $locked->id);
+            $locked->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body'],'body_html'=>$data['body_html']]);
             if ($request->user()->role==='admin' && $locked->status==='open')
                 $locked->status='in_progress';
             if ($request->user()->role!=='admin' && $locked->status==='resolved')
@@ -133,6 +151,7 @@ final class SupportTicketController extends Controller
                 'author'=>$message->author?->name ?? 'Account',
                 'own'=>$message->user_id === $request->user()->id,
                 'body'=>$message->body,
+                'body_html'=>EditorHtml::clean($message->body_html),
                 'at'=>$message->created_at?->format('Y-m-d H:i'),
             ]);
         return response()->json(['messages'=>$messages,'status'=>$ticket->status]);

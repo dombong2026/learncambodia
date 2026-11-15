@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
 use App\Models\PostTerm;
+use App\Models\EditorMedia;
+use App\Support\EditorHtml;
 use App\Support\ApprovalAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -60,14 +62,17 @@ class AdminEditorialController extends Controller
         $validated = $this->validateEntry($request, $type);
 
         $terms = $this->validatedTerms($request, $type);
-        $entry = ContentEntry::create($validated + [
-            'type' => $type,
-            'status' => 'draft',
-            'created_by' => $request->user()->id,
-            'updated_by' => $request->user()->id,
-        ]);
-
-        if ($type === 'post') $entry->terms()->sync($terms);
+        $entry = DB::transaction(function () use ($validated, $type, $request, $terms): ContentEntry {
+            $entry = ContentEntry::create($validated + [
+                'type' => $type,
+                'status' => 'draft',
+                'created_by' => $request->user()->id,
+                'updated_by' => $request->user()->id,
+            ]);
+            EditorMedia::claim($validated['body_html'] ?? null, $request->user(), 'editorial', $entry->id);
+            if ($type === 'post') $entry->terms()->sync($terms);
+            return $entry;
+        });
 
         return redirect()->route('admin.editorial.edit', ['kind' => $kind, 'entry' => $entry])
             ->with('status', 'Draft created. It is not public.');
@@ -93,11 +98,18 @@ class AdminEditorialController extends Controller
         $validated = $this->validateEntry($request, $entry->type, $entry);
         $terms = $this->validatedTerms($request, $entry->type);
         DB::transaction(function () use ($entry, $validated, $terms, $request): void {
+            EditorMedia::claim($validated['body_html'] ?? null, $request->user(), 'editorial', $entry->id);
             $entry->update($validated + ['updated_by' => $request->user()->id]);
             if ($entry->type === 'post') $entry->terms()->sync($terms);
         });
 
         return back()->with('status', 'Draft updated. It remains unpublished.');
+    }
+
+    public function preview(string $kind, ContentEntry $entry): View
+    {
+        abort_unless($entry->type === $this->type($kind), 404);
+        return view('workspace.admin.editorial-preview', compact('entry','kind'));
     }
 
     public function destroy(Request $request, string $kind, ContentEntry $entry): RedirectResponse
@@ -134,7 +146,11 @@ class AdminEditorialController extends Controller
             $slug = Str::slug((string) $request->input('title', ''));
         }
 
-        $request->merge(['slug' => $slug]);
+        $clean = EditorHtml::clean($request->input('body_html'));
+        $request->merge(['slug' => $slug, 'body_html' => $clean]);
+        if ($clean !== null && trim((string) $request->input('body', '')) === '') {
+            $request->merge(['body' => EditorHtml::text($clean)]);
+        }
 
         return $request->validate([
             'slug' => [
@@ -145,6 +161,9 @@ class AdminEditorialController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'summary' => ['nullable', 'string', 'max:400'],
             'body' => ['required', 'string', 'max:25000'],
+            'body_html' => ['nullable', 'string', 'max:120000'],
+            'seo_title' => ['nullable', 'string', 'max:200'],
+            'seo_description' => ['nullable', 'string', 'max:320'],
         ]);
     }
 }

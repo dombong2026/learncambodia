@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class SupportMessage extends Model
 {
-    protected $fillable = ['support_ticket_id','user_id','body'];
+    protected $fillable = ['support_ticket_id','user_id','body', 'body_html'];
 
     public function ticket(): BelongsTo
     {

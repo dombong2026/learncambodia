@@ -40,7 +40,7 @@ class PublicArticleController extends Controller
             ->whereKeyNot($article->id)->orderByDesc('id')->limit(4)->get();
         $author=PublicProfile::visible()->where('kind','instructor')
             ->where('user_id',$article->created_by)->first();
-        // Safely present the editorial text as distinct paragraphs; never parse it as HTML.
+        // Legacy plaintext remains escaped; newer HTML is allowlisted by EditorHtml.
         $paragraphs=array_values(array_filter(preg_split('/\R{2,}/u',trim($article->body)) ?: [],fn($p)=>trim($p)!==''));
         return view('articles.show',compact('article','related','author','paragraphs'));
     }
