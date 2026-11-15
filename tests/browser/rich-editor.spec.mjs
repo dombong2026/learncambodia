@@ -170,6 +170,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(controls).toHaveCSS('opacity', '0', { timeout: 3000 });
     await dialog.getByRole('button', { name: 'Close preview' }).click();
     await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+    await expect(speed).toHaveValue('1');
+    await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1);
   });
 
   test('ticket rich content is saved to a private conversation', async ({ page }, info) => {

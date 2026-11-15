@@ -62,6 +62,9 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         }
 
         player.addEventListener('previewopen', () => {
+            video.defaultPlaybackRate = 1;
+            video.playbackRate = 1;
+            speed.value = '1';
             status.hidden = true;
             showControls();
         });
