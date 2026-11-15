@@ -289,7 +289,7 @@ function initializeEditor(root: HTMLElement): void {
         } finally { upload.value = ''; }
     });
 
-    for (const field of form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-document-title],[data-seo-title],[data-seo-description],[data-editor-summary]')) {
+    for (const field of Array.from(form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-document-title],[data-seo-title],[data-seo-description],[data-editor-summary]'))) {
         field.addEventListener('input', () => updateSidebar(plain.value ? plain.value.split(/\s+/u).length : 0));
     }
     form.addEventListener('submit', event => {

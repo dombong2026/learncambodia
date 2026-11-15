@@ -9,6 +9,8 @@
 <article class="mx-auto max-w-4xl space-y-4 rounded-xl border border-slate-200 p-6 dark:border-slate-700">
     <p class="text-xs font-bold uppercase tracking-wide text-amber-600">{{ ucfirst(str_replace('_',' ',$entry->type)) }} · {{ ucfirst($entry->status) }} · Private</p>
     <h2 class="text-3xl font-bold">{{ $entry->title }}</h2>
+    <p class="text-xs text-slate-500">Search title: {{ $entry->seo_title ?: $entry->title }}</p>
+    @if($entry->seo_description)<p class="text-xs text-slate-500">Search description: {{ $entry->seo_description }}</p>@endif
     @if($entry->summary)<p class="text-sm text-slate-500">{{ $entry->summary }}</p>@endif
     <div class="rich-public-content break-words text-sm leading-8">
         @if($entry->body_html){!! \App\Support\EditorHtml::clean($entry->body_html) !!}
