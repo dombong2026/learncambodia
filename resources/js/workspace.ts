@@ -1,3 +1,5 @@
+import './rich-editor';
+
 const shell = document.querySelector<HTMLElement>('[data-workspace]');
 const sidebar = document.querySelector<HTMLElement>('[data-sidebar]');
 const overlay = document.querySelector<HTMLElement>('[data-sidebar-overlay]');

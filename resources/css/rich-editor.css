@@ -1,0 +1,39 @@
+
+/* Rich editor scoped to authenticated workspaces; no colored toolbar buttons. */
+.rich-editor { background: transparent; overflow: hidden; }
+.rich-editor-toolbar { background: transparent; }
+.rich-tool {
+    min-width: 30px; min-height: 30px; border: 0; border-radius: 6px;
+    background: transparent !important; padding: 4px 7px;
+    color: inherit; font-size: 12px; font-weight: 650; line-height: 1.4;
+}
+.rich-tool:hover { outline: 1px solid var(--ws-border); }
+.rich-tool[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 5px; }
+.rich-tool:focus-visible, .rich-tool-select:focus-visible { outline: 2px solid #e9b54b; outline-offset: 1px; }
+.rich-tool:disabled { opacity: .45; cursor: not-allowed; }
+.rich-tool-divider { width: 1px; height: 20px; margin: 0 4px; background: var(--ws-border); }
+.workspace-content .rich-tool-select { width: auto; min-height: 30px; border: 0; border-radius: 6px; background: transparent; padding: 4px 8px; font-size: 12px; }
+.workspace-content .rich-editor-source,
+.workspace-content .rich-editor [data-editor-plain] { border: 0; border-radius: 0; background: transparent; }
+.rich-editor-source[hidden], .rich-editor [hidden] { display: none !important; }
+.rich-editor-canvas { max-height: min(66vh, 700px); overflow: auto; overflow-wrap: anywhere; }
+.rich-editor-canvas:focus-visible { outline: 2px solid #e9b54b; outline-offset: -2px; }
+.rich-editor-canvas:empty:before { content: "Start writing…"; color: #8b9aad; }
+.rich-editor-canvas :is(p,div,blockquote,ol,ul,pre,h1,h2,h3,h4,h5,h6,figure),
+.rich-public-content :is(p,div,blockquote,ol,ul,pre,h1,h2,h3,h4,h5,h6,figure) { margin: .6em 0; }
+.rich-editor-canvas :is(h1), .rich-public-content :is(h1) { font-size: 1.75em; font-weight: 800; line-height: 1.3; }
+.rich-editor-canvas :is(h2), .rich-public-content :is(h2) { font-size: 1.5em; font-weight: 750; }
+.rich-editor-canvas :is(h3), .rich-public-content :is(h3) { font-size: 1.25em; font-weight: 700; }
+.rich-editor-canvas :is(h4,h5,h6), .rich-public-content :is(h4,h5,h6) { font-size: 1.1em; font-weight: 700; }
+.rich-editor-canvas :is(ul,ol), .rich-public-content :is(ul,ol) { padding-left: 1.6rem; }
+.rich-editor-canvas ul, .rich-public-content ul { list-style: disc; }
+.rich-editor-canvas ol, .rich-public-content ol { list-style: decimal; }
+.rich-editor-canvas blockquote, .rich-public-content blockquote { border-left: 3px solid #d5a444; padding-left: 1rem; font-style: italic; }
+.rich-editor-canvas :is(pre,code), .rich-public-content :is(pre,code) { font-family: ui-monospace, monospace; white-space: pre-wrap; }
+.rich-editor-canvas a, .rich-public-content a { color: #367fdb; text-decoration: underline; }
+.rich-editor-canvas :is(img,video), .rich-public-content :is(img,video) { max-width: 100%; height: auto; border-radius: .5rem; }
+.rich-editor-canvas audio, .rich-public-content audio { max-width: 100%; }
+.rich-editor-canvas figcaption, .rich-public-content figcaption { font-size: .8em; color: #8d9bb1; }
+.rich-editor-canvas table, .rich-public-content table { width: 100%; border-collapse: collapse; }
+.rich-editor-canvas :is(td,th), .rich-public-content :is(td,th) { border: 1px solid var(--ws-border, #cbd5e1); padding: .4rem; }
+.rich-public-content :is(td,th) { border-color: #b2bfcd; }

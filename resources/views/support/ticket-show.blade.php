@@ -15,7 +15,7 @@
     @forelse($messages as $message)
         <article data-message-id="{{ $message->id }}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950">
             <div class="flex flex-wrap justify-between gap-3 text-xs font-bold text-blue-700 dark:text-blue-400"><span>{{ $message->author?->name ?? 'Account' }}</span><time>{{ $message->created_at?->format('Y-m-d H:i') }}</time></div>
-            <p class="mt-2 whitespace-pre-line break-words text-sm leading-7">{{ $message->body }}</p>
+            <div class="rich-public-content mt-2 break-words text-sm leading-7">@if($message->body_html){!! \App\Support\EditorHtml::clean($message->body_html) !!}@else<span class="whitespace-pre-line">{{ $message->body }}</span>@endif</div>
         </article>
     @empty<p class="text-sm text-slate-500">No messages yet. Send the first message to begin.</p>@endforelse
     </div>
@@ -23,7 +23,7 @@
     @if($ticket->status!=='closed')
         <form method="POST" action="{{ route('support.messages.store',$ticket) }}" class="mt-6 space-y-3">@csrf
             <label for="support-reply" class="block text-sm font-bold">Send a message</label>
-            <textarea id="support-reply" name="body" rows="4" maxlength="4000" required placeholder="Type your message…" class="w-full rounded-xl border border-slate-300 bg-white p-4 text-sm dark:border-slate-700 dark:bg-slate-950">{{ old('body') }}</textarea>
+            <x-rich-editor id="support-reply" :value="old('body','')" :html="old('body_html')" context="ticket" :max-length="4000"/>
             @error('body')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
             <button type="submit" class="rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white">Send Message</button>
         </form>
@@ -83,7 +83,8 @@
         const time=document.createElement('time');time.textContent=msg.at;
         const body=document.createElement('p');
         body.className='mt-2 whitespace-pre-line break-words text-sm leading-7';
-        body.textContent=msg.body;
+        if(typeof msg.body_html==='string' && msg.body_html)body.innerHTML=msg.body_html;
+        else body.textContent=msg.body;
         head.append(author,time);card.append(head,body);feed.append(card);last=msg.id;
       }
     } catch(_) { /* Offline: explicit refresh remains usable. */ }

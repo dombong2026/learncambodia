@@ -422,3 +422,5 @@ a.premium-card:focus-visible,
 @media (prefers-reduced-motion: reduce) {
     .learning-focus-card .learning-focus-icon svg { transition: none !important; transform: none !important; }
 }
+
+@import './rich-editor.css';
