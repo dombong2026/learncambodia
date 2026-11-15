@@ -12,7 +12,7 @@ class ContentEntry extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'type', 'slug', 'title', 'summary', 'body',
+        'type', 'slug', 'title', 'summary', 'body', 'body_html', 'seo_title', 'seo_description',
         'status', 'created_by', 'updated_by',
     ];
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\EditorMediaController;
 use App\Http\Controllers\PublicHelpController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
@@ -77,6 +78,7 @@ Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learn
 Route::get('/upload-studio', [LearningHubController::class,'studio'])->name('learning.studio');
 Route::get('/authors', [PublicAuthorController::class, 'index'])->name('authors.index');
 Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name('authors.show');
+Route::get('/editor-media/{media}', [EditorMediaController::class,'show'])->name('editor-media.show');
 Route::get('/help-center', [PublicHelpController::class,'index'])->name('help.index');
 Route::get('/help-center/{kind}/{entry}', [PublicHelpController::class,'show'])->name('help.show');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
@@ -109,6 +111,8 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::post('/editor-media', [EditorMediaController::class,'store'])
+        ->middleware('throttle:12,1')->name('editor-media.store');
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
@@ -216,6 +220,7 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/create', [AdminEditorialController::class, 'create'])->name('create');
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');
             Route::get('/{entry}/edit', [AdminEditorialController::class, 'edit'])->name('edit');
+            Route::get('/{entry}/preview', [AdminEditorialController::class, 'preview'])->name('preview');
             Route::patch('/{entry}', [AdminEditorialController::class, 'update'])->name('update');
             Route::delete('/{entry}', [AdminEditorialController::class, 'destroy'])->name('destroy');
         });

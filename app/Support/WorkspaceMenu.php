@@ -266,7 +266,32 @@ final class WorkspaceMenu
 
         $items = [['label' => __('workspace.overview'), 'url' => self::landing($role)]];
         $parent = null;
-        foreach (self::groups($role) as $group) {
+        // Many editorial kinds share one Laravel route name; identify their
+        // actual manager from the validated kind parameter, not the first
+        // matching sidebar item (which happens to be Page Manager).
+        if ($role === 'admin' && str_starts_with($current, 'admin.editorial.')) {
+            $kind = request()->route('kind');
+            $parentTitle = match ($kind) {
+                'pages' => 'Page Manager',
+                'posts' => 'Post Manager',
+                'policies' => 'Policy Center',
+                'faqs', 'help-articles' => 'Support Center',
+                default => null,
+            };
+            if ($parentTitle !== null) {
+                $parent = [
+                    'label' => $parentTitle,
+                    'url' => route('admin.editorial.index', ['kind' => $kind]),
+                ];
+            }
+        }
+        if ($role === 'admin' && $current === 'support.tickets.create') {
+            $parent = [
+                'label' => 'Support Center',
+                'url' => route('admin.support.index', ['kind' => 'tickets']),
+            ];
+        }
+        if ($parent === null) foreach (self::groups($role) as $group) {
             foreach ($group['items'] as $item) {
                 if (($item['route'] ?? '') === $current) {
                     $parent = [
