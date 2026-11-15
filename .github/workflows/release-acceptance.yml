@@ -130,6 +130,20 @@ jobs:
           done
           tail -n 40 /tmp/learncambodia-browser.log
           exit 1
+      - name: Seed synthetic editor account in disposable browser database
+        run: |
+          test "$APP_ENV" = testing
+          php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            $user = \App\Models\User::factory()->create([
+                "name" => "Browser Test Editor",
+                "email" => "editor-browser-qa@example.test",
+                "password" => \Illuminate\Support\Facades\Hash::make("Only-A-CI-Browser-Fixture-2026!"),
+            ]);
+            $user->forceFill(["role"=>"admin"])->save();
+          '
       - name: Install browser engines
         run: |
           npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
