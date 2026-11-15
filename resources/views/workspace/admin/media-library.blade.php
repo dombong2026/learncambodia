@@ -10,9 +10,6 @@
 
 @section('content')
 <section class="media-library" data-library aria-label="Media Library">
-    @if(session('status'))
-        <p class="library-notice" role="status">{{ session('status') }}</p>
-    @endif
     @if($errors->any())
         <div class="library-error" role="alert">
             @foreach($errors->all() as $message)

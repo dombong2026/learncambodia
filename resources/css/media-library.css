@@ -177,8 +177,7 @@
 .library-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; color: var(--library-muted); font-size: .85rem; }
 .library-empty { display: grid; justify-items: center; gap: .85rem; padding: 3rem 1rem; color: var(--library-muted); }
 .library-empty svg { width: 2rem; height: 2rem; }
-.library-notice, .library-error { border: 1px solid var(--library-border); border-radius: .7rem; padding: .7rem .85rem; background: var(--library-panel); }
-.library-error { border-color: #e48e8e; }
+.library-error { border: 1px solid #e48e8e; border-radius: .7rem; padding: .7rem .85rem; background: var(--library-panel); }
 
 .library-dialog {
     position: fixed;
