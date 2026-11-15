@@ -4,29 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
 use App\Models\EditorMedia;
+use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
+use Illuminate\Database\ForeignKeyConstraintViolationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class EditorMediaController extends Controller
 {
-    public function index(Request $request): View|JsonResponse
+    public function index(Request $request): View|JsonResponse|RedirectResponse
     {
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:80'],
             'kind' => ['nullable', Rule::in(['image', 'video'])],
+            'columns' => ['nullable', 'integer', 'between:1,4'],
         ]);
+        $columns = (int) ($filters['columns'] ?? 4);
         $search = $filters['q'] ?? '';
         $kind = $filters['kind'] ?? null;
         $items = EditorMedia::query()->where('context', 'library')
             ->when($kind, fn ($query) => $query->where('mime', 'like', $kind.'/%'))
             ->when($search !== '', fn ($query) => $query->where('original_name', 'like', '%'.$search.'%'))
-            ->latest('id')->paginate(12)->withQueryString();
+            ->latest('id')->paginate($request->expectsJson() ? 12 : $columns * 4)->withQueryString();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -36,14 +43,93 @@ final class EditorMediaController extends Controller
             ]);
         }
 
-        return view('workspace.admin.media-library', compact('items', 'search', 'kind'));
+        if ($items->currentPage() > $items->lastPage()) {
+            return redirect()->to($items->url($items->lastPage()));
+        }
+
+        return view('workspace.admin.media-library', compact('items', 'search', 'kind', 'columns'));
     }
 
-    public function uploadToLibrary(Request $request): JsonResponse
+    public function uploadToLibrary(Request $request): JsonResponse|RedirectResponse
     {
         $request->merge(['context' => 'library']);
+        $response = $this->storeUpload($request, true);
 
-        return $this->storeUpload($request, true);
+        return $request->expectsJson() ? $response : back()->with('status', 'Media uploaded.');
+    }
+
+    public function updateLibrary(Request $request, EditorMedia $media): RedirectResponse
+    {
+        abort_unless($media->context === 'library', 404);
+        $allowedMimes = array_filter(FeaturedMedia::MIMES,
+            fn (string $mime) => explode('/', $mime)[0] === explode('/', $media->mime)[0]);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:190'],
+            'replacement' => ['nullable', 'file', 'max:51200', 'mimetypes:'.implode(',', $allowedMimes)],
+        ]);
+
+        $replacement = $request->file('replacement');
+        $disk = Storage::disk('local');
+        $path = $replacement?->store('editor-media', 'local');
+        abort_if($replacement && !$path, 500, 'The replacement file could not be saved.');
+
+        try {
+            $previousPath = DB::transaction(function () use ($media, $data, $replacement, $path): ?string {
+                $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
+                $previousPath = $replacement ? $current->path : null;
+                $current->original_name = $data['title'];
+
+                if ($replacement) {
+                    $current->path = $path;
+                    $current->mime = $replacement->getMimeType();
+                    $current->size = $replacement->getSize();
+                }
+
+                $current->save();
+
+                return $previousPath;
+            });
+        } catch (\Throwable $exception) {
+            if ($path) {
+                $disk->delete($path);
+            }
+
+            throw $exception;
+        }
+
+        if ($previousPath) {
+            $disk->delete($previousPath);
+        }
+
+        return back()->with('status', 'Media updated.');
+    }
+
+    public function destroyLibrary(EditorMedia $media): RedirectResponse
+    {
+        abort_unless($media->context === 'library', 404);
+
+        try {
+            $path = DB::transaction(function () use ($media): string {
+                $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
+                $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
+                    || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
+                if ($inUse) {
+                    throw ValidationException::withMessages([
+                        'media' => 'This file is used by an editorial entry or policy revision and cannot be deleted.',
+                    ]);
+                }
+
+                $current->delete();
+
+                return $current->path;
+            });
+        } catch (ForeignKeyConstraintViolationException) {
+            return back()->withErrors(['media' => 'This file is now in use and cannot be deleted.']);
+        }
+
+        Storage::disk('local')->delete($path);
+
+        return back()->with('status', 'Media deleted.');
     }
 
     public function store(Request $request): JsonResponse

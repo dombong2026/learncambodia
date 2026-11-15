@@ -1,5 +1,6 @@
 import './rich-editor';
 import './editorial-media';
+import './media-library';
 import './featured-video';
 
 const shell = document.querySelector<HTMLElement>('[data-workspace]');

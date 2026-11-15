@@ -145,6 +145,10 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/media-library', [EditorMediaController::class, 'index'])->name('media-library.index');
         Route::post('/media-library', [EditorMediaController::class, 'uploadToLibrary'])
             ->middleware('throttle:12,1')->name('media-library.store');
+        Route::patch('/media-library/{media}', [EditorMediaController::class, 'updateLibrary'])
+            ->middleware('throttle:12,1')->name('media-library.update');
+        Route::delete('/media-library/{media}', [EditorMediaController::class, 'destroyLibrary'])
+            ->name('media-library.destroy');
         Route::get('/policy-history/{entry}', [AdminEditorialController::class, 'policyHistory'])
             ->name('policy-history.index');
         Route::get('/policy-history/{entry}/{revision}', [AdminEditorialController::class, 'policyRevision'])

@@ -101,6 +101,42 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect.poll(() => featured.evaluate(image => image.naturalWidth)).toBe(1);
   });
 
+  test('media grid uploads, previews, renames and deletes an image', async ({ page }, info) => {
+    await page.goto('/dashboard/media-library?lang=en');
+    const file = 'library-' + info.project.name + '-' + Date.now() + '.png';
+    await page.getByRole('button', { name: 'Upload media' }).click();
+    const upload = page.getByRole('dialog', { name: 'Upload media' });
+    await upload.getByLabel('Image or video').setInputFiles({
+      name: file,
+      mimeType: 'image/png',
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQsisEAAEnAMIfy+WiAAAAAElFTkSuQmCC', 'base64'),
+    });
+    await upload.getByRole('button', { name: 'Upload', exact: true }).click();
+    await expect(page.getByRole('status')).toContainText('Media uploaded.');
+    const search = page.getByRole('search');
+    await search.getByLabel('Title').fill(file);
+    await search.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+    const preview = page.getByRole('dialog', { name: file });
+    await expect(preview).toBeVisible();
+    await expect.poll(() => preview.getByRole('img').evaluate(image => image.naturalWidth)).toBe(1);
+    await page.keyboard.press('Escape');
+    await expect(preview).toBeHidden();
+
+    const actions = page.locator('article[data-library-item]').filter({ hasText: file }).locator('summary');
+    await actions.click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    const edit = page.getByRole('dialog', { name: 'Edit media' });
+    await edit.getByLabel('Title').fill(file + ' renamed');
+    await edit.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByRole('status')).toContainText('Media updated.');
+    await actions.click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    const remove = page.getByRole('dialog', { name: 'Delete media' });
+    await remove.getByRole('button', { name: 'Delete media', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'No matching media' })).toBeVisible();
+  });
+
   test('ticket rich content is saved to a private conversation', async ({ page }, info) => {
     await page.goto('/support/tickets/create?lang=en');
     await page.locator('#support-subject').fill('Editor QA ticket ' + info.project.name + ' ' + Date.now());
