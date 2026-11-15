@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './rich-editor.css';
 /* Explicit choice overrides the OS theme. Uses the HTML root .dark class. */
 @custom-variant dark (&:where(.dark, .dark *));
 @source '../views/**/*.blade.php';
@@ -423,4 +424,3 @@ a.premium-card:focus-visible,
     .learning-focus-card .learning-focus-icon svg { transition: none !important; transform: none !important; }
 }
 
-@import './rich-editor.css';

@@ -8,6 +8,39 @@ const allowed = new Set([
 const discard = new Set(['script','style','iframe','object','embed','svg','math','form','input','button','link','meta','base']);
 const mediaPattern = /^\/editor-media\/[1-9]\d*$/;
 
+function safeCss(input: string, tag: string, node: Element): string {
+    const properties: Record<string, string> = {};
+    const items = input.toLowerCase().split(';');
+    if (tag === 'font') {
+        items.push('color:' + (node.getAttribute('color') ?? ''));
+        const sizes = ['','12','14','16','18','24','32','36'];
+        const size = Number(node.getAttribute('size'));
+        if (size >= 1 && size <= 7) items.push('font-size:' + sizes[size] + 'px');
+        const face = (node.getAttribute('face') ?? '').toLowerCase();
+        if (['arial','georgia','monospace'].includes(face)) items.push('font-family:' + face);
+    }
+    for (const item of items) {
+        const separator = item.indexOf(':');
+        if (separator < 0) continue;
+        const key = item.slice(0, separator).trim();
+        let value = item.slice(separator + 1).trim();
+        if (key === 'color' || key === 'background-color') {
+            const rgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/.exec(value);
+            if (rgb && rgb.slice(1).every(v => Number(v) <= 255)) {
+                value = '#' + rgb.slice(1).map(v => Number(v).toString(16).padStart(2, '0')).join('');
+            }
+            if (/^#[a-f0-9]{3}([a-f0-9]{3})?$/i.test(value)) properties[key] = value;
+        } else if (key === 'text-align' && ['left','center','right','justify'].includes(value)) {
+            properties[key] = value;
+        } else if (key === 'font-size' && /^(12|14|16|18|20|24|28|32|36)px$/.test(value)) {
+            properties[key] = value;
+        } else if (key === 'font-family' && ['arial','georgia','monospace'].includes(value)) {
+            properties[key] = value;
+        }
+    }
+    return Object.entries(properties).map(([key,value]) => key + ':' + value).join(';');
+}
+
 function safeMarkup(markup: string): string {
     const doc = new DOMParser().parseFromString(markup, 'text/html');
     const out = document.createElement('div');
@@ -18,6 +51,8 @@ function safeMarkup(markup: string): string {
         const tag = node.tagName.toLowerCase();
         if (discard.has(tag)) return null;
         const el = document.createElement(allowed.has(tag) ? tag : 'span');
+        const style = safeCss(node.getAttribute('style') ?? '', tag, node);
+        if (style) el.setAttribute('style', style);
         if (tag === 'a') {
             const href = node.getAttribute('href') ?? '';
             if (/^(https?:\/\/|mailto:|tel:|\/(?!\/))/i.test(href)) {
@@ -182,6 +217,22 @@ function initializeEditor(root: HTMLElement): void {
     root.querySelectorAll<HTMLButtonElement>('[data-editor-command]').forEach(button => {
         button.addEventListener('mousedown', remember);
         button.addEventListener('click', () => command(button.dataset.editorCommand ?? ''));
+    });
+    root.querySelectorAll<HTMLInputElement>('[data-editor-color]').forEach(picker => {
+        picker.addEventListener('input', () => {
+            if (!/^#[0-9a-f]{6}$/i.test(picker.value)) return;
+            command(picker.dataset.editorColor === 'hiliteColor' ? 'hiliteColor' : 'foreColor', picker.value);
+        });
+    });
+    root.querySelector<HTMLSelectElement>('[data-editor-size]')?.addEventListener('change', event => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLSelectElement)) return;
+        command('fontSize', target.value);
+    });
+    root.querySelector<HTMLSelectElement>('[data-editor-font]')?.addEventListener('change', event => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLSelectElement)) return;
+        command('fontName', target.value);
     });
     const block = root.querySelector<HTMLSelectElement>('[data-editor-block]');
     block?.addEventListener('change', () => { command('formatBlock', block.value); block.value = 'p'; });

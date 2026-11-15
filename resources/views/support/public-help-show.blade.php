@@ -1,5 +1,5 @@
 @extends('layouts.public')
-@section('title',$content->title)
+@section('title',$content->seo_title ?: $content->title)
 @section('meta_description',$content->seo_description ?: $content->summary)
 @section('content')
 <article class="mx-auto max-w-4xl px-4 py-12 sm:px-6">

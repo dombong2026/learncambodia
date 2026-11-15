@@ -56,14 +56,17 @@ final class EditorHtml
         }
         if (!$node instanceof DOMElement) return '';
 
-        $tag = strtolower($node->tagName);
-        if (in_array($tag, self::DROP, true)) return '';
+        $original = strtolower($node->tagName);
+        if (in_array($original, self::DROP, true)) return '';
 
         $children = '';
         foreach ($node->childNodes as $child) $children .= self::render($child);
-        if (!in_array($tag, self::TAGS, true)) return $children;
+        if ($original !== 'font' && !in_array($original, self::TAGS, true)) return $children;
+        $tag = $original === 'font' ? 'span' : $original;
 
         $attrs = '';
+        $style = self::safeStyle($node);
+        if ($style !== '') $attrs .= self::attr('style', $style);
         if ($tag === 'a') {
             $url = trim($node->getAttribute('href'));
             if (preg_match('~^(https?://|mailto:|tel:|/)~i', $url) && !str_starts_with($url, '//')) {
@@ -92,6 +95,48 @@ final class EditorHtml
         }
         if (in_array($tag, self::VOID, true)) return '<'.$tag.$attrs.'>';
         return '<'.$tag.$attrs.'>'.$children.'</'.$tag.'>';
+    }
+
+    private static function safeStyle(DOMElement $node): string
+    {
+        $safe = [];
+        $raw = explode(';', mb_strtolower($node->getAttribute('style')));
+        if (strtolower($node->tagName) === 'font') {
+            $raw[] = 'color:'.$node->getAttribute('color');
+            $size = (int) $node->getAttribute('size');
+            $sizes = [1 => 12, 2 => 14, 3 => 16, 4 => 18, 5 => 24, 6 => 32, 7 => 36];
+            if (isset($sizes[$size])) $raw[] = 'font-size:'.$sizes[$size].'px';
+            $face = mb_strtolower($node->getAttribute('face'));
+            if (in_array($face, ['arial','georgia','monospace'], true)) $raw[] = 'font-family:'.$face;
+        }
+        foreach ($raw as $item) {
+            $pair = explode(':', trim($item), 2);
+            if (count($pair) !== 2) continue;
+            [$key,$value] = array_map('trim', $pair);
+            if (in_array($key, ['color','background-color'], true)) {
+                $value = self::safeColor($value);
+                if ($value !== null) $safe[$key] = $value;
+            } elseif ($key === 'text-align' && in_array($value, ['left','center','right','justify'], true)) {
+                $safe[$key] = $value;
+            } elseif ($key === 'font-size' && preg_match('/^(12|14|16|18|20|24|28|32|36)px$/D', $value)) {
+                $safe[$key] = $value;
+            } elseif ($key === 'font-family' && in_array($value, ['arial','georgia','monospace'], true)) {
+                $safe[$key] = $value;
+            }
+        }
+        return implode(';', array_map(fn ($key,$value) => $key.':'.$value, array_keys($safe), array_values($safe)));
+    }
+
+    private static function safeColor(string $value): ?string
+    {
+        $value = trim($value);
+        if (preg_match('/^#[a-f0-9]{3}(?:[a-f0-9]{3})?$/iD', $value)) return $value;
+        if (preg_match('/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/D', $value, $rgb)) {
+            if ((int)$rgb[1] <= 255 && (int)$rgb[2] <= 255 && (int)$rgb[3] <= 255) {
+                return sprintf('#%02x%02x%02x', (int)$rgb[1], (int)$rgb[2], (int)$rgb[3]);
+            }
+        }
+        return null;
     }
 
     private static function attr(string $name, string $value): string

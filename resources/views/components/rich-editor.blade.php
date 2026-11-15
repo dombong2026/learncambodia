@@ -8,10 +8,25 @@
                 <option value="p">Paragraph</option><option value="h1">Heading 1</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="h4">Heading 4</option>
                 <option value="blockquote">Quote</option><option value="pre">Code block</option>
             </select>
+            <label class="sr-only" for="{{ $id }}-size">Text size</label>
+            <select id="{{ $id }}-size" data-editor-size class="rich-tool-select" title="Text size">
+                <option value="2">14 px</option><option value="1">12 px</option><option value="3">16 px</option>
+                <option value="4">18 px</option><option value="5">24 px</option><option value="6">32 px</option>
+            </select>
+            <label class="sr-only" for="{{ $id }}-font">Font family</label>
+            <select id="{{ $id }}-font" data-editor-font class="rich-tool-select" title="Font family">
+                <option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="monospace">Monospace</option>
+            </select>
             <span class="rich-tool-divider" aria-hidden="true"></span>
             @foreach(['bold'=>'Bold','italic'=>'Italic','underline'=>'Underline','strikeThrough'=>'Strike','subscript'=>'Subscript','superscript'=>'Superscript'] as $command=>$label)
             <button type="button" data-editor-command="{{ $command }}" class="rich-tool" title="{{ $label }}" aria-label="{{ $label }}">{{ ['bold'=>'B','italic'=>'I','underline'=>'U','strikeThrough'=>'S','subscript'=>'x₂','superscript'=>'x²'][$command] }}</button>
             @endforeach
+            <label class="rich-tool inline-flex cursor-pointer items-center gap-1" title="Text color">Color
+                <input data-editor-color="foreColor" type="color" value="#2563eb" class="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" aria-label="Text color">
+            </label>
+            <label class="rich-tool inline-flex cursor-pointer items-center gap-1" title="Highlight color">Mark
+                <input data-editor-color="hiliteColor" type="color" value="#f8d478" class="h-5 w-5 cursor-pointer border-0 bg-transparent p-0" aria-label="Highlight color">
+            </label>
             <span class="rich-tool-divider" aria-hidden="true"></span>
             @foreach(['insertUnorderedList'=>'Bulleted list','insertOrderedList'=>'Numbered list','outdent'=>'Outdent','indent'=>'Indent','justifyLeft'=>'Align left','justifyCenter'=>'Align center','justifyRight'=>'Align right'] as $command=>$label)
             <button type="button" data-editor-command="{{ $command }}" class="rich-tool" title="{{ $label }}" aria-label="{{ $label }}">{{ ['insertUnorderedList'=>'• ≡','insertOrderedList'=>'1. ≡','outdent'=>'⇤','indent'=>'⇥','justifyLeft'=>'≡','justifyCenter'=>'☰','justifyRight'=>'≡⇥'][$command] }}</button>
