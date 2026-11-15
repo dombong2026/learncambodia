@@ -244,11 +244,59 @@ function initializeEditor(root: HTMLElement): void {
             inform('Please enter a safe URL beginning with https:// or /');
             return;
         }
-        command('createLink', value);
+        const selected = window.getSelection()?.toString().trim() ?? '';
+        if (selected !== '') {
+            command('createLink', value);
+        } else {
+            const label = window.prompt('Link text', value);
+            if (!label) return;
+            command('insertHTML', '<a href="' + escapeMarkup(value) + '">' + escapeMarkup(label) + '</a>');
+        }
     });
     root.querySelector<HTMLButtonElement>('[data-editor-table]')?.addEventListener('click', () => {
         if (locked) return;
-        command('insertHTML', '<table><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table><p></p>');
+        const rowInput = window.prompt('Number of table rows (1–8)', '2');
+        if (rowInput === null) return;
+        const colInput = window.prompt('Number of table columns (1–8)', '2');
+        if (colInput === null) return;
+        const rows = Number(rowInput), columns = Number(colInput);
+        if (!Number.isInteger(rows) || !Number.isInteger(columns) || rows < 1 || columns < 1 || rows > 8 || columns > 8) {
+            inform('Table must contain 1–8 rows and 1–8 columns.');
+            return;
+        }
+        let table = '<table><tbody>';
+        for (let row = 0; row < rows; row++) {
+            table += '<tr>';
+            for (let col = 0; col < columns; col++) table += '<td>Cell</td>';
+            table += '</tr>';
+        }
+        command('insertHTML', table + '</tbody></table><p></p>');
+    });
+
+    const previewDialog = root.querySelector<HTMLDialogElement>('[data-editor-preview-dialog]');
+    const previewContent = root.querySelector<HTMLElement>('[data-editor-preview-content]');
+    root.querySelector<HTMLButtonElement>('[data-editor-preview]')?.addEventListener('click', () => {
+        sync();
+        if (!previewDialog || !previewContent) return;
+        previewContent.innerHTML = safeMarkup(html.value);
+        previewDialog.showModal();
+    });
+    root.querySelector<HTMLButtonElement>('[data-editor-preview-close]')?.addEventListener('click', () => {
+        previewDialog?.close();
+    });
+    const expand = root.querySelector<HTMLButtonElement>('[data-editor-expand]');
+    expand?.addEventListener('click', () => {
+        const expanded = root.classList.toggle('rich-editor-expanded');
+        expand.setAttribute('aria-pressed', String(expanded));
+        expand.textContent = expanded ? 'Collapse' : 'Expand';
+        inform(expanded ? 'Expanded editing view. Press Escape to close.' : 'Compact editing view.');
+        if (mode === 'html') source.focus(); else visual.focus();
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && root.classList.contains('rich-editor-expanded')) {
+            root.classList.remove('rich-editor-expanded');
+            if (expand) { expand.textContent = 'Expand'; expand.setAttribute('aria-pressed', 'false'); expand.focus(); }
+        }
     });
 
     const upload = root.querySelector<HTMLInputElement>('[data-editor-upload]');

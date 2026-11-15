@@ -34,6 +34,8 @@ final class RichEditorAndMediaTest extends TestCase
                 ->assertSee('data-editor-mode="text"', false)
                 ->assertSee('data-editor-mode="html"', false)
                 ->assertSee('data-editor-upload', false)
+                ->assertSee('data-editor-preview', false)
+                ->assertSee('data-editor-expand', false)
                 ->assertSee('data-editor-color', false)
                 ->assertSee('Document settings')
                 ->assertSee('Search appearance')

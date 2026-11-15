@@ -44,6 +44,8 @@
                 <input data-editor-upload type="file" accept="image/jpeg,image/png,image/gif,image/webp,audio/mpeg,audio/ogg,audio/wav,video/mp4,video/webm" class="sr-only" aria-label="Upload an image, audio or video">
             </label>
             <span class="rich-tool-divider" aria-hidden="true"></span>
+            <button type="button" data-editor-preview class="rich-tool" title="Preview unsaved content">Preview</button>
+            <button type="button" data-editor-expand class="rich-tool" aria-pressed="false" title="Expand editor">Expand</button>
             <div class="ml-auto inline-flex gap-1" role="group" aria-label="Editor mode">
                 <button type="button" data-editor-mode="text" aria-pressed="true" class="rich-tool font-bold">Text</button>
                 <button type="button" data-editor-mode="html" aria-pressed="false" class="rich-tool font-bold">HTML</button>
@@ -60,6 +62,13 @@
             <span data-editor-count>0 words · 0 characters</span>
         </div>
     </div>
+    <dialog data-editor-preview-dialog aria-label="Live content preview" class="rich-editor-preview-dialog rounded-xl border border-slate-300 p-5 text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <h2 class="text-sm font-extrabold">Live content preview</h2>
+            <button type="button" data-editor-preview-close class="rich-tool" aria-label="Close preview">Close</button>
+        </div>
+        <div data-editor-preview-content class="rich-public-content max-h-[65vh] min-h-32 overflow-y-auto text-sm leading-8"></div>
+    </dialog>
     <label class="sr-only" for="{{ $id }}-plain">Content (plain text fallback)</label>
     <textarea id="{{ $id }}-plain" data-editor-plain name="body" rows="12" maxlength="{{ $maxLength }}" required
         class="w-full rounded-xl border-0 px-4 py-4 text-sm leading-7">{{ $value }}</textarea>

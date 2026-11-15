@@ -37,3 +37,15 @@
 .rich-editor-canvas table, .rich-public-content table { width: 100%; border-collapse: collapse; }
 .rich-editor-canvas :is(td,th), .rich-public-content :is(td,th) { border: 1px solid var(--ws-border, #cbd5e1); padding: .4rem; }
 .rich-public-content :is(td,th) { border-color: #b2bfcd; }
+
+.rich-editor-expanded {
+    position: fixed !important; inset: 2vh 2vw; z-index: 100;
+    display: flex; flex-direction: column; overflow: auto;
+    background: var(--ws-input, #fff) !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, .25);
+}
+.rich-editor-expanded [data-editor-enhanced] { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.rich-editor-expanded .rich-editor-canvas { max-height: none; min-height: 0; flex: 1; }
+.rich-editor-expanded .rich-editor-source { min-height: 0; flex: 1; resize: none; }
+.rich-editor-preview-dialog { width: min(800px, 94vw); max-height: 90vh; }
+.rich-editor-preview-dialog::backdrop { background: rgba(6, 17, 35, .67); }
