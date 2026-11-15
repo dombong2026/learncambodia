@@ -137,6 +137,41 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page.getByRole('heading', { name: 'No matching media' })).toBeVisible();
   });
 
+  test('media video preview uses transparent speed and hides controls when inactive', async ({ page }, info) => {
+    await page.goto('/dashboard/media-library?lang=en');
+    const file = 'compact-player-' + info.project.name + '-' + Date.now() + '.webm';
+    await page.getByRole('button', { name: 'Upload media' }).click();
+    const upload = page.getByRole('dialog', { name: 'Upload media' });
+    await upload.getByLabel('Image or video').setInputFiles({
+      name: file,
+      mimeType: 'video/webm',
+      buffer: Buffer.from('GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAJnEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEjTbuMU6uEHFO7a1OsggJR7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjEuNy4xMDNXQYxMYXZmNjEuNy4xMDNEiYhAp3AAAAAAABZUrmvIrgEAAAAAAAA/14EBc8WI6p6I8dTtfZOcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4Q7msoA4JCwgSC6gSCagQJVsIRVuYEBElTDZ/tzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYxLjcuMTAzc3PWY8CLY8WI6p6I8dTtfZNnyKFFo4dFTkNPREVSRIeUTGF2YzYxLjE5LjEwMSBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAzLjAwMDAwMDAwMAAfQ7Z1QKjngQCjv4EAAIDQAgCdASogACAAAEcIhYWImYSIAgICdaoD+AIIISmecP79IUX/8Bf/gL/8Bf/+Av//fAn3gT7wJ/tsAKOwgQPoANEBAAEQEAAYAB5X9AwAQQ4A/v0hRf/wF/+Av/wF//4C//98CfeBPvAn+2wAo7CBB9AA0QEAARAQABgAHlf0DABBDgD+/SFF//AX/4C//AX//gL//3wJ94E+8Cf7bAAcU7trkbuPs4EAt4r3gQHxggGj8IED', 'base64'),
+    });
+    await upload.getByRole('button', { name: 'Upload', exact: true }).click();
+    await page.getByRole('search').getByLabel('Title').fill(file);
+    await page.getByRole('search').getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+
+    const dialog = page.getByRole('dialog', { name: file });
+    const player = dialog.locator('[data-compact-video]');
+    const controls = player.locator('[data-video-controls]');
+    const speed = dialog.getByLabel('Speed', { exact: true });
+    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '1');
+    await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await speed.selectOption('1.5');
+    await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
+
+    await player.dispatchEvent('pointerleave', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '0', { timeout: 500 });
+    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '1');
+    await expect(controls).toHaveCSS('opacity', '0', { timeout: 3000 });
+    await dialog.getByRole('button', { name: 'Close preview' }).click();
+    await expect(dialog).toBeHidden();
+  });
+
   test('ticket rich content is saved to a private conversation', async ({ page }, info) => {
     await page.goto('/support/tickets/create?lang=en');
     await page.locator('#support-subject').fill('Editor QA ticket ' + info.project.name + ' ' + Date.now());

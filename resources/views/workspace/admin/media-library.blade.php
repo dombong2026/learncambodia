@@ -106,7 +106,7 @@
         </div>
         <div class="library-preview-stage">
             <img alt="" hidden data-preview-image>
-            <video controls playsinline preload="metadata" hidden data-preview-video aria-label="Media preview"></video>
+            <x-featured-video compact label="Media preview" />
             <p hidden data-preview-error>This file could not be previewed.</p>
         </div>
     </dialog>

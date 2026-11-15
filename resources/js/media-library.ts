@@ -6,7 +6,8 @@ if (library) {
     const search = content.querySelector<HTMLFormElement>('form[role="search"]')!;
     const preview = content.querySelector<HTMLDialogElement>('#media-preview')!;
     const picture = preview.querySelector<HTMLImageElement>('[data-preview-image]')!;
-    const video = preview.querySelector<HTMLVideoElement>('[data-preview-video]')!;
+    const player = preview.querySelector<HTMLElement>('[data-compact-video]')!;
+    const video = player.querySelector('video')!;
     const previewError = preview.querySelector<HTMLElement>('[data-preview-error]')!;
     let trigger: HTMLElement | undefined;
     let resizeTimer: ReturnType<typeof setTimeout>;
@@ -41,7 +42,10 @@ if (library) {
     fitGrid();
 
     function resetPreview(): void {
+        player.hidden = true;
+        delete player.dataset.controlsActive;
         video.pause();
+        video.playbackRate = 1;
         video.removeAttribute('src');
         video.load();
         picture.removeAttribute('src');
@@ -71,7 +75,7 @@ if (library) {
             if (id === 'media-preview') {
                 dialog.querySelector<HTMLElement>('[data-library-meta]')!.textContent = format + ' · ' + size;
                 picture.hidden = kind === 'video';
-                video.hidden = kind !== 'video';
+                player.hidden = kind !== 'video';
                 if (kind === 'video') {
                     video.setAttribute('aria-label', title ?? 'Video preview');
                     video.src = src!;
@@ -92,6 +96,9 @@ if (library) {
         }
 
         dialog.showModal();
+        if (id === 'media-preview' && !player.hidden) {
+            player.dispatchEvent(new Event('previewopen'));
+        }
     }
 
     document.addEventListener('click', event => {

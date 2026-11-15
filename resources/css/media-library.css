@@ -200,3 +200,72 @@
 .library-preview-stage [data-preview-error]:not([hidden]) { padding: 1.5rem; }
 .library-dialog-form { display: grid; gap: .9rem; padding: 1rem; }
 .library-form-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .55rem; }
+
+.library-preview-stage .featured-video-compact:not([hidden]) {
+    width: 100%;
+}
+
+.featured-video-compact .featured-video-controls:not([hidden]) {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 0 .25rem;
+    align-items: center;
+    padding: .2rem .45rem .3rem;
+    border: 0;
+    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
+    filter: drop-shadow(0 1px 2px #000) drop-shadow(0 0 4px #000);
+}
+
+.featured-video-compact[data-controls-active] .featured-video-controls,
+.featured-video-compact .featured-video-controls:has(:focus-visible) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.featured-video-compact .featured-video-controls button {
+    min-height: 2.1rem;
+    width: 2.1rem;
+    background: transparent;
+}
+
+.featured-video-compact .featured-video-controls button:hover { color: #ffdb8b; }
+.featured-video-compact .featured-video-time { white-space: nowrap; }
+.featured-video-compact .featured-video-controls input {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-width: 0;
+    width: 100%;
+    height: .75rem;
+    cursor: pointer;
+}
+
+.library-preview-stage .featured-video-compact .featured-video-speed {
+    appearance: none;
+    min-width: 2.7rem;
+    min-height: 2.1rem;
+    padding: 0 .2rem;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.featured-video-speed option { background: #11233b; color: #fff; }
+
+.featured-video-compact .featured-video-status {
+    position: absolute;
+    inset: .5rem .65rem auto;
+    z-index: 2;
+    background: #0a1729;
+    border-radius: .5rem;
+}
+
+.library-preview-stage .featured-video-compact:fullscreen video { max-height: 100dvh; }

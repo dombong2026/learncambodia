@@ -14,6 +14,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
     const seek = player.querySelector<HTMLInputElement>('[data-video-seek]')!;
     const time = player.querySelector<HTMLElement>('[data-video-time]')!;
     const status = player.querySelector<HTMLElement>('[data-video-status]')!;
+    const speed = player.querySelector<HTMLSelectElement>('[data-video-speed]');
 
     function setLabel(button: HTMLButtonElement, label: string): void {
         button.title = label;
@@ -45,10 +46,45 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         } else video.pause();
     }
 
+    if (speed) {
+        let idleTimer: ReturnType<typeof setTimeout>;
+
+        function hideControls(): void {
+            clearTimeout(idleTimer);
+            delete player.dataset.controlsActive;
+        }
+
+        function showControls(): void {
+            if (player.hidden) return;
+            clearTimeout(idleTimer);
+            player.dataset.controlsActive = 'true';
+            idleTimer = setTimeout(hideControls, 1200);
+        }
+
+        player.addEventListener('previewopen', () => {
+            status.hidden = true;
+            showControls();
+        });
+        player.addEventListener('pointermove', showControls);
+        player.addEventListener('pointerdown', showControls);
+        player.addEventListener('pointerleave', event => {
+            if (event.pointerType !== 'touch') hideControls();
+        });
+        player.addEventListener('pointercancel', hideControls);
+        window.addEventListener('blur', hideControls);
+        speed.addEventListener('change', () => {
+            video.playbackRate = Number(speed.value);
+            showControls();
+        });
+        video.addEventListener('ratechange', () => { speed.value = String(video.playbackRate); });
+    }
+
     play.addEventListener('click', togglePlayback);
     video.addEventListener('click', togglePlayback);
     mute.addEventListener('click', () => { video.muted = !video.muted; });
-    seek.addEventListener('input', () => { video.currentTime = Number(seek.value) / 1000 * video.duration; });
+    seek.addEventListener('input', () => {
+        if (!seek.disabled) video.currentTime = Number(seek.value) / 1000 * video.duration;
+    });
     const mobileVideo = video as HTMLVideoElement & { webkitEnterFullscreen?: () => void };
     fullscreen.hidden = !player.requestFullscreen && !mobileVideo.webkitEnterFullscreen;
     fullscreen.addEventListener('click', async () => {
