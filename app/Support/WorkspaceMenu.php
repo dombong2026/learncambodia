@@ -68,7 +68,7 @@ final class WorkspaceMenu
             if ($role === 'admin' && $key === 'content' && Route::has('admin.media-library.index')) {
                 $items[] = [
                     'key' => 'media-library', 'label' => 'Media Library', 'route' => 'admin.media-library.index',
-                    'icon' => 'files', 'section_title' => 'Content & Appearance',
+                    'icon' => 'media-library', 'section_title' => 'Content & Appearance',
                 ];
             }
             if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {

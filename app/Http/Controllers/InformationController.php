@@ -56,7 +56,9 @@ class InformationController extends Controller
         }
 
         if ($page==='contact') {
-            return view('information.contact',compact('title','lede','body','page'));
+            $publishedPolicies = ContentEntry::publishedLegalPolicies();
+
+            return view('information.contact', compact('title', 'lede', 'body', 'page', 'publishedPolicies'));
         }
 
         return view('information.show', compact('title', 'lede', 'body', 'page'));

@@ -69,6 +69,7 @@ class EditorialDirectPublicationTest extends TestCase
         ])->assertRedirect();
         $entry = ContentEntry::firstOrFail();
         $this->get('/information/privacy')->assertRedirect('/policies/privacy');
+        $this->get('/information/contact')->assertOk()->assertSee('Privacy policy');
         $this->get('/policies')->assertOk()->assertSee('Privacy policy');
         $this->patch('/dashboard/editorial/policies/'.$entry->id, [
             'title' => 'Privacy policy', 'slug' => 'privacy', 'body' => 'Current policy text.',

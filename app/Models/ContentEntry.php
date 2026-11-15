@@ -36,6 +36,12 @@ class ContentEntry extends Model
         return $this->hasMany(PolicyRevision::class);
     }
 
+    public static function publishedLegalPolicies(): array
+    {
+        return self::query()->where('type', 'policy')->where('status', 'published')
+            ->whereIn('slug', ['privacy', 'terms'])->pluck('title', 'slug')->all();
+    }
+
     public function publicUrl(): string
     {
         return match ($this->type) {

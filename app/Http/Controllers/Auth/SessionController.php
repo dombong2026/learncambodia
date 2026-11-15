@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ContentEntry;
 use App\Models\User;
 use App\Support\ReadingReturn;
 use Illuminate\Http\RedirectResponse;
@@ -37,7 +38,10 @@ class SessionController extends Controller
             $request->session()->put('auth.reading_return', $returnTo);
         }
 
-        return view('auth.register', ['authReturnTo' => $returnTo]);
+        return view('auth.register', [
+            'authReturnTo' => $returnTo,
+            'publishedPolicies' => ContentEntry::publishedLegalPolicies(),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse

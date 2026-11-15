@@ -41,6 +41,7 @@
         'presentation' => 'M3 3h18v14H3zM8 21l4-4 4 4M7 8h10M7 12h7',
         'library' => 'M4 3v18M9 3v18M14 4v17M19 7v14M2 21h20',
         'lock' => 'M5 11h14v11H5zM8 11V7a4 4 0 0 1 8 0v4M12 15v3',
+        'media-library' => 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 5M15 9h.01',
         'files' => 'M8 3h9l4 4v14H8zM17 3v5h4M3 7v14h15',
         'file-plus-2' => 'M5 2h10l4 4v16H5zM15 2v5h4M12 10v8M8 14h8',
         'newspaper' => 'M3 4h15v16H3zM18 8h3v10a2 2 0 0 1-2 2M6 8h9M6 12h4M12 12h3M6 16h9',

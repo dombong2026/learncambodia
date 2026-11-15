@@ -28,8 +28,6 @@ $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
             <label for="rich-editor-document-plain" class="text-xs font-bold">Content</label>
             <span class="text-xs text-slate-500 dark:text-slate-400">Text editor · safe HTML · images · audio · video</span>
         </div>
-        @error('body')<p class="text-xs text-red-700 dark:text-red-300">{{ $message }}</p>@enderror
-        @error('body_html')<p class="text-xs text-red-700 dark:text-red-300">{{ $message }}</p>@enderror
         <x-rich-editor id="rich-editor-document" :value="old('body',$entry->body)" :html="old('body_html',$entry->body_html)" context="editorial"/>
     </fieldset>
     <aside class="min-w-0 space-y-4 xl:self-start" aria-label="Document settings">

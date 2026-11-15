@@ -87,7 +87,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await picker.locator('[data-media-upload]').setInputFiles({
       name: 'browser-cover.png',
       mimeType: 'image/png',
-      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aPioAAAAASUVORK5CYII=', 'base64'),
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQsisEAAEnAMIfy+WiAAAAAElFTkSuQmCC', 'base64'),
     });
     await expect(picker).toBeHidden();
     await expect(sidebar.getByText('browser-cover.png')).toBeVisible();
