@@ -45,7 +45,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await editor.locator('[data-editor-preview]').click();
     const dialog = editor.locator('[data-editor-preview-dialog]');
     await expect(dialog).toBeVisible();
-    await expect(dialog.locator('h2')).toContainText('Structured learning');
+    await expect(dialog.locator('[data-editor-preview-content] h2')).toHaveText('Structured learning');
     await editor.locator('[data-editor-preview-close]').click();
     await expect(dialog).toBeHidden();
 
