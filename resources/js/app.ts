@@ -1,3 +1,6 @@
+import './featured-video';
+import './policy-links';
+
 function initMenus(): void {
     const menus = Array.from(document.querySelectorAll<HTMLElement>('[data-dropdown]'));
     const close = (menu: HTMLElement): void => {

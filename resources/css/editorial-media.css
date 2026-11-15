@@ -1,0 +1,66 @@
+.editorial-featured {
+    margin-block: 1.5rem;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #0b1728;
+}
+
+.editorial-color {
+    min-height: clamp(5rem, 20vw, 12rem);
+    background: var(--featured-color, #123e71);
+}
+
+.featured-video {
+    position: relative;
+    overflow: hidden;
+    background: #0b1728;
+    color: #edf6ff;
+}
+
+.featured-video video {
+    display: block;
+    width: 100%;
+    max-height: min(62vh, 36rem);
+    min-height: 5rem;
+    background: #080f18;
+}
+
+.featured-video-controls:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .45rem;
+    border-top: 1px solid #284057;
+}
+
+.featured-video-controls button {
+    display: grid;
+    flex: 0 0 2.75rem;
+    place-items: center;
+    min-height: 2.75rem;
+    border-radius: .55rem;
+}
+
+.featured-video-controls button[hidden] { display: none; }
+.featured-video-controls button:hover { background: #24425d; }
+.featured-video-controls button:focus-visible { outline: 2px solid #f8c867; outline-offset: -2px; }
+.featured-video-controls svg { width: 1.2rem; height: 1.2rem; }
+.featured-video-controls input { min-width: 1.5rem; flex: 1; accent-color: #f8c867; }
+.featured-video-time { flex: 0 0 auto; font-size: .72rem; font-variant-numeric: tabular-nums; }
+.featured-video-status { padding: .45rem .8rem; color: #fbd887; font-size: .8rem; }
+.featured-video[data-playing="true"] [data-video-play] svg { display: none; }
+.featured-video[data-playing="true"] [data-video-play]::after {
+    content: "";
+    width: .72rem;
+    height: .95rem;
+    border-inline: .22rem solid currentColor;
+}
+.featured-video[data-muted="true"] [data-video-mute] { opacity: .55; }
+.featured-video:fullscreen { display: flex; flex-direction: column; justify-content: center; }
+.featured-video:fullscreen video { max-height: calc(100vh - 4rem); flex: 1; }
+
+@media print {
+    body:has([data-public-document="policy"]) > :not(main) { display: none; }
+    [data-public-document="policy"] { max-width: none; color: #000; }
+    [data-public-document="policy"] .editorial-featured { display: none; }
+}

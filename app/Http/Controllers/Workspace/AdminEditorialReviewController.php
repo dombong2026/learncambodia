@@ -68,7 +68,7 @@ class AdminEditorialReviewController extends Controller
                 'The author or submitting editor cannot approve their own work.');
 
             $next=$data['decision']==='approve' ? 'published' : 'rejected';
-            $post->update(['status'=>$next]);
+            $post->update(['status' => $next, 'published_at' => $next === 'published' ? now() : null]);
             ApprovalAudit::record('editorial_'.$post->type,$post->id,$request->user(),
                 $data['decision'],'pending_review',$next,$data['note']??null);
         });

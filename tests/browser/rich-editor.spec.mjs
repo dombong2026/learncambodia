@@ -69,6 +69,38 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page.locator('.rich-public-content script')).toHaveCount(0);
   });
 
+  test('publication sidebar can copy the slug, upload and publish a reusable featured image', async ({ page }, info) => {
+    await page.goto('/dashboard/editorial/pages/create?lang=en');
+    const sidebar = page.getByRole('complementary', { name: 'Document settings' });
+    const publication = sidebar.getByRole('region', { name: 'Publication' });
+    await expect(publication.getByRole('button', { name: 'Save Draft', exact: true })).toBeVisible();
+    await expect(publication.getByRole('button', { name: 'Publish', exact: true })).toBeVisible();
+    const title = 'Browser Cover ' + info.project.name + ' ' + Date.now();
+    await page.locator('[data-document-title]').fill(title);
+    await sidebar.getByRole('button', { name: 'Click to copy' }).click();
+    await expect(sidebar.getByLabel('URL slug')).toHaveValue(title.toLowerCase().replaceAll(' ', '-'));
+    await page.locator('[data-editor-visual]').fill('Featured media for Learn Cambodia.');
+    await sidebar.getByLabel('Media type').selectOption('image');
+    await sidebar.getByRole('button', { name: 'Select from Media Library' }).click();
+    const picker = page.getByRole('dialog', { name: 'Media Library' });
+    await expect(picker).toBeVisible();
+    await picker.locator('[data-media-upload]').setInputFiles({
+      name: 'browser-cover.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aPioAAAAASUVORK5CYII=', 'base64'),
+    });
+    await expect(picker).toBeHidden();
+    await expect(sidebar.getByText('browser-cover.png')).toBeVisible();
+    await sidebar.getByLabel('Image description').fill('Sample learning graphic');
+    await publication.getByRole('button', { name: 'Publish', exact: true }).click();
+    await expect(page).toHaveURL(/dashboard\/editorial\/pages\/\d+\/edit/);
+    await publication.getByRole('link', { name: 'View published' }).click();
+    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+    const featured = page.getByRole('img', { name: 'Sample learning graphic' });
+    await expect(featured).toBeVisible();
+    await expect.poll(() => featured.evaluate(image => image.naturalWidth)).toBe(1);
+  });
+
   test('ticket rich content is saved to a private conversation', async ({ page }, info) => {
     await page.goto('/support/tickets/create?lang=en');
     await page.locator('#support-subject').fill('Editor QA ticket ' + info.project.name + ' ' + Date.now());

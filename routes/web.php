@@ -3,6 +3,7 @@
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\EditorMediaController;
 use App\Http\Controllers\PublicHelpController;
+use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -86,6 +87,9 @@ Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->nam
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [CatalogController::class, 'show'])->name('categories.show');
 Route::get('/cefr', [CefrController::class, 'index'])->name('cefr.index');
+Route::get('/pages/{slug}', [PublicDocumentController::class, 'page'])->name('pages.show');
+Route::get('/policies', [PublicDocumentController::class, 'policies'])->name('policies.index');
+Route::get('/policies/{slug}', [PublicDocumentController::class, 'policy'])->name('policies.show');
 Route::get('/information/{page}', [InformationController::class, 'show'])->name('information.show');
 Route::post('/contact', [PublicContactController::class, 'store'])
     ->middleware('throttle:5,1')->name('contact.store');
@@ -138,6 +142,13 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
+        Route::get('/media-library', [EditorMediaController::class, 'index'])->name('media-library.index');
+        Route::post('/media-library', [EditorMediaController::class, 'uploadToLibrary'])
+            ->middleware('throttle:12,1')->name('media-library.store');
+        Route::get('/policy-history/{entry}', [AdminEditorialController::class, 'policyHistory'])
+            ->name('policy-history.index');
+        Route::get('/policy-history/{entry}/{revision}', [AdminEditorialController::class, 'policyRevision'])
+            ->name('policy-history.show');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
         Route::get('/support/{kind}', [SupportTicketController::class,'adminIndex'])->name('support.index');
         Route::patch('/support/{kind}/{ticket}', [SupportTicketController::class,'adminUpdate'])->name('support.update');
@@ -218,6 +229,7 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/{entry}/submit', [AdminEditorialReviewController::class, 'submit'])->name('submit');
             Route::get('/', [AdminEditorialController::class, 'index'])->name('index');
             Route::get('/create', [AdminEditorialController::class, 'create'])->name('create');
+            Route::get('/slug', [AdminEditorialController::class, 'slug'])->name('slug');
             Route::post('/', [AdminEditorialController::class, 'store'])->name('store');
             Route::get('/{entry}/edit', [AdminEditorialController::class, 'edit'])->name('edit');
             Route::get('/{entry}/preview', [AdminEditorialController::class, 'preview'])->name('preview');

@@ -4,10 +4,10 @@
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_blog'); @endphp
 <x-learning-hero :title="$article->title" :subtitle="$article->summary" eyebrow="Blog / Educational article" icon="newspaper" :action-url="'#article-body'" action-label="Start reading"/>
-<x-learning-section id="article-body" :title="$a['reading_heading']" eyebrow="Published educational content" subtitle="Published content is independently reviewed; rich formatting and attachments are rendered from the permitted editorial allowlist." tone="white">
+<x-learning-section id="article-body" :title="$a['reading_heading']" eyebrow="Published educational content" tone="white">
     <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(290px,.6fr)]">
-        <article class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 dark:border-slate-700 dark:bg-[#183658]">
-            <p class="mb-6 text-xs font-black uppercase tracking-widest text-[#b07d27]">Approved editorial article</p>
+        <article data-public-document="post" class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 dark:border-slate-700 dark:bg-[#183658]">
+            <x-editorial-featured-media :entry="$article"/>
             @if($article->body_html)
                 <div class="rich-public-content break-words text-base leading-8 text-slate-700 dark:text-slate-200">{!! \App\Support\EditorHtml::clean($article->body_html) !!}</div>
             @else
