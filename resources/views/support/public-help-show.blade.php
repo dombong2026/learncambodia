@@ -1,6 +1,6 @@
 @extends('layouts.public')
 @section('title',$content->seo_title ?: $content->title)
-@section('meta_description',$content->seo_description ?: $content->summary)
+@section('meta_description', $content->seo_description ?: ($content->summary ?: \Illuminate\Support\Str::limit($content->body, 155)))
 @section('content')
 <article class="mx-auto max-w-4xl px-4 py-12 sm:px-6">
     <a href="{{ route('help.index') }}" class="text-sm font-bold text-blue-600">All Help Articles</a>

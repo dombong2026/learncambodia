@@ -1,6 +1,6 @@
 @extends('layouts.public')
 @section('title',$article->seo_title ?: $article->title)
-@section('meta_description',$article->seo_description ?: $article->summary)
+@section('meta_description', $article->seo_description ?: ($article->summary ?: \Illuminate\Support\Str::limit($article->body, 155)))
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_blog'); @endphp
 <x-learning-hero :title="$article->title" :subtitle="$article->summary" eyebrow="Blog / Educational article" icon="newspaper" :action-url="'#article-body'" action-label="Start reading"/>

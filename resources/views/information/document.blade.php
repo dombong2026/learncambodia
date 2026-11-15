@@ -1,6 +1,6 @@
 @extends('layouts.public')
 @section('title', $document->seo_title ?: $document->title)
-@section('meta_description', $document->seo_description ?: $document->summary)
+@section('meta_description', $document->seo_description ?: ($document->summary ?: \Illuminate\Support\Str::limit($document->body, 155)))
 @section('content')
 <article class="mx-auto max-w-4xl px-4 py-12 sm:px-8 sm:py-16" data-public-document="{{ $document->type }}">
     @if($document->type === 'policy')
