@@ -77,6 +77,6 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await page.locator('button[form="support-create-form"]').click();
     await expect(page).toHaveURL(/\/support\/tickets\/\d+/);
     await expect(page.locator('[data-support-feed]')).toContainText('Please review this support message.');
-    await expect(page.getByText('High').first()).toBeVisible();
+    await expect(page.locator('#ticket-priority')).toHaveValue('high');
   });
 });
