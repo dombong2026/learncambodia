@@ -179,7 +179,7 @@ final class RichEditorAndMediaTest extends TestCase
         $response->assertCreated();
         $url=$response->json('url');
 
-        $this->actingAs($second)->post('/support/tickets',[
+        $this->actingAs($second)->withHeaders(['Accept'=>'text/html'])->post('/support/tickets',[
             'subject'=>'Unauthorized attachment','priority'=>'normal',
             'body'=>'Please see private attachment.',
             'body_html'=>'<p>Please see private attachment.</p><img src="'.$url.'" alt="Private">',
