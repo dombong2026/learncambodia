@@ -2,6 +2,9 @@
 @section('title','Contact Inquiries')
 @section('heading','Contact Inquiries')
 @section('description','Private inquiries can only be read and reviewed by authorized administrators. No external notifications are sent.')
+@section('heading_action')
+<a href="{{ route('information.show','contact') }}" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Contact Form</a>
+@endsection
 @section('content')
 <form action="{{ route('admin.contact-inquiries.index') }}" method="GET" class="mb-6 flex flex-wrap items-end justify-end gap-3">
     <div><label for="inquiry-filter" class="mb-1 block text-xs font-bold">Status</label><select id="inquiry-filter" name="status" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs dark:border-slate-700 dark:bg-[#11284a]"><option value="">All</option>@foreach(['new','reviewed','closed'] as $choice)<option value="{{ $choice }}" @selected($status===$choice)>{{ ucfirst($choice) }}</option>@endforeach</select></div>
@@ -21,6 +24,7 @@
             <button type="submit" name="status" value="reviewed" class="rounded-xl border border-[#d5aa61] px-5 py-3 text-xs font-bold text-[#b17b27]">Mark reviewed</button>
             <button type="submit" name="status" value="closed" class="rounded-xl bg-[#12365f] px-5 py-3 text-xs font-black text-white">Close</button>
         </form>
+        <form class="mt-3" method="POST" action="{{ route('admin.contact-inquiries.destroy',$inquiry) }}" onsubmit="return confirm('Archive this contact inquiry?')">@csrf @method('DELETE')<button class="rounded-xl border border-red-300 px-5 py-3 text-xs font-bold text-red-700">Archive Inquiry</button></form>
     </section>
 @empty
     <p class="rounded-2xl border border-dashed border-slate-300 bg-white p-9 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#152e4d]">No inquiries match this filter.</p>
