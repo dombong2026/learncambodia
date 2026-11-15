@@ -112,7 +112,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQsisEAAEnAMIfy+WiAAAAAElFTkSuQmCC', 'base64'),
     });
     await upload.getByRole('button', { name: 'Upload', exact: true }).click();
-    await expect(page.getByRole('status')).toContainText('Media uploaded.');
+    await expect(page.getByText('Media uploaded.', { exact: true })).toBeVisible();
     const search = page.getByRole('search');
     await search.getByLabel('Title').fill(file);
     await search.getByRole('button', { name: 'Search' }).click();
@@ -129,7 +129,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const edit = page.getByRole('dialog', { name: 'Edit media' });
     await edit.getByLabel('Title').fill(file + ' renamed');
     await edit.getByRole('button', { name: 'Save changes' }).click();
-    await expect(page.getByRole('status')).toContainText('Media updated.');
+    await expect(page.getByText('Media updated.', { exact: true })).toBeVisible();
     await actions.click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     const remove = page.getByRole('dialog', { name: 'Delete media' });
