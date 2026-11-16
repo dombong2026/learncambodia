@@ -22,7 +22,8 @@ final class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "camera=(), microphone=$microphone, geolocation=(), payment=()");
 
         // Enable HSTS only on actual HTTPS responses from the production app.
         // A short initial age prevents premature subdomain-wide commitment.

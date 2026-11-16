@@ -60,7 +60,7 @@ final class StandaloneAssessmentTest extends TestCase
         $show = route('account.assessment-attempts.show', $attempt);
         $feedback = route('account.assessment-attempts.feedback', $attempt);
         $this->post(route('account.assessment-attempts.start', $quiz))->assertRedirect($show);
-        $this->get($show)->assertOk()->assertSee('A reading passage.')->assertSee('Strongly agree')->assertDontSee('Review this choice.');
+        $this->get($show)->assertOk()->assertHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=(), payment=()')->assertSee('A reading passage.')->assertSee('Strongly agree')->assertDontSee('Review this choice.');
         $this->get($audio->json('url'))->assertOk();
         $this->actingAs($other)->get($show)->assertNotFound();
         $this->postJson($feedback, ['question' => 0, 'answer' => 'a'])->assertNotFound();

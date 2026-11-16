@@ -86,14 +86,24 @@ final class StudentExaminationController extends Controller
     {
         $this->authorizeAttempt($request, $attempt, $enrollment);
 
-        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt'));
+        return $this->attemptView($request, $attempt, $enrollment);
     }
 
     public function showStandalone(Request $request, ExamAttempt $attempt): View
     {
         $this->authorizeAttempt($request, $attempt);
 
-        return view('workspace.student.exam-attempt', ['attempt' => $attempt, 'enrollment' => null]);
+        return $this->attemptView($request, $attempt);
+    }
+
+    private function attemptView(Request $request, ExamAttempt $attempt, ?CourseEnrollment $enrollment = null): View
+    {
+        if (!$attempt->submitted_at && $attempt->expires_at->isFuture()
+            && in_array('speaking', array_column($attempt->snapshot['questions'], 'format'), true)) {
+            $request->attributes->set('assessmentMicrophone', true);
+        }
+
+        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt'));
     }
 
     public function submit(Request $request, CourseEnrollment $enrollment, ExamAttempt $attempt): RedirectResponse
