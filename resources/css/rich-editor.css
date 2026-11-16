@@ -79,3 +79,33 @@
     min-width: 0;
     overflow-x: auto;
 }
+
+.lesson-rich-content { min-width: 0; overflow-x: auto; }
+.lesson-rich-content iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: .5rem; }
+[data-editor-visual] figure[data-youtube] {
+    border: 1px dashed var(--ws-border);
+    border-radius: .5rem;
+    padding: .75rem;
+}
+[data-editor-visual] figure[data-youtube]::before { content: "YouTube"; font-weight: 700; }
+:is(.lesson-rich-content, [data-editor-visual]) a[data-resource] {
+    display: inline-flex;
+    border: 1px solid currentColor;
+    border-radius: .5rem;
+    padding: .25rem .65rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+:is(.lesson-rich-content, [data-editor-visual]) a[data-resource]:hover { text-decoration: underline; }
+:is(.lesson-rich-content, [data-editor-visual]) pre:has(> code[data-language]) {
+    padding: .75rem 1rem;
+    border: 1px solid var(--ws-border, #aebed0);
+    border-radius: .5rem;
+}
+:is(.lesson-rich-content, [data-editor-visual]) pre > code[data-language]::before {
+    content: attr(data-language);
+    display: block;
+    margin-bottom: .35rem;
+    font-size: .75rem;
+    font-weight: 700;
+}

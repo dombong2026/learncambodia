@@ -2,7 +2,10 @@
     'id' => 'rich-content', 'value' => '', 'html' => null, 'context' => 'editorial', 'maxLength' => 25000,
     'name' => 'body', 'htmlName' => 'body_html', 'labelledBy' => null, 'required' => true,
 ])
-@php $courseEditor = $context === 'course'; @endphp
+@php
+    $courseEditor = in_array($context, ['course', 'lesson'], true);
+    $lessonEditor = $context === 'lesson';
+@endphp
 <section data-rich-editor data-editor-context="{{ $context }}" data-editor-upload-url="{{ route('editor-media.store') }}"
     @class(['rich-editor min-w-0 rounded-xl border border-slate-300 dark:border-slate-700', 'course-description-editor' => $courseEditor])
     aria-label="Rich text editor">
@@ -45,10 +48,17 @@
                 <button type="button" data-editor-command="removeFormat" class="rich-tool" title="Clear formatting">Clear</button>
                 <button type="button" data-editor-command="undo" class="rich-tool" title="Undo" aria-label="Undo">↶</button>
                 <button type="button" data-editor-command="redo" class="rich-tool" title="Redo" aria-label="Redo">↷</button>
-                <label class="rich-tool inline-flex cursor-pointer items-center" title="Insert image, audio or video">
-                    Media
-                    <input data-editor-upload type="file" accept="image/jpeg,image/png,image/gif,image/webp,audio/mpeg,audio/ogg,audio/wav,video/mp4,video/webm" class="sr-only" aria-label="Upload an image, audio or video">
+                <label class="rich-tool inline-flex cursor-pointer items-center" title="{{ $lessonEditor ? 'Upload an image, video, audio file or document' : 'Insert image, audio or video' }}">
+                    {{ $lessonEditor ? 'Upload' : 'Media' }}
+                    <input data-editor-upload type="file" accept="image/jpeg,image/png,image/gif,image/webp,audio/mpeg,audio/ogg,audio/wav,video/mp4,video/webm{{ $lessonEditor ? ',.pdf,.doc,.docx,.xls,.xlsx' : '' }}" class="sr-only" aria-label="{{ $lessonEditor ? 'Upload lesson file' : 'Upload an image, audio or video' }}">
                 </label>
+                @if($lessonEditor)
+                    <button type="button" data-lesson-insert="youtube" class="rich-tool">YouTube</button>
+                    <button type="button" data-lesson-insert="code" class="rich-tool">Code</button>
+                    <button type="button" data-lesson-insert="button" class="rich-tool">Resource button</button>
+                    <button type="button" data-lesson-edit-block class="rich-tool" hidden>Edit element</button>
+                    <button type="button" data-lesson-remove-block class="rich-tool" hidden>Remove element</button>
+                @endif
                 @if($courseEditor)
                     <button type="button" data-editor-media-caption class="rich-tool" hidden>Edit media caption</button>
                     <button type="button" data-editor-media-alt class="rich-tool" hidden>Edit image description</button>
@@ -78,12 +88,34 @@
             <span data-editor-count>0 words · 0 characters</span>
         </div>
     </div>
+    @if($lessonEditor)
+        <dialog data-lesson-insert-dialog aria-labelledby="{{ $id }}-element-heading" class="rich-editor-preview-dialog rounded-xl border border-slate-300 p-5 text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            <h2 id="{{ $id }}-element-heading" data-lesson-insert-title class="mb-4 text-sm font-extrabold">Insert element</h2>
+            <div class="space-y-3">
+                <label data-lesson-label-field class="builder-field"><span>Label</span><input type="text" maxlength="160"></label>
+                <label data-lesson-url-field class="builder-field"><span>URL or video ID</span><input type="text" maxlength="2048"></label>
+                <label data-lesson-language-field class="builder-field">Language
+                    <select>
+                        @foreach(['plaintext'=>'Plain text','html'=>'HTML','css'=>'CSS','javascript'=>'JavaScript','typescript'=>'TypeScript','php'=>'PHP','python'=>'Python','sql'=>'SQL','java'=>'Java','c'=>'C','c++'=>'C++','c#'=>'C#','bash'=>'Bash','json'=>'JSON','ruby'=>'Ruby','go'=>'Go','rust'=>'Rust','swift'=>'Swift','kotlin'=>'Kotlin'] as $language => $label)
+                            <option value="{{ $language }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label data-lesson-code-field class="builder-field">Code<textarea rows="7" spellcheck="false" class="font-mono"></textarea></label>
+                <p data-lesson-dialog-notice class="text-sm text-red-700 dark:text-red-300" role="alert" hidden></p>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button type="button" data-lesson-insert-cancel class="builder-button">Cancel</button>
+                <button type="button" data-lesson-insert-apply class="builder-button builder-primary">Insert</button>
+            </div>
+        </dialog>
+    @endif
     <dialog data-editor-preview-dialog aria-label="Live content preview" class="rich-editor-preview-dialog rounded-xl border border-slate-300 p-5 text-slate-900 shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
         <div class="mb-4 flex items-center justify-between gap-3">
             <h2 class="text-sm font-extrabold">Live content preview</h2>
             <button type="button" data-editor-preview-close class="rich-tool" aria-label="Close preview">Close</button>
         </div>
-        <div data-editor-preview-content class="rich-public-content max-h-[65vh] min-h-32 overflow-y-auto text-sm leading-8"></div>
+        <div data-editor-preview-content class="rich-public-content {{ $lessonEditor ? 'lesson-rich-content' : '' }} max-h-[65vh] min-h-32 overflow-y-auto text-sm leading-8"></div>
     </dialog>
     @unless($labelledBy)<label class="sr-only" for="{{ $id }}-plain">Content (plain text fallback)</label>@endunless
     <textarea id="{{ $id }}-plain" data-editor-plain name="{{ $name }}" rows="{{ $courseEditor ? 6 : 12 }}" maxlength="{{ $maxLength }}" @required($required)

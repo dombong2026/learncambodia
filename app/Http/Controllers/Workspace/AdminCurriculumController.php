@@ -7,9 +7,12 @@ use App\Models\Course;
 use App\Models\CourseLesson;
 use App\Models\CourseModule;
 use App\Models\CurriculumLessonRevision;
+use App\Models\EditorMedia;
+use App\Support\EditorHtml;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminCurriculumController extends Controller
 {
@@ -54,13 +57,47 @@ class AdminCurriculumController extends Controller
 
     private function lessonRules(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'title'=>['required','string','max:180'],
-            'content'=>['required','string','max:50000'],
+            'content'=>['nullable','string','max:50000'],
+            'content_html'=>['nullable','string','max:200000'],
             'position'=>['required','integer','between:1,999'],
             'duration_minutes'=>['required','integer','between:1,600'],
             'is_preview'=>['required','boolean'],
         ]);
+
+        if (filled($data['content_html'] ?? null)) {
+            $data['content_html'] = EditorHtml::clean($data['content_html'], lesson: true);
+            $data['content'] = EditorHtml::courseText($data['content_html']);
+            if (blank($data['content']) && preg_match('/ data-youtube="[A-Za-z0-9_-]{11}"/', $data['content_html'] ?? '')) {
+                $data['content'] = 'YouTube video';
+            }
+            if (blank($data['content']) && EditorHtml::sourceIds($data['content_html'], lesson: true) !== []) {
+                $data['content'] = 'Lesson media';
+            }
+        }
+        validator($data, ['content' => ['required', 'string', 'max:50000']])->validate();
+
+        return $data;
+    }
+
+    private function syncMedia(CourseLesson $lesson, int $editorId): void
+    {
+        $ids = EditorHtml::sourceIds($lesson->content_html, lesson: true);
+        if ($ids !== []) {
+            $existing = $lesson->media()->allRelatedIds();
+            $allowed = EditorMedia::query()->whereIn('id', $ids)->where('context', 'lesson')
+                ->where(fn ($media) => $media->where('uploaded_by', $editorId)->orWhereIn('id', $existing))
+                ->orderBy('id')->lockForUpdate()->pluck('id');
+
+            if ($allowed->count() !== count($ids)) {
+                throw ValidationException::withMessages([
+                    'content_html' => 'An inline file is unavailable. Remove it or upload it again.',
+                ]);
+            }
+        }
+
+        $lesson->media()->sync($ids);
     }
 
     public function storeModule(Request $request,Course $course): RedirectResponse
@@ -100,6 +137,7 @@ class AdminCurriculumController extends Controller
         $lesson = $this->mutate($course,function($locked) use($request,$module,$data): CourseLesson {
             abort_if($module->lessons()->count()>=200,422,'Lesson count limit reached.');
             $lesson=$module->lessons()->create($data);
+            $this->syncMedia($lesson, $request->user()->id);
             CurriculumLessonRevision::capture($locked,$lesson,$request->user(),'created');
             return $lesson;
         });
@@ -112,9 +150,17 @@ class AdminCurriculumController extends Controller
         $this->lesson($module,$lesson);
         $data=$this->lessonRules($request);
         $this->mutate($course,function($locked) use($request,$lesson,$data): void {
+            $lesson->refresh();
+            if (!array_key_exists('content_html', $data) && $data['content'] !== $lesson->content) {
+                $lesson->content_html = null;
+            }
             $lesson->fill($data);
             if($lesson->isDirty()){
+                $contentChanged = $lesson->isDirty('content_html');
                 $lesson->save();
+                if ($contentChanged) {
+                    $this->syncMedia($lesson, $request->user()->id);
+                }
                 CurriculumLessonRevision::capture($locked,$lesson,$request->user(),'updated');
             }
         });
@@ -142,9 +188,10 @@ class AdminCurriculumController extends Controller
             abort_if($position>999,422,'Lesson order limit reached.');
             $copy=$module->lessons()->create([
                 'title'=>mb_substr($lesson->title,0,160).' (copy)',
-                'content'=>$lesson->content,'position'=>$position,
+                'content'=>$lesson->content,'content_html'=>$lesson->content_html,'position'=>$position,
                 'duration_minutes'=>$lesson->duration_minutes,'is_preview'=>false,
             ]);
+            $copy->media()->attach($lesson->media()->allRelatedIds());
             CurriculumLessonRevision::capture($locked,$copy,$request->user(),'copied');
         });
         return $this->saved($request, $course, 'Draft lesson duplicated; independent review still required.', ['module' => $module->id]);
@@ -163,10 +210,11 @@ class AdminCurriculumController extends Controller
             ]);
             foreach($module->lessons as $lesson){
                 $duplicate=$copy->lessons()->create([
-                    'title'=>$lesson->title,'content'=>$lesson->content,
+                    'title'=>$lesson->title,'content'=>$lesson->content,'content_html'=>$lesson->content_html,
                     'position'=>$lesson->position,'duration_minutes'=>$lesson->duration_minutes,
                     'is_preview'=>false,
                 ]);
+                $duplicate->media()->attach($lesson->media()->allRelatedIds());
                 CurriculumLessonRevision::capture($locked,$duplicate,$request->user(),'copied');
             }
         });

@@ -11,7 +11,7 @@ class CurriculumLessonRevision extends Model
 
     protected $fillable = [
         'course_id','lesson_id','edited_by','snapshot_number','action','title',
-        'content','position','duration_minutes','is_preview','created_at',
+        'content','content_html','position','duration_minutes','is_preview','created_at',
     ];
 
     protected function casts(): array
@@ -30,7 +30,7 @@ class CurriculumLessonRevision extends Model
         self::create([
             'course_id'=>$course->id,'lesson_id'=>$lesson->id,'edited_by'=>$actor->id,
             'snapshot_number'=>$number,'action'=>$action,'title'=>$lesson->title,
-            'content'=>$lesson->content,'position'=>$lesson->position,
+            'content'=>$lesson->content,'content_html'=>$lesson->content_html,'position'=>$lesson->position,
             'duration_minutes'=>$lesson->duration_minutes,'is_preview'=>$lesson->is_preview,
             'created_at'=>now(),
         ]);

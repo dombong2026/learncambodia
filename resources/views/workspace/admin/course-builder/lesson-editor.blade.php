@@ -11,10 +11,15 @@
                 <label class="builder-field">Order<input name="position" type="number" required min="1" max="999" value="{{ old('position', $editingLesson?->position ?? ((int) $module->lessons->max('position') + 1)) }}"></label>
                 <label class="builder-field">Minutes<input name="duration_minutes" type="number" required min="1" max="600" value="{{ old('duration_minutes', $editingLesson?->duration_minutes ?? 15) }}"></label>
             </div>
-            <label class="builder-field">Lesson content<textarea name="content" required maxlength="50000" rows="7">{{ old('content', $editingLesson?->content) }}</textarea></label>
+            <div class="min-w-0">
+                <label id="lesson-content-label" for="lesson-content-plain" class="mb-2 block text-sm font-bold">Lesson content</label>
+                <x-rich-editor id="lesson-content" context="lesson" name="content" html-name="content_html"
+                    labelled-by="lesson-content-label" :max-length="50000"
+                    :value="old('content', $editingLesson?->content)" :html="old('content_html', $editingLesson?->content_html)" />
+            </div>
             <label class="flex items-center gap-2 text-sm font-semibold"><input type="hidden" name="is_preview" value="0"><input type="checkbox" name="is_preview" value="1" @checked(old('is_preview', $editingLesson?->is_preview ?? false))> Public preview after approval</label>
         </form>
     @else
-        <p class="whitespace-pre-wrap break-words text-sm leading-7">{{ $editingLesson->content }}</p>
+        <x-lesson-content :lesson="$editingLesson" class="text-sm leading-7" />
     @endif
 </section>

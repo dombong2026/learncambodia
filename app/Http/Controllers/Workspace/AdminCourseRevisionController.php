@@ -59,10 +59,12 @@ class AdminCourseRevisionController extends Controller
                     $copiedLesson=$copied->lessons()->create([
                         'title' => $lesson->title,
                         'content' => $lesson->content,
+                        'content_html' => $lesson->content_html,
                         'position' => $lesson->position,
                         'duration_minutes' => $lesson->duration_minutes,
                         'is_preview' => $lesson->is_preview,
                     ]);
+                    $copiedLesson->media()->attach($lesson->media()->allRelatedIds());
                     CurriculumLessonRevision::capture($new,$copiedLesson,$request->user(),'copied');
                 }
             }

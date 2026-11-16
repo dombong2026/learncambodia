@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
 use App\Models\Course;
+use App\Models\User;
 use App\Models\EditorMedia;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
@@ -21,6 +22,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class EditorMediaController extends Controller
 {
+    private const DOCUMENT_MIMES = [
+        'application/pdf', 'application/msword', 'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ];
+
     public function index(Request $request): View|JsonResponse|RedirectResponse
     {
         $filters = $request->validate([
@@ -141,12 +148,15 @@ final class EditorMediaController extends Controller
 
     private function storeUpload(Request $request, bool $library): JsonResponse
     {
+        $lesson = !$library && $request->input('context') === 'lesson';
+        $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav'];
+        if ($lesson) {
+            $mimes = [...$mimes, ...self::DOCUMENT_MIMES];
+        }
         $data = $request->validate([
-            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course'])],
-            'file' => ['required', 'file', $library ? 'max:51200' : 'max:12288',
-                'mimetypes:'.implode(',', $library
-                    ? FeaturedMedia::MIMES
-                    : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav'])],
+            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course', 'lesson'])],
+            'file' => ['required', 'file', ($library || $lesson) ? 'max:51200' : 'max:12288',
+                'mimetypes:'.implode(',', $mimes)],
         ]);
         abort_if($data['context'] !== 'ticket' && $request->user()->role !== 'admin', 403);
 
@@ -155,6 +165,7 @@ final class EditorMediaController extends Controller
             $unclaimed = EditorMedia::query()->where('context', $data['context'])->where('uploaded_by', $request->user()->id)
                 ->whereNull('content_entry_id')->whereNull('support_ticket_id')
                 ->when($data['context'] === 'course', fn ($media) => $media->doesntHave('descriptionCourses'))
+                ->when($lesson, fn ($media) => $media->doesntHave('lessons'))
                 ->where('created_at', '>=', now()->subDay())->count();
             abort_if($unclaimed >= 20, 429, 'Save your current draft before uploading more files.');
         }
@@ -200,6 +211,12 @@ final class EditorMediaController extends Controller
             $published = $published || Course::published()->where('featured_media_id', $media->id)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
             abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
+        } elseif ($media->context === 'lesson') {
+            $enrolled = $viewer?->role === User::ROLE_STUDENT
+                && $media->lessons()->whereHas('module.course', fn ($courses) => $courses->published()
+                    ->whereHas('enrollments', fn ($enrollments) => $enrollments
+                        ->where('student_id', $viewer->id)->where('status', 'approved')))->exists();
+            abort_unless($viewer?->role === User::ROLE_ADMIN || $enrolled, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
             abort_unless($published || $viewer?->role === 'admin', 403);
@@ -227,7 +244,11 @@ final class EditorMediaController extends Controller
             'Content-Security-Policy' => "default-src 'none'; sandbox",
         ];
 
-        if (str_starts_with($media->mime, 'video/')) {
+        if ($media->context === 'lesson' && in_array($media->mime, self::DOCUMENT_MIMES, true)) {
+            return $disk->download($media->path, $media->original_name, array_diff_key($headers, ['Content-Disposition' => true]));
+        }
+
+        if (str_starts_with($media->mime, 'video/') || ($media->context === 'lesson' && str_starts_with($media->mime, 'audio/'))) {
             return new BinaryFileResponse($disk->path($media->path), 200, $headers, false);
         }
 

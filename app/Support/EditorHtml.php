@@ -18,7 +18,7 @@ final class EditorHtml
     private const DROP = ['script','style','iframe','object','embed','svg','math','form','input','button','link','meta','base'];
     private const VOID = ['br','hr','img','source'];
 
-    public static function clean(?string $html): ?string
+    public static function clean(?string $html, bool $lesson = false): ?string
     {
         if ($html === null || trim($html) === '') return null;
         $document = new DOMDocument('1.0', 'UTF-8');
@@ -32,7 +32,7 @@ final class EditorHtml
         $root = $document->getElementById('editor-root');
         if (!$root) return null;
         $rendered = '';
-        foreach ($root->childNodes as $node) $rendered .= self::render($node);
+        foreach ($root->childNodes as $node) $rendered .= self::render($node, $lesson);
         return trim($rendered) ?: null;
     }
 
@@ -50,11 +50,17 @@ final class EditorHtml
     }
 
     /** Extract only actual media attributes from already sanitized markup. */
-    public static function sourceIds(?string $cleanHtml): array
+    public static function sourceIds(?string $cleanHtml, bool $lesson = false): array
     {
         preg_match_all('~<(?:img|audio|video|source)\b[^>]*? src="/editor-media/([1-9][0-9]*)"~', $cleanHtml ?? '', $matches);
 
-        return array_values(array_unique(array_map('intval', $matches[1])));
+        $ids = $matches[1];
+        if ($lesson) {
+            preg_match_all('~<a\b[^>]*? href="/editor-media/([1-9][0-9]*)" data-resource="file"~', $cleanHtml ?? '', $files);
+            $ids = [...$ids, ...$files[1]];
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
     }
 
     /** Only scoped media endpoints; no remote tracking pixels or executable URLs. */
@@ -65,7 +71,7 @@ final class EditorHtml
         return array_values(array_unique(array_map('intval', $matches[1])));
     }
 
-    private static function render(DOMNode $node): string
+    private static function render(DOMNode $node, bool $lesson): string
     {
         if ($node->nodeType === XML_TEXT_NODE) {
             return htmlspecialchars($node->nodeValue ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -76,17 +82,29 @@ final class EditorHtml
         if (in_array($original, self::DROP, true)) return '';
 
         $children = '';
-        foreach ($node->childNodes as $child) $children .= self::render($child);
+        foreach ($node->childNodes as $child) $children .= self::render($child, $lesson);
         if ($original !== 'font' && !in_array($original, self::TAGS, true)) return $children;
         $tag = $original === 'font' ? 'span' : $original;
 
         $attrs = '';
         $style = self::safeStyle($node);
         if ($style !== '') $attrs .= self::attr('style', $style);
+        if ($lesson && $tag === 'figure' && preg_match('/^[A-Za-z0-9_-]{11}$/D', $node->getAttribute('data-youtube'))) {
+            $attrs .= self::attr('data-youtube', $node->getAttribute('data-youtube'));
+        }
+        if ($lesson && $tag === 'code' && preg_match('/^[a-z][a-z0-9+#-]{0,23}$/D', $node->getAttribute('data-language'))) {
+            $attrs .= self::attr('data-language', $node->getAttribute('data-language'));
+        }
         if ($tag === 'a') {
             $url = trim($node->getAttribute('href'));
             if (preg_match('~^(?:https?://|mailto:|tel:|/(?![/\\\\]))[^\x00-\x1f\x7f]*$~iD', $url)) {
                 $attrs .= self::attr('href', $url);
+                $kind = $node->getAttribute('data-resource');
+                if ($lesson && $kind === 'button') {
+                    $attrs .= ' data-resource="button"';
+                } elseif ($lesson && $kind === 'file' && preg_match('~^/editor-media/[1-9][0-9]*$~D', $url)) {
+                    $attrs .= ' data-resource="file"';
+                }
                 $attrs .= ' rel="noopener noreferrer nofollow"';
             }
         }

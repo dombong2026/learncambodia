@@ -55,10 +55,46 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await builder.getByRole('button', { name: 'Save changes' }).click();
     await builder.getByRole('link', { name: '+ Add lesson' }).click();
     await builder.getByLabel('Lesson title').fill('Say hello');
-    await builder.getByLabel('Lesson content').fill('Hello, my name is Samith.');
+    const lessonEditor = builder.locator('[data-editor-context="lesson"]');
+    const lessonContent = lessonEditor.getByRole('textbox', { name: 'Lesson content' });
+    await lessonContent.fill('Hello, my name is Samith.');
+    await lessonEditor.getByRole('button', { name: 'YouTube', exact: true }).click();
+    let insert = lessonEditor.getByRole('dialog', { name: 'Insert YouTube video' });
+    await insert.getByLabel('URL or video ID').fill('https://youtu.be/dQw4w9WgXcQ');
+    await insert.getByLabel('Label', { exact: true }).fill('Lesson video');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+    await expect(lessonContent.locator('figure[data-youtube]')).toHaveText('Lesson video');
+
+    await lessonEditor.getByRole('button', { name: 'Code', exact: true }).click();
+    insert = lessonEditor.getByRole('dialog', { name: 'Insert code block' });
+    await insert.getByLabel('Language').selectOption('python');
+    await insert.getByLabel('Code', { exact: true }).fill('print("Hello!")');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+
+    await lessonEditor.getByRole('button', { name: 'Resource button', exact: true }).click();
+    insert = lessonEditor.getByRole('dialog', { name: 'Insert resource button' });
+    await insert.getByLabel('Label', { exact: true }).fill('Study guide');
+    await insert.getByLabel('URL or video ID').fill('/reference');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+    await expect(lessonContent.locator('a[data-resource]')).toHaveText('Study guide');
+
+    await lessonEditor.getByLabel('Upload lesson file').setInputFiles({
+      name: 'lesson-handout.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4\n%%EOF'),
+    });
+    await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
+    await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
+    await expect(lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' })).toHaveValue(/data-language="python"/);
+    await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
     await builder.getByRole('button', { name: 'Save changes' }).click();
     await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveCount(1);
-    await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveValue('Hello, my name is Samith.');
+    await expect(lessonContent).toContainText('Hello, my name is Samith.');
+    await expect(lessonContent.locator('code[data-language="python"]')).toHaveText('print("Hello!")');
+    await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
+    await lessonContent.locator('figure[data-youtube]').click();
+    await lessonEditor.getByRole('button', { name: 'Remove element', exact: true }).click();
+    await expect(lessonContent.locator('figure[data-youtube]')).toHaveCount(0);
     await builder.getByRole('button', { name: /Save & continue/ }).click();
     await expect(page).toHaveURL(/step=quizzes/);
     await builder.getByRole('link', { name: /Continue/ }).click();

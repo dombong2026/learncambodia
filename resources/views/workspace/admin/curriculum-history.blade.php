@@ -34,7 +34,7 @@
             <details class="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
                 <summary class="cursor-pointer text-sm font-bold">{{ $entry->title }} · Revision {{ $entry->snapshot_number }} ({{ $entry->action }}) · {{ $entry->created_at?->format('Y-m-d H:i') }}</summary>
                 <p class="mt-3 text-xs text-slate-500">Editor: {{ $entry->editor?->name ?? 'Former administrator' }} · {{ $entry->duration_minutes }} min</p>
-                <p class="mt-3 whitespace-pre-line break-words rounded-xl bg-slate-50 p-4 text-sm leading-7 dark:bg-slate-950">{{ $entry->content }}</p>
+                <x-lesson-content :lesson="$entry" class="mt-3 rounded-xl bg-slate-50 p-4 text-sm leading-7 dark:bg-slate-950" />
             </details>
         @empty<p class="text-sm text-slate-500">No lesson changes tracked yet.</p>@endforelse
     </div>

@@ -25,7 +25,7 @@
                         <h3 class="text-lg font-bold">{{ $lesson->position }}. {{ $lesson->title }}</h3>
                         <span class="text-xs text-slate-500">{{ $lesson->duration_minutes }} min</span>
                     </div>
-                    <p class="mt-4 whitespace-pre-line break-words text-sm leading-8 text-slate-700 dark:text-slate-300">{{ $lesson->content }}</p>
+                    <x-lesson-content :lesson="$lesson" class="mt-4 text-sm leading-8 text-slate-700 dark:text-slate-300" />
                     <a href="{{ route('account.lessons.watch',[$enrollment,$lesson]) }}" class="mt-4 inline-flex rounded-xl border border-[#d4a65b] px-4 py-2.5 text-xs font-bold text-[#a57526] dark:text-[#f3c773]">Open focused lesson view →</a>
                     @php $done = in_array($lesson->id, $completedLessonIds, true); @endphp
                     <form method="POST" action="{{ route('account.progress.update',[$enrollment,$lesson]) }}" class="mt-5 flex justify-end">@csrf

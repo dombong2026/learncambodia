@@ -13,7 +13,7 @@
         ['value'=>number_format($lesson->duration_minutes).' min','label'=>'Lesson study duration','icon'=>'calendar'],
         ['value'=>$percent.'%','label'=>'Your self-reported course completion','icon'=>'chart-line'],
     ]"/>
-<x-learning-section id="lesson-content" title="Focused learning workspace" eyebrow="Approved student enrollment" tone="white" subtitle="This private view is available only to the owner of an active approved enrollment. Lesson text is presented as safe plain text.">
+<x-learning-section id="lesson-content" title="Focused learning workspace" eyebrow="Approved student enrollment" tone="white" subtitle="This private view is available only to the owner of an active approved enrollment.">
     <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,.65fr)]">
         <article class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 dark:border-slate-700 dark:bg-[#173758]">
             <div class="mb-8 flex flex-wrap items-center justify-between gap-3">
@@ -21,7 +21,7 @@
                 <span class="text-xs font-semibold text-slate-500">{{ $lesson->duration_minutes }} minutes</span>
             </div>
             <h2 class="text-2xl font-black text-[#123661] dark:text-white">{{ $lesson->title }}</h2>
-            <p class="mt-7 whitespace-pre-line break-words text-base leading-10 text-slate-700 dark:text-slate-200">{{ $lesson->content }}</p>
+            <x-lesson-content :lesson="$lesson" class="mt-7 text-base leading-10 text-slate-700 dark:text-slate-200" />
             <form action="{{ route('account.progress.update',[$enrollment,$lesson]) }}" method="POST" class="mt-9 flex flex-wrap justify-end gap-3">@csrf
                 <input type="hidden" name="complete" value="{{ $done?'0':'1' }}">
                 <button type="submit" class="rounded-xl px-6 py-3 text-xs font-black {{ $done?'border border-[#d6a660] text-[#a47625] dark:text-[#f2c575]':'bg-[#123a67] text-white' }}">{{ $done?'Mark for more study':'Mark this lesson complete' }}</button>
