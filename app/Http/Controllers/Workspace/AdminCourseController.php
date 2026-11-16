@@ -43,15 +43,25 @@ class AdminCourseController extends Controller
 
     private function form(Course $course, string $step = 'details'): View
     {
-        if ($course->exists) {
-            $course->load(['category', 'featuredMedia', 'modules.lessons', 'quizzes' => fn ($query) => $query->withCount('questions')]);
+        if ($step === 'media' || $step === 'review') {
+            $course->load('featuredMedia');
+        }
+        if ($step === 'quizzes') {
+            $course->load(['quizzes' => fn ($query) => $query->withCount('questions')]);
+        }
+        if ($step === 'review') {
+            $course->load('category')->loadCount(['modules', 'lessons', 'quizzes']);
+        }
+        if ($step === 'curriculum') {
+            $course->load(['modules' => fn ($query) => $query->withCount('lessons')->withSum('lessons', 'duration_minutes')]);
         }
 
         $module = $step === 'curriculum' && $course->exists
             ? ($course->modules->firstWhere('id', request()->integer('module')) ?? $course->modules->first())
             : null;
         $editor = $step === 'curriculum' ? request()->query('editor') : null;
-        $lesson = $editor === 'lesson' ? $module?->lessons->firstWhere('id', request()->integer('lesson')) : null;
+        $module?->load(['lessons' => fn ($query) => $query->select('id', 'course_module_id', 'title', 'position', 'duration_minutes')]);
+        $lesson = $editor === 'lesson' ? $module?->lessons()->find(request()->integer('lesson')) : null;
 
         return view('workspace.admin.course-form', [
             'role' => 'admin',
@@ -62,7 +72,7 @@ class AdminCourseController extends Controller
             'lesson' => $lesson,
             'categories' => $step === 'details' ? Category::orderBy('sort_order')->get() : collect(),
             'levels' => $step === 'details' ? CefrLevel::orderBy('sort_order')->get() : collect(),
-            'reviewChecklist' => $course->exists ? CourseReadiness::checklist($course) : [],
+            'reviewChecklist' => $step === 'review' ? CourseReadiness::checklist($course) : [],
         ]);
     }
 
@@ -130,7 +140,6 @@ class AdminCourseController extends Controller
             abort_unless($locked->isMutable(), 409, 'Only draft or rejected courses may be edited.');
             $locked->update($data);
         });
-
     }
 
     public function submit(Request $request, Course $course): RedirectResponse

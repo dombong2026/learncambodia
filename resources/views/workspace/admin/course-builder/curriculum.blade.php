@@ -16,7 +16,7 @@
                     <span class="builder-step-number">{{ $item->position }}</span>
                     <span class="min-w-0 flex-1">
                         <strong class="block break-words text-sm">{{ $item->title }}</strong>
-                        <span class="mt-1 block text-xs text-slate-600 dark:text-slate-300">{{ $item->lessons->count() }} {{ Str::plural('lesson', $item->lessons->count()) }} · {{ $item->lessons->sum('duration_minutes') }} min</span>
+                        <span class="mt-1 block text-xs text-slate-600 dark:text-slate-300">{{ $item->lessons_count }} {{ Str::plural('lesson', $item->lessons_count) }} · {{ (int) $item->lessons_sum_duration_minutes }} min</span>
                     </span>
                 </a>
             @empty

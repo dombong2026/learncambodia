@@ -14,8 +14,8 @@
             <div><dt class="font-semibold">Category</dt><dd>{{ $course->category?->name ?? '—' }}</dd></div>
             <div><dt class="font-semibold">CEFR</dt><dd>{{ $course->cefr_level ?? 'All levels' }}</dd></div>
             <div><dt class="font-semibold">Delivery mode</dt><dd>{{ ucfirst($course->delivery_mode) }}</dd></div>
-            <div><dt class="font-semibold">Curriculum</dt><dd>{{ $course->modules->count() }} modules · {{ $course->modules->sum(fn ($module) => $module->lessons->count()) }} lessons</dd></div>
-            <div><dt class="font-semibold">Practice quizzes</dt><dd>{{ $course->quizzes->count() }}</dd></div>
+            <div><dt class="font-semibold">Curriculum</dt><dd>{{ $course->modules_count }} modules · {{ $course->lessons_count }} lessons</dd></div>
+            <div><dt class="font-semibold">Practice quizzes</dt><dd>{{ $course->quizzes_count }}</dd></div>
             <div><dt class="font-semibold">Featured media</dt><dd>{{ ucfirst($course->featured_kind ?? 'None') }}</dd></div>
         </dl>
     </div>
