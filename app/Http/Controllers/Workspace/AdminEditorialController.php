@@ -99,7 +99,7 @@ class AdminEditorialController extends Controller
         return view('workspace.admin.editorial-form', [
             'kind' => $kind, 'entry' => $entry, 'editing' => true,
             'categories' => $kind === 'posts' ? PostTerm::where('kind','category')->orderBy('name')->get() : collect(),
-            'learningCategories' => $kind === 'posts' ? Category::where(fn ($query) => $query->published()->orWhereKey($entry->category_id))->orderBy('sort_order')->get() : collect(),
+            'learningCategories' => $kind === 'posts' ? Category::where(fn ($query) => $query->published()->orWhere('id', $entry->category_id))->orderBy('sort_order')->get() : collect(),
             'tags' => $kind === 'posts' ? PostTerm::where('kind','tag')->orderBy('name')->get() : collect(),
         ]);
     }
