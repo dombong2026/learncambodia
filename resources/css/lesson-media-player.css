@@ -97,7 +97,7 @@ button {
     touch-action: manipulation;
 }
 button:is(:hover, [aria-expanded="true"], [aria-pressed="true"]) { background: #bcdfff23; color: var(--player-accent); }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--player-accent); outline-offset: 2px; }
+button:focus-visible, input:focus-visible { outline: var(--lesson-player-focus-width, 2px) solid var(--player-accent); outline-offset: 2px; }
 :host([data-pointer-seek]) [data-seek]:focus-visible { outline: none; }
 button svg { width: 19px; height: 19px; }
 [data-fullscreen] svg { width: 21px; height: 21px; }
