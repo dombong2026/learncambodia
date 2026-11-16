@@ -20,7 +20,7 @@ class CatalogController extends Controller
             ->whereIn('code', ['GE', 'IELTS', 'TOEFL', 'TEFL', 'TESOL', 'CEFR'])
             ->orderBy('sort_order')->get();
 
-        $featuredCourses = Course::discoverable()->with('category')
+        $featuredCourses = Course::discoverable()->with(['category', 'featuredMedia'])
             ->withCount('lessons')->orderByDesc('published_at')->limit(6)->get();
         $latestArticles = ContentEntry::query()->publishedArticles()->orderByDesc('id')->limit(3)->get();
 
@@ -84,7 +84,7 @@ class CatalogController extends Controller
             ->orderBy('sort_order')->limit(6)->get();
 
         $courses = $category->courses()->discoverable()
-            ->with('category:id,slug,name,code')->withCount('lessons')
+            ->with(['category:id,slug,name,code', 'featuredMedia'])->withCount('lessons')
             ->orderBy('title')->paginate(12);
 
         $publishedCourseCount = $category->courses()->discoverable()->count();

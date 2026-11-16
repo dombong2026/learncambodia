@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
+use App\Models\Course;
 use App\Models\EditorMedia;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
@@ -112,10 +113,11 @@ final class EditorMediaController extends Controller
             $path = DB::transaction(function () use ($media): string {
                 $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
                 $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
+                    || Course::where('featured_media_id', $current->id)->exists()
                     || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
                 if ($inUse) {
                     throw ValidationException::withMessages([
-                        'media' => 'This file is used by an editorial entry or policy revision and cannot be deleted.',
+                        'media' => 'This file is used by a course, editorial entry or policy revision and cannot be deleted.',
                     ]);
                 }
 
@@ -194,6 +196,8 @@ final class EditorMediaController extends Controller
             $published = ContentEntry::query()->where('featured_media_id', $media->id)
                 ->where('status', 'published')->whereIn('featured_kind', ['image', 'video'])
                 ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
+            $published = $published || Course::published()->where('featured_media_id', $media->id)
+                ->whereIn('featured_kind', ['image', 'video'])->exists();
             abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&

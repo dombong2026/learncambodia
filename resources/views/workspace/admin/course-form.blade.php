@@ -28,6 +28,12 @@
         <div><label for="course-mode" class="mb-2 block text-sm font-bold">Delivery mode</label><select id="course-mode" name="delivery_mode" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">@foreach(['online'=>'Online','onsite'=>'On-site','hybrid'=>'Hybrid'] as $key=>$name)<option value="{{ $key }}" @selected(old('delivery_mode',$course->delivery_mode ?? 'online')===$key)>{{ $name }}</option>@endforeach</select></div>
         <div class="sm:col-span-2"><label for="course-summary" class="mb-2 block text-sm font-bold">Summary</label><textarea id="course-summary" name="summary" maxlength="1000" rows="3" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-7 dark:border-slate-700 dark:bg-slate-950">{{ old('summary',$course->summary) }}</textarea>@error('summary')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror</div>
         <div class="sm:col-span-2"><label for="course-description" class="mb-2 block text-sm font-bold">Full course description</label><textarea id="course-description" name="description" maxlength="25000" rows="5" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-7 dark:border-slate-700 dark:bg-slate-950">{{ old('description',$course->description) }}</textarea>@error('description')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror</div>
+        <div class="sm:col-span-2">
+            @if($course->featured_kind)
+                <div class="max-w-lg"><x-editorial-featured-media :entry="$course"/></div>
+            @endif
+            @if($editable)@include('workspace.admin.editorial-featured-media', ['entry' => $course])@endif
+        </div>
         @if($editable)<div class="sm:col-span-2 flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">{{ $course->exists ? 'Save course' : 'Create draft course' }}</button></div>@endif
     </fieldset>
 </form>
@@ -138,4 +144,5 @@
         <p class="mt-7 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">The curriculum is locked in its current state. Publication changes require reviewed versioning.</p>
     @endif
 @endif
+@if($editable)@include('workspace.admin.media-picker')@endif
 @endsection

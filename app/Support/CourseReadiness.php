@@ -51,6 +51,11 @@ final class CourseReadiness
             ])->values()->all(),
         ];
 
+        // Preserve existing review fingerprints for courses without covers.
+        if ($course->featured_kind !== null) {
+            $data['course'] += $course->only(Course::FEATURED_FIELDS);
+        }
+
         return hash('sha256',json_encode($data,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
     }
 }

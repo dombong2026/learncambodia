@@ -31,6 +31,7 @@ class AdminCourseRevisionController extends Controller
                 'The proposed revision URL is already in use.');
 
             $new = Course::create([
+                ...$source->only(Course::FEATURED_FIELDS),
                 'source_course_id' => $source->id,
                 'revision_number' => $number,
                 'category_id' => $source->category_id,

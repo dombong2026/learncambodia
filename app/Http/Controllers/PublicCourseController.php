@@ -29,7 +29,7 @@ class PublicCourseController extends Controller
         $mode = $filters['mode'] ?? null;
 
         $courses = Course::discoverable()
-            ->with('category:id,slug,name,code')
+            ->with(['category:id,slug,name,code', 'featuredMedia'])
             ->withCount('lessons')
             ->when($search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
                 $inner->where('title','like','%'.$search.'%')
@@ -62,7 +62,7 @@ class PublicCourseController extends Controller
         abort_unless(Course::discoverable()->whereKey($course->id)->exists(),404);
 
         $course->load([
-            'category:id,slug,name,code',
+            'category:id,slug,name,code', 'featuredMedia',
             'modules' => fn ($query) => $query->withCount('lessons'),
         ])->loadCount('lessons');
 
@@ -76,7 +76,7 @@ class PublicCourseController extends Controller
         $educators=PublicProfile::visible()->where('kind','instructor')
             ->whereIn('user_id',$instructorIds)->orderBy('display_name')->get();
         $relatedCourses=Course::discoverable()->where('category_id',$course->category_id)
-            ->whereKeyNot($course->id)->with('category')->withCount('lessons')
+            ->whereKeyNot($course->id)->with(['category', 'featuredMedia'])->withCount('lessons')
             ->orderBy('title')->limit(4)->get();
 
         return view('courses.show',compact(

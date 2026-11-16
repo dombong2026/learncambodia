@@ -8,6 +8,7 @@ use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\CourseReviewSnapshot;
 use App\Support\CourseReadiness;
+use App\Support\FeaturedMedia;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -65,7 +66,7 @@ class AdminCourseController extends Controller
                 Rule::unique('courses', 'slug')->ignore($course?->id)],
         ])->validate();
 
-        return $data;
+        return $data + FeaturedMedia::validate($request);
     }
 
     public function store(Request $request): RedirectResponse

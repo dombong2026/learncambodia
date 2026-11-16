@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
+    public const FEATURED_FIELDS = ['featured_kind', 'featured_media_id', 'featured_value', 'featured_alt'];
+
     protected $fillable = [
+        ...self::FEATURED_FIELDS,
         'category_id', 'slug', 'title', 'summary', 'description',
         'cefr_level', 'delivery_mode', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
@@ -20,6 +23,11 @@ class Course extends Model
     protected function casts(): array
     {
         return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+    }
+
+    public function featuredMedia(): BelongsTo
+    {
+        return $this->belongsTo(EditorMedia::class);
     }
 
     public function category(): BelongsTo

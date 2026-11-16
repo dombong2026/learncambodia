@@ -1,6 +1,12 @@
 @props(['course'])
 <article class="premium-card group flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#e4b456] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
-    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
+    @if($course->featured_kind === 'image' && $course->featuredMedia)
+        <img class="mb-4 aspect-video w-full rounded-xl object-cover" src="{{ route('editor-media.show', $course->featuredMedia) }}" alt="{{ $course->featured_alt ?? '' }}" loading="lazy" decoding="async">
+    @elseif($course->featured_kind === 'color' && preg_match('/^#[a-f0-9]{6}$/D', $course->featured_value ?? ''))
+        <div class="mb-4 aspect-video rounded-xl" style="background-color: {{ $course->featured_value }}" aria-hidden="true"></div>
+    @else
+        <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
+    @endif
     <div class="premium-card-content flex flex-wrap items-center gap-2 text-xs font-bold">
         <span class="rounded-full bg-[#fff2d1] px-3 py-1 text-[#8b5a12] dark:bg-amber-950 dark:text-amber-300">{{ $course->category?->code }}</span>
         @if($course->cefr_level)<span class="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">CEFR {{ $course->cefr_level }}</span>@endif
