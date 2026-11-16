@@ -11,6 +11,7 @@ const overlay = document.querySelector<HTMLElement>('[data-sidebar-overlay]');
 const trigger = document.querySelector<HTMLButtonElement>('[data-sidebar-toggle]');
 const closeButton = document.querySelector<HTMLButtonElement>('[data-sidebar-close]');
 const page = document.querySelector<HTMLElement>('[data-workspace-page]');
+const mobileNav = document.querySelector<HTMLElement>('[data-workspace-mobile-nav]');
 
 const desktop = window.matchMedia('(min-width: 64rem)');
 const sidebarPreference = 'learncambodia.workspace.sidebar';
@@ -23,7 +24,9 @@ function renderSidebar(): void {
     document.documentElement.dataset.desktopSidebar = desktopOpen ? 'open' : 'closed';
     shell.dataset.mobileSidebar = mobileOpen && !desktop.matches ? 'open' : 'closed';
     sidebar.inert = !open;
-    if (page) page.inert = !desktop.matches && mobileOpen;
+    const mobileDrawer = !desktop.matches && mobileOpen;
+    if (page) page.inert = mobileDrawer;
+    if (mobileNav) mobileNav.inert = mobileDrawer;
     overlay.hidden = desktop.matches || !mobileOpen;
     trigger.setAttribute('aria-expanded', String(open));
 }
