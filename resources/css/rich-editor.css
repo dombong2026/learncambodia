@@ -47,7 +47,18 @@
 .rich-editor-expanded [data-editor-enhanced] { display: flex; min-height: 0; flex: 1; flex-direction: column; }
 .rich-editor-expanded .rich-editor-canvas { max-height: none; min-height: 0; flex: 1; }
 .rich-editor-expanded .rich-editor-source { min-height: 0; flex: 1; resize: none; }
-.rich-editor-preview-dialog { width: min(800px, 94vw); max-height: 90vh; }
+.rich-editor-preview-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(50rem, calc(100% - 2rem));
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+}
+.rich-editor-preview-dialog[data-lesson-insert-dialog] {
+    width: min(30rem, calc(100% - 2rem));
+}
 .rich-editor-preview-dialog::backdrop { background: rgba(6, 17, 35, .67); }
 
 .course-description-editor .rich-editor-toolbar {
