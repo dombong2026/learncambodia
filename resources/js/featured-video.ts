@@ -92,7 +92,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (player.hidden) return;
             clearTimeout(idleTimer);
             player.dataset.controlsActive = 'true';
-            idleTimer = setTimeout(hideControls, volumePanel.hidden ? 1200 : 3500);
+            if (volumePanel.hidden) idleTimer = setTimeout(hideControls, 1200);
         }
 
         player.addEventListener('previewopen', () => {
@@ -124,7 +124,10 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             showControls();
         });
         volumeMenu.addEventListener('focusout', event => {
-            if (event.relatedTarget && !volumeMenu.contains(event.relatedTarget as Node)) setVolumePanel(false);
+            if (event.relatedTarget && !volumeMenu.contains(event.relatedTarget as Node)) {
+                setVolumePanel(false);
+                showControls();
+            }
         });
         player.addEventListener('keydown', event => {
             if (event.key !== 'Escape' || volumePanel.hidden) return;
@@ -135,7 +138,10 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             showControls();
         });
         player.addEventListener('pointermove', showControls);
-        player.addEventListener('pointerdown', showControls);
+        player.addEventListener('pointerdown', event => {
+            if (!volumeMenu.contains(event.target as Node)) setVolumePanel(false);
+            showControls();
+        });
         player.addEventListener('pointerleave', event => {
             if (event.pointerType !== 'touch') hideControls();
         });

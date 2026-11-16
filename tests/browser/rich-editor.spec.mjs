@@ -164,7 +164,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
 
     const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
+    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
     await volumeButton.click();
+    await expect(volumeButton).toHaveAttribute('aria-expanded', 'true');
     const volume = dialog.getByRole('slider', { name: 'Volume level' });
     if (await volume.isVisible()) {
       await expect(volume).toHaveCSS('writing-mode', 'vertical-lr');

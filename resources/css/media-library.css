@@ -263,7 +263,7 @@
 
 .featured-video-volume-panel:not([hidden]) {
     position: absolute;
-    bottom: calc(100% + .15rem);
+    bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
     display: grid;
