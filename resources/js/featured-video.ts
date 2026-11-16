@@ -74,7 +74,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
 
         const detectVolumeSupport = () => {
             const current = video.volume;
-            const probe = current === 0.5 ? 0.6 : 0.5;
+            const probe = current === 0.5 ? 0.75 : 0.5;
             video.volume = probe;
             const canAdjust = video.volume === probe;
             video.volume = current;

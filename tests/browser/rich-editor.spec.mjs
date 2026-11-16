@@ -178,7 +178,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       expect(adjustedVolume).toBeGreaterThan(0.2);
       expect(adjustedVolume).toBeLessThan(0.5);
       await volume.fill('35');
-      await expect.poll(() => player.locator('video').evaluate(video => video.volume)).toBe(0.35);
+      await expect.poll(() => player.locator('video').evaluate(video => Math.round(video.volume * 100))).toBe(35);
       await expect(volume).toHaveAttribute('aria-valuetext', '35%');
       await dialog.getByRole('button', { name: 'Mute', exact: true }).click();
       await expect(volume).toHaveValue('0');
