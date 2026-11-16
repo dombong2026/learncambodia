@@ -18,7 +18,9 @@
                 </button>
                 <div id="preview-volume-panel" class="featured-video-volume-panel" data-video-volume-panel hidden>
                     <output data-video-volume-value aria-hidden="true">100%</output>
-                    <input type="range" data-video-volume min="0" max="100" value="100" step="1" aria-label="Volume level" aria-orientation="vertical">
+                    <div class="featured-video-volume-slider" data-video-volume-slider>
+                        <input type="range" data-video-volume min="0" max="100" value="100" step="1" aria-label="Volume level" aria-orientation="vertical">
+                    </div>
                     <p data-video-device-volume hidden>Use your device volume controls.</p>
                     <button type="button" data-video-mute aria-label="Mute" title="Mute">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

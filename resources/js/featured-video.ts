@@ -62,6 +62,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         const volumeMenu = player.querySelector<HTMLElement>('[data-video-volume-menu]')!;
         const volumeToggle = volumeMenu.querySelector<HTMLButtonElement>('[data-video-volume-toggle]')!;
         const volumePanel = volumeMenu.querySelector<HTMLElement>('[data-video-volume-panel]')!;
+        const volumeSlider = volumePanel.querySelector<HTMLElement>('[data-video-volume-slider]')!;
         const deviceVolume = volumePanel.querySelector<HTMLElement>('[data-video-device-volume]')!;
         let idleTimer: ReturnType<typeof setTimeout>;
         let adjustingVolume = false;
@@ -77,7 +78,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             video.volume = probe;
             const canAdjust = video.volume === probe;
             video.volume = current;
-            volume.hidden = volumeValue.hidden = !canAdjust;
+            volumeSlider.hidden = volumeValue.hidden = !canAdjust;
             deviceVolume.hidden = canAdjust;
         };
 
@@ -122,6 +123,13 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (video.volume > 0) previousVolume = video.volume;
             update();
             showControls();
+        });
+        volume.addEventListener('keydown', event => {
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+            event.preventDefault();
+            if (event.key === 'ArrowUp') volume.stepUp();
+            else volume.stepDown();
+            volume.dispatchEvent(new Event('input'));
         });
         volumeMenu.addEventListener('focusout', event => {
             if (event.relatedTarget && !volumeMenu.contains(event.relatedTarget as Node)) {

@@ -164,12 +164,19 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
 
     const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
-    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
+    await volumeButton.scrollIntoViewIfNeeded();
+    const volumeButtonBox = await volumeButton.boundingBox();
+    await page.mouse.move(volumeButtonBox.x + volumeButtonBox.width / 2, volumeButtonBox.y + volumeButtonBox.height / 2);
     await volumeButton.click();
     await expect(volumeButton).toHaveAttribute('aria-expanded', 'true');
     const volume = dialog.getByRole('slider', { name: 'Volume level' });
     if (await volume.isVisible()) {
-      await expect(volume).toHaveCSS('writing-mode', 'vertical-lr');
+      const bounds = await volume.boundingBox();
+      expect(bounds.height).toBeGreaterThan(bounds.width);
+      await page.mouse.click(bounds.x + bounds.width / 2, bounds.y + bounds.height * .65);
+      const adjustedVolume = await player.locator('video').evaluate(video => video.volume);
+      expect(adjustedVolume).toBeGreaterThan(0.2);
+      expect(adjustedVolume).toBeLessThan(0.5);
       await volume.fill('35');
       await expect.poll(() => player.locator('video').evaluate(video => video.volume)).toBe(0.35);
       await expect(volume).toHaveAttribute('aria-valuetext', '35%');
