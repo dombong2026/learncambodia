@@ -55,6 +55,15 @@ $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
                 </div>
             </details>
             @if($kind==='posts')
+            <div class="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+                <label class="block text-xs font-bold" for="learning_category_id">Learning category</label>
+                <select id="learning_category_id" name="category_id" class="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">
+                    <option value="">Unassigned</option>
+                    @foreach($learningCategories as $learningCategory)
+                        <option value="{{ $learningCategory->id }}" @selected((string) old('category_id', $entry->category_id) === (string) $learningCategory->id)>{{ $learningCategory->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <details open class="border-t border-slate-200 pt-3 dark:border-slate-700">
                 <summary class="cursor-pointer text-xs font-bold">Categories</summary>
                 <div class="mt-2 max-h-36 space-y-2 overflow-auto">

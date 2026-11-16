@@ -84,6 +84,7 @@ if (settings && picker) {
     function choose(item: MediaItem): void {
         assetId.value = String(item.id);
         assetName.textContent = item.name;
+        assetId.dispatchEvent(new Event('change', { bubbles: true }));
         picker!.close();
     }
 
@@ -168,26 +169,6 @@ if (settings && picker) {
         } finally {
             upload.value = '';
             upload.disabled = false;
-        }
-    });
-}
-
-const library = document.querySelector<HTMLElement>('[data-media-library-page]');
-const libraryInput = library?.querySelector<HTMLInputElement>('[data-media-upload]');
-const libraryStatus = library?.querySelector<HTMLElement>('[data-media-status]');
-if (library && libraryInput && libraryStatus) {
-    libraryInput.addEventListener('change', async () => {
-        const file = libraryInput.files?.[0];
-        if (!file) return;
-        libraryInput.disabled = true;
-        libraryStatus.textContent = 'Uploading…';
-        try {
-            await uploadMedia(file, library.dataset.uploadUrl!);
-            window.location.assign(library.dataset.uploadUrl!);
-        } catch (error) {
-            libraryStatus.textContent = error instanceof Error ? error.message : 'Upload failed.';
-            libraryInput.value = '';
-            libraryInput.disabled = false;
         }
     });
 }

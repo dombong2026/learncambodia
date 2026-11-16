@@ -26,7 +26,7 @@ class CatalogApiController extends Controller
         ]);
         $perPage = $this->pagination($request);
 
-        $result = Category::query()->published()
+        $result = Category::query()->visibleInCatalog()
             ->when(isset($validated['group']), fn ($builder) => $builder->where('group', $validated['group']))
             ->orderBy('sort_order')
             ->paginate($perPage, ['code', 'slug', 'name', 'group', 'description']);

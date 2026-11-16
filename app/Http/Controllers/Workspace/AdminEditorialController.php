@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
+use App\Models\Category;
 use App\Models\PostTerm;
 use App\Models\EditorMedia;
 use App\Models\PolicyRevision;
@@ -55,6 +56,7 @@ class AdminEditorialController extends Controller
         return view('workspace.admin.editorial-form', [
             'kind' => $kind, 'entry' => new ContentEntry(['type' => $type]), 'editing' => false,
             'categories' => $kind === 'posts' ? PostTerm::where('kind','category')->orderBy('name')->get() : collect(),
+            'learningCategories' => $kind === 'posts' ? Category::published()->orderBy('sort_order')->get() : collect(),
             'tags' => $kind === 'posts' ? PostTerm::where('kind','tag')->orderBy('name')->get() : collect(),
         ]);
     }
@@ -97,6 +99,7 @@ class AdminEditorialController extends Controller
         return view('workspace.admin.editorial-form', [
             'kind' => $kind, 'entry' => $entry, 'editing' => true,
             'categories' => $kind === 'posts' ? PostTerm::where('kind','category')->orderBy('name')->get() : collect(),
+            'learningCategories' => $kind === 'posts' ? Category::where(fn ($query) => $query->published()->orWhere('id', $entry->category_id))->orderBy('sort_order')->get() : collect(),
             'tags' => $kind === 'posts' ? PostTerm::where('kind','tag')->orderBy('name')->get() : collect(),
         ]);
     }
@@ -254,6 +257,7 @@ class AdminEditorialController extends Controller
             'body_html' => ['nullable', 'string', 'max:120000'],
             'seo_title' => ['nullable', 'string', 'max:200'],
             'seo_description' => ['nullable', 'string', 'max:320'],
+            ...($type === 'post' ? ['category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('categories', 'id')]] : []),
             ...($type === 'policy' ? [
                 'policy_version' => ['sometimes', 'nullable', 'string', 'max:40'],
                 'policy_effective_on' => ['sometimes', 'nullable', 'date_format:Y-m-d'],

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Support\EditorHtml;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Validation\ValidationException;
 
 final class EditorMedia extends Model
@@ -12,6 +12,16 @@ final class EditorMedia extends Model
     protected $table = 'editor_media';
 
     protected $fillable = ['uploaded_by', 'context', 'path', 'mime', 'original_name', 'size', 'content_entry_id', 'support_ticket_id'];
+
+    public function descriptionCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_description_media');
+    }
+
+    public function lessons(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseLesson::class, 'course_lesson_media');
+    }
 
     public static function claim(?string $html, User $actor, string $context, int $ownerId): void
     {

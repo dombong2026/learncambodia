@@ -55,7 +55,7 @@ final class PublicPeopleController extends Controller
         $learning = null;
 
         if ($kind === 'instructor') {
-            $courses = Course::discoverable()->with('category:id,slug,name,code')
+            $courses = Course::discoverable()->with(['category:id,slug,name,code', 'featuredMedia'])
                 ->withCount('lessons')
                 ->whereHas('instructorAssignments', fn($q) =>
                     $q->where('instructor_id',$profile->user_id)->where('status','active'))

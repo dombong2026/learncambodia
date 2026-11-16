@@ -6,15 +6,18 @@ use App\Models\Category;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\PublishesLearningCategoryFixtures;
 use Tests\TestCase;
 
 final class CompactCategorySubheaderTest extends TestCase
 {
     use RefreshDatabase;
+    use PublishesLearningCategoryFixtures;
 
     public function test_public_category_tray_uses_codes_but_preserves_full_names_and_destinations(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
 
         foreach (['/?lang=en', '/categories?lang=en', '/cefr?lang=en'] as $url) {
             $html = $this->get($url)->assertOk()
@@ -47,6 +50,7 @@ final class CompactCategorySubheaderTest extends TestCase
     public function test_category_pages_and_search_still_show_the_full_name(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $category = Category::where('code', 'ESL')->firstOrFail();
 
         $this->get(route('categories.show', $category))->assertOk()

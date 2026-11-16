@@ -16,21 +16,19 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
-        $featuredCategories = Category::query()->published()
+        $featuredCategories = Category::query()->visibleInCatalog()
             ->whereIn('code', ['GE', 'IELTS', 'TOEFL', 'TEFL', 'TESOL', 'CEFR'])
             ->orderBy('sort_order')->get();
 
-        $featuredCourses = Course::discoverable()->with('category')
+        $featuredCourses = Course::discoverable()->with(['category', 'featuredMedia'])
             ->withCount('lessons')->orderByDesc('published_at')->limit(6)->get();
-        $latestArticles = ContentEntry::query()->where('type','post')
-            ->where('status','published')->orderByDesc('id')->limit(3)->get();
+        $latestArticles = ContentEntry::query()->publishedArticles()->orderByDesc('id')->limit(3)->get();
 
         $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
             ->orderByDesc('published_at')->limit(4)->get();
         $publishedCourseCount = Course::discoverable()->count();
-        $publishedCategoryCount = Category::published()->count();
-        $publishedArticleCount = ContentEntry::query()->where('type','post')
-            ->where('status','published')->count();
+        $publishedCategoryCount = Category::visibleInCatalog()->count();
+        $publishedArticleCount = ContentEntry::query()->publishedArticles()->count();
 
         return view('home', compact(
             'featuredCategories','featuredCourses','latestArticles',
@@ -48,7 +46,7 @@ class CatalogController extends Controller
         $query = trim($filters['q'] ?? '');
         $group = $filters['group'] ?? null;
 
-        $categories = Category::query()->published()
+        $categories = Category::query()->visibleInCatalog()
             ->withCount(['courses as published_courses_count'=> fn($q)=>$q->discoverable()])
             ->when($group, fn ($builder) => $builder->where('group', $group))
             ->when($query !== '', function ($builder) use ($query): void {
@@ -60,16 +58,15 @@ class CatalogController extends Controller
             })
             ->orderBy('sort_order')->paginate(12)->withQueryString();
 
-        $groupCounts = Category::published()->select('group')
+        $groupCounts = Category::visibleInCatalog()->select('group')
             ->selectRaw('COUNT(*) AS aggregate_count')
             ->groupBy('group')->pluck('aggregate_count','group');
-        $publishedCategories = Category::published()->count();
+        $publishedCategories = Category::visibleInCatalog()->count();
         $publishedCourses = Course::discoverable()->count();
         $cefrLevelCount=CefrLevel::query()->count();
         $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
             ->orderBy('display_name')->limit(4)->get();
-        $articles = ContentEntry::query()->where('type','post')
-            ->where('status','published')->orderByDesc('id')->limit(3)->get();
+        $articles = ContentEntry::query()->publishedArticles()->orderByDesc('id')->limit(3)->get();
 
         return view('categories.index', compact(
             'categories','group','query','groupCounts','publishedCategories',
@@ -79,15 +76,15 @@ class CatalogController extends Controller
 
     public function show(Category $category): View
     {
-        abort_unless($category->is_published, 404);
+        abort_unless(Category::visibleInCatalog()->whereKey($category->id)->exists(), 404);
 
-        $relatedCategories = Category::query()->published()
+        $relatedCategories = Category::query()->visibleInCatalog()
             ->where('group', $category->group)
             ->whereKeyNot($category->getKey())
             ->orderBy('sort_order')->limit(6)->get();
 
         $courses = $category->courses()->discoverable()
-            ->with('category:id,slug,name,code')->withCount('lessons')
+            ->with(['category:id,slug,name,code', 'featuredMedia'])->withCount('lessons')
             ->orderBy('title')->paginate(12);
 
         $publishedCourseCount = $category->courses()->discoverable()->count();
@@ -101,8 +98,7 @@ class CatalogController extends Controller
         $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
             ->whereIn('user_id',$instructorIds)->orderBy('display_name')->limit(4)->get();
 
-        $articles = ContentEntry::query()->where('type','post')
-            ->where('status','published')->orderByDesc('id')->limit(3)->get();
+        $articles = $category->articles()->with('featuredMedia')->orderByDesc('id')->paginate(10, pageName: 'articles_page');
 
         return view('categories.show', compact(
             'category','relatedCategories','courses','publishedCourseCount',

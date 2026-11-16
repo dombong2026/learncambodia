@@ -24,6 +24,11 @@
                     <span class="inline-flex items-center gap-1.5"><x-workspace-icon name="shield-check" class="h-4 w-4 text-[#b58128]"/>{{ __('pages.academically_reviewed') }}</span>
                 </div>
             </div>
+            @if($course->featured_kind)
+                <div class="flex min-w-0 items-center justify-center [&_.editorial-featured]:m-0 [&_.editorial-featured]:w-full">
+                    <x-editorial-featured-media :entry="$course"/>
+                </div>
+            @else
             <div class="relative flex min-h-[230px] flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-[#133a68] to-[#0a284f] px-6 py-8 text-center text-white">
                 <div class="absolute -right-8 -top-10 h-44 w-44 rounded-full border-[22px] border-[#f5c468]/10" aria-hidden="true"></div>
                 <x-workspace-icon name="book-open" class="relative h-16 w-16 text-[#f0c570]"/>
@@ -31,6 +36,7 @@
                 <p class="relative mt-2 text-xs font-semibold text-[#d7e5f4]">{{ __('pages.lesson_preview_note') }}</p>
                 <a href="#course-curriculum" class="relative mt-6 rounded-xl border border-white/40 px-5 py-2.5 text-xs font-bold hover:bg-white/10">{{ __('pages.view_curriculum') }}</a>
             </div>
+            @endif
             <aside class="flex flex-col rounded-3xl bg-[#0d305f] p-6 text-white shadow-xl">
                 <p class="text-[11px] font-black uppercase tracking-[.14em] text-[#f6cd7f]">{{ __('frontend.start_learning') }}</p>
                 <h2 class="mt-3 text-xl font-black">{{ __('pages.ready_to_study') }}</h2>
@@ -65,7 +71,7 @@
         <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
             <p class="text-xs font-black uppercase tracking-[.12em] text-[#b27a25]">{{ __('pages.learning_objectives') }}</p>
             <h2 class="mt-2 text-xl font-black text-[#0c315c] dark:text-white">{{ __('pages.what_you_learn') }}</h2>
-            <p class="mt-4 whitespace-pre-line break-words text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $course->description }}</p>
+            <x-course-description :course="$course" class="mt-4 text-sm leading-8 text-slate-600 dark:text-slate-300" />
         </section>
         <section id="course-curriculum" class="scroll-mt-40 overflow-hidden rounded-3xl border border-[#c69a4d] bg-[#0e315e] p-7 text-white shadow-md">
             <div class="flex flex-wrap items-start justify-between gap-3">

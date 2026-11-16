@@ -28,7 +28,7 @@ final class LearningHubController extends Controller
 
     private function articles(string $search='')
     {
-        return ContentEntry::query()->where('type','post')->where('status','published')
+        return ContentEntry::query()->publishedArticles()
             ->when($search!=='',fn($q)=>$q->where(fn($inner)=>$inner
                 ->where('title','like','%'.$search.'%')
                 ->orWhere('summary','like','%'.$search.'%')));
@@ -44,9 +44,9 @@ final class LearningHubController extends Controller
     {
         $search=$this->search($request);
         $articles=$this->articles($search)->orderByDesc('id')->paginate(9)->withQueryString();
-        $courses=Course::discoverable()->with('category')->withCount('lessons')
+        $courses=Course::discoverable()->with(['category', 'featuredMedia'])->withCount('lessons')
             ->orderByDesc('published_at')->limit(6)->get();
-        $categories=Category::published()->orderBy('sort_order')->limit(8)->get();
+        $categories=Category::visibleInCatalog()->orderBy('sort_order')->limit(8)->get();
         return view('learning.library',compact('search','articles','courses','categories'));
     }
 
@@ -54,7 +54,7 @@ final class LearningHubController extends Controller
     {
         $search=$this->search($request);
         $articles=$this->articles($search)->orderByDesc('id')->paginate(9)->withQueryString();
-        $categories=Category::published()->orderBy('sort_order')->limit(8)->get();
+        $categories=Category::visibleInCatalog()->orderBy('sort_order')->limit(8)->get();
         return view('learning.reading',compact('search','articles','categories'));
     }
 
@@ -65,7 +65,7 @@ final class LearningHubController extends Controller
             ->when($search!=='',fn($q)=>$q->where(fn($s)=>$s
                 ->where('title','like','%'.$search.'%')
                 ->orWhereHas('category',fn($c)=>$c->where('name','like','%'.$search.'%'))))
-            ->with('category')->withCount(['quizzes as practice_quizzes_count'=>
+            ->with(['category', 'featuredMedia'])->withCount(['quizzes as practice_quizzes_count'=>
                 fn($q)=>$q->has('questions')])
             ->orderBy('title')->paginate(9)->withQueryString();
         return view('learning.exams',compact('search','courses'));
@@ -82,7 +82,7 @@ final class LearningHubController extends Controller
         $enrollment=$student ? $course->enrollments()->where('student_id',$student->id)
             ->where('status','approved')->first() : null;
         $related=Course::discoverable()->where('category_id',$course->category_id)
-            ->whereKeyNot($course->id)->with('category')->withCount('lessons')
+            ->whereKeyNot($course->id)->with(['category', 'featuredMedia'])->withCount('lessons')
             ->limit(4)->get();
         return view('learning.exam',compact('course','quizzes','enrollment','related'));
     }
@@ -100,7 +100,7 @@ final class LearningHubController extends Controller
         $suggestions=Course::discoverable()
             ->when($courseIds!==[],fn($q)=>$q->whereNotIn('id',$courseIds))
             ->when($categoryIds!==[],fn($q)=>$q->whereIn('category_id',$categoryIds))
-            ->with('category')->withCount('lessons')->orderBy('title')->limit(9)->get();
+            ->with(['category', 'featuredMedia'])->withCount('lessons')->orderBy('title')->limit(9)->get();
         $completedLessons=$student ? LessonProgress::query()
             ->whereNotNull('completed_at')->whereHas('enrollment',fn($q)=>$q
                 ->where('student_id',$student->id))->count() : 0;
@@ -142,7 +142,7 @@ final class LearningHubController extends Controller
             ->where('status','approved')
             ->whereHas('course',fn($q)=>$q->published())
             ->with('course.modules.lessons')->orderByDesc('id')->limit(8)->get() : collect();
-        $courses=Course::discoverable()->with('category')->withCount('lessons')
+        $courses=Course::discoverable()->with(['category', 'featuredMedia'])->withCount('lessons')
             ->orderByDesc('published_at')->limit(6)->get();
         return view('learning.watch',compact('student','enrollments','courses'));
     }

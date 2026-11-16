@@ -31,6 +31,7 @@ class AdminCourseRevisionController extends Controller
                 'The proposed revision URL is already in use.');
 
             $new = Course::create([
+                ...$source->only(Course::FEATURED_FIELDS),
                 'source_course_id' => $source->id,
                 'revision_number' => $number,
                 'category_id' => $source->category_id,
@@ -38,12 +39,15 @@ class AdminCourseRevisionController extends Controller
                 'title' => $source->title,
                 'summary' => $source->summary,
                 'description' => $source->description,
+                'description_html' => $source->description_html,
                 'cefr_level' => $source->cefr_level,
                 'delivery_mode' => $source->delivery_mode,
                 'status' => 'draft',
                 'published_at' => null,
                 'created_by' => $request->user()->id,
             ]);
+
+            $new->descriptionMedia()->attach($source->descriptionMedia()->allRelatedIds());
 
             foreach ($source->modules()->with('lessons')->get() as $module) {
                 $copied = $new->modules()->create([
@@ -55,10 +59,12 @@ class AdminCourseRevisionController extends Controller
                     $copiedLesson=$copied->lessons()->create([
                         'title' => $lesson->title,
                         'content' => $lesson->content,
+                        'content_html' => $lesson->content_html,
                         'position' => $lesson->position,
                         'duration_minutes' => $lesson->duration_minutes,
                         'is_preview' => $lesson->is_preview,
                     ]);
+                    $copiedLesson->media()->attach($lesson->media()->allRelatedIds());
                     CurriculumLessonRevision::capture($new,$copiedLesson,$request->user(),'copied');
                 }
             }

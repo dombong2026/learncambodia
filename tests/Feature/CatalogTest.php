@@ -6,15 +6,18 @@ use App\Models\Category;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\CefrLevelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\PublishesLearningCategoryFixtures;
 use Tests\TestCase;
 
 class CatalogTest extends TestCase
 {
     use RefreshDatabase;
+    use PublishesLearningCategoryFixtures;
 
     public function test_homepage_displays_published_pathways(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
 
         $this->get('/')->assertOk()
             ->assertSee('Explore English learning for every ambition.')
@@ -24,20 +27,32 @@ class CatalogTest extends TestCase
     public function test_header_tray_lists_individual_published_categories(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $this->get('/')->assertOk()->assertSee('CELPIP')->assertSee('TEYL');
     }
 
     public function test_search_returns_matching_category(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
 
         $this->get('/categories?q=IELTS')->assertOk()
             ->assertSee('International English Language Testing System');
     }
 
+    public function test_empty_category_is_hidden_even_when_marked_published(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $category = Category::where('code', 'ESL')->firstOrFail();
+        $this->get('/')->assertOk()->assertDontSee('data-category-short="ESL"', false);
+        $this->get('/categories?q=ESL')->assertOk()->assertDontSee($category->name);
+        $this->get(route('categories.show', $category))->assertNotFound();
+    }
+
     public function test_unpublished_category_is_not_public(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $category = Category::query()->where('code', 'IELTS')->firstOrFail();
         $category->update(['is_published' => false]);
 
@@ -47,6 +62,7 @@ class CatalogTest extends TestCase
     public function test_reseeding_does_not_republish_a_withdrawn_category(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $category = Category::query()->where('code', 'IELTS')->firstOrFail();
         $category->update(['is_published' => false]);
 

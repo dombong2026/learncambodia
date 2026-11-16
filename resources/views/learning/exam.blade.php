@@ -13,7 +13,7 @@
         <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 dark:border-slate-700 dark:bg-[#183657]">
             <p class="text-xs font-black uppercase tracking-wider text-[#b07d28]">{{ $course->category?->name }}</p>
             <h3 class="mt-4 text-2xl font-black">{{ $course->title }}</h3>
-            <p class="mt-4 whitespace-pre-line text-sm leading-9 text-slate-600 dark:text-slate-300">{{ $course->description }}</p>
+            <x-course-description :course="$course" class="mt-4 text-sm leading-9 text-slate-600 dark:text-slate-300" />
             <div class="mt-6 flex flex-wrap gap-3 text-xs font-bold text-slate-500 dark:text-slate-300">
                 @if($course->cefr_level)<span class="rounded-full border border-[#d9b778] px-4 py-2">CEFR {{ $course->cefr_level }}</span>@endif
                 <span class="rounded-full border border-slate-200 px-4 py-2 dark:border-slate-700">{{ $course->lessons_count }} lessons</span>

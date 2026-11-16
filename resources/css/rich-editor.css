@@ -49,3 +49,63 @@
 .rich-editor-expanded .rich-editor-source { min-height: 0; flex: 1; resize: none; }
 .rich-editor-preview-dialog { width: min(800px, 94vw); max-height: 90vh; }
 .rich-editor-preview-dialog::backdrop { background: rgba(6, 17, 35, .67); }
+
+.course-description-editor .rich-editor-toolbar {
+    gap: .25rem;
+    padding: .375rem .5rem;
+}
+.course-description-editor .rich-editor-canvas {
+    min-height: 12rem;
+}
+.course-description-editor.rich-editor-expanded .rich-editor-canvas {
+    min-height: 0;
+}
+.workspace-content .course-description-editor :is(.rich-tool-select, .rich-editor-source, [data-editor-plain]) {
+    background: transparent;
+}
+.workspace-content .course-description-editor [data-editor-visual] :is(thead, tr:hover) {
+    background: transparent;
+}
+.course-description-editor .rich-tool:has(:focus-visible) {
+    outline: 2px solid #e9b54b;
+}
+.course-description-editor .rich-tool[aria-pressed="true"] {
+    color: #1d4ed8;
+}
+.dark .course-description-editor .rich-tool[aria-pressed="true"] {
+    color: #93c5fd;
+}
+.course-description-content {
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.lesson-rich-content { min-width: 0; overflow-x: auto; }
+.lesson-rich-content iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: .5rem; }
+[data-editor-visual] figure[data-youtube] {
+    border: 1px dashed var(--ws-border);
+    border-radius: .5rem;
+    padding: .75rem;
+}
+[data-editor-visual] figure[data-youtube]::before { content: "YouTube"; font-weight: 700; }
+:is(.lesson-rich-content, [data-editor-visual]) a[data-resource] {
+    display: inline-flex;
+    border: 1px solid currentColor;
+    border-radius: .5rem;
+    padding: .25rem .65rem;
+    font-weight: 650;
+    text-decoration: none;
+}
+:is(.lesson-rich-content, [data-editor-visual]) a[data-resource]:hover { text-decoration: underline; }
+:is(.lesson-rich-content, [data-editor-visual]) pre:has(> code[data-language]) {
+    padding: .75rem 1rem;
+    border: 1px solid var(--ws-border, #aebed0);
+    border-radius: .5rem;
+}
+:is(.lesson-rich-content, [data-editor-visual]) pre > code[data-language]::before {
+    content: attr(data-language);
+    display: block;
+    margin-bottom: .35rem;
+    font-size: .75rem;
+    font-weight: 700;
+}

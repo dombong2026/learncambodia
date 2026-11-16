@@ -37,4 +37,17 @@ class Category extends Model
     {
         return $this->hasMany(Course::class);
     }
+
+    public function articles(): HasMany
+    {
+        return $this->hasMany(ContentEntry::class)->publishedArticles();
+    }
+
+    public function scopeVisibleInCatalog(Builder $query): Builder
+    {
+        return $query->published()->where(function (Builder $content): void {
+            $content->whereHas('courses', fn (Builder $courses) => $courses->discoverable())
+                ->orWhereHas('articles');
+        });
+    }
 }

@@ -5,13 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
+    public const FEATURED_FIELDS = ['featured_kind', 'featured_media_id', 'featured_value', 'featured_alt'];
+
     protected $fillable = [
-        'category_id', 'slug', 'title', 'summary', 'description',
+        ...self::FEATURED_FIELDS,
+        'category_id', 'slug', 'title', 'summary', 'description', 'description_html',
         'cefr_level', 'delivery_mode', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
         'source_course_id', 'revision_number', 'superseded_at',
@@ -20,6 +24,16 @@ class Course extends Model
     protected function casts(): array
     {
         return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+    }
+
+    public function featuredMedia(): BelongsTo
+    {
+        return $this->belongsTo(EditorMedia::class);
+    }
+
+    public function descriptionMedia(): BelongsToMany
+    {
+        return $this->belongsToMany(EditorMedia::class, 'course_description_media');
     }
 
     public function category(): BelongsTo

@@ -9,6 +9,100 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
   });
 
+  test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
+    await page.goto('/dashboard/course-builder/create?lang=en');
+    const builder = page.locator('[data-course-builder]');
+    const courseTitle = 'Builder Browser Course ' + info.project.name + ' ' + Date.now();
+    await builder.getByLabel('Course title').fill(courseTitle);
+    await builder.getByLabel('Category', { exact: true }).selectOption({ index: 1 });
+    await builder.getByLabel('Summary', { exact: true }).fill('A short English practice course.');
+    const editor = builder.getByRole('region', { name: 'Rich text editor' });
+    const visual = editor.getByRole('textbox', { name: 'Full course description' });
+    await visual.fill('A guided session on introductions.');
+    await expect(builder.getByText('Unsaved changes', { exact: true })).toBeVisible();
+    const bold = editor.getByRole('button', { name: 'Bold', exact: true });
+    await expect(bold).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await editor.getByRole('button', { name: 'HTML', exact: true }).click();
+    const source = editor.getByRole('textbox', { name: 'Edit safe HTML source' });
+    await expect(source).toHaveValue(/A guided session on introductions/);
+    await source.fill('<h2>Introductions</h2><p>Practise greetings <strong>aloud</strong>.</p><table><tbody><tr><td>Welcome</td><td>Goodbye</td></tr></tbody></table><script>window.__unsafe=1</script>');
+    await editor.getByRole('button', { name: 'Text', exact: true }).click();
+    await expect(visual.locator('strong')).toHaveText('aloud');
+    await expect(visual.locator('script')).toHaveCount(0);
+    await visual.getByRole('cell', { name: 'Welcome' }).click();
+    await editor.getByRole('button', { name: 'Add row', exact: true }).click();
+    await expect(visual.getByRole('row')).toHaveCount(2);
+    await visual.getByRole('cell', { name: 'Welcome' }).click();
+    await editor.getByRole('button', { name: 'Remove table', exact: true }).click();
+    await expect(visual.getByRole('table')).toHaveCount(0);
+    await editor.getByRole('button', { name: 'Preview', exact: true }).click();
+    const preview = editor.getByRole('dialog', { name: 'Live content preview' });
+    await expect(preview.getByRole('heading', { name: 'Introductions', exact: true })).toBeVisible();
+    await preview.getByRole('button', { name: 'Close preview' }).click();
+    await builder.getByRole('button', { name: /Create draft & continue/ }).click();
+    await expect(page).toHaveURL(/step=media/);
+
+    await expect(builder).toHaveAttribute('data-builder-ready', 'true');
+    await builder.getByLabel('Media type').selectOption('color');
+    await expect(builder.getByText('Unsaved changes', { exact: true })).toBeVisible();
+    page.once('dialog', dialog => dialog.dismiss());
+    await builder.getByRole('link', { name: 'Back', exact: false }).filter({ hasText: '← Back' }).click();
+    await expect(page).toHaveURL(/step=media/);
+    await builder.getByRole('button', { name: /Save & continue/ }).click();
+    await expect(page).toHaveURL(/step=curriculum/);
+    await builder.getByRole('link', { name: '+ Add module' }).click();
+    await builder.getByLabel('Module title').fill('Introductions');
+    await builder.getByRole('button', { name: 'Save changes' }).click();
+    await builder.getByRole('link', { name: '+ Add lesson' }).click();
+    await builder.getByLabel('Lesson title').fill('Say hello');
+    const lessonEditor = builder.locator('[data-editor-context="lesson"]');
+    const lessonContent = lessonEditor.getByRole('textbox', { name: 'Lesson content' });
+    await lessonContent.fill('Hello, my name is Samith.');
+    await lessonEditor.getByRole('button', { name: 'YouTube', exact: true }).click();
+    let insert = lessonEditor.getByRole('dialog', { name: 'Insert YouTube video' });
+    await insert.getByLabel('URL or video ID').fill('https://youtu.be/dQw4w9WgXcQ');
+    await insert.getByLabel('Label', { exact: true }).fill('Lesson video');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+    await expect(lessonContent.locator('figure[data-youtube]')).toHaveText('Lesson video');
+
+    await lessonEditor.getByRole('button', { name: 'Code', exact: true }).click();
+    insert = lessonEditor.getByRole('dialog', { name: 'Insert code block' });
+    await insert.getByLabel('Language').selectOption('python');
+    await insert.getByLabel('Code', { exact: true }).fill('print("Hello!")');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+
+    await lessonEditor.getByRole('button', { name: 'Resource button', exact: true }).click();
+    insert = lessonEditor.getByRole('dialog', { name: 'Insert resource button' });
+    await insert.getByLabel('Label', { exact: true }).fill('Study guide');
+    await insert.getByLabel('URL or video ID').fill('/reference');
+    await insert.getByRole('button', { name: 'Insert', exact: true }).click();
+    await expect(lessonContent.locator('a[data-resource]')).toHaveText('Study guide');
+
+    await lessonEditor.getByLabel('Upload lesson file').setInputFiles({
+      name: 'lesson-handout.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4\n%%EOF'),
+    });
+    await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
+    await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
+    await expect(lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' })).toHaveValue(/data-language="python"/);
+    await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
+    await builder.getByRole('button', { name: 'Save changes' }).click();
+    await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveCount(1);
+    await expect(lessonContent).toContainText('Hello, my name is Samith.');
+    await expect(lessonContent.locator('code[data-language="python"]')).toHaveText('print("Hello!")');
+    await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
+    await lessonContent.locator('figure[data-youtube]').click();
+    await lessonEditor.getByRole('button', { name: 'Remove element', exact: true }).click();
+    await expect(lessonContent.locator('figure[data-youtube]')).toHaveCount(0);
+    await builder.getByRole('button', { name: /Save & continue/ }).click();
+    await expect(page).toHaveURL(/step=quizzes/);
+    await builder.getByRole('link', { name: /Continue/ }).click();
+    await expect(builder.getByRole('heading', { name: 'Review & Submit' })).toBeVisible();
+    await expect(builder.locator('.course-description-content strong')).toHaveText('aloud');
+    await expect(builder.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
+  });
+
   test('six forms show the usable editor, mode switch and contextual sidebar', async ({ page }) => {
     for (const kind of ['pages', 'posts', 'policies', 'faqs', 'help-articles']) {
       await page.goto('/dashboard/editorial/' + kind + '/create?lang=en');
@@ -99,6 +193,120 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const featured = page.getByRole('img', { name: 'Sample learning graphic' });
     await expect(featured).toBeVisible();
     await expect.poll(() => featured.evaluate(image => image.naturalWidth)).toBe(1);
+  });
+
+  test('media grid uploads, previews, renames and deletes an image', async ({ page }, info) => {
+    await page.goto('/dashboard/media-library?lang=en');
+    const file = 'library-' + info.project.name + '-' + Date.now() + '.png';
+    await page.getByRole('button', { name: 'Upload media' }).click();
+    const upload = page.getByRole('dialog', { name: 'Upload media' });
+    await upload.getByLabel('Image or video').setInputFiles({
+      name: file,
+      mimeType: 'image/png',
+      buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQsisEAAEnAMIfy+WiAAAAAElFTkSuQmCC', 'base64'),
+    });
+    await upload.getByRole('button', { name: 'Upload', exact: true }).click();
+    await expect(page.getByText('Media uploaded.', { exact: true })).toBeVisible();
+    const search = page.getByRole('search');
+    await search.getByLabel('Title').fill(file);
+    await search.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+    const preview = page.getByRole('dialog', { name: file });
+    await expect(preview).toBeVisible();
+    await expect.poll(() => preview.getByRole('img').evaluate(image => image.naturalWidth)).toBe(1);
+    await page.keyboard.press('Escape');
+    await expect(preview).toBeHidden();
+
+    const actions = page.locator('article[data-library-item]').filter({ hasText: file }).locator('summary');
+    await actions.click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    const edit = page.getByRole('dialog', { name: 'Edit media' });
+    await edit.getByLabel('Title').fill(file + ' renamed');
+    await edit.getByRole('button', { name: 'Save changes' }).click();
+    await expect(page.getByText('Media updated.', { exact: true })).toBeVisible();
+    await actions.click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    const remove = page.getByRole('dialog', { name: 'Delete media' });
+    await remove.getByRole('button', { name: 'Delete media', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'No matching media' })).toBeVisible();
+  });
+
+  test('media video preview uses transparent speed and hides controls when inactive', async ({ page }, info) => {
+    await page.goto('/dashboard/media-library?lang=en');
+    const file = 'compact-player-' + info.project.name + '-' + Date.now() + '.webm';
+    await page.getByRole('button', { name: 'Upload media' }).click();
+    const upload = page.getByRole('dialog', { name: 'Upload media' });
+    await upload.getByLabel('Image or video').setInputFiles({
+      name: file,
+      mimeType: 'video/webm',
+      buffer: Buffer.from('GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAJnEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEjTbuMU6uEHFO7a1OsggJR7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjEuNy4xMDNXQYxMYXZmNjEuNy4xMDNEiYhAp3AAAAAAABZUrmvIrgEAAAAAAAA/14EBc8WI6p6I8dTtfZOcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4Q7msoA4JCwgSC6gSCagQJVsIRVuYEBElTDZ/tzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYxLjcuMTAzc3PWY8CLY8WI6p6I8dTtfZNnyKFFo4dFTkNPREVSRIeUTGF2YzYxLjE5LjEwMSBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAzLjAwMDAwMDAwMAAfQ7Z1QKjngQCjv4EAAIDQAgCdASogACAAAEcIhYWImYSIAgICdaoD+AIIISmecP79IUX/8Bf/gL/8Bf/+Av//fAn3gT7wJ/tsAKOwgQPoANEBAAEQEAAYAB5X9AwAQQ4A/v0hRf/wF/+Av/wF//4C//98CfeBPvAn+2wAo7CBB9AA0QEAARAQABgAHlf0DABBDgD+/SFF//AX/4C//AX//gL//3wJ94E+8Cf7bAAcU7trkbuPs4EAt4r3gQHxggGj8IED', 'base64'),
+    });
+    await upload.getByRole('button', { name: 'Upload', exact: true }).click();
+    await page.getByRole('search').getByLabel('Title').fill(file);
+    await page.getByRole('search').getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+
+    const dialog = page.getByRole('dialog', { name: file });
+    const player = dialog.locator('[data-compact-video]');
+    const controls = player.locator('[data-video-controls]');
+    const speed = dialog.getByRole('button', { name: 'Speed', exact: true });
+    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '1');
+    await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await speed.click();
+    await dialog.getByRole('button', { name: '1.5×', exact: true }).click();
+    await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
+
+    const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
+    await volumeButton.scrollIntoViewIfNeeded();
+    const volumeButtonBox = await volumeButton.boundingBox();
+    await page.mouse.move(volumeButtonBox.x + volumeButtonBox.width / 2, volumeButtonBox.y + volumeButtonBox.height / 2);
+    await volumeButton.click();
+    await expect(volumeButton).toHaveAttribute('aria-expanded', 'true');
+    const volume = dialog.getByRole('slider', { name: 'Volume level' });
+    if (await volume.isVisible()) {
+      const bounds = await volume.boundingBox();
+      expect(bounds.height).toBeGreaterThan(bounds.width);
+      await page.mouse.click(bounds.x + bounds.width / 2, bounds.y + bounds.height * .65);
+      const adjustedVolume = await player.locator('video').evaluate(video => video.volume);
+      expect(adjustedVolume).toBeGreaterThan(0.2);
+      expect(adjustedVolume).toBeLessThan(0.5);
+      await volume.fill('35');
+      await expect.poll(() => player.locator('video').evaluate(video => Math.round(video.volume * 100))).toBe(35);
+      await expect(volume).toHaveAttribute('aria-valuetext', '35%');
+      await dialog.getByRole('button', { name: 'Mute', exact: true }).click();
+      await expect(volume).toHaveValue('0');
+      await dialog.getByRole('button', { name: 'Unmute', exact: true }).click();
+      await expect(volume).toHaveValue('35');
+    } else {
+      await expect(dialog.getByText('Use your device volume controls.')).toBeVisible();
+    }
+    await volumeButton.click();
+    await expect(volumeButton).toHaveAttribute('aria-expanded', 'false');
+
+    const settings = dialog.getByRole('button', { name: 'Settings', exact: true });
+    await settings.click();
+    const loop = dialog.getByRole('checkbox', { name: 'Loop video' });
+    await loop.check();
+    await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(true);
+    await loop.uncheck();
+    await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(false);
+    await settings.click();
+    await expect(settings).toHaveAttribute('aria-expanded', 'false');
+    await expect(player.locator('input[type=file], [download]')).toHaveCount(0);
+    await expect(player.getByRole('button', { name: /upload|download/i })).toHaveCount(0);
+
+    await player.dispatchEvent('pointerleave', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '0', { timeout: 500 });
+    await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
+    await expect(controls).toHaveCSS('opacity', '1');
+    await expect(controls).toHaveCSS('opacity', '0', { timeout: 3000 });
+    await dialog.getByRole('button', { name: 'Close preview' }).click();
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
+    await expect(speed).toHaveAttribute('title', 'Speed (1×)');
+    await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1);
   });
 
   test('ticket rich content is saved to a private conversation', async ({ page }, info) => {

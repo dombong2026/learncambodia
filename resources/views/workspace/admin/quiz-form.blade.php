@@ -3,7 +3,7 @@
 @section('heading', 'Practice Quiz Builder')
 @section('description', 'Author four-option, single-answer practice questions. These are educational exercises, not official language tests or certifications.')
 @section('content')
-<a href="{{ route('admin.course-builder.edit', $course) }}" class="inline-block rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">← Return to course</a>
+<a href="{{ route('admin.course-builder.edit', ['course' => $course, 'step' => 'quizzes']) }}" class="inline-block rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">← Return to practice quizzes</a>
 <div class="mt-6 max-w-5xl space-y-6">
     <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-extrabold">Quiz settings</h2>

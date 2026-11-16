@@ -39,7 +39,7 @@ final class CourseReadiness
                 'position'=>$module->position,
                 'lessons'=>$module->lessons->map(fn($lesson)=>$lesson->only([
                     'id','title','content','position','duration_minutes','is_preview',
-                ]))->values()->all(),
+                ]) + (filled($lesson->content_html) ? $lesson->only('content_html') : []))->values()->all(),
             ])->values()->all(),
             'quizzes'=>$course->quizzes->map(fn($quiz)=>[
                 'id'=>$quiz->id,'title'=>$quiz->title,'instructions'=>$quiz->instructions,
@@ -50,6 +50,15 @@ final class CourseReadiness
                 ]))->values()->all(),
             ])->values()->all(),
         ];
+
+        // Preserve existing review fingerprints for courses without covers.
+        if ($course->featured_kind !== null) {
+            $data['course'] += $course->only(Course::FEATURED_FIELDS);
+        }
+
+        if (filled($course->description_html)) {
+            $data['course']['description_html'] = $course->description_html;
+        }
 
         return hash('sha256',json_encode($data,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
     }

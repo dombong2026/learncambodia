@@ -22,6 +22,9 @@
             <div class="mt-10 border-t border-slate-200 pt-6 text-xs leading-8 text-slate-500 dark:border-slate-700">Content on this page is for education and does not constitute an official examination result or qualification.</div>
         </article>
         <aside class="space-y-5 lg:sticky lg:top-40">
+            @if($article->category)
+                <a href="{{ route('categories.show', $article->category) }}" class="block rounded-2xl border border-slate-200 p-4 text-sm font-bold hover:underline dark:border-slate-700">{{ $article->category->name }}</a>
+            @endif
             <div class="rounded-3xl border border-slate-200 bg-[#f5f7fa] p-6 dark:border-slate-700 dark:bg-[#19395a]">
                 <h2 class="text-lg font-black text-[#10345d] dark:text-white">{{ $a['outline_heading'] }}</h2>
                 <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">Jump between article paragraphs</p>
