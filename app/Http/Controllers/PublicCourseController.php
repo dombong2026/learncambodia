@@ -52,7 +52,7 @@ class PublicCourseController extends Controller
             'courses'=>$courses,'search'=>$search,'category'=>$category,
             'level'=>$level,'group'=>$group,'mode'=>$mode,
             'featuredInstructors'=>$featuredInstructors,
-            'categories'=>Category::published()->orderBy('sort_order')
+            'categories'=>Category::published()->whereHas('courses', fn ($courses) => $courses->discoverable())->orderBy('sort_order')
                 ->get(['id','slug','name','code']),
         ]);
     }

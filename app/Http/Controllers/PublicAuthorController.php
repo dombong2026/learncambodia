@@ -16,23 +16,20 @@ final class PublicAuthorController extends Controller
         $data=$request->validate(['q'=>['nullable','string','max:80']]);
         $search=trim($data['q']??'');
 
-        $articles=ContentEntry::query()->where('type','post')
-            ->where('status','published')
+        $articles=ContentEntry::query()->publishedArticles()
             ->when($search!=='',fn($q)=>$q->where(fn($s)=>
                 $s->where('title','like','%'.$search.'%')
                     ->orWhere('summary','like','%'.$search.'%')))
             ->orderByDesc('id')->paginate(9)->withQueryString();
 
-        $approvedAuthorIds=ContentEntry::query()->where('type','post')
-            ->where('status','published')->distinct()->pluck('created_by');
+        $approvedAuthorIds=ContentEntry::query()->publishedArticles()->distinct()->pluck('created_by');
         $authors=PublicProfile::visible()->where('kind','instructor')
             ->whereIn('user_id',$approvedAuthorIds)
             ->orderBy('display_name')->limit(8)->get();
 
-        $articleCount=ContentEntry::query()->where('type','post')
-            ->where('status','published')->count();
+        $articleCount=ContentEntry::query()->publishedArticles()->count();
         $courseCount=Course::discoverable()->count();
-        $categoryCount=Category::published()->count();
+        $categoryCount=Category::visibleInCatalog()->count();
 
         return view('authors.index',compact('articles','authors','articleCount','courseCount','categoryCount','search'));
     }
@@ -41,8 +38,7 @@ final class PublicAuthorController extends Controller
     {
         abort_unless(PublicProfile::visible()->where('kind','instructor')
             ->whereKey($profile->id)->exists(),404);
-        $articles=ContentEntry::query()->where('type','post')
-            ->where('status','published')->where('created_by',$profile->user_id)
+        $articles=ContentEntry::query()->publishedArticles()->where('created_by',$profile->user_id)
             ->orderByDesc('id')->paginate(9);
         abort_if($articles->total()===0,404);
 

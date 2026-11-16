@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
 use Illuminate\Http\Request;
@@ -11,32 +12,35 @@ class PublicArticleController extends Controller
 {
     public function index(Request $request): View
     {
-        $filters = $request->validate(['q'=>['nullable','string','max:80']]);
+        $filters = $request->validate(['q'=>['nullable','string','max:80'], 'category'=>['nullable','string','max:200']]);
         $search = trim((string) ($filters['q'] ?? ''));
+        $category = !empty($filters['category'])
+            ? Category::published()->whereHas('articles')->where('slug', $filters['category'])->firstOrFail()
+            : null;
 
-        $articles = ContentEntry::query()->where('type','post')
-            ->where('status','published')
+        $published = ContentEntry::query()->publishedArticles()
+            ->when($category, fn ($query) => $query->where('category_id', $category->id));
+        $articles = (clone $published)->with('featuredMedia')
             ->when($search !== '',fn($query)=>$query
                 ->where(fn($inner)=>$inner->where('title','like','%'.$search.'%')
                     ->orWhere('summary','like','%'.$search.'%')))
             ->orderByDesc('id')->paginate(10)->withQueryString();
 
 
-        $featured=ContentEntry::query()->where('type','post')->where('status','published')
-            ->orderByDesc('id')->first();
-        $publishedCount=ContentEntry::query()->where('type','post')
-            ->where('status','published')->count();
+        $featured = (clone $published)->with('featuredMedia')->orderByDesc('id')->first();
+        $publishedCount = $published->count();
 
-        return view('articles.index',compact('articles','search','featured','publishedCount'));
+        return view('articles.index',compact('articles','search','featured','publishedCount','category'));
     }
 
     public function show(string $article): View
     {
-        $article = ContentEntry::query()->where('type','post')->where('status','published')
+        $article = ContentEntry::query()->publishedArticles()->with(['category', 'featuredMedia'])
             ->where('slug',$article)->firstOrFail();
 
 
-        $related=ContentEntry::query()->where('type','post')->where('status','published')
+        $related=ContentEntry::query()->publishedArticles()
+            ->when($article->category_id, fn ($query) => $query->where('category_id', $article->category_id))
             ->whereKeyNot($article->id)->orderByDesc('id')->limit(4)->get();
         $author=PublicProfile::visible()->where('kind','instructor')
             ->where('user_id',$article->created_by)->first();

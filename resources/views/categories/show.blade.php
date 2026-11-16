@@ -17,6 +17,7 @@
                 <h1 class="mt-4 max-w-4xl break-words text-4xl font-black leading-tight sm:text-5xl xl:text-6xl">{{ $category->name }}</h1>
                 <p class="mt-6 max-w-3xl text-base leading-9 text-[#d9e5f2]">{{ $category->description }}</p>
                 <div class="mt-8 flex flex-wrap gap-3">
+                    @if($articles->total())<a href="#category-articles" class="rounded-xl bg-[#eebd63] px-6 py-3 text-sm font-black text-[#11345d] hover:bg-[#ffdc95]">{{ __('frontend.nav_articles') }}</a>@endif
                     <a href="#category-courses" class="rounded-xl bg-[#eebd63] px-6 py-3 text-sm font-black text-[#11345d] hover:bg-[#ffdc95]">{{ __('longpage.view_courses') }}</a>
                     <a href="{{ route('categories.index') }}" class="rounded-xl border border-white/30 px-6 py-3 text-sm font-bold hover:bg-white/10">{{ __('longpage.all_categories') }}</a>
                 </div>
@@ -119,22 +120,16 @@
 @endif
 
 @if($articles->isNotEmpty())
-<section class="border-y border-slate-200 bg-[#f1f4f9] py-16 dark:border-slate-800 dark:bg-[#102e50]">
+<section id="category-articles" class="scroll-mt-28 border-y border-slate-200 bg-[#f1f4f9] py-16 dark:border-slate-800 dark:bg-[#102e50]">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div class="flex flex-wrap items-end justify-between gap-5"><h2 class="text-3xl font-black text-[#10325a] dark:text-white">{{ __('longpage.latest_articles') }}</h2>
-            <a href="{{ route('articles.index') }}" class="text-sm font-black text-[#b17b22]">{{ __('longpage.view_resources') }}</a></div>
+            <a href="{{ route('articles.index', ['category' => $category->slug]) }}" class="text-sm font-black text-[#b17b22]">{{ __('longpage.view_resources') }}</a></div>
         <div class="mt-8 grid gap-5 md:grid-cols-3">
-            @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dcb25e] dark:border-slate-700 dark:bg-[#183b60]"><span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span>
-                    <p class="text-xs font-extrabold uppercase tracking-widest text-[#ad7624]">{{ __('longpage.approved_article') }}</p>
-                    <h3 class="mt-4 text-xl font-black text-[#12345e] group-hover:underline dark:text-white">{{ $article->title }}</h3>
-                    <p class="mt-3 flex-1 text-sm leading-8 text-slate-500 dark:text-slate-300">{{ $article->summary }}</p>
-                    <span class="mt-5 text-xs font-black text-[#b0812d]">{{ __('frontend.read_article') }}</span>
-                </a>
-            @empty
-                <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-8 text-sm text-slate-500 dark:border-slate-700">{{ __('frontend.no_articles') }}</p>
-            @endforelse
+            @foreach($articles as $article)
+                <x-public-article-card :article="$article"/>
+            @endforeach
         </div>
+        <div class="mt-8">{{ $articles->withQueryString()->fragment('category-articles')->links() }}</div>
     </div>
 </section>
 @endif

@@ -192,12 +192,14 @@ final class EditorMediaController extends Controller
         $viewer = $request->user();
         if ($media->context === 'library') {
             $published = ContentEntry::query()->where('featured_media_id', $media->id)
-                ->where('status', 'published')->whereIn('featured_kind', ['image', 'video'])->exists();
+                ->where('status', 'published')->whereIn('featured_kind', ['image', 'video'])
+                ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
             abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&
                 ContentEntry::query()->whereKey($media->content_entry_id)
-                    ->where('status', 'published')->whereIn('type', [...ContentEntry::DIRECT_PUBLICATION_TYPES, 'faq'])->exists();
+                    ->where('status', 'published')->whereIn('type', [...ContentEntry::DIRECT_PUBLICATION_TYPES, 'faq'])
+                    ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
             abort_unless($approved || ($viewer && $viewer->role === 'admin'), 403);
         } else {
             $ticket = $media->support_ticket_id

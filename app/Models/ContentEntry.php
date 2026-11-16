@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,7 +19,7 @@ class ContentEntry extends Model
         'type', 'slug', 'title', 'summary', 'body', 'body_html', 'seo_title', 'seo_description',
         'status', 'created_by', 'updated_by', 'published_at',
         'featured_kind', 'featured_media_id', 'featured_value', 'featured_alt',
-        'policy_version', 'policy_effective_on',
+        'policy_version', 'policy_effective_on', 'category_id',
     ];
 
     protected function casts(): array
@@ -29,6 +30,25 @@ class ContentEntry extends Model
     public function featuredMedia(): BelongsTo
     {
         return $this->belongsTo(EditorMedia::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function scopePublishedArticles(Builder $query): Builder
+    {
+        return $query->where('type', 'post')->where('status', 'published')
+            ->where(fn (Builder $visibility) => $visibility->visibleArticleCategory());
+    }
+
+    public function scopeVisibleArticleCategory(Builder $query): Builder
+    {
+        return $query
+            ->where(fn (Builder $dates) => $dates->whereNull('published_at')->orWhere('published_at', '<=', now()))
+            ->where(fn (Builder $entries) => $entries->whereNull('category_id')
+                ->orWhereHas('category', fn (Builder $categories) => $categories->published()));
     }
 
     public function policyRevisions(): HasMany

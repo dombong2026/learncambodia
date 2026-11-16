@@ -44,9 +44,9 @@ class InformationController extends Controller
 
         if ($page==='about') {
             $courseCount=Course::discoverable()->count();
-            $categoryCount=Category::published()->count();
+            $categoryCount=Category::visibleInCatalog()->count();
             $cefrLevelCount=CefrLevel::query()->count();
-            $publishedArticles=ContentEntry::query()->where('type','post')->where('status','published')->count();
+            $publishedArticles=ContentEntry::query()->publishedArticles()->count();
             $instructors=PublicProfile::visible()->where('kind','instructor')
                 ->orderBy('display_name')->limit(4)->get();
 

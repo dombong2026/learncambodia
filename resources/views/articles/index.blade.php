@@ -29,6 +29,7 @@
 </x-learning-section>
 <x-learning-section id="article-directory" :title="$a['articles_heading']" eyebrow="Reading library" subtitle="Filter by real article titles and summaries. Only published entries are displayed." tone="mist">
     <form action="{{ route('articles.index') }}#article-directory" method="GET" role="search" class="flex max-w-3xl flex-wrap gap-3">
+        @if($category)<input type="hidden" name="category" value="{{ $category->slug }}">@endif
         <label for="blog-search" class="sr-only">Search published articles</label>
         <input id="blog-search" name="q" type="search" maxlength="80" value="{{ $search }}" placeholder="Search learning articles and tips" class="min-w-[200px] flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm dark:border-slate-700 dark:bg-[#173451]">
         <button type="submit" class="rounded-xl bg-[#11365f] px-6 py-3.5 text-sm font-black text-white">Search</button>
@@ -36,7 +37,7 @@
     </form>
     <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @forelse($articles as $article)
-            <x-learning-card :href="route('articles.show',$article->slug)" :title="$article->title" :description="$article->summary" icon="newspaper" eyebrow="Published article" meta="Educational reading" action="Read article"/>
+            <x-public-article-card :article="$article"/>
         @empty
             <p class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-sm text-slate-600 dark:border-slate-700 dark:bg-[#153254] dark:text-slate-300">No published articles match your search. <a href="{{ route('articles.index') }}" class="font-bold text-[#b27c25] underline">Browse all articles</a>.</p>
         @endforelse

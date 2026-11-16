@@ -28,7 +28,7 @@ final class LearningHubController extends Controller
 
     private function articles(string $search='')
     {
-        return ContentEntry::query()->where('type','post')->where('status','published')
+        return ContentEntry::query()->publishedArticles()
             ->when($search!=='',fn($q)=>$q->where(fn($inner)=>$inner
                 ->where('title','like','%'.$search.'%')
                 ->orWhere('summary','like','%'.$search.'%')));
@@ -46,7 +46,7 @@ final class LearningHubController extends Controller
         $articles=$this->articles($search)->orderByDesc('id')->paginate(9)->withQueryString();
         $courses=Course::discoverable()->with('category')->withCount('lessons')
             ->orderByDesc('published_at')->limit(6)->get();
-        $categories=Category::published()->orderBy('sort_order')->limit(8)->get();
+        $categories=Category::visibleInCatalog()->orderBy('sort_order')->limit(8)->get();
         return view('learning.library',compact('search','articles','courses','categories'));
     }
 
@@ -54,7 +54,7 @@ final class LearningHubController extends Controller
     {
         $search=$this->search($request);
         $articles=$this->articles($search)->orderByDesc('id')->paginate(9)->withQueryString();
-        $categories=Category::published()->orderBy('sort_order')->limit(8)->get();
+        $categories=Category::visibleInCatalog()->orderBy('sort_order')->limit(8)->get();
         return view('learning.reading',compact('search','articles','categories'));
     }
 

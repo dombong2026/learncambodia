@@ -7,11 +7,13 @@ use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Tests\Support\PublishesLearningCategoryFixtures;
 use Tests\TestCase;
 
 class DeveloperApiTest extends TestCase
 {
     use RefreshDatabase;
+    use PublishesLearningCategoryFixtures;
 
     private function developer(): User
     {
@@ -71,6 +73,7 @@ class DeveloperApiTest extends TestCase
     public function test_valid_developer_token_only_reads_published_catalogue(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         Category::where('code', 'IELTS')->update(['is_published' => false]);
         $developer = $this->developer();
         $token = $developer->createToken('Read only', ['catalog:read'], now()->addDay());

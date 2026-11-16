@@ -6,11 +6,13 @@ use App\Models\Category;
 use App\Support\CategoryVisual;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\PublishesLearningCategoryFixtures;
 use Tests\TestCase;
 
 final class FrontendExperienceRefinementTest extends TestCase
 {
     use RefreshDatabase;
+    use PublishesLearningCategoryFixtures;
 
     public function test_category_art_is_meaningful_and_safe_for_unknown_codes(): void
     {
@@ -38,6 +40,7 @@ final class FrontendExperienceRefinementTest extends TestCase
     public function test_category_search_is_preserved_when_switching_group_filters(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
 
         $this->get('/categories?q=IELTS&group=exam-preparation')
             ->assertOk()
@@ -63,6 +66,7 @@ final class FrontendExperienceRefinementTest extends TestCase
     public function test_category_filtering_and_footer_links_are_grounded_in_specific_searches(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
 
         $response = $this->get('/categories?lang=en')->assertOk();
         $response->assertSee('premium-corner-icon', false);
@@ -92,6 +96,7 @@ final class FrontendExperienceRefinementTest extends TestCase
     public function test_empty_catalog_uses_compact_status_without_unapproved_courses_or_people(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $category = Category::query()->where('code', 'IELTS')->firstOrFail();
 
         $this->get('/categories/'.$category->slug)->assertOk()
@@ -112,6 +117,7 @@ final class FrontendExperienceRefinementTest extends TestCase
     public function test_category_group_unit_is_singular_or_plural_in_each_locale(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         foreach (['en', 'km', 'zh'] as $locale) {
             $this->get('/categories?lang='.$locale)->assertOk()
                 ->assertDontSee('longpage.category_one')
@@ -121,6 +127,7 @@ final class FrontendExperienceRefinementTest extends TestCase
     public function test_learning_focus_cards_center_large_icons_titles_and_real_group_counts(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
         $response = $this->get('/categories?lang=en')->assertOk()
             ->assertSee('data-learning-focus-card', false)
             ->assertSee('data-learning-focus-icon', false)

@@ -96,8 +96,7 @@ final class Appearance
         if (!$route || !\Illuminate\Support\Facades\Route::has($route)) return null;
 
         if ($section==='single_blog') {
-            $article=\App\Models\ContentEntry::query()->where('type','post')
-                ->where('status','published')->orderByDesc('id')->first();
+            $article=\App\Models\ContentEntry::query()->publishedArticles()->orderByDesc('id')->first();
             return $article ? route('articles.show',$article->slug) : route('articles.index');
         }
         if ($section==='single_course_exam') {
@@ -106,7 +105,7 @@ final class Appearance
             return $course ? route('learning.exam.show',$course->slug) : route('learning.exams');
         }
         if ($section==='single_category') {
-            $category=\App\Models\Category::published()->orderBy('sort_order')->first();
+            $category=\App\Models\Category::visibleInCatalog()->orderBy('sort_order')->first();
             return $category ? route('categories.show',$category) : route('categories.index');
         }
 
