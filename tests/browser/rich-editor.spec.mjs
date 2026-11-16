@@ -163,6 +163,24 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await speed.selectOption('1.5');
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
 
+    const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
+    await volumeButton.click();
+    const volume = dialog.getByRole('slider', { name: 'Volume level' });
+    if (await volume.isVisible()) {
+      await expect(volume).toHaveCSS('writing-mode', 'vertical-lr');
+      await volume.fill('35');
+      await expect.poll(() => player.locator('video').evaluate(video => video.volume)).toBe(0.35);
+      await expect(volume).toHaveAttribute('aria-valuetext', '35%');
+      await dialog.getByRole('button', { name: 'Mute', exact: true }).click();
+      await expect(volume).toHaveValue('0');
+      await dialog.getByRole('button', { name: 'Unmute', exact: true }).click();
+      await expect(volume).toHaveValue('35');
+    } else {
+      await expect(dialog.getByText('Use your device volume controls.')).toBeVisible();
+    }
+    await volumeButton.click();
+    await expect(volumeButton).toHaveAttribute('aria-expanded', 'false');
+
     await player.dispatchEvent('pointerleave', { pointerType: 'mouse' });
     await expect(controls).toHaveCSS('opacity', '0', { timeout: 500 });
     await player.dispatchEvent('pointermove', { pointerType: 'mouse' });

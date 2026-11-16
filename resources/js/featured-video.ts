@@ -15,6 +15,9 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
     const time = player.querySelector<HTMLElement>('[data-video-time]')!;
     const status = player.querySelector<HTMLElement>('[data-video-status]')!;
     const speed = player.querySelector<HTMLSelectElement>('[data-video-speed]');
+    const volume = player.querySelector<HTMLInputElement>('[data-video-volume]');
+    const volumeValue = player.querySelector<HTMLOutputElement>('[data-video-volume-value]');
+    let previousVolume = video.volume || 1;
 
     function setLabel(button: HTMLButtonElement, label: string): void {
         button.title = label;
@@ -26,12 +29,21 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         const seekable = Number.isFinite(duration) && duration > 0;
         seek.disabled = !seekable;
         seek.value = String(seekable ? Math.round(video.currentTime / duration * 1000) : 0);
+        if (volume) seek.style.setProperty('--video-progress', Number(seek.value) / 10 + '%');
         seek.setAttribute('aria-valuetext', formatTime(video.currentTime));
         time.textContent = formatTime(video.currentTime) + ' / ' + formatTime(duration);
         setLabel(play, video.paused ? 'Play' : 'Pause');
-        setLabel(mute, video.muted ? 'Unmute' : 'Mute');
+        const silent = video.muted || (volume !== null && video.volume === 0);
+        setLabel(mute, silent ? 'Unmute' : 'Mute');
         player.dataset.playing = String(!video.paused);
-        player.dataset.muted = String(video.muted);
+        player.dataset.muted = String(silent);
+        if (volume && volumeValue) {
+            const level = Math.round((silent ? 0 : video.volume) * 100);
+            volume.value = String(level);
+            volume.setAttribute('aria-valuetext', level + '%');
+            volume.style.setProperty('--video-progress', level + '%');
+            volumeValue.textContent = level + '%';
+        }
     }
 
     function notify(message: string): void {
@@ -46,11 +58,33 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         } else video.pause();
     }
 
-    if (speed) {
+    if (speed && volume && volumeValue) {
+        const volumeMenu = player.querySelector<HTMLElement>('[data-video-volume-menu]')!;
+        const volumeToggle = volumeMenu.querySelector<HTMLButtonElement>('[data-video-volume-toggle]')!;
+        const volumePanel = volumeMenu.querySelector<HTMLElement>('[data-video-volume-panel]')!;
+        const deviceVolume = volumePanel.querySelector<HTMLElement>('[data-video-device-volume]')!;
         let idleTimer: ReturnType<typeof setTimeout>;
+        let adjustingVolume = false;
+
+        function setVolumePanel(open: boolean): void {
+            volumePanel.hidden = !open;
+            volumeToggle.setAttribute('aria-expanded', String(open));
+        }
+
+        const detectVolumeSupport = () => {
+            const current = video.volume;
+            const probe = current === 0.5 ? 0.6 : 0.5;
+            video.volume = probe;
+            const canAdjust = video.volume === probe;
+            video.volume = current;
+            volume.hidden = volumeValue.hidden = !canAdjust;
+            deviceVolume.hidden = canAdjust;
+        };
 
         function hideControls(): void {
             clearTimeout(idleTimer);
+            if (adjustingVolume || volumePanel.matches(':has(:focus-visible)')) return;
+            setVolumePanel(false);
             delete player.dataset.controlsActive;
         }
 
@@ -58,7 +92,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (player.hidden) return;
             clearTimeout(idleTimer);
             player.dataset.controlsActive = 'true';
-            idleTimer = setTimeout(hideControls, 1200);
+            idleTimer = setTimeout(hideControls, volumePanel.hidden ? 1200 : 3500);
         }
 
         player.addEventListener('previewopen', () => {
@@ -66,6 +100,38 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             video.playbackRate = 1;
             speed.value = '1';
             status.hidden = true;
+            setVolumePanel(false);
+            showControls();
+        });
+        volumeToggle.addEventListener('click', () => {
+            if (volumePanel.hidden) detectVolumeSupport();
+            setVolumePanel(volumePanel.hidden);
+            showControls();
+        });
+        volume.addEventListener('pointerdown', () => { adjustingVolume = true; });
+        const finishVolumeAdjustment = () => {
+            if (!adjustingVolume) return;
+            adjustingVolume = false;
+            showControls();
+        };
+        window.addEventListener('pointerup', finishVolumeAdjustment);
+        window.addEventListener('pointercancel', finishVolumeAdjustment);
+        volume.addEventListener('input', () => {
+            video.volume = Number(volume.value) / 100;
+            video.muted = false;
+            if (video.volume > 0) previousVolume = video.volume;
+            update();
+            showControls();
+        });
+        volumeMenu.addEventListener('focusout', event => {
+            if (event.relatedTarget && !volumeMenu.contains(event.relatedTarget as Node)) setVolumePanel(false);
+        });
+        player.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || volumePanel.hidden) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setVolumePanel(false);
+            volumeToggle.focus();
             showControls();
         });
         player.addEventListener('pointermove', showControls);
@@ -84,7 +150,14 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
 
     play.addEventListener('click', togglePlayback);
     video.addEventListener('click', togglePlayback);
-    mute.addEventListener('click', () => { video.muted = !video.muted; });
+    mute.addEventListener('click', () => {
+        if (volume && video.volume === 0) {
+            video.volume = previousVolume;
+            video.muted = false;
+        } else {
+            video.muted = !video.muted;
+        }
+    });
     seek.addEventListener('input', () => {
         if (!seek.disabled) video.currentTime = Number(seek.value) / 1000 * video.duration;
     });

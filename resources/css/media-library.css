@@ -201,9 +201,16 @@
 .library-dialog-form { display: grid; gap: .9rem; padding: 1rem; }
 .library-form-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .55rem; }
 
-.library-preview-stage .featured-video-compact:not([hidden]) {
-    width: 100%;
+.featured-video-compact {
+    --video-action: #eaf5ff;
+    --video-fill: #6eb8ff;
+    --video-thumb: #e6f4ff;
+    --video-track: #3c536d;
+    color: var(--video-action);
 }
+
+.library-preview-stage .featured-video-compact:not([hidden]) { width: 100%; }
+.library-preview-stage .featured-video-compact video { min-height: min(10rem, 48dvh); }
 
 .featured-video-compact .featured-video-controls:not([hidden]) {
     position: absolute;
@@ -234,16 +241,100 @@
     background: transparent;
 }
 
-.featured-video-compact .featured-video-controls button:hover { color: #ffdb8b; }
+.featured-video-compact .featured-video-controls button:hover { color: var(--video-fill); }
 .featured-video-compact .featured-video-time { white-space: nowrap; }
-.featured-video-compact .featured-video-controls input {
+.featured-video-compact :is([data-video-seek], [data-video-volume]) {
+    appearance: none;
+    background: transparent;
+    margin: 0;
+    cursor: pointer;
+}
+
+.featured-video-compact [data-video-seek] {
+    --video-track-direction: to right;
     grid-column: 1 / -1;
     grid-row: 1;
     min-width: 0;
     width: 100%;
-    height: .75rem;
-    cursor: pointer;
+    height: 1rem;
 }
+
+.featured-video-volume { position: relative; }
+
+.featured-video-volume-panel:not([hidden]) {
+    position: absolute;
+    bottom: calc(100% + .15rem);
+    left: 50%;
+    transform: translateX(-50%);
+    display: grid;
+    justify-items: center;
+    gap: .25rem;
+    padding: .4rem .35rem .25rem;
+    border: 1px solid #526e8a;
+    border-radius: .6rem;
+    background: #10233a;
+    box-shadow: 0 .3rem .9rem rgb(0 0 0 / .28);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.featured-video-volume-panel [data-video-device-volume] {
+    width: 6.5rem;
+    text-align: center;
+}
+
+.featured-video-compact .featured-video-volume-panel [data-video-mute] { opacity: 1; }
+
+.featured-video-volume-panel [data-video-volume] {
+    --video-track-direction: to top;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 1.6rem;
+    height: clamp(2.5rem, 9dvh, 4.65rem);
+}
+
+.featured-video-compact :is([data-video-seek], [data-video-volume]) {
+    --video-range-track: linear-gradient(var(--video-track-direction),
+        var(--video-fill) var(--video-progress, 0%), var(--video-track) var(--video-progress, 0%));
+}
+
+.featured-video-compact :is([data-video-seek], [data-video-volume])::-webkit-slider-runnable-track {
+    background: var(--video-range-track);
+    border-radius: 999px;
+}
+
+.featured-video-compact :is([data-video-seek], [data-video-volume])::-moz-range-track {
+    background: var(--video-range-track);
+    border-radius: 999px;
+}
+
+.featured-video-compact [data-video-seek]::-webkit-slider-runnable-track { height: .25rem; }
+.featured-video-compact [data-video-seek]::-moz-range-track { height: .25rem; }
+.featured-video-compact [data-video-volume]::-webkit-slider-runnable-track { width: .25rem; }
+.featured-video-compact [data-video-volume]::-moz-range-track { width: .25rem; }
+
+.featured-video-compact :is([data-video-seek], [data-video-volume])::-webkit-slider-thumb {
+    appearance: none;
+    width: .7rem;
+    height: .7rem;
+    border: 1px solid #537da8;
+    border-radius: 50%;
+    background: var(--video-thumb);
+    margin-block-start: -.225rem;
+}
+
+.featured-video-compact :is([data-video-seek], [data-video-volume])::-moz-range-thumb {
+    width: .7rem;
+    height: .7rem;
+    box-sizing: border-box;
+    border: 1px solid #537da8;
+    border-radius: 50%;
+    background: var(--video-thumb);
+}
+
+.featured-video-compact [data-video-volume-cross],
+.featured-video-compact[data-muted="true"] [data-video-volume-waves] { display: none; }
+.featured-video-compact[data-muted="true"] [data-video-volume-cross] { display: inline; }
 
 .library-preview-stage .featured-video-compact .featured-video-speed {
     appearance: none;
@@ -253,6 +344,7 @@
     border: 0;
     background: transparent;
     text-align: center;
+    color: var(--video-action);
     font-size: .75rem;
     font-weight: 700;
     cursor: pointer;
