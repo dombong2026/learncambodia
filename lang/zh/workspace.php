@@ -20,7 +20,8 @@ return [
     'my_account' => '我的账户',
     'groups' => [
         'overview' => '概览',
-        'content' => '内容与外观',
+        'content' => '内容',
+        'appearance' => '外观',
         'programs' => '学术课程',
         'people' => '人员与账户',
         'review' => '审核与质量',

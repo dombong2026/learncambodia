@@ -5,6 +5,7 @@
         'home' => 'm3 10 9-7 9 7v11H3V10ZM9 21v-8h6v8',
         'search' => 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm6-2 4 4',
         'megaphone' => 'M3 10v4h4l9 5V5l-9 5H3ZM7 14l2 7h3',
+        'content-folder' => 'M3 6h6l2 2h10v12H3zM7 12h10m-10 4h7',
         'palette' => 'M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 2-2 2 2 0 0 0-.4-1.2A2 2 0 0 1 16 14h2a3 3 0 0 0 3-3c0-4.4-4-8-9-8ZM7 11h.01M9 7h.01M14 6h.01M18 9h.01',
         'graduation' => 'm2 8 10-5 10 5-10 5L2 8ZM6 10v6c3.7 3 8.3 3 12 0v-6M22 8v7',
         'file' => 'M5 2h9l5 5v15H5zM14 2v5h5M9 12h6M9 16h6',

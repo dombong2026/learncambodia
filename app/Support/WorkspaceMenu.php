@@ -17,7 +17,8 @@ final class WorkspaceMenu
         $definitions = match ($role) {
             'admin' => [
                 ['overview','Overview','layout',['dashboard']],
-                ['content','Content & Appearance','palette',['appearance']],
+                ['content','Content','content-folder',['content']],
+                ['appearance','Appearance','palette',['appearance']],
                 ['page-manager','Page Manager','files',['page-manager']],
                 ['post-manager','Post Manager','newspaper',['post-manager']],
                 ['policy-center','Policy Center','shield',['policy-center']],
@@ -67,12 +68,6 @@ final class WorkspaceMenu
                     $items[] = $item;
                 }
             }
-            if ($role === 'admin' && $key === 'content' && Route::has('admin.media-library.index')) {
-                $items[] = [
-                    'key' => 'media-library', 'label' => 'Media Library', 'route' => 'admin.media-library.index',
-                    'icon' => 'media-library', 'section_title' => 'Content & Appearance',
-                ];
-            }
             if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {
                 $items[] = [
                     'key'=>'public-profiles','label'=>'Public Profile Reviews',
@@ -102,9 +97,10 @@ final class WorkspaceMenu
             'appearance/menu' => 'list-tree',
             'appearance/footer' => 'panel-bottom',
             'appearance/typography' => 'type',
-            'appearance/home' => 'house',
-            'appearance/about' => 'info',
-            'appearance/contact' => 'mail',
+            'content/home' => 'house',
+            'content/about' => 'info',
+            'content/contact' => 'mail',
+            'content/media-library' => 'media-library',
             'course-appearance/course' => 'presentation',
             'course-appearance/catalog' => 'library',
             'examination/exams' => 'exam-sheet',
@@ -179,6 +175,10 @@ final class WorkspaceMenu
 
     public static function find(string $role, string $section, string $item): ?array
     {
+        if ($role === 'admin' && $section === 'appearance' && in_array($item, ['home', 'about', 'contact'], true)) {
+            $section = 'content';
+        }
+
         foreach (config('workspaces.'.$role, []) as $group) {
             if ($group['key'] !== $section) continue;
             foreach ($group['items'] as $entry) {

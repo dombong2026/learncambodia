@@ -20,7 +20,8 @@ return [
     'my_account' => 'My account',
     'groups' => [
         'overview' => 'Overview',
-        'content' => 'Content & Appearance',
+        'content' => 'Content',
+        'appearance' => 'Appearance',
         'programs' => 'Academic Programs',
         'people' => 'People & Accounts',
         'review' => 'Reviews & Quality',

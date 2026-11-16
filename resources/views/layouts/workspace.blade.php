@@ -30,10 +30,6 @@
                 </a>
                 <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 lg:hidden"><x-workspace-icon name="close" /></button>
             </div>
-            <div class="border-b border-white/10 px-5 py-4">
-                <p class="text-[10px] font-bold uppercase tracking-[.15em] text-[#efbe59]">{{ __('workspace.groups.overview') }} · {{ __('workspace.workspace') }}</p>
-                <p class="mt-1 truncate text-sm font-extrabold text-white">{{ auth()->user()->name }}</p>
-            </div>
             <div class="px-3 pt-3 lg:hidden">
                 <label for="workspace-search-mobile" class="sr-only">{{ __('workspace.search') }}</label>
                 <div class="relative">

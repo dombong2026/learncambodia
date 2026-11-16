@@ -44,6 +44,42 @@ return json_decode(<<<'JSON'
       ]
     },
     {
+      "key": "content",
+      "title": "Content",
+      "icon": "files",
+      "items": [
+        {
+          "key": "home",
+          "label": "Home",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "home"
+          }
+        },
+        {
+          "key": "about",
+          "label": "About",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "about"
+          }
+        },
+        {
+          "key": "contact",
+          "label": "Contact",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "contact"
+          }
+        },
+        {
+          "key": "media-library",
+          "label": "Media Library",
+          "route": "admin.media-library.index"
+        }
+      ]
+    },
+    {
       "key": "appearance",
       "title": "Appearance",
       "icon": "palette",
@@ -83,30 +119,6 @@ return json_decode(<<<'JSON'
           "route": "admin.appearance.edit",
           "parameters": {
             "section": "typography"
-          }
-        },
-        {
-          "key": "home",
-          "label": "Home",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "home"
-          }
-        },
-        {
-          "key": "about",
-          "label": "About",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "about"
-          }
-        },
-        {
-          "key": "contact",
-          "label": "Contact",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "contact"
           }
         },
         {

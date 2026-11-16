@@ -47,7 +47,7 @@ class PremiumDashboardTest extends TestCase
         foreach (['admin','student','instructor','developer'] as $role) {
             $groups = WorkspaceMenu::groups($role);
             $this->assertGreaterThan(0, count($groups));
-            $this->assertLessThanOrEqual($role==='admin' ? 12 : 7, count($groups));
+            $this->assertLessThanOrEqual($role==='admin' ? 13 : 7, count($groups));
             foreach ($groups as $group) {
                 $this->assertNotEmpty($group['items']);
                 foreach ($group['items'] as $item) {
@@ -66,6 +66,21 @@ class PremiumDashboardTest extends TestCase
             ->flatMap(fn($group)=>$group['items'])->contains('label','Payment Methods'));
         $this->assertFalse(collect(WorkspaceMenu::groups('student'))
             ->flatMap(fn($group)=>$group['items'])->contains('label','Placement Test'));
+    }
+
+    public function test_admin_sidebar_separates_page_content_from_appearance_controls(): void
+    {
+        $groups = collect(WorkspaceMenu::groups('admin'))->keyBy('key');
+        $this->assertSame(['Home', 'About', 'Contact', 'Media Library'], array_column($groups['content']['items'], 'label'));
+        $this->assertSame(['Appearance Overview', 'Header', 'Menu', 'Footer', 'Typography', 'Authentication'],
+            array_column($groups['appearance']['items'], 'label'));
+        $this->assertSame('admin.appearance.edit', WorkspaceMenu::find('admin', 'appearance', 'home')['route']);
+
+        $this->actingAs($this->user('admin'))->get(route('admin.appearance.edit', 'about'))
+            ->assertOk()->assertSee('>Content</a>', false)->assertDontSee('Overview · Workspace')
+            ->assertDontSee('Content & Appearance');
+        $this->get(route('admin.appearance.edit', 'header'))
+            ->assertOk()->assertSee('>Appearance</a>', false);
     }
 
     public function test_all_roles_have_a_real_contextual_action_mobile_tabs_and_breadcrumb_outside_header(): void
