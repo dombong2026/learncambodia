@@ -11,7 +11,8 @@ class EnsureRole
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         abort_unless($request->user() !== null
-            && in_array($request->user()->role, $roles, true), 403);
+            && (in_array($request->user()->role, $roles, true)
+                || (in_array('admin', $roles, true) && $request->user()->isAdministrator())), 403);
 
         return $next($request);
     }

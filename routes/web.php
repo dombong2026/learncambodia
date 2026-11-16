@@ -136,6 +136,8 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/tickets/{ticket}/messages', [SupportTicketController::class,'reply'])->middleware('throttle:30,1')->name('messages.store');
     });
 
+    Route::get('/certificates/{certificate:code}', [\App\Http\Controllers\Workspace\CertificateController::class, 'show'])->name('certificates.show');
+
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {
@@ -143,6 +145,24 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
+        Route::get('/exams', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'index'])->name('exams.index');
+        Route::get('/exams/create', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'create'])->name('exams.create');
+        Route::post('/exams', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'save'])->name('exams.store');
+        Route::get('/exams/{exam}/edit', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'edit'])->name('exams.edit');
+        Route::patch('/exams/{exam}', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'save'])->name('exams.update');
+        foreach (['exam-types', 'certificate-types'] as $type) {
+            Route::get("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'types'])->defaults('kind', $type)->name("$type.index");
+            Route::post("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'saveType'])->defaults('kind', $type)->name("$type.store");
+            Route::patch("/$type/{id}", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'updateType'])->whereNumber('id')->defaults('kind', $type)->name("$type.update");
+        }
+        Route::get('/certificate-templates', [\App\Http\Controllers\Workspace\CertificateController::class, 'templates'])->name('certificate-templates.index');
+        Route::get('/certificate-templates/create', [\App\Http\Controllers\Workspace\CertificateController::class, 'builder'])->name('certificate-templates.create');
+        Route::post('/certificate-templates', [\App\Http\Controllers\Workspace\CertificateController::class, 'save'])->name('certificate-templates.store');
+        Route::get('/certificate-templates/{template}/edit', [\App\Http\Controllers\Workspace\CertificateController::class, 'builder'])->name('certificate-templates.edit');
+        Route::patch('/certificate-templates/{template}', [\App\Http\Controllers\Workspace\CertificateController::class, 'save'])->name('certificate-templates.update');
+        Route::get('/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'index'])->name('certificates.index');
+        Route::post('/enrollments/{enrollment}/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'issue'])->name('certificates.issue');
+        Route::patch('/certificates/{certificate}/revoke', [\App\Http\Controllers\Workspace\CertificateController::class, 'revoke'])->name('certificates.revoke');
         Route::get('/media-library', [EditorMediaController::class, 'index'])->name('media-library.index');
         Route::post('/media-library', [EditorMediaController::class, 'uploadToLibrary'])
             ->middleware('throttle:12,1')->name('media-library.store');
@@ -279,6 +299,11 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:20,1')->name('saved-courses.destroy');
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+        Route::post('/enrollments/{enrollment}/exams/{exam}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'start'])
+            ->middleware('throttle:12,1')->name('exam-attempts.start');
+        Route::get('/enrollments/{enrollment}/exam-attempts/{attempt}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'show'])->name('exam-attempts.show');
+        Route::post('/enrollments/{enrollment}/exam-attempts/{attempt}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'submit'])
+            ->middleware('throttle:12,1')->name('exam-attempts.submit');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
         Route::get('/notes', [StudentNoteController::class, 'index'])->name('notes.index');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/notes', [StudentNoteController::class, 'store'])

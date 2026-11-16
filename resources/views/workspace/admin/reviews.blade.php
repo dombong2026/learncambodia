@@ -17,16 +17,12 @@
                 <div class="flex flex-wrap gap-2"><a href="{{ route('admin.course-builder.edit', $course) }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Inspect curriculum</a><a href="{{ route('admin.course-builder.history.index',$course) }}" class="rounded-full border border-blue-400 px-5 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-300">Review history & evidence</a></div>
             </div>
             <p class="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
-            <p class="mt-3 text-xs font-semibold text-slate-500">Created by account #{{ $course->created_by ?? 'Unknown' }} · Reviewer must be a different administrator.</p>
+            <p class="mt-3 text-xs font-semibold text-slate-500">Created by account #{{ $course->created_by ?? 'Unknown' }}</p>
             <p class="mt-2 text-sm">Current price <x-course-price :course="$course" class="ml-1" /></p>
-            @if($course->created_by === auth()->id())
-                <p class="mt-4 text-sm font-semibold text-amber-700 dark:text-amber-400">You submitted this course. Another administrator must decide.</p>
-            @else
                 <div class="mt-5 grid gap-3 sm:grid-cols-2">
                     <form method="POST" action="{{ route('admin.reviews.course',$course) }}" class="flex items-end gap-2">@csrf<input type="hidden" name="decision" value="approve"><button type="submit" class="w-full rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Approve & publish</button></form>
                     <form method="POST" action="{{ route('admin.reviews.course',$course) }}" class="flex flex-col gap-2">@csrf<input type="hidden" name="decision" value="reject"><label for="course-note-{{ $course->id }}" class="text-xs font-bold">Rejection reason</label><textarea id="course-note-{{ $course->id }}" name="note" rows="2" maxlength="500" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea><button type="submit" class="self-end rounded-full border border-red-300 px-5 py-3 text-sm font-bold text-red-700">Reject</button></form>
                 </div>
-            @endif
         </article>
         @empty
         <p class="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">No courses awaiting review.</p>

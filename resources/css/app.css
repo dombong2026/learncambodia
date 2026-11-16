@@ -434,3 +434,19 @@ a.premium-card:focus-visible,
 :is(input, textarea, select)[class*="focus:ring-"]:focus {
     box-shadow: none;
 }
+
+.certificate-sheet {
+    width: min(100%, 64rem);
+    border: 4px double var(--certificate-accent, #986310);
+    background: #fffdf7;
+    color: #17304f;
+    border-radius: 1rem;
+    overflow-wrap: anywhere;
+}
+.certificate-sheet[data-orientation="portrait"] { max-width: 36rem; }
+@media print {
+    body:has([data-print-certificate]) .certificate-sheet {
+        width: 100%; max-width: none; color: #17304f; background: #fff;
+    }
+    body:has([data-print-certificate]) :is(header, footer, [data-print-certificate]) { display: none !important; }
+}

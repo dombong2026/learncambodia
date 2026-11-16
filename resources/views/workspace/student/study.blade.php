@@ -50,4 +50,5 @@
 </section>
 @endif
 </div>
+@include('workspace.student.course-examination')
 @endsection

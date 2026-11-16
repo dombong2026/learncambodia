@@ -46,6 +46,6 @@
 </section>
 @if($editable)
     <form id="course-submit-form" method="POST" action="{{ route('admin.course-builder.submit', $course) }}">@csrf
-        <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">A different administrator reviews this edition after submission.</p>
+        <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">Review or publish this course from Course Reviews after submission.</p>
     </form>
 @endif

@@ -11,7 +11,7 @@
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
 </head>
-@php $role = auth()->user()->role; @endphp
+@php $role = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role; @endphp
 <body data-workspace-body class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <a href="#workspace-main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:text-slate-900">Skip to main content</a>
     <div data-workspace class="workspace-shell min-h-screen lg:pl-[266px]">
@@ -87,7 +87,7 @@
             </header>
             <main data-workspace-main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
                 @php
-                    $workspaceHeading = trim($__env->yieldContent('heading', __('workspace.overview')));
+                    $workspaceHeading = html_entity_decode(trim($__env->yieldContent('heading', __('workspace.overview'))), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);
                     $workspaceAction = \App\Support\WorkspaceMenu::topAction($role);
                 @endphp

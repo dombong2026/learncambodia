@@ -53,7 +53,7 @@ class CurriculumApprovalTest extends TestCase
         return $course->fresh();
     }
 
-    public function test_course_curriculum_requires_independent_review_before_publication(): void
+    public function test_course_curriculum_publishes_after_an_administrator_records_review(): void
     {
         $this->seed([CategorySeeder::class, CefrLevelSeeder::class]);
         $author = $this->admin();
@@ -68,10 +68,6 @@ class CurriculumApprovalTest extends TestCase
         $this->post('/dashboard/course-builder/'.$course->id.'/submit')->assertRedirect();
         $this->assertSame('pending_review', $course->fresh()->status);
         $this->get('/account/courses')->assertForbidden();
-        $this->post('/dashboard/reviews/courses/'.$course->id, [
-            'decision' => 'approve',
-        ])->assertForbidden();
-
         $this->actingAs($reviewer)
             ->post('/dashboard/reviews/courses/'.$course->id, ['decision' => 'approve'])
             ->assertRedirect();

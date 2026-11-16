@@ -51,6 +51,16 @@ class Course extends Model
         return $this->hasManyThrough(CourseLesson::class, CourseModule::class, 'course_id', 'course_module_id');
     }
 
+    public function exams(): HasMany
+    {
+        return $this->hasMany(CourseExam::class);
+    }
+
+    public function certificateTemplates(): BelongsToMany
+    {
+        return $this->belongsToMany(CertificateTemplate::class, 'course_certificate_templates');
+    }
+
     public function quizzes(): HasMany
     {
         return $this->hasMany(CourseQuiz::class)->orderBy('position')->orderBy('id');

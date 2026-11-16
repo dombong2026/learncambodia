@@ -145,7 +145,7 @@ function initializeEditor(root: HTMLElement): void {
     if (!form || !visual || !source || !plain || !html || !enhanced) return;
 
     const locked = Boolean(root.closest('fieldset')?.disabled);
-    const lesson = root.dataset.editorContext === 'lesson';
+    const lesson = ['lesson', 'exam'].includes(root.dataset.editorContext ?? '');
     const course = lesson || root.dataset.editorContext === 'course';
     const clean = (markup: string): string => safeMarkup(markup, lesson);
     const htmlLimit = lesson ? 200000 : 120000;

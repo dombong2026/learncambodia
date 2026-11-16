@@ -119,7 +119,7 @@ class AcademicEvidenceReviewTest extends TestCase
             'action'=>'reviewed','actor_id'=>$reviewer->id,
         ]);
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasTable('certificates'));
-        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.certificates.issue'));
+        $this->assertDatabaseCount('issued_certificates', 0);
         $this->assertFalse(\Illuminate\Support\Facades\Route::has('account.certificates.download'));
 
         $this->post('/dashboard/academic/evidence/reviews/'.$review->id,[

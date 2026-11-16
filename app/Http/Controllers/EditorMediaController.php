@@ -6,6 +6,8 @@ use App\Models\ContentEntry;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\EditorMedia;
+use App\Models\ExamAttempt;
+use App\Support\EditorHtml;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
 use Illuminate\Database\ForeignKeyConstraintViolationException;
@@ -148,24 +150,25 @@ final class EditorMediaController extends Controller
 
     private function storeUpload(Request $request, bool $library): JsonResponse
     {
-        $lesson = !$library && $request->input('context') === 'lesson';
+        $lesson = !$library && in_array($request->input('context'), ['lesson', 'exam'], true);
         $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav'];
         if ($lesson) {
             $mimes = [...$mimes, ...self::DOCUMENT_MIMES];
         }
         $data = $request->validate([
-            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course', 'lesson'])],
+            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course', 'lesson', 'exam'])],
             'file' => ['required', 'file', ($library || $lesson) ? 'max:51200' : 'max:12288',
                 'mimetypes:'.implode(',', $mimes)],
         ]);
-        abort_if($data['context'] !== 'ticket' && $request->user()->role !== 'admin', 403);
+        abort_if($data['context'] !== 'ticket' && !$request->user()->isAdministrator(), 403);
 
         // Cap unclaimed private media rather than enabling unlimited anonymous staging.
         if (!$library) {
             $unclaimed = EditorMedia::query()->where('context', $data['context'])->where('uploaded_by', $request->user()->id)
                 ->whereNull('content_entry_id')->whereNull('support_ticket_id')
                 ->when($data['context'] === 'course', fn ($media) => $media->doesntHave('descriptionCourses'))
-                ->when($lesson, fn ($media) => $media->doesntHave('lessons'))
+                ->when($data['context'] === 'lesson', fn ($media) => $media->doesntHave('lessons'))
+                ->when($data['context'] === 'exam', fn ($media) => $media->doesntHave('exams'))
                 ->where('created_at', '>=', now()->subDay())->count();
             abort_if($unclaimed >= 20, 429, 'Save your current draft before uploading more files.');
         }
@@ -210,27 +213,36 @@ final class EditorMediaController extends Controller
                 ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
             $published = $published || Course::published()->where('featured_media_id', $media->id)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
-            abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
+            abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'lesson') {
             $enrolled = $viewer?->role === User::ROLE_STUDENT
                 && $media->lessons()->whereHas('module.course', fn ($courses) => $courses->published()
                     ->whereHas('enrollments', fn ($enrollments) => $enrollments
                         ->where('student_id', $viewer->id)->where('status', 'approved')))->exists();
-            abort_unless($viewer?->role === User::ROLE_ADMIN || $enrolled, 403);
+            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
+        } elseif ($media->context === 'exam') {
+            $enrolled = $viewer?->role === User::ROLE_STUDENT
+                && ExamAttempt::whereIn('course_exam_id', $media->exams()->select('course_exams.id'))
+                    ->whereNull('submitted_at')->where('expires_at', '>', now())
+                    ->whereHas('enrollment', fn ($query) => $query->where('student_id', $viewer->id)
+                        ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published()))
+                    ->cursor()->contains(fn ($attempt) => in_array($media->id,
+                        EditorHtml::sourceIds($attempt->snapshot['instructions_html'], lesson: true), true));
+            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
-            abort_unless($published || $viewer?->role === 'admin', 403);
+            abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&
                 ContentEntry::query()->whereKey($media->content_entry_id)
                     ->where('status', 'published')->whereIn('type', [...ContentEntry::DIRECT_PUBLICATION_TYPES, 'faq'])
                     ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
-            abort_unless($approved || ($viewer && $viewer->role === 'admin'), 403);
+            abort_unless($approved || $viewer?->isAdministrator(), 403);
         } else {
             $ticket = $media->support_ticket_id
                 ? \App\Models\SupportTicket::find($media->support_ticket_id) : null;
             abort_unless($viewer && (
-                ($ticket && ($viewer->role === 'admin' || $ticket->user_id === $viewer->id)) ||
+                ($ticket && ($viewer->isAdministrator() || $ticket->user_id === $viewer->id)) ||
                 (!$ticket && $media->support_ticket_id === null && $media->uploaded_by === $viewer->id)
             ), 403);
         }
@@ -244,11 +256,11 @@ final class EditorMediaController extends Controller
             'Content-Security-Policy' => "default-src 'none'; sandbox",
         ];
 
-        if ($media->context === 'lesson' && in_array($media->mime, self::DOCUMENT_MIMES, true)) {
+        if (in_array($media->context, ['lesson', 'exam'], true) && in_array($media->mime, self::DOCUMENT_MIMES, true)) {
             return $disk->download($media->path, $media->original_name, array_diff_key($headers, ['Content-Disposition' => true]));
         }
 
-        if (str_starts_with($media->mime, 'video/') || ($media->context === 'lesson' && str_starts_with($media->mime, 'audio/'))) {
+        if (str_starts_with($media->mime, 'video/') || (in_array($media->context, ['lesson', 'exam'], true) && str_starts_with($media->mime, 'audio/'))) {
             return new BinaryFileResponse($disk->path($media->path), 200, $headers, false);
         }
 

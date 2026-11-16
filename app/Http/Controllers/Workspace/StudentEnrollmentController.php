@@ -49,12 +49,14 @@ class StudentEnrollmentController extends Controller
         abort_unless($enrollment->status === 'approved', 403);
 
         $course = Course::published()->whereKey($enrollment->course_id)
-            ->with('modules.lessons')->firstOrFail();
+            ->with('modules.lessons', 'exams.type', 'quizzes')->firstOrFail();
 
         return view('workspace.student.study', [
             'role' => 'student',
             'enrollment' => $enrollment,
             'course' => $course,
+            'certificates' => \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->whereNull('revoked_at')->get(),
+            'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $enrollment->lessonProgress()
                 ->whereNotNull('completed_at')->pluck('lesson_id')->all(),
         ]);

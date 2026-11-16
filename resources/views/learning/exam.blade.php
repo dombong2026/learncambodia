@@ -1,13 +1,24 @@
 @extends('layouts.public')
-@section('title',$course->title.' · Practice Assessments')
+@section('title',$course->title.' · Course Assessments')
 @section('meta_description',$course->summary)
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_course_exam'); @endphp
-<x-learning-hero :title="$course->title" :subtitle="$course->summary" eyebrow="Course exam / Reviewed practice" icon="clipboard-check" :action-url="'#practice-quiz-list'" action-label="View course practice"
+<x-learning-hero :title="$course->title" :subtitle="$course->summary" eyebrow="Course assessments" icon="clipboard-check" :action-url="$exams->isNotEmpty() ? '#course-exams' : '#practice-quiz-list'" action-label="View assessments"
     :stats="[
         ['value'=>number_format($quizzes->count()),'label'=>'Reviewed practice quizzes','icon'=>'list-check'],
         ['value'=>number_format($quizzes->sum('questions_count')),'label'=>'Practice questions','icon'=>'clipboard-check'],
     ]"/>
+@if($exams->isNotEmpty())
+    <x-learning-section id="course-exams" title="Course exams" tone="white">
+        <div class="grid gap-4 sm:grid-cols-2">
+            @foreach($exams as $exam)
+                <x-learning-card :href="$enrollment ? route('account.enrollments.show',$enrollment) : route('courses.show',$course->slug)"
+                    :title="$exam->title" :description="$exam->type->name.' · '.$exam->time_limit.' minutes'"
+                    icon="clipboard-check" :action="$enrollment ? 'Open enrolled course' : 'View course'" />
+            @endforeach
+        </div>
+    </x-learning-section>
+@endif
 <x-learning-section :title="$a['intro_heading']" eyebrow="About this course" tone="white" subtitle="The preparation area uses the existing reviewed quiz engine. Course content remains protected until your enrollment is approved.">
     <div class="grid gap-7 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,.6fr)]">
         <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 dark:border-slate-700 dark:bg-[#183657]">

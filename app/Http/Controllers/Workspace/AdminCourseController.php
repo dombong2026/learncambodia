@@ -214,6 +214,6 @@ class AdminCourseController extends Controller
         });
 
         return redirect()->route('admin.course-builder.edit', ['course' => $course, 'step' => 'review'])
-            ->with('status', 'Course submitted for independent administrator review.');
+            ->with('status', 'Course submitted for administrator review.');
     }
 }

@@ -20,6 +20,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public const ROLE_STUDENT = 'student';
     public const ROLE_ADMIN = 'admin';
+    public const ROLE_SUPERADMIN = 'superadmin';
     public const ROLE_DEVELOPER = 'developer';
     public const ROLE_INSTRUCTOR = 'instructor';
 
@@ -29,7 +30,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function homeRouteName(): string
     {
         return match ($this->role) {
-            self::ROLE_ADMIN => 'admin.overview',
+            self::ROLE_ADMIN, self::ROLE_SUPERADMIN => 'admin.overview',
             self::ROLE_DEVELOPER => 'developer.overview',
             self::ROLE_INSTRUCTOR => 'instructor.overview',
             default => 'account.overview',
@@ -38,7 +39,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdministrator(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPERADMIN], true);
     }
 
     public function isInstructor(): bool

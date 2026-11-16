@@ -22,7 +22,8 @@ final class WorkspaceMenu
                 ['post-manager','Post Manager','newspaper',['post-manager']],
                 ['policy-center','Policy Center','shield',['policy-center']],
                 ['support-center','Support Center','headphones',['support-center']],
-                ['programs','Academic Programs','book',['category','courses']],
+                ['course-manager','Course Manager','book',['courses','category','course-appearance']],
+                ['examination','Examination','graduation',['examination']],
                 ['people','People & Accounts','users',['user-manager']],
                 ['review','Reviews & Quality','shield',['approvals','academic-quality']],
                 ['reporting','Analytics','activity',['learning-insights']],
@@ -103,7 +104,13 @@ final class WorkspaceMenu
             'appearance/home' => 'house',
             'appearance/about' => 'info',
             'appearance/contact' => 'mail',
-            'appearance/course' => 'presentation',
+            'course-appearance/course' => 'presentation',
+            'course-appearance/catalog' => 'library',
+            'examination/exams' => 'exam-sheet',
+            'examination/exam-types' => 'exam-types',
+            'examination/certificate-types' => 'certificate-type',
+            'examination/templates' => 'certificate-design',
+            'examination/certificates' => 'certificate-issued',
             'appearance/catalog' => 'library',
             'appearance/auth' => 'lock',
             'page-manager/all' => 'files',
@@ -299,7 +306,9 @@ final class WorkspaceMenu
         }
         if ($parent === null) foreach (self::groups($role) as $group) {
             foreach ($group['items'] as $item) {
-                if (($item['route'] ?? '') === $current) {
+                if (($item['route'] ?? '') === $current
+                    && collect($item['parameters'] ?? [])->every(fn ($value, $key) =>
+                        (string) (request()->route($key) ?? request()->query($key, $key === 'focus' ? 'courses' : '')) === (string) $value)) {
                     $parent = [
                         'label' => $group['title'],
                         'url' => self::href($role, $group, $group['items'][0]),
@@ -313,6 +322,8 @@ final class WorkspaceMenu
             $prefix = explode('.', $current)[1] ?? '';
             $route = match ($role.':'.$prefix) {
                 'admin:course-builder' => 'admin.courses.index',
+                'admin:exams' => 'admin.exams.index',
+                'admin:certificate-templates' => 'admin.certificate-templates.index',
                 'admin:appearance' => 'admin.appearance.index',
                 'admin:editorial' => 'admin.editorial.index',
                 'instructor:grading' => 'instructor.grading.index',

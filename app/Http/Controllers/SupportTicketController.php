@@ -17,7 +17,7 @@ final class SupportTicketController extends Controller
 {
     private function authorizeTicket(Request $request, SupportTicket $ticket): void
     {
-        abort_unless($request->user()->role === 'admin' || $ticket->user_id === $request->user()->id, 403);
+        abort_unless($request->user()->isAdministrator() || $ticket->user_id === $request->user()->id, 403);
     }
 
     private function ticketKind(string $kind): string

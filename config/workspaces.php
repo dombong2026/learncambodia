@@ -110,22 +110,6 @@ return json_decode(<<<'JSON'
           }
         },
         {
-          "key": "course",
-          "label": "Course",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "course"
-          }
-        },
-        {
-          "key": "catalog",
-          "label": "Catalog",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "catalog"
-          }
-        },
-        {
           "key": "auth",
           "label": "Authentication",
           "route": "admin.appearance.edit",
@@ -436,12 +420,12 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Categories",
+          "label": "Course Categories",
           "route": "admin.categories.index"
         },
         {
           "key": "create",
-          "label": "Create Category",
+          "label": "Create Course Category",
           "route": "admin.categories.create"
         },
         {
@@ -463,7 +447,7 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "create",
-          "label": "Create",
+          "label": "Create Course",
           "route": "admin.course-builder.create"
         },
         {
@@ -489,6 +473,25 @@ return json_decode(<<<'JSON'
           "label": "Homework Reviews",
           "route": "admin.homework.reviews"
         }
+      ]
+    },
+    {
+      "key": "course-appearance",
+      "title": "Course Appearance",
+      "items": [
+        {"key": "course", "label": "Course Appearance", "route": "admin.appearance.edit", "parameters": {"section": "course"}},
+        {"key": "catalog", "label": "Catalog Appearance", "route": "admin.appearance.edit", "parameters": {"section": "catalog"}}
+      ]
+    },
+    {
+      "key": "examination",
+      "title": "Examination",
+      "items": [
+        {"key": "exams", "label": "Exams & Builder", "route": "admin.exams.index"},
+        {"key": "exam-types", "label": "Exam Types & Categories", "route": "admin.exam-types.index"},
+        {"key": "certificate-types", "label": "Certificate Types", "route": "admin.certificate-types.index"},
+        {"key": "templates", "label": "Certificate Templates & Builder", "route": "admin.certificate-templates.index"},
+        {"key": "certificates", "label": "Issued Certificates", "route": "admin.certificates.index"}
       ]
     },
     {

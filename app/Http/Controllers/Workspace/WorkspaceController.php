@@ -49,7 +49,7 @@ class WorkspaceController extends Controller
 
     public function module(Request $request, string $section, string $item): View
     {
-        $role = $request->user()->role;
+        $role = $request->user()->isAdministrator() ? 'admin' : $request->user()->role;
         $entry = WorkspaceMenu::find($role, $section, $item);
 
         abort_unless($entry !== null, 404);

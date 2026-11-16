@@ -1,7 +1,7 @@
 @extends('layouts.workspace')
 @section('title', 'Course Manager')
 @section('heading', 'Course Manager')
-@section('description', 'Create, build and submit real curriculum records. Only independently approved courses may appear in the public catalogue.')
+@section('description', 'Create, build and submit real curriculum records. Only approved courses may appear in the public catalogue.')
 @section('content')
 {{-- The shared page heading already provides Create course; avoid a duplicate CTA. --}}
 <div class="workspace-panel overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">

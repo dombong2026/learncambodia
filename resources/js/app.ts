@@ -170,3 +170,5 @@ function initThemeToggle(): void {
 }
 
 initThemeToggle();
+
+document.querySelector('[data-print-certificate]')?.addEventListener('click', () => window.print());

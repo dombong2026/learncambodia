@@ -53,10 +53,6 @@ class AdminReviewController extends Controller
         DB::transaction(function () use ($request, $course, $data): void {
             $locked = Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'pending_review', 409);
-            // A second administrator must approve the author's curriculum.
-            abort_unless($locked->created_by && $locked->created_by !== $request->user()->id,
-                403, 'A separate administrator must review the submitted course.');
-
             $submission=CourseReviewSnapshot::where('course_id',$locked->id)->latest('id')->first();
             if ($data['decision'] === 'approve') {
                 abort_unless(CourseReadiness::ready($locked),422,

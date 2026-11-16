@@ -11,7 +11,7 @@
             <li class="rounded-xl border p-4 text-sm {{ $passed ? 'text-emerald-700' : 'text-amber-700' }}">{{ $passed ? '✓ Ready' : 'Needs attention' }} · {{ $label }}</li>
         @endforeach
     </ul>
-    <p class="mt-4 text-xs text-slate-500">A different administrator must approve publication. Submitted academic content is locked.</p>
+    <p class="mt-4 text-xs text-slate-500">Submitted academic content is locked until an administrator records a decision.</p>
 </section>
 <section class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
     <h2 class="text-xl font-extrabold">Independent review evidence</h2>

@@ -11,7 +11,7 @@ class AssignAccountRole extends Command
 {
     protected $signature = 'accounts:assign-role
         {email : Existing account email address}
-        {role : student, admin, developer or instructor}
+        {role : student, admin, superadmin, developer or instructor}
         {--operator= : Approved operator identifier}
         {--reason= : Approved reason or change ticket}
         {--confirm : Explicitly authorize the role transition}';
@@ -25,7 +25,7 @@ class AssignAccountRole extends Command
         $operator = trim((string) $this->option('operator'));
         $reason = trim((string) $this->option('reason'));
 
-        if (! in_array($role, [User::ROLE_STUDENT, User::ROLE_ADMIN, User::ROLE_DEVELOPER, User::ROLE_INSTRUCTOR], true)) {
+        if (! in_array($role, [User::ROLE_STUDENT, User::ROLE_ADMIN, User::ROLE_SUPERADMIN, User::ROLE_DEVELOPER, User::ROLE_INSTRUCTOR], true)) {
             $this->error('Invalid role.');
             return self::FAILURE;
         }

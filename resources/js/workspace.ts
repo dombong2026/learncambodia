@@ -3,6 +3,7 @@ import './editorial-media';
 import './media-library';
 import './featured-video';
 import './course-builder';
+import './examination';
 
 const shell = document.querySelector<HTMLElement>('[data-workspace]');
 const sidebar = document.querySelector<HTMLElement>('[data-sidebar]');
