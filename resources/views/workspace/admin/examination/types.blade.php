@@ -1,5 +1,18 @@
 @extends('layouts.workspace')
-@section('heading', $kind === 'exam-types' ? 'Exam Types & Categories' : 'Certificate Types')
+@php
+    $heading = match($kind) {
+        'exam-types' => 'Exam Types',
+        'quiz-types' => 'Quiz Types',
+        default => 'Certificate Types',
+    };
+@endphp
+@section('title', $heading)
+@section('heading', $heading)
+@section('heading_action')
+    @if($kind !== 'certificate-types')
+        <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="{{ route($kind === 'quiz-types' ? 'admin.quizzes-manager.create' : 'admin.exams.create') }}">{{ $kind === 'quiz-types' ? 'Create Quiz' : 'Create Exam' }}</a>
+    @endif
+@endsection
 @section('content')
     @if($errors->any())<p role="alert" class="mb-4 text-red-600">{{ $errors->first() }}</p>@endif
     <div class="grid items-start gap-4 lg:grid-cols-[22rem_1fr]">

@@ -1,5 +1,6 @@
 @extends('layouts.workspace')
-@section('heading', 'Certificate Templates & Builder')
+@section('title', 'Certificate Templates')
+@section('heading', 'Certificate Templates')
 @section('heading_action')
     <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="{{ route('admin.certificate-templates.create') }}">Create template</a>
 @endsection

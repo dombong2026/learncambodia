@@ -23,7 +23,7 @@ final class StandaloneAssessmentTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $student = User::factory()->create();
         $other = User::factory()->create();
-        $type = ExamType::create(['name' => 'Language skills']);
+        $type = ExamType::create(['name' => 'Language skills', 'kind' => 'quiz']);
         $this->actingAs($admin)->get(route('admin.quizzes-manager.create'))->assertOk()->assertSee('Quiz Builder')->assertDontSee('Course (optional)');
         $wav = 'RIFF'.pack('V', 40).'WAVEfmt '.pack('VvvVVvv', 16, 1, 1, 8000, 16000, 2, 16).'data'.pack('V', 4)."\0\0\0\0";
         $audio = $this->postJson(route('editor-media.store'), [

@@ -56,7 +56,7 @@ final class AdminExaminationController extends Controller
             'exam' => $exam, 'accessRequests' => $exam->exists
                 ? AssessmentAccess::where('course_exam_id', $exam->id)->with('student')->latest('id')->paginate(15, ['*'], 'access_page')
                 : collect(), 'attempts' => $attempts, 'courses' => Course::orderBy('title')->get(['id', 'title']),
-            'types' => ExamType::orderBy('name')->get(),
+            'types' => ExamType::where('kind', $exam->kind)->orderBy('name')->get(),
         ]);
     }
 
@@ -70,7 +70,7 @@ final class AdminExaminationController extends Controller
         }
         $data = $request->validate([
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
-            'exam_type_id' => ['required', 'integer', 'exists:exam_types,id'],
+            'exam_type_id' => ['required', 'integer', Rule::exists('exam_types', 'id')->where('kind', $kind)],
             'title' => ['required', 'string', 'max:160'],
             'instructions_html' => ['nullable', 'string', 'max:120000'],
             'instructions' => ['nullable', 'string', 'max:15000'],
@@ -166,10 +166,10 @@ final class AdminExaminationController extends Controller
 
     public function types(Request $request, string $kind): View
     {
-        $model = $kind === 'exam-types' ? ExamType::class : CertificateType::class;
+        $query = $kind === 'certificate-types' ? CertificateType::query() : ExamType::where('kind', $this->assessmentKind($kind));
 
         return view('workspace.admin.examination.types', [
-            'kind' => $kind, 'types' => $model::orderBy('name')->paginate(15),
+            'kind' => $kind, 'types' => $query->orderBy('name')->paginate(15),
         ]);
     }
 
@@ -180,13 +180,25 @@ final class AdminExaminationController extends Controller
 
     public function saveType(Request $request, string $kind, ?int $id = null): RedirectResponse
     {
-        $model = $kind === 'exam-types' ? ExamType::class : CertificateType::class;
-        $record = $id ? $model::findOrFail($id) : new $model();
+        if ($kind === 'certificate-types') {
+            $record = $id ? CertificateType::findOrFail($id) : new CertificateType();
+            $unique = Rule::unique('certificate_types', 'name');
+        } else {
+            $assessmentKind = $this->assessmentKind($kind);
+            $record = $id ? ExamType::where('kind', $assessmentKind)->findOrFail($id) : new ExamType(['kind' => $assessmentKind]);
+            $unique = Rule::unique('exam_types', 'name')->where('kind', $assessmentKind);
+        }
+
         $record->fill($request->validate([
-            'name' => ['required', 'string', 'max:100', Rule::unique($record->getTable())->ignore($record->id)],
+            'name' => ['required', 'string', 'max:100', $unique->ignore($record->id)],
             'description' => ['nullable', 'string', 'max:500'],
         ]))->save();
 
         return back()->with('status', 'Type saved.');
+    }
+
+    private function assessmentKind(string $kind): string
+    {
+        return $kind === 'quiz-types' ? 'quiz' : 'exam';
     }
 }

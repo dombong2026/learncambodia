@@ -76,6 +76,8 @@
         'panel-left-toggle' => 'M3 5h18v14H3zM9 5v14m7-10-3 3 3 3',
         'notification-bell' => 'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9m-8 12a2 2 0 0 0 4 0',
         'exam-sheet' => 'M5 3h14v18H5zM8 7h8M8 11h2m3 0h3m-8 4h2m3 0h3',
+        'exam-create' => 'M5 3h14v18H5zM8 7h8m-8 4h3m3 1v6m-3-3h6',
+        'quiz-types' => 'M4 4h12v8H9l-4 3v-3H4zM9 16h6l4 4v-4h1V8m-13 0h.01m3 0h.01m3 0h.01',
         'exam-types' => 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 17.5h7m-3.5-3.5v7',
         'certificate-type' => 'M12 4l8 5-8 5-8-5 8-5ZM4 13l8 5 8-5M4 17l8 5 8-5',
         'certificate-design' => 'M3 6h18v12H3zM7 10h5m-5 4h3m8-4-4 4m1-5 4 4',

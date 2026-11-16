@@ -487,10 +487,11 @@ return json_decode(<<<'JSON'
       "key": "examination",
       "title": "Examination",
       "items": [
-        {"key": "exams", "label": "Exams & Builder", "route": "admin.exams.index"},
-        {"key": "exam-types", "label": "Exam Types & Categories", "route": "admin.exam-types.index"},
+        {"key": "exams", "label": "Exams", "route": "admin.exams.index"},
+        {"key": "create", "label": "Create Exam", "route": "admin.exams.create"},
+        {"key": "exam-types", "label": "Exam Types", "route": "admin.exam-types.index"},
         {"key": "certificate-types", "label": "Certificate Types", "route": "admin.certificate-types.index"},
-        {"key": "templates", "label": "Certificate Templates & Builder", "route": "admin.certificate-templates.index"},
+        {"key": "templates", "label": "Certificate Templates", "route": "admin.certificate-templates.index"},
         {"key": "certificates", "label": "Issued Certificates", "route": "admin.certificates.index"}
       ]
     },
@@ -498,8 +499,9 @@ return json_decode(<<<'JSON'
       "key": "quiz-manager",
       "title": "Quiz Manager",
       "items": [
-        {"key": "quizzes", "label": "Quizzes & Builder", "route": "admin.quizzes-manager.index"},
-        {"key": "create", "label": "Create Quiz", "route": "admin.quizzes-manager.create"}
+        {"key": "quizzes", "label": "Quizzes", "route": "admin.quizzes-manager.index"},
+        {"key": "create", "label": "Create Quiz", "route": "admin.quizzes-manager.create"},
+        {"key": "quiz-types", "label": "Quiz Types", "route": "admin.quiz-types.index"}
       ]
     },
     {

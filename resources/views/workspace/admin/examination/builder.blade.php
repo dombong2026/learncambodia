@@ -6,7 +6,7 @@
 @endphp
 @section('heading', $quiz ? 'Quiz Builder' : 'Exam Builder')
 @section('heading_action')
-    <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quiz Manager' : 'Exams & Builder' }}</a>
+    <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
 @section('content')
     @if($errors->any())
@@ -35,7 +35,7 @@
                         <option value="{{ $type->id }}" @selected((int) old('exam_type_id', $exam->exam_type_id) === $type->id)>{{ $type->name }}</option>
                     @endforeach
                 </select>
-                <a class="text-blue-600 dark:text-blue-300" href="{{ route('admin.exam-types.index') }}">Manage types</a>
+                <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
             </label>
             <div class="grid gap-4 sm:col-span-2 sm:grid-cols-3">
                 @foreach(['time_limit'=>['Time limit (minutes)',$quiz ? 5 : 60,$quiz ? 30 : 240], 'passing_percent'=>['Pass score (%)',70,100], 'attempt_limit'=>['Attempts allowed',2,10]] as $field=>[$label,$default,$maximum])

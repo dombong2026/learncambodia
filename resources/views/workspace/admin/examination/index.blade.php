@@ -1,8 +1,9 @@
 @extends('layouts.workspace')
 @php($manager = $kind === 'quiz' ? 'admin.quizzes-manager' : 'admin.exams')
-@section('heading', $kind === 'quiz' ? 'Quiz Manager' : 'Exams & Builder')
+@section('title', $kind === 'quiz' ? 'Quizzes' : 'Exams')
+@section('heading', $kind === 'quiz' ? 'Quizzes' : 'Exams')
 @section('heading_action')
-    <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="{{ route($manager.'.create') }}">Create {{ $kind }}</a>
+    <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="{{ route($manager.'.create') }}">{{ $kind === 'quiz' ? 'Create Quiz' : 'Create Exam' }}</a>
 @endsection
 @section('content')
     <div class="space-y-3">
