@@ -99,9 +99,12 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const originalLesson = await lessonSource.inputValue();
     // Check the player and its saved HTML independently of a platform's media codecs.
     await page.route('**/editor-media/9999999', route => route.abort());
-    await lessonSource.fill(originalLesson + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Test playback</figcaption></figure>');
+    await lessonSource.fill(originalLesson + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Uploaded example.mp4</figcaption></figure>'
+      + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Test playback</figcaption></figure>');
     await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
-    const player = lessonContent.locator('lesson-media-player');
+    await expect(lessonContent).not.toContainText('Uploaded example.mp4');
+    await expect(lessonContent).toContainText('Test playback');
+    const player = lessonContent.locator('lesson-media-player').last();
     await expect(player).toHaveAttribute('data-kind', 'video');
     await expect(player.locator('video')).not.toHaveAttribute('controls');
     await expect(player.getByRole('button', { name: 'Playback settings' })).toBeVisible();
@@ -118,7 +121,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(fullScreen).toBeFocused();
     await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
     await expect(lessonSource).toHaveValue(/<video src="\/editor-media\/9999999"/);
-    await expect(lessonSource).not.toHaveValue(/lesson-media-player|<button|<svg/);
+    await expect(lessonSource).not.toHaveValue(/lesson-media-player|<button|<svg|Uploaded example\.mp4/);
     await lessonSource.fill(originalLesson);
     await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
     await builder.getByRole('button', { name: 'Save changes' }).click();

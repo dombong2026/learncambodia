@@ -349,7 +349,18 @@ function hasSource(media: HTMLMediaElement): boolean {
 
 customElements.define(playerTag, LessonMediaPlayer);
 
+export function removeLessonVideoFileCaptions(scope: ParentNode): void {
+    // Older uploads inserted the filename as plain text in a two-element figure.
+    scope.querySelectorAll('figure:not([data-youtube])').forEach(figure => {
+        const [video, caption] = Array.from(figure.children);
+        if (figure.children.length !== 2 || !(video instanceof HTMLVideoElement) || !hasSource(video)
+            || !caption.matches('figcaption') || caption.childElementCount > 0) return;
+        if (/\.(mp4|webm)$/i.test(caption.textContent.trim())) caption.remove();
+    });
+}
+
 export function enhanceLessonMedia(scope: ParentNode): void {
+    removeLessonVideoFileCaptions(scope);
     scope.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => {
         if (!hasSource(media) || media.closest(playerTag)) return;
         const player = document.createElement(playerTag);

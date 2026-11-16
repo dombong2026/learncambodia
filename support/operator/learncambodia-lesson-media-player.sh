@@ -4,7 +4,8 @@ umask 077
 
 repo=dombong2026/learncambodia
 base=9a8c999f4148c5c39e841eba497904dafad538d6
-previous_player=f286972797ad007470804ce01596210e99f5b34d
+previous_player=00a89282bd90194e35775ee6e286bc377faa863c
+first_player=f286972797ad007470804ce01596210e99f5b34d
 release="${1:?Pass the reviewed lesson media player commit SHA}"
 [[ "$release" =~ ^[0-9a-f]{40}$ ]]
 test "$(id -u)" -eq 0
@@ -78,12 +79,15 @@ for file in "${files[@]}"; do
     if [[ -e "$file" ]]; then
         test -f "$file"
         if ! cmp -s "$file" "$stage/next/$file"; then
-            case "$file" in
-                resources/js/app.ts|resources/js/rich-editor.ts) baseline="$base" ;;
-                *) baseline="$previous_player" ;;
-            esac
-            fetch "$baseline" "$file" > "$stage/baseline"
-            cmp -s "$file" "$stage/baseline"
+            fetch "$previous_player" "$file" > "$stage/baseline"
+            if ! cmp -s "$file" "$stage/baseline"; then
+                case "$file" in
+                    resources/js/app.ts|resources/js/rich-editor.ts) baseline="$base" ;;
+                    *) baseline="$first_player" ;;
+                esac
+                fetch "$baseline" "$file" > "$stage/baseline"
+                cmp -s "$file" "$stage/baseline"
+            fi
         fi
         cp -a "$file" "$stage/previous/$file"
     fi

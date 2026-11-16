@@ -1,6 +1,6 @@
 // Compact, dependency-free rich editor. Only the server-side allowlist decides
 // what is persisted/rendered; the client also sanitizes HTML before DOM insertion.
-import { enhanceLessonMedia } from './lesson-media-player';
+import { enhanceLessonMedia, removeLessonVideoFileCaptions } from './lesson-media-player';
 
 const allowed = new Set([
     'p','div','br','strong','b','em','i','u','s','strike','h1','h2','h3','h4','h5','h6',
@@ -53,6 +53,7 @@ function safeCss(input: string, tag: string, node: Element): string {
 function safeMarkup(markup: string, lesson = false): string {
     const parsed = document.createElement('template');
     parsed.innerHTML = markup;
+    if (lesson) removeLessonVideoFileCaptions(parsed.content);
     const out = document.createElement('div');
 
     const copy = (node: Node): Node | null => {
@@ -682,7 +683,8 @@ function initializeEditor(root: HTMLElement): void {
             let markup = '';
             if (result.mime.startsWith('image/')) markup = '<figure><img src="' + href + '" alt="' + name + '"><figcaption>' + name + '</figcaption></figure><p></p>';
             else if (result.mime.startsWith('audio/')) markup = '<figure><audio src="' + href + '" controls preload="none"></audio><figcaption>' + name + '</figcaption></figure><p></p>';
-            else if (result.mime.startsWith('video/')) markup = '<figure><video src="' + href + '" controls preload="none"></video><figcaption>' + name + '</figcaption></figure><p></p>';
+            else if (result.mime.startsWith('video/')) markup = '<figure><video src="' + href + '" controls preload="none"></video>' +
+                (lesson ? '' : '<figcaption>' + name + '</figcaption>') + '</figure><p></p>';
             else if (lesson) markup = '<p><a data-resource="file" href="' + href + '">' + name + '</a></p>';
             if (insertion && visual.contains(insertion.startContainer)) selection = insertion;
             if (lesson) {
