@@ -22,6 +22,7 @@
             </div>
             <h2 class="text-2xl font-black text-[#123661] dark:text-white">{{ $lesson->title }}</h2>
             <x-lesson-content :lesson="$lesson" class="mt-7 text-base leading-10 text-slate-700 dark:text-slate-200" />
+            <x-lesson-quiz :lesson="$lesson" :enrollment="$enrollment" />
             <form action="{{ route('account.progress.update',[$enrollment,$lesson]) }}" method="POST" class="mt-9 flex flex-wrap justify-end gap-3">@csrf
                 <input type="hidden" name="complete" value="{{ $done?'0':'1' }}">
                 <button type="submit" class="rounded-xl px-6 py-3 text-xs font-black {{ $done?'border border-[#d6a660] text-[#a47625] dark:text-[#f2c575]':'bg-[#123a67] text-white' }}">{{ $done?'Mark for more study':'Mark this lesson complete' }}</button>

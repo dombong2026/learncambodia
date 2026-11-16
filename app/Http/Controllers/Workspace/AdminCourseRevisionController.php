@@ -60,6 +60,7 @@ class AdminCourseRevisionController extends Controller
                         'title' => $lesson->title,
                         'content' => $lesson->content,
                         'content_html' => $lesson->content_html,
+                        'quiz_questions' => $lesson->quiz_questions,
                         'position' => $lesson->position,
                         'duration_minutes' => $lesson->duration_minutes,
                         'is_preview' => $lesson->is_preview,

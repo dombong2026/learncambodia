@@ -10,15 +10,21 @@
             <h3 class="font-extrabold">Modules</h3>
             @if($editable)<a class="builder-button" href="{{ $curriculumUrl(null, 'new-module') }}">+ Add module</a>@endif
         </div>
-        <div class="space-y-2">
+        <div class="space-y-2" @if($editable && $course->modules->count() > 1)
+            data-order-list="module" data-order-url="{{ route('admin.course-builder.modules.reorder', $course) }}" @endif>
             @forelse($course->modules as $item)
-                <a class="builder-row builder-outline-row" href="{{ $curriculumUrl($item) }}" @if($module?->id === $item->id && $editor !== 'new-module') aria-current="true" @endif>
-                    <span class="builder-step-number">{{ $item->position }}</span>
+                <div class="builder-row builder-outline-row" data-order-id="{{ $item->id }}">
+                @if($editable && $course->modules->count() > 1)
+                    @include('workspace.admin.course-builder.reorder-handle')
+                @endif
+                <a class="flex min-w-0 flex-1 items-center gap-3 rounded-md hover:underline" href="{{ $curriculumUrl($item) }}" @if($module?->id === $item->id && $editor !== 'new-module') aria-current="true" @endif>
+                    <span class="builder-step-number" data-order-number>{{ $item->position }}</span>
                     <span class="min-w-0 flex-1">
                         <strong class="block break-words text-sm">{{ $item->title }}</strong>
                         <span class="mt-1 block text-xs text-slate-600 dark:text-slate-300">{{ $item->lessons_count }} {{ Str::plural('lesson', $item->lessons_count) }} · {{ (int) $item->lessons_sum_duration_minutes }} min</span>
                     </span>
                 </a>
+                </div>
             @empty
                 <p class="text-sm text-slate-600 dark:text-slate-300">No modules yet.</p>
             @endforelse
@@ -45,8 +51,14 @@
                         <h4 class="font-bold">Lessons</h4>
                         @if($editable)<a class="builder-button" href="{{ $curriculumUrl($module, 'new-lesson') }}">+ Add lesson</a>@endif
                     </div>
+                    <div class="space-y-2" @if($editable && $module->lessons->count() > 1)
+                        data-order-list="lesson" data-order-parent="{{ $module->id }}"
+                        data-order-url="{{ route('admin.course-builder.lessons.reorder', [$course, $module]) }}" @endif>
                     @forelse($module->lessons as $item)
-                        <div class="builder-row">
+                        <div class="builder-row" data-order-id="{{ $item->id }}">
+                            @if($editable && $module->lessons->count() > 1)
+                                @include('workspace.admin.course-builder.reorder-handle')
+                            @endif
                             <a class="flex min-w-0 flex-1 items-center gap-3 rounded-md text-sm font-semibold hover:underline" href="{{ $curriculumUrl($module, 'lesson', $item->id) }}" @if($currentLesson?->id === $item->id) aria-current="true" @endif>
                                 <x-workspace-icon name="file" class="h-4 w-4 shrink-0 text-blue-700 dark:text-blue-300"/>
                                 <span class="min-w-0 flex-1 break-words">{{ $item->title }}</span>
@@ -59,6 +71,7 @@
                     @empty
                         <p class="text-sm text-slate-600 dark:text-slate-300">This module has no lessons.</p>
                     @endforelse
+                    </div>
                 </div>
                 @if($currentLesson || ($editable && $editor === 'new-lesson'))
                     @include('workspace.admin.course-builder.lesson-editor', ['editingLesson' => $currentLesson])
@@ -69,3 +82,7 @@
         @endif
     </div>
 </div>
+@if($editable)
+    <p id="builder-reorder-instructions" class="sr-only">Drag up or down to reorder. With a keyboard, press the Up or Down arrow key.</p>
+    <p role="status" data-order-status class="mt-3 text-sm text-slate-700 dark:text-slate-200" hidden></p>
+@endif

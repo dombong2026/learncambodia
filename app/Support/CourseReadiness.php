@@ -39,7 +39,8 @@ final class CourseReadiness
                 'position'=>$module->position,
                 'lessons'=>$module->lessons->map(fn($lesson)=>$lesson->only([
                     'id','title','content','position','duration_minutes','is_preview',
-                ]) + (filled($lesson->content_html) ? $lesson->only('content_html') : []))->values()->all(),
+                ]) + (filled($lesson->content_html) ? $lesson->only('content_html') : [])
+                    + (filled($lesson->quiz_questions) ? $lesson->only('quiz_questions') : []))->values()->all(),
             ])->values()->all(),
             'quizzes'=>$course->quizzes->map(fn($quiz)=>[
                 'id'=>$quiz->id,'title'=>$quiz->title,'instructions'=>$quiz->instructions,

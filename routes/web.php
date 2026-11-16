@@ -36,6 +36,7 @@ use App\Http\Controllers\Workspace\InstructorInsightsController;
 use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
 use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
+use App\Http\Controllers\Workspace\StudentLessonQuizController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
@@ -204,6 +205,8 @@ Route::middleware('auth')->group(function (): void {
             Route::delete('/{course}/quizzes/{quiz}/questions/{question}', [AdminQuizController::class, 'destroyQuestion'])->name('quizzes.questions.destroy');
 
             Route::post('/{course}/modules', [AdminCurriculumController::class, 'storeModule'])->name('modules.store');
+            Route::patch('/{course}/module-order', [AdminCurriculumController::class, 'reorderModules'])->name('modules.reorder');
+            Route::patch('/{course}/modules/{module}/lesson-order', [AdminCurriculumController::class, 'reorderLessons'])->name('lessons.reorder');
             Route::patch('/{course}/modules/{module}', [AdminCurriculumController::class, 'updateModule'])->name('modules.update');
             Route::delete('/{course}/modules/{module}', [AdminCurriculumController::class, 'destroyModule'])->name('modules.destroy');
             Route::post('/{course}/modules/{module}/lessons', [AdminCurriculumController::class, 'storeLesson'])->name('lessons.store');
@@ -295,6 +298,8 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
+        Route::post('/enrollments/{enrollment}/lessons/{lesson}/quiz', [StudentLessonQuizController::class, 'store'])
+            ->middleware('throttle:20,1')->name('lessons.quiz');
         Route::get('/homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
         Route::get('/homework/submissions', [StudentHomeworkController::class, 'submissions'])->name('homework.submissions');
         Route::get('/homework/{assignment}', [StudentHomeworkController::class, 'show'])->name('homework.show');
