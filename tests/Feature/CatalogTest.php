@@ -67,7 +67,6 @@ class CatalogTest extends TestCase
         $category->update(['is_published' => false]);
 
         $this->seed(CategorySeeder::class);
-        $this->publishLearningCategoryFixtures();
 
         $this->assertFalse($category->fresh()->is_published);
         $this->get('/categories/'.$category->slug)->assertNotFound();
