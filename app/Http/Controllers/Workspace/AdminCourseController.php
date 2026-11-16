@@ -18,6 +18,8 @@ use Illuminate\View\View;
 
 class AdminCourseController extends Controller
 {
+    private const STEPS = ['details', 'media', 'curriculum', 'quizzes', 'review'];
+
     public function index(): View
     {
         return view('workspace.admin.courses', [
@@ -32,18 +34,34 @@ class AdminCourseController extends Controller
         return $this->form(new Course());
     }
 
-    public function edit(Course $course): View
+    public function edit(Request $request, Course $course): View
     {
-        return $this->form($course->load('modules.lessons'));
+        $step = $request->query('step');
+
+        return $this->form($course, in_array($step, self::STEPS, true) ? $step : 'details');
     }
 
-    private function form(Course $course): View
+    private function form(Course $course, string $step = 'details'): View
     {
+        if ($course->exists) {
+            $course->load(['category', 'featuredMedia', 'modules.lessons', 'quizzes' => fn ($query) => $query->withCount('questions')]);
+        }
+
+        $module = $step === 'curriculum' && $course->exists
+            ? ($course->modules->firstWhere('id', request()->integer('module')) ?? $course->modules->first())
+            : null;
+        $editor = $step === 'curriculum' ? request()->query('editor') : null;
+        $lesson = $editor === 'lesson' ? $module?->lessons->firstWhere('id', request()->integer('lesson')) : null;
+
         return view('workspace.admin.course-form', [
             'role' => 'admin',
             'course' => $course,
-            'categories' => Category::orderBy('sort_order')->get(),
-            'levels' => CefrLevel::orderBy('sort_order')->get(),
+            'step' => $step,
+            'module' => $module,
+            'editor' => $editor,
+            'lesson' => $lesson,
+            'categories' => $step === 'details' ? Category::orderBy('sort_order')->get() : collect(),
+            'levels' => $step === 'details' ? CefrLevel::orderBy('sort_order')->get() : collect(),
             'reviewChecklist' => $course->exists ? CourseReadiness::checklist($course) : [],
         ]);
     }
@@ -76,7 +94,8 @@ class AdminCourseController extends Controller
             'status' => 'draft', 'created_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('admin.course-builder.edit', $course)
+        return redirect()->route('admin.course-builder.edit', $request->input('continue') === '1'
+            ? ['course' => $course, 'step' => 'media'] : ['course' => $course])
             ->with('status', 'Draft course created. Add modules and lessons before review.');
     }
 
@@ -84,13 +103,34 @@ class AdminCourseController extends Controller
     {
         $data = $this->validated($request, $course);
 
+        $this->saveDraft($course, $data);
+
+        if ($request->input('continue') === '1') {
+            return redirect()->route('admin.course-builder.edit', ['course' => $course, 'step' => 'media'])
+                ->with('status', 'Course details saved.');
+        }
+
+        return back()->with('status', 'Course details saved.');
+    }
+
+    public function media(Request $request, Course $course): RedirectResponse
+    {
+        $request->validate(['featured_kind' => ['required', 'string']]);
+        $this->saveDraft($course, FeaturedMedia::validate($request));
+
+        return redirect()->route('admin.course-builder.edit', [
+            'course' => $course, 'step' => $request->input('continue') === '1' ? 'curriculum' : 'media',
+        ])->with('status', 'Featured media saved.');
+    }
+
+    private function saveDraft(Course $course, array $data): void
+    {
         DB::transaction(function () use ($course, $data): void {
             $locked = Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->isMutable(), 409, 'Only draft or rejected courses may be edited.');
             $locked->update($data);
         });
 
-        return back()->with('status', 'Course details saved. Publication requires review.');
     }
 
     public function submit(Request $request, Course $course): RedirectResponse
@@ -121,7 +161,7 @@ class AdminCourseController extends Controller
                 $request->user(), 'submitted', $from, 'pending_review');
         });
 
-        return redirect()->route('admin.course-builder.edit', $course)
+        return redirect()->route('admin.course-builder.edit', ['course' => $course, 'step' => 'review'])
             ->with('status', 'Course submitted for independent administrator review.');
     }
 }

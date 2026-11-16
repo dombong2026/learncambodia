@@ -187,6 +187,7 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/', [AdminCourseController::class, 'store'])->name('store');
             Route::get('/{course}/edit', [AdminCourseController::class, 'edit'])->name('edit');
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
+            Route::patch('/{course}/media', [AdminCourseController::class, 'media'])->name('media');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
             Route::get('/{course}/history', [AdminCurriculumHistoryController::class, 'index'])->name('history.index');
             Route::post('/{course}/modules/{module}/duplicate', [AdminCurriculumController::class, 'duplicateModule'])->name('modules.duplicate');

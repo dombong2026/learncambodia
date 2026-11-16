@@ -48,7 +48,7 @@ class MilestoneThreeScreenTest extends TestCase
             ->get('/dashboard/courses')->assertOk()->assertSee('Acceptance Course');
         $this->get('/dashboard/course-builder/create')->assertOk()
             ->assertSee('Create New Course');
-        $this->get('/dashboard/course-builder/'.$course->id.'/edit')->assertOk()
+        $this->get('/dashboard/course-builder/'.$course->id.'/edit?step=curriculum')->assertOk()
             ->assertSee('Lesson 1');
         $this->get('/dashboard/appearance')->assertOk()->assertSee('Typography');
         $this->get('/dashboard/appearance/header')->assertOk()->assertSee('Search Placeholder');

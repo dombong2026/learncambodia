@@ -13,14 +13,24 @@ use Illuminate\Support\Facades\DB;
 
 class AdminCurriculumController extends Controller
 {
-    private function mutate(Course $course, callable $action): void
+    private function mutate(Course $course, callable $action): mixed
     {
-        DB::transaction(function () use ($course,$action): void {
+        return DB::transaction(function () use ($course,$action) {
             $locked=Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->isMutable(),409,
                 'The curriculum is locked while pending approval or published.');
-            $action($locked);
+            return $action($locked);
         });
+    }
+
+    private function saved(Request $request, Course $course, string $message, array $selection = []): RedirectResponse
+    {
+        $parameters = ['course' => $course, 'step' => 'quizzes'];
+        if ($request->input('continue') !== '1') {
+            $parameters = ['course' => $course, 'step' => 'curriculum', ...$selection];
+        }
+
+        return redirect()->route('admin.course-builder.edit', $parameters)->with('status', $message);
     }
 
     private function module(Course $course,CourseModule $module): void
@@ -56,11 +66,11 @@ class AdminCurriculumController extends Controller
     public function storeModule(Request $request,Course $course): RedirectResponse
     {
         $data=$this->moduleRules($request);
-        $this->mutate($course,function($locked) use ($data): void {
+        $module = $this->mutate($course,function($locked) use ($data): CourseModule {
             abort_if($locked->modules()->count()>=100,422,'Module count limit reached.');
-            $locked->modules()->create($data);
+            return $locked->modules()->create($data);
         });
-        return back()->with('status','Curriculum module added.');
+        return $this->saved($request, $course, 'Curriculum module added.', ['module' => $module->id]);
     }
 
     public function updateModule(Request $request,Course $course,CourseModule $module): RedirectResponse
@@ -68,7 +78,7 @@ class AdminCurriculumController extends Controller
         $this->module($course,$module);
         $data=$this->moduleRules($request);
         $this->mutate($course,fn()=> $module->update($data));
-        return back()->with('status','Module updated.');
+        return $this->saved($request, $course, 'Module updated.', ['module' => $module->id, 'editor' => 'module']);
     }
 
     public function destroyModule(Request $request,Course $course,CourseModule $module): RedirectResponse
@@ -80,19 +90,20 @@ class AdminCurriculumController extends Controller
             }
             $module->delete();
         });
-        return back()->with('status','Module and its draft lessons deleted; revision history retained.');
+        return $this->saved($request, $course, 'Module and its draft lessons deleted; revision history retained.');
     }
 
     public function storeLesson(Request $request,Course $course,CourseModule $module): RedirectResponse
     {
         $this->module($course,$module);
         $data=$this->lessonRules($request);
-        $this->mutate($course,function($locked) use($request,$module,$data): void {
+        $lesson = $this->mutate($course,function($locked) use($request,$module,$data): CourseLesson {
             abort_if($module->lessons()->count()>=200,422,'Lesson count limit reached.');
             $lesson=$module->lessons()->create($data);
             CurriculumLessonRevision::capture($locked,$lesson,$request->user(),'created');
+            return $lesson;
         });
-        return back()->with('status','Lesson added and revision recorded.');
+        return $this->saved($request, $course, 'Lesson added and revision recorded.', ['module' => $module->id, 'editor' => 'lesson', 'lesson' => $lesson->id]);
     }
 
     public function updateLesson(Request $request,Course $course,CourseModule $module,CourseLesson $lesson): RedirectResponse
@@ -107,7 +118,7 @@ class AdminCurriculumController extends Controller
                 CurriculumLessonRevision::capture($locked,$lesson,$request->user(),'updated');
             }
         });
-        return back()->with('status','Lesson updated and revision recorded.');
+        return $this->saved($request, $course, 'Lesson updated and revision recorded.', ['module' => $module->id, 'editor' => 'lesson', 'lesson' => $lesson->id]);
     }
 
     public function destroyLesson(Request $request,Course $course,CourseModule $module,CourseLesson $lesson): RedirectResponse
@@ -118,7 +129,7 @@ class AdminCurriculumController extends Controller
             CurriculumLessonRevision::capture($locked,$lesson,$request->user(),'deleted');
             $lesson->delete();
         });
-        return back()->with('status','Draft lesson deleted; revision history retained.');
+        return $this->saved($request, $course, 'Draft lesson deleted; revision history retained.', ['module' => $module->id]);
     }
 
     public function duplicateLesson(Request $request,Course $course,CourseModule $module,CourseLesson $lesson): RedirectResponse
@@ -136,7 +147,7 @@ class AdminCurriculumController extends Controller
             ]);
             CurriculumLessonRevision::capture($locked,$copy,$request->user(),'copied');
         });
-        return back()->with('status','Draft lesson duplicated; independent review still required.');
+        return $this->saved($request, $course, 'Draft lesson duplicated; independent review still required.', ['module' => $module->id]);
     }
 
     public function duplicateModule(Request $request,Course $course,CourseModule $module): RedirectResponse
@@ -159,6 +170,6 @@ class AdminCurriculumController extends Controller
                 CurriculumLessonRevision::capture($locked,$duplicate,$request->user(),'copied');
             }
         });
-        return back()->with('status','Draft module copied; full academic review remains required.');
+        return $this->saved($request, $course, 'Draft module copied; full academic review remains required.', ['module' => $module->id]);
     }
 }

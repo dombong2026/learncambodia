@@ -47,8 +47,8 @@ final class StarterCourseMediaTest extends TestCase
         $image = route('editor-media.show', $course->featuredMedia);
         $this->get($image)->assertForbidden();
         $this->get(route('courses.show', $course->slug))->assertNotFound();
-        $this->actingAs($author)->get(route('admin.course-builder.edit', $course))
-            ->assertOk()->assertSee('Featured media')->assertSee($image);
+        $this->actingAs($author)->get(route('admin.course-builder.edit', ['course' => $course, 'step' => 'media']))
+            ->assertOk()->assertSee('Featured Media')->assertSee($image);
 
         $this->delete(route('admin.media-library.destroy', $course->featuredMedia))
             ->assertSessionHasErrors('media');

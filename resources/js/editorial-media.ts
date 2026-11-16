@@ -84,6 +84,7 @@ if (settings && picker) {
     function choose(item: MediaItem): void {
         assetId.value = String(item.id);
         assetName.textContent = item.name;
+        assetId.dispatchEvent(new Event('change', { bubbles: true }));
         picker!.close();
     }
 

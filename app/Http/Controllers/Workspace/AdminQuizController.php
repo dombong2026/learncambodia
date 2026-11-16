@@ -117,7 +117,7 @@ class AdminQuizController extends Controller
         $this->owns($course, $quiz);
         $this->mutate($course, fn () => $quiz->delete());
 
-        return redirect()->route('admin.course-builder.edit', $course)
+        return redirect()->route('admin.course-builder.edit', ['course' => $course, 'step' => 'quizzes'])
             ->with('status', 'Draft quiz deleted.');
     }
 
