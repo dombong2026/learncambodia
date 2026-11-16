@@ -7,16 +7,18 @@ cd /www/wwwroot/learncambodia.com
 
 repo=dombong2026/learncambodia
 old=b90deb37f33a756fec7b81450f997a8e4cab349d
-release="${1:?Pass the reviewed course description editor commit SHA}"
+release="${1:?Pass the reviewed Course Builder editors commit SHA}"
 [[ "$release" =~ ^[a-f0-9]{40}$ ]]
 php=/www/server/php/85/bin/php
-marker=storage/app/private/learncambodia-course-description-release.txt
+marker=storage/app/private/learncambodia-course-editors-release.txt
 export GH_CONFIG_DIR=/root/learncambodia-github-auth/gh
 export GIT_CONFIG_GLOBAL=/root/learncambodia-github-auth/gitconfig
 export GIT_CONFIG_NOSYSTEM=1
 exec 9>/var/backups/learncambodia/course-builder.lock
 flock -n 9
-if [[ -f "$marker" ]] && grep -Fxq "COURSE_DESCRIPTION_SHA=$release" "$marker"; then
+if [[ -f "$marker" ]] && grep -Fxq "COURSE_EDITORS_SHA=$release" "$marker"; then
+    test ! -e storage/framework/down
+    echo COURSE_EDITORS_APPLY=PASS
     printf '%s\n' 'This release is already installed.'
     exit 0
 fi
@@ -31,13 +33,13 @@ artifact="$(gh api "repos/$repo/actions/runs/$vite/artifacts" --jq '.artifacts[]
 IFS=$'\t' read -r artifact_id digest <<< "$artifact"
 [[ "$artifact_id" =~ ^[0-9]+$ && "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
 
-stage="$(mktemp -d /var/backups/learncambodia/course-description-XXXXXXXX)"
+stage="$(mktemp -d /var/backups/learncambodia/course-editors-XXXXXXXX)"
 git init -q "$stage/source"
 git -C "$stage/source" fetch -q --depth=1 "https://github.com/$repo.git" "$old" "$release"
 git -C "$stage/source" diff --name-only "$old" "$release" | awk '!/^(tests|support\/operator)\//' > "$stage/files"
 test -s "$stage/files"
 while IFS= read -r file; do
-    [[ "$file" =~ ^(app/(Http/Controllers/|Models/|Support/)|resources/(views|css|js)/|database/migrations/2026_11_16_000033_add_rich_course_descriptions\.php$) ]]
+    [[ "$file" =~ ^(app/(Http/Controllers/|Models/|Support/)|resources/(views|css|js)/|database/migrations/2026_11_16_00003(3_add_rich_course_descriptions|4_add_rich_lesson_content)\.php$) ]]
     test ! -L "$file"
     if prior="$(git -C "$stage/source" rev-parse --verify "$old:$file" 2>/dev/null)"; then
         test "$(git hash-object "$file")" = "$prior"
@@ -94,7 +96,7 @@ rollback() {
             artisan view:cache
         fi
         if ((maintenance)); then artisan up; fi
-        echo "COURSE_DESCRIPTION_APPLY=FAILED Backup: $stage"
+        echo "COURSE_EDITORS_APPLY=FAILED Backup: $stage"
     fi
     exit "$code"
 }
@@ -113,12 +115,29 @@ mv public/build "$stage/old-build"
 mv "$stage/next-build" public/build
 if ((route_cached)); then artisan route:cache; fi
 # Keep the additive columns/tables if code rollback is needed so authored data can never be dropped by this installer.
-artisan migrate --path=database/migrations/2026_11_16_000033_add_rich_course_descriptions.php --force
+artisan migrate --force \
+    --path=database/migrations/2026_11_16_000033_add_rich_course_descriptions.php \
+    --path=database/migrations/2026_11_16_000034_add_rich_lesson_content.php
+runuser -u www -- "$php" <<'PHP'
+<?php
+require 'vendor/autoload.php';
+$app = require 'bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$schema = Illuminate\Support\Facades\Schema::getFacadeRoot();
+if (!$schema->hasColumn('courses', 'description_html')
+    || !$schema->hasColumn('course_lessons', 'content_html')
+    || !$schema->hasColumn('curriculum_lesson_revisions', 'content_html')
+    || !$schema->hasTable('course_description_media')
+    || !$schema->hasTable('course_lesson_media')) {
+    exit(1);
+}
+echo "COURSE_EDITORS_SCHEMA=PASS\n";
+PHP
 artisan route:list --name=admin.course-builder.edit --json | grep -F 'admin.course-builder.edit' >/dev/null
 artisan view:clear
 artisan view:cache
-printf 'PR51_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
+printf 'COURSE_EDITORS_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
 install -o root -g www -m 0640 "$stage/marker" "$marker"
 artisan up
 test ! -e storage/framework/down
-echo COURSE_DESCRIPTION_APPLY=PASS
+echo COURSE_EDITORS_APPLY=PASS
