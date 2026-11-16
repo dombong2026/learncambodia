@@ -41,6 +41,22 @@ final class EditorHtml
         return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags(self::clean($html) ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
     }
 
+    public static function courseText(?string $cleanHtml): string
+    {
+        $withLineBreaks = preg_replace('~<(?:br|hr)\b[^>]*>|</(?:p|div|h[1-6]|blockquote|pre|li|tr|figure|figcaption)>~i', "\n", $cleanHtml ?? '');
+        $withCellSpacing = preg_replace('~</(?:td|th)>~i', ' ', $withLineBreaks);
+
+        return trim(html_entity_decode(strip_tags($withCellSpacing), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    /** Extract only actual media attributes from already sanitized markup. */
+    public static function sourceIds(?string $cleanHtml): array
+    {
+        preg_match_all('~<(?:img|audio|video|source)\b[^>]*? src="/editor-media/([1-9][0-9]*)"~', $cleanHtml ?? '', $matches);
+
+        return array_values(array_unique(array_map('intval', $matches[1])));
+    }
+
     /** Only scoped media endpoints; no remote tracking pixels or executable URLs. */
     public static function mediaIds(?string $html): array
     {
@@ -69,7 +85,7 @@ final class EditorHtml
         if ($style !== '') $attrs .= self::attr('style', $style);
         if ($tag === 'a') {
             $url = trim($node->getAttribute('href'));
-            if (preg_match('~^(https?://|mailto:|tel:|/)~i', $url) && !str_starts_with($url, '//')) {
+            if (preg_match('~^(?:https?://|mailto:|tel:|/(?![/\\\\]))[^\x00-\x1f\x7f]*$~iD', $url)) {
                 $attrs .= self::attr('href', $url);
                 $attrs .= ' rel="noopener noreferrer nofollow"';
             }
@@ -100,7 +116,7 @@ final class EditorHtml
     private static function safeStyle(DOMElement $node): string
     {
         $safe = [];
-        $raw = explode(';', mb_strtolower($node->getAttribute('style')));
+        $raw = ['text-align:'.mb_strtolower($node->getAttribute('align')), ...explode(';', mb_strtolower($node->getAttribute('style')))];
         if (strtolower($node->tagName) === 'font') {
             $raw[] = 'color:'.$node->getAttribute('color');
             $size = (int) $node->getAttribute('size');
@@ -118,6 +134,8 @@ final class EditorHtml
                 if ($value !== null) $safe[$key] = $value;
             } elseif ($key === 'text-align' && in_array($value, ['left','center','right','justify'], true)) {
                 $safe[$key] = $value;
+            } elseif (in_array($key, ['margin-left', 'margin-inline-start'], true) && preg_match('/^(40|80|120|160)px$/D', $value)) {
+                $safe['margin-inline-start'] = $value;
             } elseif ($key === 'font-size' && preg_match('/^(12|14|16|18|20|24|28|32|36)px$/D', $value)) {
                 $safe[$key] = $value;
             } elseif ($key === 'font-family' && in_array($value, ['arial','georgia','monospace'], true)) {

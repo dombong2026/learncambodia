@@ -142,7 +142,7 @@ final class EditorMediaController extends Controller
     private function storeUpload(Request $request, bool $library): JsonResponse
     {
         $data = $request->validate([
-            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket'])],
+            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course'])],
             'file' => ['required', 'file', $library ? 'max:51200' : 'max:12288',
                 'mimetypes:'.implode(',', $library
                     ? FeaturedMedia::MIMES
@@ -154,6 +154,7 @@ final class EditorMediaController extends Controller
         if (!$library) {
             $unclaimed = EditorMedia::query()->where('context', $data['context'])->where('uploaded_by', $request->user()->id)
                 ->whereNull('content_entry_id')->whereNull('support_ticket_id')
+                ->when($data['context'] === 'course', fn ($media) => $media->doesntHave('descriptionCourses'))
                 ->where('created_at', '>=', now()->subDay())->count();
             abort_if($unclaimed >= 20, 429, 'Save your current draft before uploading more files.');
         }
@@ -199,6 +200,9 @@ final class EditorMediaController extends Controller
             $published = $published || Course::published()->where('featured_media_id', $media->id)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
             abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
+        } elseif ($media->context === 'course') {
+            $published = $media->descriptionCourses()->published()->exists();
+            abort_unless($published || $viewer?->role === 'admin', 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&
                 ContentEntry::query()->whereKey($media->content_entry_id)

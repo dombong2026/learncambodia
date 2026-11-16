@@ -39,12 +39,15 @@ class AdminCourseRevisionController extends Controller
                 'title' => $source->title,
                 'summary' => $source->summary,
                 'description' => $source->description,
+                'description_html' => $source->description_html,
                 'cefr_level' => $source->cefr_level,
                 'delivery_mode' => $source->delivery_mode,
                 'status' => 'draft',
                 'published_at' => null,
                 'created_by' => $request->user()->id,
             ]);
+
+            $new->descriptionMedia()->attach($source->descriptionMedia()->allRelatedIds());
 
             foreach ($source->modules()->with('lessons')->get() as $module) {
                 $copied = $new->modules()->create([

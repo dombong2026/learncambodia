@@ -56,6 +56,10 @@ final class CourseReadiness
             $data['course'] += $course->only(Course::FEATURED_FIELDS);
         }
 
+        if (filled($course->description_html)) {
+            $data['course']['description_html'] = $course->description_html;
+        }
+
         return hash('sha256',json_encode($data,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
     }
 }

@@ -12,7 +12,7 @@
     <div><p class="text-sm font-extrabold">My lesson progress</p><p class="mt-1 text-xs text-slate-500">{{ count($completedLessonIds) }} of {{ $totalLessons }} lessons complete (self-reported)</p></div>
     <a href="{{ route('account.progress.index') }}" class="text-sm font-bold text-blue-700 dark:text-blue-400">View progress →</a>
 </div>
-<p class="max-w-4xl text-sm leading-8 text-slate-600 dark:text-slate-400">{{ $course->description }}</p>
+<x-course-description :course="$course" class="max-w-4xl text-sm leading-8 text-slate-600 dark:text-slate-400" />
 <div class="mt-7 space-y-6">
 @foreach($course->modules as $module)
     <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">

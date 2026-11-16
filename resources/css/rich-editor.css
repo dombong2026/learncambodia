@@ -49,3 +49,33 @@
 .rich-editor-expanded .rich-editor-source { min-height: 0; flex: 1; resize: none; }
 .rich-editor-preview-dialog { width: min(800px, 94vw); max-height: 90vh; }
 .rich-editor-preview-dialog::backdrop { background: rgba(6, 17, 35, .67); }
+
+.course-description-editor .rich-editor-toolbar {
+    gap: .25rem;
+    padding: .375rem .5rem;
+}
+.course-description-editor .rich-editor-canvas {
+    min-height: 12rem;
+}
+.course-description-editor.rich-editor-expanded .rich-editor-canvas {
+    min-height: 0;
+}
+.workspace-content .course-description-editor :is(.rich-tool-select, .rich-editor-source, [data-editor-plain]) {
+    background: transparent;
+}
+.workspace-content .course-description-editor [data-editor-visual] :is(thead, tr:hover) {
+    background: transparent;
+}
+.course-description-editor .rich-tool:has(:focus-visible) {
+    outline: 2px solid #e9b54b;
+}
+.course-description-editor .rich-tool[aria-pressed="true"] {
+    color: #1d4ed8;
+}
+.dark .course-description-editor .rich-tool[aria-pressed="true"] {
+    color: #93c5fd;
+}
+.course-description-content {
+    min-width: 0;
+    overflow-x: auto;
+}

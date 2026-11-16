@@ -20,6 +20,12 @@
         </dl>
     </div>
 </div>
+@if($course->description || $course->description_html)
+    <section class="mt-7 border-t border-slate-200 pt-5 dark:border-slate-700" aria-labelledby="builder-description">
+        <h3 id="builder-description" class="text-lg font-extrabold">Full course description</h3>
+        <x-course-description :course="$course" class="mt-2 text-sm leading-7" />
+    </section>
+@endif
 <section class="mt-7" aria-labelledby="builder-checklist">
     <h3 id="builder-checklist" class="text-lg font-extrabold">Academic review readiness</h3>
     <ul class="mt-3 space-y-2">

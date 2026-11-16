@@ -16,10 +16,33 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await builder.getByLabel('Course title').fill(courseTitle);
     await builder.getByLabel('Category', { exact: true }).selectOption({ index: 1 });
     await builder.getByLabel('Summary', { exact: true }).fill('A short English practice course.');
-    await builder.getByLabel('Full course description').fill('A guided session on introductions.');
+    const editor = builder.getByRole('region', { name: 'Rich text editor' });
+    const visual = editor.getByRole('textbox', { name: 'Full course description' });
+    await visual.fill('A guided session on introductions.');
+    await expect(builder.getByText('Unsaved changes', { exact: true })).toBeVisible();
+    const bold = editor.getByRole('button', { name: 'Bold', exact: true });
+    await expect(bold).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await editor.getByRole('button', { name: 'HTML', exact: true }).click();
+    const source = editor.getByRole('textbox', { name: 'Edit safe HTML source' });
+    await expect(source).toHaveValue(/A guided session on introductions/);
+    await source.fill('<h2>Introductions</h2><p>Practise greetings <strong>aloud</strong>.</p><table><tbody><tr><td>Welcome</td><td>Goodbye</td></tr></tbody></table><script>window.__unsafe=1</script>');
+    await editor.getByRole('button', { name: 'Text', exact: true }).click();
+    await expect(visual.locator('strong')).toHaveText('aloud');
+    await expect(visual.locator('script')).toHaveCount(0);
+    await visual.getByRole('cell', { name: 'Welcome' }).click();
+    await editor.getByRole('button', { name: 'Add row', exact: true }).click();
+    await expect(visual.getByRole('row')).toHaveCount(2);
+    await visual.getByRole('cell', { name: 'Welcome' }).click();
+    await editor.getByRole('button', { name: 'Remove table', exact: true }).click();
+    await expect(visual.getByRole('table')).toHaveCount(0);
+    await editor.getByRole('button', { name: 'Preview', exact: true }).click();
+    const preview = editor.getByRole('dialog', { name: 'Live content preview' });
+    await expect(preview.getByRole('heading', { name: 'Introductions', exact: true })).toBeVisible();
+    await preview.getByRole('button', { name: 'Close preview' }).click();
     await builder.getByRole('button', { name: /Create draft & continue/ }).click();
     await expect(page).toHaveURL(/step=media/);
 
+    await expect(builder).toHaveAttribute('data-builder-ready', 'true');
     await builder.getByLabel('Media type').selectOption('color');
     await expect(builder.getByText('Unsaved changes', { exact: true })).toBeVisible();
     page.once('dialog', dialog => dialog.dismiss());
@@ -40,6 +63,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page).toHaveURL(/step=quizzes/);
     await builder.getByRole('link', { name: /Continue/ }).click();
     await expect(builder.getByRole('heading', { name: 'Review & Submit' })).toBeVisible();
+    await expect(builder.locator('.course-description-content strong')).toHaveText('aloud');
     await expect(builder.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
   });
 

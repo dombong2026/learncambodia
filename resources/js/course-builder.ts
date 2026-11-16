@@ -31,6 +31,7 @@ if (builder) {
     });
 
     builder.addEventListener('submit', event => {
+        if (event.defaultPrevented) return;
         const form = event.target as HTMLFormElement;
         const warning = form.dataset.builderConfirm;
         if ((form !== editable && !confirmDiscard()) || (warning && !window.confirm(warning))) {
@@ -43,6 +44,7 @@ if (builder) {
     window.addEventListener('beforeunload', event => {
         if (!proceeding && isDirty()) event.preventDefault();
     });
+    builder.dataset.builderReady = 'true';
     window.addEventListener('pageshow', () => {
         proceeding = false;
         updateNotice();

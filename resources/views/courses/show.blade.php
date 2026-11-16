@@ -71,7 +71,7 @@
         <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
             <p class="text-xs font-black uppercase tracking-[.12em] text-[#b27a25]">{{ __('pages.learning_objectives') }}</p>
             <h2 class="mt-2 text-xl font-black text-[#0c315c] dark:text-white">{{ __('pages.what_you_learn') }}</h2>
-            <p class="mt-4 whitespace-pre-line break-words text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $course->description }}</p>
+            <x-course-description :course="$course" class="mt-4 text-sm leading-8 text-slate-600 dark:text-slate-300" />
         </section>
         <section id="course-curriculum" class="scroll-mt-40 overflow-hidden rounded-3xl border border-[#c69a4d] bg-[#0e315e] p-7 text-white shadow-md">
             <div class="flex flex-wrap items-start justify-between gap-3">

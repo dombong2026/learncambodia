@@ -7,10 +7,13 @@ const allowed = new Set([
 ]);
 const discard = new Set(['script','style','iframe','object','embed','svg','math','form','input','button','link','meta','base']);
 const mediaPattern = /^\/editor-media\/[1-9]\d*$/;
+const linkPattern = /^(?:https?:\/\/|mailto:|tel:|\/(?![\/\\]))[^\x00-\x1f\x7f]*$/i;
 
 function safeCss(input: string, tag: string, node: Element): string {
     const properties: Record<string, string> = {};
     const items = input.toLowerCase().split(';');
+    const align = node.getAttribute('align');
+    if (align) items.unshift('text-align:' + align.toLowerCase());
     if (tag === 'font') {
         items.push('color:' + (node.getAttribute('color') ?? ''));
         const sizes = ['','12','14','16','18','24','32','36'];
@@ -24,7 +27,9 @@ function safeCss(input: string, tag: string, node: Element): string {
         if (separator < 0) continue;
         const key = item.slice(0, separator).trim();
         let value = item.slice(separator + 1).trim();
-        if (key === 'color' || key === 'background-color') {
+        if (key === 'margin-left' && /^(40|80|120|160)px$/.test(value)) {
+            properties['margin-inline-start'] = value;
+        } else if (key === 'color' || key === 'background-color') {
             const rgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/.exec(value);
             if (rgb && rgb.slice(1).every(v => Number(v) <= 255)) {
                 value = '#' + rgb.slice(1).map(v => Number(v).toString(16).padStart(2, '0')).join('');
@@ -34,6 +39,8 @@ function safeCss(input: string, tag: string, node: Element): string {
             properties[key] = value;
         } else if (key === 'font-size' && /^(12|14|16|18|20|24|28|32|36)px$/.test(value)) {
             properties[key] = value;
+        } else if (key === 'margin-inline-start' && /^(40|80|120|160)px$/.test(value)) {
+            properties[key] = value;
         } else if (key === 'font-family' && ['arial','georgia','monospace'].includes(value)) {
             properties[key] = value;
         }
@@ -42,30 +49,32 @@ function safeCss(input: string, tag: string, node: Element): string {
 }
 
 function safeMarkup(markup: string): string {
-    const doc = new DOMParser().parseFromString(markup, 'text/html');
+    const parsed = document.createElement('template');
+    parsed.innerHTML = markup;
     const out = document.createElement('div');
 
     const copy = (node: Node): Node | null => {
         if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent ?? '');
-        if (!(node instanceof Element)) return null;
-        const tag = node.tagName.toLowerCase();
+        if (node.nodeType !== Node.ELEMENT_NODE) return null;
+        const element = node as Element;
+        const tag = element.tagName.toLowerCase();
         if (discard.has(tag)) return null;
         const el = document.createElement(allowed.has(tag) ? tag : 'span');
-        const style = safeCss(node.getAttribute('style') ?? '', tag, node);
+        const style = safeCss(element.getAttribute('style') ?? '', tag, element);
         if (style) el.setAttribute('style', style);
         if (tag === 'a') {
-            const href = node.getAttribute('href') ?? '';
-            if (/^(https?:\/\/|mailto:|tel:|\/(?!\/))/i.test(href)) {
+            const href = element.getAttribute('href') ?? '';
+            if (linkPattern.test(href)) {
                 el.setAttribute('href', href);
                 el.setAttribute('rel', 'noopener noreferrer nofollow');
             }
         }
         if (['img','audio','video','source'].includes(tag)) {
-            const src = node.getAttribute('src') ?? '';
+            const src = element.getAttribute('src') ?? '';
             if (src && !mediaPattern.test(src) && ['img','source'].includes(tag)) return null;
             if (mediaPattern.test(src)) el.setAttribute('src', src);
             if (tag === 'img') {
-                el.setAttribute('alt', (node.getAttribute('alt') ?? '').slice(0, 200));
+                el.setAttribute('alt', (element.getAttribute('alt') ?? '').slice(0, 200));
                 el.setAttribute('loading', 'lazy');
             }
             if (tag === 'audio' || tag === 'video') {
@@ -75,7 +84,7 @@ function safeMarkup(markup: string): string {
         }
         if (tag === 'td' || tag === 'th') {
             for (const attr of ['colspan','rowspan']) {
-                const value = node.getAttribute(attr) ?? '';
+                const value = element.getAttribute(attr) ?? '';
                 if (/^[1-8]$/.test(value)) el.setAttribute(attr, value);
             }
         }
@@ -86,7 +95,7 @@ function safeMarkup(markup: string): string {
         }
         return el;
     };
-    for (const node of Array.from(doc.body.childNodes)) {
+    for (const node of Array.from(parsed.content.childNodes)) {
         const next = copy(node);
         if (next) out.append(next);
     }
@@ -117,16 +126,29 @@ function initializeEditor(root: HTMLElement): void {
     if (!form || !visual || !source || !plain || !html || !enhanced) return;
 
     const locked = Boolean(root.closest('fieldset')?.disabled);
+    const course = root.dataset.editorContext === 'course';
+    const required = plain.required;
+    const startingText = plain.value;
+    const startingHtml = html.value;
+    // Keep the legacy fallback untouched until the description itself changes.
+    const initial = safeMarkup(startingHtml || initialMarkup(startingText));
+    const formatting = root.querySelector<HTMLElement>('[data-editor-formatting]');
     let mode: 'text' | 'html' = 'text';
     let selection: Range | null = null;
-    visual.innerHTML = safeMarkup(html.value || initialMarkup(plain.value));
+    visual.innerHTML = initial;
+    html.disabled = false;
     enhanced.hidden = false;
     plain.hidden = true;
     plain.required = false;
     visual.contentEditable = locked ? 'false' : 'true';
 
     const inform = (message: string): void => { if (notice) notice.textContent = message; };
-    const getText = (): string => (visual.innerText || visual.textContent || '').trim();
+    const getText = (markup: string): string => {
+        const content = document.createElement('template');
+        content.innerHTML = markup.replace(/<(?:br|hr)\b[^>]*>|<\/(?:p|div|h[1-6]|blockquote|pre|li|tr|figure|figcaption)>/gi, '\n')
+            .replace(/<\/(?:td|th)>/gi, ' ');
+        return (content.content.textContent ?? '').trim();
+    };
 
     const updateSidebar = (words: number): void => {
         const summary = form.querySelector<HTMLElement>('[data-editor-words-summary]');
@@ -144,12 +166,15 @@ function initializeEditor(root: HTMLElement): void {
 
     const sync = (): void => {
         const cleaned = safeMarkup(mode === 'html' ? source.value : visual.innerHTML);
-        html.value = cleaned;
+        const text = getText(cleaned);
+        const meaningful = text || /<(?:img|audio|video|hr)\b/.test(cleaned);
+        const unchanged = course && cleaned === initial;
+        html.value = unchanged ? startingHtml : (course && !meaningful ? '' : cleaned);
         if (mode === 'html') {
             // Keep raw input out of the live DOM until it has passed client sanitization.
-            visual.innerHTML = cleaned;
+            if (visual.innerHTML !== cleaned) visual.innerHTML = cleaned;
         }
-        plain.value = getText();
+        plain.value = unchanged ? startingText : text;
         const words = plain.value ? plain.value.split(/\s+/u).length : 0;
         if (count) count.textContent = String(words) + ' words · ' + String(plain.value.length) + ' characters';
         updateSidebar(words);
@@ -159,7 +184,7 @@ function initializeEditor(root: HTMLElement): void {
         if (mode === next) return;
         sync();
         if (next === 'html') {
-            source.value = html.value;
+            source.value = safeMarkup(visual.innerHTML);
             visual.hidden = true;
             source.hidden = false;
             source.focus();
@@ -170,12 +195,31 @@ function initializeEditor(root: HTMLElement): void {
             if (!locked) visual.focus();
         }
         mode = next;
+        selectedMedia = null;
+        if (course && formatting) formatting.hidden = next === 'html';
+        selection = null;
+        updateSelectionTools();
         root.querySelectorAll<HTMLButtonElement>('[data-editor-mode]').forEach(button => {
             button.setAttribute('aria-pressed', String(button.dataset.editorMode === next));
         });
         inform(next === 'html' ? 'Editing HTML source. Unsafe tags and attributes are removed on save.' : 'Visual text editing.');
     };
 
+    const caption = root.querySelector<HTMLButtonElement>('[data-editor-media-caption]');
+    const alt = root.querySelector<HTMLButtonElement>('[data-editor-media-alt]');
+    const removeMedia = root.querySelector<HTMLButtonElement>('[data-editor-media-remove]');
+    const tableTools = root.querySelector<HTMLElement>('[data-editor-table-tools]');
+    let selectedMedia: HTMLElement | null = null;
+    const selectedElement = (selector: string): Element | null => {
+        const node = selection?.startContainer;
+        return (node instanceof Element ? node : node?.parentElement)?.closest(selector) ?? null;
+    };
+    const updateSelectionTools = (): void => {
+        if (caption) caption.hidden = !selectedMedia?.matches('figure');
+        if (alt) alt.hidden = !(selectedMedia?.matches('img') || selectedMedia?.querySelector('img'));
+        if (removeMedia) removeMedia.hidden = !selectedMedia;
+        if (tableTools) tableTools.hidden = !selectedElement('td, th');
+    };
     const remember = (): void => {
         const current = window.getSelection();
         if (current?.rangeCount && visual.contains(current.anchorNode)) selection = current.getRangeAt(0).cloneRange();
@@ -195,11 +239,117 @@ function initializeEditor(root: HTMLElement): void {
         document.execCommand(name, false, value);
         remember();
         sync();
+        if (course) plain.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
-    visual.addEventListener('keyup', remember);
-    visual.addEventListener('mouseup', remember);
-    visual.addEventListener('input', sync);
+    visual.addEventListener('keyup', () => {
+        selectedMedia = null;
+        remember();
+        updateSelectionTools();
+    });
+    visual.addEventListener('mouseup', event => {
+        const target = event.target as Element;
+        selectedMedia = target.closest<HTMLElement>('figure, img, audio, video');
+        remember();
+        updateSelectionTools();
+    });
+    visual.addEventListener('input', () => {
+        remember();
+        if (selectedMedia && !visual.contains(selectedMedia)) selectedMedia = null;
+        updateSelectionTools();
+        sync();
+    });
+    const selectElement = (element: Element): void => {
+        selection = document.createRange();
+        selection.selectNode(element);
+    };
+    const removeElement = (element: Element | null): void => {
+        if (!element || !visual.contains(element)) return;
+        selectElement(element);
+        selectedMedia = null;
+        command('delete');
+        updateSelectionTools();
+    };
+    caption?.addEventListener('click', () => {
+        if (!selectedMedia || !visual.contains(selectedMedia)) return;
+        const label = window.prompt('Media caption', selectedMedia.querySelector('figcaption')?.textContent ?? '');
+        if (label === null) return;
+        const replacement = selectedMedia.cloneNode(true) as HTMLElement;
+        replacement.querySelector('figcaption')?.remove();
+        if (label.trim()) {
+            const newCaption = document.createElement('figcaption');
+            newCaption.textContent = label.trim();
+            replacement.append(newCaption);
+        }
+        selectElement(selectedMedia);
+        selectedMedia = null;
+        command('insertHTML', replacement.outerHTML);
+        updateSelectionTools();
+    });
+    alt?.addEventListener('click', () => {
+        if (!selectedMedia || !visual.contains(selectedMedia)) return;
+        const replacement = selectedMedia.cloneNode(true) as HTMLElement;
+        const image = replacement.matches('img') ? replacement : replacement.querySelector('img');
+        if (!image) return;
+        const description = window.prompt('Image description', image.getAttribute('alt') ?? '');
+        if (description === null) return;
+        image.setAttribute('alt', description.trim().slice(0, 200));
+        selectElement(selectedMedia);
+        selectedMedia = null;
+        command('insertHTML', replacement.outerHTML);
+        updateSelectionTools();
+    });
+    removeMedia?.addEventListener('click', () => removeElement(selectedMedia));
+    tableTools?.addEventListener('click', event => {
+        const action = (event.target as Element).closest<HTMLButtonElement>('[data-table-action]')?.dataset.tableAction;
+        const cell = selectedElement('td, th') as HTMLTableCellElement | null;
+        const row = cell?.parentElement as HTMLTableRowElement | null;
+        const table = row?.closest('table');
+        if (!action || !table || !row || !cell) return;
+        if (action === 'remove-table') {
+            removeElement(table);
+            return;
+        }
+        const replacement = table.cloneNode(true) as HTMLTableElement;
+        const currentRow = replacement.rows[row.rowIndex];
+        const column = cell.cellIndex;
+        if (Array.from(replacement.rows).some(item =>
+            Array.from(item.cells).some(entry => entry.colSpan !== 1 || entry.rowSpan !== 1)
+        )) {
+            inform('Use HTML mode to change tables with merged cells.');
+            return;
+        }
+        if ((action === 'remove-row' && replacement.rows.length === 1)
+            || (action === 'remove-column' && currentRow.cells.length === 1)) {
+            removeElement(table);
+            return;
+        }
+        if (action === 'add-row') {
+            const newRow = (currentRow.parentElement as HTMLTableSectionElement).insertRow(currentRow.sectionRowIndex + 1);
+            for (const entry of Array.from(currentRow.cells)) {
+                const newCell = document.createElement(entry.tagName);
+                newCell.textContent = 'Cell';
+                newRow.append(newCell);
+            }
+        } else if (action === 'remove-row') {
+            currentRow.remove();
+        } else {
+            for (const item of Array.from(replacement.rows)) {
+                const entry = item.cells[column];
+                if (!entry) continue;
+                if (action === 'add-column') {
+                    const newCell = document.createElement(entry.tagName);
+                    newCell.textContent = 'Cell';
+                    entry.after(newCell);
+                } else {
+                    entry.remove();
+                }
+            }
+        }
+        selectElement(table);
+        command('insertHTML', replacement.outerHTML);
+        updateSelectionTools();
+    });
     visual.addEventListener('paste', (event) => {
         if (!event.clipboardData || locked) return;
         event.preventDefault();
@@ -210,6 +360,7 @@ function initializeEditor(root: HTMLElement): void {
         else document.execCommand('insertText', false, text);
         sync();
     });
+    if (course) visual.addEventListener('drop', event => event.preventDefault());
     source.addEventListener('input', sync);
     root.querySelectorAll<HTMLButtonElement>('[data-editor-mode]').forEach(button => {
         button.addEventListener('click', () => setMode(button.dataset.editorMode === 'html' ? 'html' : 'text'));
@@ -238,19 +389,27 @@ function initializeEditor(root: HTMLElement): void {
     block?.addEventListener('change', () => { command('formatBlock', block.value); block.value = 'p'; });
     root.querySelector<HTMLButtonElement>('[data-editor-link]')?.addEventListener('click', () => {
         if (locked) return;
-        const value = window.prompt('Link URL (https://, mailto: or same-site /path)', 'https://');
-        if (value === null) return;
-        if (!/^(https?:\/\/|mailto:|tel:|\/(?!\/))/i.test(value)) {
+        const existingLink = selectedElement('a');
+        const value = window.prompt('Link URL (https://, mailto: or same-site /path)', existingLink?.getAttribute('href') ?? 'https://')?.trim();
+        if (value === undefined) return;
+        if (!linkPattern.test(value)) {
             inform('Please enter a safe URL beginning with https:// or /');
             return;
         }
-        const selected = window.getSelection()?.toString().trim() ?? '';
-        if (selected !== '') {
+        if (existingLink) {
+            const replacement = existingLink.cloneNode(true) as HTMLAnchorElement;
+            replacement.setAttribute('href', value);
+            selectElement(existingLink);
+            command('insertHTML', replacement.outerHTML);
+        } else if (selection?.toString().trim()) {
             command('createLink', value);
         } else {
             const label = window.prompt('Link text', value);
             if (!label) return;
-            command('insertHTML', '<a href="' + escapeMarkup(value) + '">' + escapeMarkup(label) + '</a>');
+            const link = document.createElement('a');
+            link.setAttribute('href', value);
+            link.textContent = label;
+            command('insertHTML', link.outerHTML);
         }
     });
     root.querySelector<HTMLButtonElement>('[data-editor-table]')?.addEventListener('click', () => {
@@ -310,7 +469,8 @@ function initializeEditor(root: HTMLElement): void {
         if (!csrf) { inform('Missing secure upload token. Refresh and try again.'); return; }
         const body = new FormData();
         body.append('file', file);
-        body.append('context', root.dataset.editorContext === 'ticket' ? 'ticket' : 'editorial');
+        body.append('context', root.dataset.editorContext ?? 'editorial');
+        const insertion = selection?.cloneRange();
         inform('Uploading ' + file.name + '…');
         try {
             const response = await fetch(root.dataset.editorUploadUrl ?? '/editor-media', {
@@ -330,6 +490,7 @@ function initializeEditor(root: HTMLElement): void {
             if (file.type.startsWith('image/')) markup = '<figure><img src="' + href + '" alt="' + name + '"><figcaption>' + name + '</figcaption></figure><p></p>';
             else if (file.type.startsWith('audio/')) markup = '<figure><audio src="' + href + '" controls preload="none"></audio><figcaption>' + name + '</figcaption></figure><p></p>';
             else markup = '<figure><video src="' + href + '" controls preload="none"></video><figcaption>' + name + '</figcaption></figure><p></p>';
+            if (insertion && visual.contains(insertion.startContainer)) selection = insertion;
             command('insertHTML', markup);
             inform('Media uploaded privately. Save your document to attach it.');
         } catch {
@@ -342,14 +503,15 @@ function initializeEditor(root: HTMLElement): void {
     }
     form.addEventListener('submit', event => {
         sync();
-        if (!plain.value.trim()) {
+        if (required && !plain.value.trim()) {
             event.preventDefault();
             inform('Add some text or a caption before saving.');
             if (mode === 'html') source.focus(); else visual.focus();
         }
-        if (plain.value.length > Number(plain.maxLength || '25000')) {
+        if (plain.value.length > plain.maxLength || (course && html.value.length > 120000)) {
             event.preventDefault();
             inform('Content is longer than the allowed character limit.');
+            if (mode === 'html') source.focus(); else visual.focus();
         }
     });
     if (locked) root.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('[data-editor-enhanced] button,[data-editor-enhanced] input,[data-editor-enhanced] select]').forEach(control => { control.disabled = true; });

@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\EditorMedia;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 final class CourseBuilderStepsTest extends TestCase
@@ -65,4 +67,69 @@ final class CourseBuilderStepsTest extends TestCase
         $this->assertSame('pending_review', $course->fresh()->status);
         $this->assertSame('#123456', $course->fresh()->featured_value);
     }
+    public function test_description_html_is_sanitized_rendered_copied_and_removable(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $author = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($author);
+        Storage::fake('local');
+        Storage::disk('local')->put('editor-media/course-cover.png', 'course media fixture');
+
+        $media = EditorMedia::create([
+            'context' => 'course', 'uploaded_by' => $author->id, 'path' => 'editor-media/course-cover.png',
+            'mime' => 'image/png', 'original_name' => 'Example.png', 'size' => 20,
+        ]);
+        $other = EditorMedia::create([
+            'context' => 'ticket', 'uploaded_by' => $author->id, 'path' => 'editor-media/other.png',
+            'mime' => 'image/png', 'original_name' => 'Private.png', 'size' => 20,
+        ]);
+        $fields = [
+            'title' => 'Structured Course',
+            'summary' => 'A meaningful course summary.',
+            'category_id' => Category::where('code', 'GE')->valueOrFail('id'),
+            'delivery_mode' => 'online',
+        ];
+
+        $this->post(route('admin.course-builder.store'), $fields + [
+            'description_html' => '<img src="/editor-media/'.$other->id.'">',
+        ])->assertSessionHasErrors('description_html');
+        $this->assertDatabaseMissing('courses', ['title' => $fields['title']]);
+
+        $this->post(route('admin.course-builder.store'), $fields + [
+            'description_html' => '<h2>Overview</h2><p><strong>Practice</strong> &amp; review.</p>'
+                .'<script>unsafe()</script><img src="/editor-media/'.$media->id.'" onerror="unsafe()" alt="Example">'
+                .'<a href="javascript:unsafe()">Objectives</a>',
+        ])->assertSessionHasNoErrors();
+        $course = Course::sole();
+        $mediaUrl = route('editor-media.show', $media);
+        $public = route('courses.show', $course->slug);
+
+        $this->assertSame("Overview\nPractice & review.\nObjectives", $course->description);
+        $this->assertSame([$media->id], $course->descriptionMedia()->allRelatedIds()->all());
+        $this->get(route('admin.course-builder.edit', $course))->assertOk()->assertSee('Full course description')->assertSee('Overview');
+        $this->get(route('admin.course-builder.edit', ['course' => $course, 'step' => 'review']))
+            ->assertOk()->assertSee('<strong>Practice</strong>', false)->assertDontSee('unsafe()', false);
+        auth()->forgetGuards();
+        $this->get($mediaUrl)->assertForbidden();
+        $this->get($public)->assertNotFound();
+
+        $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
+        $this->get($public)->assertOk()->assertSee('<h2>Overview</h2>', false)->assertDontSee('unsafe()', false);
+        $this->get($mediaUrl)->assertOk();
+
+        $reviewer = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($reviewer)
+            ->post(route('admin.course-builder.revise', $course))->assertRedirect();
+        $revision = Course::where('source_course_id', $course->id)->sole();
+        $this->assertSame($course->description_html, $revision->description_html);
+        $this->assertSame([$media->id], $revision->descriptionMedia()->allRelatedIds()->all());
+        $this->patch(route('admin.course-builder.update', $revision), $fields + [
+            'slug' => $revision->slug, 'description' => null, 'description_html' => null,
+        ])->assertSessionHasNoErrors();
+        $this->assertNull($revision->fresh()->description_html);
+        $this->assertNull($revision->fresh()->description);
+        $this->assertCount(0, $revision->descriptionMedia);
+        $this->assertCount(1, $course->descriptionMedia);
+    }
+
 }
