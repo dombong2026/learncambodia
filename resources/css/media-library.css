@@ -203,9 +203,9 @@
 
 .featured-video-compact {
     --video-action: #eaf5ff;
-    --video-fill: #6eb8ff;
+    --video-fill: #71bcff;
     --video-thumb: #e6f4ff;
-    --video-track: #3c536d;
+    --video-track: #496480;
     color: var(--video-action);
 }
 
@@ -221,10 +221,10 @@
     inset: auto 0 0;
     z-index: 1;
     display: grid;
-    grid-template-columns: auto 1fr auto auto auto;
-    gap: 0 .25rem;
+    grid-template-columns: auto minmax(0, 1fr) repeat(4, auto);
+    gap: 0 clamp(.06rem, 1vw, .3rem);
     align-items: center;
-    padding: .2rem .45rem .3rem;
+    padding: .2rem clamp(.3rem, 2vw, .75rem) .35rem;
     border: 0;
     background: transparent;
     opacity: 0;
@@ -245,7 +245,19 @@
     background: transparent;
 }
 
-.featured-video-compact .featured-video-controls button:hover { color: var(--video-fill); }
+.featured-video-compact .featured-video-controls button:is(:hover, [aria-expanded="true"]) { color: var(--video-fill); }
+.featured-video-compact .featured-video-controls :is(button, input):focus-visible {
+    outline: 2px solid var(--video-fill);
+    outline-offset: -2px;
+}
+.featured-video-compact [data-video-pause-icon],
+.featured-video-compact [data-video-collapse-icon],
+.featured-video-compact[data-playing="true"] [data-video-play-icon],
+.featured-video-compact[data-fullscreen="true"] [data-video-expand-icon] { display: none; }
+.featured-video-compact[data-playing="true"] [data-video-play] svg,
+.featured-video-compact[data-playing="true"] [data-video-pause-icon],
+.featured-video-compact[data-fullscreen="true"] [data-video-collapse-icon] { display: block; }
+.featured-video-compact[data-playing="true"] [data-video-play]::after { content: none; }
 .featured-video-compact .featured-video-time { white-space: nowrap; }
 .featured-video-compact :is([data-video-seek], [data-video-volume]) {
     appearance: none;
@@ -263,24 +275,31 @@
     height: 1rem;
 }
 
+.featured-video-compact [data-video-toggle] { display: grid; }
 .featured-video-volume { position: relative; }
 
-.featured-video-volume-panel:not([hidden]) {
+.featured-video-popover:not([hidden]) {
     position: absolute;
     bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
     display: grid;
-    justify-items: center;
     gap: .25rem;
-    padding: .4rem .35rem .25rem;
-    border: 1px solid #526e8a;
-    border-radius: .6rem;
-    background: #10233a;
-    box-shadow: 0 .3rem .9rem rgb(0 0 0 / .28);
-    font-size: .7rem;
-    font-weight: 700;
+    padding: .35rem;
+    border: 1px solid #496481;
+    border-radius: .7rem;
+    background: #102037;
+    box-shadow: 0 .35rem 1.15rem rgb(0 0 0 / .35);
+    font-size: .75rem;
 }
+
+.featured-video-volume-panel { left: 50%; transform: translateX(-50%); justify-items: center; }
+.featured-video-volume-panel output { font-weight: 700; font-variant-numeric: tabular-nums; }
+.featured-video-options { right: .55rem; bottom: 2.4rem; min-width: 7.8rem; }
+.featured-video-options:has([data-video-rate]) { grid-template-columns: repeat(3, 1fr); }
+.featured-video-option-title { grid-column: 1 / -1; padding: .2rem .35rem; color: #b5c9e1; }
+.featured-video-compact .featured-video-options button { width: auto; min-height: 1.75rem; }
+.featured-video-compact .featured-video-options button[aria-pressed="true"] { background: #234264; color: #bfe1ff; }
+.featured-video-loop { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .3rem; cursor: pointer; }
+.featured-video-compact .featured-video-loop input { flex: none; min-width: auto; accent-color: var(--video-fill); }
 
 .featured-video-volume-panel [data-video-device-volume] {
     width: 6.5rem;
@@ -347,22 +366,6 @@
 .featured-video-compact [data-video-volume-cross],
 .featured-video-compact[data-muted="true"] [data-video-volume-waves] { display: none; }
 .featured-video-compact[data-muted="true"] [data-video-volume-cross] { display: inline; }
-
-.library-preview-stage .featured-video-compact .featured-video-speed {
-    appearance: none;
-    min-width: 2.7rem;
-    min-height: 2.1rem;
-    padding: 0 .2rem;
-    border: 0;
-    background: transparent;
-    text-align: center;
-    color: var(--video-action);
-    font-size: .75rem;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.featured-video-speed option { background: #11233b; color: #fff; }
 
 .featured-video-compact .featured-video-status {
     position: absolute;

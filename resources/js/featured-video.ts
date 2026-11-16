@@ -14,7 +14,6 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
     const seek = player.querySelector<HTMLInputElement>('[data-video-seek]')!;
     const time = player.querySelector<HTMLElement>('[data-video-time]')!;
     const status = player.querySelector<HTMLElement>('[data-video-status]')!;
-    const speed = player.querySelector<HTMLSelectElement>('[data-video-speed]');
     const volume = player.querySelector<HTMLInputElement>('[data-video-volume]');
     const volumeValue = player.querySelector<HTMLOutputElement>('[data-video-volume-value]');
     let previousVolume = video.volume || 1;
@@ -58,18 +57,24 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         } else video.pause();
     }
 
-    if (speed && volume && volumeValue) {
-        const volumeMenu = player.querySelector<HTMLElement>('[data-video-volume-menu]')!;
-        const volumeToggle = volumeMenu.querySelector<HTMLButtonElement>('[data-video-volume-toggle]')!;
-        const volumePanel = volumeMenu.querySelector<HTMLElement>('[data-video-volume-panel]')!;
+    if (volume && volumeValue) {
+        const volumePanel = player.querySelector<HTMLElement>('[data-video-volume-panel]')!;
         const volumeSlider = volumePanel.querySelector<HTMLElement>('[data-video-volume-slider]')!;
         const deviceVolume = volumePanel.querySelector<HTMLElement>('[data-video-device-volume]')!;
+        const rateOptions = Array.from(player.querySelectorAll<HTMLButtonElement>('[data-video-rate]'));
+        const speedToggle = player.querySelector<HTMLButtonElement>('[aria-controls="preview-speed-panel"]')!;
+        const loop = player.querySelector<HTMLInputElement>('[data-video-loop]')!;
         let idleTimer: ReturnType<typeof setTimeout>;
         let adjustingVolume = false;
+        let openMenu: { toggle: HTMLButtonElement; panel: HTMLElement } | undefined;
 
-        function setVolumePanel(open: boolean): void {
-            volumePanel.hidden = !open;
-            volumeToggle.setAttribute('aria-expanded', String(open));
+        function closeMenu(restoreFocus = false): void {
+            if (!openMenu) return;
+            const { toggle, panel } = openMenu;
+            openMenu = undefined;
+            panel.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) toggle.focus({ preventScroll: true });
         }
 
         const detectVolumeSupport = () => {
@@ -84,8 +89,8 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
 
         function hideControls(): void {
             clearTimeout(idleTimer);
-            if (adjustingVolume || volumePanel.matches(':has(:focus-visible)')) return;
-            setVolumePanel(false);
+            if (adjustingVolume || openMenu?.panel.matches(':has(:focus-visible)')) return;
+            closeMenu();
             delete player.dataset.controlsActive;
         }
 
@@ -93,22 +98,38 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (player.hidden) return;
             clearTimeout(idleTimer);
             player.dataset.controlsActive = 'true';
-            if (volumePanel.hidden) idleTimer = setTimeout(hideControls, 1200);
+            if (!openMenu) idleTimer = setTimeout(hideControls, 1200);
         }
+
+        const updateSpeed = () => {
+            speedToggle.title = `Speed (${video.playbackRate}×)`;
+            for (const option of rateOptions) {
+                option.setAttribute('aria-pressed', String(Number(option.dataset.videoRate) === video.playbackRate));
+            }
+        };
 
         player.addEventListener('previewopen', () => {
             video.defaultPlaybackRate = 1;
             video.playbackRate = 1;
-            speed.value = '1';
+            updateSpeed();
             status.hidden = true;
-            setVolumePanel(false);
+            closeMenu();
             showControls();
         });
-        volumeToggle.addEventListener('click', () => {
-            if (volumePanel.hidden) detectVolumeSupport();
-            setVolumePanel(volumePanel.hidden);
-            showControls();
-        });
+        for (const toggle of Array.from(player.querySelectorAll<HTMLButtonElement>('[data-video-toggle]'))) {
+            const panel = toggle.parentElement!.querySelector<HTMLElement>('[data-video-panel]')!;
+            toggle.addEventListener('click', () => {
+                const wasOpen = openMenu?.toggle === toggle;
+                closeMenu();
+                if (!wasOpen) {
+                    if (panel === volumePanel) detectVolumeSupport();
+                    panel.hidden = false;
+                    toggle.setAttribute('aria-expanded', 'true');
+                    openMenu = { toggle, panel };
+                }
+                showControls();
+            });
+        }
         volume.addEventListener('pointerdown', () => { adjustingVolume = true; });
         const finishVolumeAdjustment = () => {
             if (!adjustingVolume) return;
@@ -131,23 +152,22 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             else volume.stepDown();
             volume.dispatchEvent(new Event('input'));
         });
-        volumeMenu.addEventListener('focusout', event => {
-            if (event.relatedTarget && !volumeMenu.contains(event.relatedTarget as Node)) {
-                setVolumePanel(false);
+        player.addEventListener('focusout', event => {
+            if (event.relatedTarget && openMenu && !openMenu.toggle.parentElement?.contains(event.relatedTarget as Node)) {
+                closeMenu();
                 showControls();
             }
         });
         player.addEventListener('keydown', event => {
-            if (event.key !== 'Escape' || volumePanel.hidden) return;
+            if (event.key !== 'Escape' || !openMenu) return;
             event.preventDefault();
             event.stopPropagation();
-            setVolumePanel(false);
-            volumeToggle.focus();
+            closeMenu(true);
             showControls();
         });
         player.addEventListener('pointermove', showControls);
         player.addEventListener('pointerdown', event => {
-            if (!volumeMenu.contains(event.target as Node)) setVolumePanel(false);
+            if (openMenu && !openMenu.toggle.parentElement?.contains(event.target as Node)) closeMenu();
             showControls();
         });
         player.addEventListener('pointerleave', event => {
@@ -155,11 +175,16 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         });
         player.addEventListener('pointercancel', hideControls);
         window.addEventListener('blur', hideControls);
-        speed.addEventListener('change', () => {
-            video.playbackRate = Number(speed.value);
-            showControls();
-        });
-        video.addEventListener('ratechange', () => { speed.value = String(video.playbackRate); });
+        for (const option of rateOptions) {
+            option.addEventListener('click', () => {
+                video.playbackRate = Number(option.dataset.videoRate);
+                updateSpeed();
+                closeMenu(option.matches(':focus-visible'));
+                showControls();
+            });
+        }
+        video.addEventListener('ratechange', updateSpeed);
+        loop.addEventListener('change', () => { video.loop = loop.checked; });
     }
 
     play.addEventListener('click', togglePlayback);
@@ -187,7 +212,9 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
         }
     });
     document.addEventListener('fullscreenchange', () => {
-        setLabel(fullscreen, document.fullscreenElement === player ? 'Exit fullscreen' : 'Fullscreen');
+        const active = document.fullscreenElement === player;
+        setLabel(fullscreen, active ? 'Exit Full Screen' : 'Full Screen');
+        player.dataset.fullscreen = String(active);
     });
     for (const event of ['loadedmetadata', 'durationchange', 'timeupdate', 'play', 'pause', 'ended', 'volumechange']) {
         video.addEventListener(event, update);

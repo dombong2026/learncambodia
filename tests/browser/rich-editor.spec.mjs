@@ -155,12 +155,13 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const dialog = page.getByRole('dialog', { name: file });
     const player = dialog.locator('[data-compact-video]');
     const controls = player.locator('[data-video-controls]');
-    const speed = dialog.getByLabel('Speed', { exact: true });
+    const speed = dialog.getByRole('button', { name: 'Speed', exact: true });
     await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
     await expect(controls).toHaveCSS('opacity', '1');
     await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    await speed.selectOption('1.5');
+    await speed.click();
+    await dialog.getByRole('button', { name: '1.5×', exact: true }).click();
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
 
     const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
@@ -190,6 +191,18 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await volumeButton.click();
     await expect(volumeButton).toHaveAttribute('aria-expanded', 'false');
 
+    const settings = dialog.getByRole('button', { name: 'Settings', exact: true });
+    await settings.click();
+    const loop = dialog.getByRole('checkbox', { name: 'Loop video' });
+    await loop.check();
+    await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(true);
+    await loop.uncheck();
+    await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(false);
+    await settings.click();
+    await expect(settings).toHaveAttribute('aria-expanded', 'false');
+    await expect(player.locator('input[type=file], [download]')).toHaveCount(0);
+    await expect(player.getByRole('button', { name: /upload|download/i })).toHaveCount(0);
+
     await player.dispatchEvent('pointerleave', { pointerType: 'mouse' });
     await expect(controls).toHaveCSS('opacity', '0', { timeout: 500 });
     await player.dispatchEvent('pointermove', { pointerType: 'mouse' });
@@ -198,7 +211,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await dialog.getByRole('button', { name: 'Close preview' }).click();
     await expect(dialog).toBeHidden();
     await page.getByRole('button', { name: 'Preview ' + file, exact: true }).click();
-    await expect(speed).toHaveValue('1');
+    await expect(speed).toHaveAttribute('title', 'Speed (1×)');
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1);
   });
 
