@@ -144,12 +144,33 @@ if ! cmp -s "$stage/build/manifest.json" "$manifest"; then
     replace "$stage/build/manifest.json" "$manifest"
 fi
 
-# Check the assets through the active HTTPS origin.
+# Verify the installed files as the web user before probing the origin.
+runuser -u www -- test -r "$manifest"
+cmp -s "$stage/build/manifest.json" "$manifest"
+origin_authenticated=1
 for path in "$workspace_asset" "$app_asset" "$player_asset"; do
-    curl -fsS --max-time 20 --resolve learncambodia.com:443:127.0.0.1 \
-        "https://learncambodia.com/build/$path" -o "$stage/served"
-    cmp -s "public/build/$path" "$stage/served"
+    runuser -u www -- test -r "public/build/$path"
+    cmp -s "$stage/build/$path" "public/build/$path"
+    status="$(curl -sS --max-time 20 --noproxy '*' --resolve learncambodia.com:443:127.0.0.1 \
+        -D "$stage/headers" -o "$stage/served" -w '%{http_code}' "https://learncambodia.com/build/$path")"
+    case "$status" in
+        200) cmp -s "public/build/$path" "$stage/served" ;;
+        401)
+            # The private installation challenges unauthenticated curl requests.
+            # Leave Basic Auth enabled and report that only disk contents were verified.
+            grep -Eiq '^www-authenticate:[[:blank:]]+Basic[[:blank:]]+realm="Learn Cambodia - Private Installation"[[:space:]]*$' "$stage/headers" ||
+                { printf 'Unexpected HTTP 401 for %s\n' "$path" >&2; exit 1; }
+            origin_authenticated=0
+            ;;
+        *) printf 'Unexpected HTTP %s for %s\n' "$status" "$path" >&2; exit 1 ;;
+    esac
 done
+printf 'LESSON_MEDIA_PLAYER_FILES=PASS\n'
+if ((origin_authenticated)); then
+    printf 'LESSON_MEDIA_PLAYER_ORIGIN=PASS\n'
+else
+    printf 'LESSON_MEDIA_PLAYER_ORIGIN=AUTH_REQUIRED\n'
+fi
 printf 'LESSON_MEDIA_PLAYER_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
 marker_changed=1
 replace "$stage/marker" "$marker"
