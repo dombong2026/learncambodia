@@ -9,6 +9,8 @@ release="${1:?Pass the reviewed lesson media player commit SHA}"
 test "$(id -u)" -eq 0
 export GH_CONFIG_DIR=/root/learncambodia-github-auth/gh
 cd /www/wwwroot/learncambodia.com
+php=/www/server/php/85/bin/php
+test -x "$php"
 
 exec 9>/var/backups/learncambodia/course-builder.lock
 flock -n 9
@@ -99,6 +101,38 @@ tar -tzf "$stage/build.tgz" | awk '$0 !~ /^build\/(assets\/([A-Za-z0-9_.-]+)?)?$
 tar -xzf "$stage/build.tgz" -C "$stage"
 test -s "$stage/build/manifest.json"
 
+# Resolve the pinned asset paths before writing anything to the live checkout.
+asset_paths="$("$php" -r '
+try {
+    $manifest = json_decode(file_get_contents($argv[1]), true, 512, JSON_THROW_ON_ERROR);
+    $workspace = $manifest["resources/js/workspace.ts"] ?? [];
+    $app = $manifest["resources/js/app.ts"] ?? [];
+    $players = array_filter($manifest, static fn ($entry) => ($entry["name"] ?? null) === "lesson-media-player");
+    $playerKey = array_key_first($players);
+
+    if (count($players) !== 1
+        || !in_array($playerKey, $workspace["imports"] ?? [], true)
+        || !in_array($playerKey, $app["imports"] ?? [], true)) {
+        throw new RuntimeException("The lesson player is missing from a Vite entry point.");
+    }
+
+    $paths = [$workspace["file"] ?? null, $app["file"] ?? null, $players[$playerKey]["file"] ?? null];
+    foreach ($paths as $path) {
+        if (!is_string($path) || !preg_match("~^assets/[A-Za-z0-9_.-]+[.]js$~D", $path)) {
+            throw new RuntimeException("The Vite manifest contains an invalid JavaScript asset path.");
+        }
+    }
+    echo implode("\t", $paths), "\n";
+} catch (Throwable $error) {
+    fwrite(STDERR, "Lesson media player manifest: ".$error->getMessage()."\n");
+    exit(1);
+}
+' "$stage/build/manifest.json")"
+IFS=$'\t' read -r workspace_asset app_asset player_asset <<< "$asset_paths"
+for path in "$workspace_asset" "$app_asset" "$player_asset"; do
+    test -s "$stage/build/$path"
+done
+
 rsync -rlpt --chown=root:www --chmod=D750,F640 "$stage/build/assets/" public/build/assets/
 for file in "${files[@]}"; do
     if cmp -s "$file" "$stage/next/$file"; then continue; fi
@@ -111,9 +145,7 @@ if ! cmp -s "$stage/build/manifest.json" "$manifest"; then
 fi
 
 # Check the assets through the active HTTPS origin.
-asset="$(jq -er '.["resources/js/workspace.ts"].file' "$manifest")"
-player="$(jq -er 'to_entries[] | select(.value.name == "lesson-media-player") | .value.file' "$manifest")"
-for path in "$asset" "$player"; do
+for path in "$workspace_asset" "$app_asset" "$player_asset"; do
     curl -fsS --max-time 20 --resolve learncambodia.com:443:127.0.0.1 \
         "https://learncambodia.com/build/$path" -o "$stage/served"
     cmp -s "public/build/$path" "$stage/served"
