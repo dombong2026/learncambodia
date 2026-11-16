@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\Workspace\AdminExaminationController;
+use App\Http\Controllers\Workspace\AssessmentAccessController;
+use App\Http\Controllers\Workspace\StudentExaminationController;
 use App\Http\Controllers\EditorMediaController;
 use App\Http\Controllers\PublicHelpController;
 use App\Http\Controllers\PublicDocumentController;
@@ -74,6 +77,9 @@ Route::get('/library', [LearningHubController::class,'library'])->name('learning
 Route::get('/reading', [LearningHubController::class,'reading'])->name('learning.reading');
 Route::get('/exam-catalog', [LearningHubController::class,'exams'])->name('learning.exams');
 Route::get('/exam-catalog/{course:slug}', [LearningHubController::class,'exam'])->name('learning.exam.show');
+Route::get('/assessments/exams', [AssessmentAccessController::class, 'catalog'])->name('assessments.exams');
+Route::get('/assessments/quizzes', [AssessmentAccessController::class, 'catalog'])->name('assessments.quizzes');
+Route::get('/assessments/{exam}', [AssessmentAccessController::class, 'show'])->whereNumber('exam')->name('assessments.show');
 Route::get('/recommendations', [LearningHubController::class,'recommendations'])->name('learning.recommendations');
 Route::get('/leaderboard', [LearningHubController::class,'leaderboard'])->name('learning.leaderboard');
 Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learning.watch');
@@ -136,6 +142,9 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/tickets/{ticket}/messages', [SupportTicketController::class,'reply'])->middleware('throttle:30,1')->name('messages.store');
     });
 
+    Route::get('/assessment-attempts/{attempt}/recording/{question}', [StudentExaminationController::class, 'recording'])
+        ->whereNumber('question')->name('assessments.recording');
+
     Route::get('/certificates/{certificate:code}', [\App\Http\Controllers\Workspace\CertificateController::class, 'show'])->name('certificates.show');
 
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
@@ -145,11 +154,15 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::patch('/profile/password', [ProfileController::class, 'password'])->middleware('throttle:5,1')->name('profile.password');
-        Route::get('/exams', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'index'])->name('exams.index');
-        Route::get('/exams/create', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'create'])->name('exams.create');
-        Route::post('/exams', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'save'])->name('exams.store');
-        Route::get('/exams/{exam}/edit', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'edit'])->name('exams.edit');
-        Route::patch('/exams/{exam}', [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'save'])->name('exams.update');
+        foreach (['exams' => 'exams', 'quiz-manager' => 'quizzes-manager'] as $path => $name) {
+            Route::get("/$path", [AdminExaminationController::class, 'index'])->name("$name.index");
+            Route::get("/$path/create", [AdminExaminationController::class, 'create'])->name("$name.create");
+            Route::post("/$path", [AdminExaminationController::class, 'save'])->name("$name.store");
+            Route::get("/$path/{exam}/edit", [AdminExaminationController::class, 'edit'])->name("$name.edit");
+            Route::patch("/$path/{exam}", [AdminExaminationController::class, 'save'])->name("$name.update");
+        }
+        Route::patch('/assessment-access/{access}', [AssessmentAccessController::class, 'review'])->name('assessment-access.review');
+        Route::patch('/assessment-attempts/{attempt}/grade', [AdminExaminationController::class, 'grade'])->name('assessment-attempts.grade');
         foreach (['exam-types', 'certificate-types'] as $type) {
             Route::get("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'types'])->defaults('kind', $type)->name("$type.index");
             Route::post("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'saveType'])->defaults('kind', $type)->name("$type.store");
@@ -299,6 +312,17 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:20,1')->name('saved-courses.destroy');
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+        Route::post('/assessments/{exam}/start', [StudentExaminationController::class, 'startStandalone'])
+            ->middleware('throttle:12,1,assessment-start')->name('assessment-attempts.start');
+        Route::post('/assessments/{exam}/access', [AssessmentAccessController::class, 'requestAccess'])
+            ->middleware('throttle:12,1,assessment-access')->name('assessment-access.request');
+        Route::get('/assessment-attempts/{attempt}', [StudentExaminationController::class, 'showStandalone'])->name('assessment-attempts.show');
+        Route::post('/assessment-attempts/{attempt}', [StudentExaminationController::class, 'submitStandalone'])
+            ->middleware('throttle:12,1,assessment-submit')->name('assessment-attempts.submit');
+        Route::post('/assessment-attempts/{attempt}/feedback', [StudentExaminationController::class, 'feedback'])
+            ->middleware('throttle:90,1,assessment-feedback')->name('assessment-attempts.feedback');
+        Route::post('/enrollments/{enrollment}/exam-attempts/{attempt}/feedback', [StudentExaminationController::class, 'courseFeedback'])
+            ->middleware('throttle:90,1')->name('exam-attempts.feedback');
         Route::post('/enrollments/{enrollment}/exams/{exam}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'start'])
             ->middleware('throttle:12,1')->name('exam-attempts.start');
         Route::get('/enrollments/{enrollment}/exam-attempts/{attempt}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'show'])->name('exam-attempts.show');

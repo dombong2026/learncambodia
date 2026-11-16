@@ -68,7 +68,7 @@ final class ExaminationWorkflowTest extends TestCase
         $this->post(route('admin.exams.store'), $data)->assertSessionHasNoErrors();
         $exam = CourseExam::sole();
         $this->assertStringNotContainsString('<script>', $exam->instructions_html);
-        $this->get(route('admin.exams.edit', $exam))->assertOk()->assertSee('Scored questions');
+        $this->get(route('admin.exams.edit', $exam))->assertOk()->assertSee('Questions');
         $this->post(route('admin.certificate-types.store'), ['name'=>'Completion'])->assertSessionHasNoErrors();
         $this->post(route('admin.certificate-templates.store'), [
             'name'=>'Course completion', 'certificate_type_id'=>CertificateType::sole()->id,

@@ -1,15 +1,36 @@
 @extends('layouts.workspace')
 @section('heading', $attempt->snapshot['title'])
 @section('content')
-    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('account.enrollments.show',$enrollment) }}">← Return to course</a>
-    <a class="mb-4 ml-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('support.tickets.create') }}">Exam support</a>
+    @php
+        $label = ($attempt->snapshot['kind'] ?? 'exam') === 'quiz' ? 'Quiz' : 'Exam';
+        $back = $enrollment ? route('account.enrollments.show', $enrollment) : route('assessments.show', $attempt->course_exam_id);
+    @endphp
+    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ $enrollment ? 'course' : strtolower($label) }}</a>
+    <a class="mb-4 ml-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('support.tickets.create') }}">{{ $label }} support</a>
+    @if($errors->any())
+        <ul role="alert" class="mb-4 list-disc pl-5 text-red-600 dark:text-red-300">
+            @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+        </ul>
+    @endif
     @if($attempt->submitted_at)
         <section class="workspace-panel space-y-3 p-6">
             <h2 class="text-xl font-extrabold">{{ $attempt->passed ? 'Passed' : 'Attempt complete' }}</h2>
-            <p>{{ $attempt->score }}% scored · {{ $attempt->snapshot['passing_percent'] }}% required</p>
-            @if($attempt->snapshot['gamified'] && $attempt->passed)
-                <p class="font-semibold text-blue-700 dark:text-blue-300">Milestone earned: Exam passed</p>
+            @if($attempt->score !== null)
+                <p>{{ $attempt->score }}% scored · {{ $attempt->snapshot['passing_percent'] }}% required</p>
+            @elseif(collect($attempt->snapshot['questions'])->contains(fn ($question) => \App\Support\AssessmentQuestions::manual($question)))
+                <p>Waiting for writing or speaking grades.</p>
+            @else
+                <p>Your responses have been recorded.</p>
             @endif
+            @if($attempt->snapshot['gamified'] && $attempt->passed)
+                <p class="font-semibold text-blue-700 dark:text-blue-300 motion-safe:animate-pulse">Milestone earned: {{ $label }} passed</p>
+            @endif
+            @foreach($attempt->snapshot['questions'] as $index => $question)
+                @php($comment = \App\Support\AssessmentQuestions::manual($question) ? ($attempt->grading[$index]['feedback'] ?? null) : ($question['feedback'] ?? null))
+                @if($comment)
+                    <p class="break-words whitespace-pre-wrap"><strong>{{ $index + 1 }}.</strong> {{ $comment }}</p>
+                @endif
+            @endforeach
         </section>
     @elseif(!$attempt->expires_at->isFuture())
         <p class="workspace-panel p-6">This attempt ended when the time limit expired.</p>
@@ -24,31 +45,18 @@
                 <x-lesson-content :lesson="(object) ['content_html'=>$attempt->snapshot['instructions_html'], 'content'=>'']" class="mt-4" />
             @endif
         </section>
-        <form data-exam-attempt method="post" action="{{ route('account.exam-attempts.submit',[$enrollment,$attempt]) }}" class="mt-5 space-y-4">
+        <form data-exam-attempt method="post" enctype="multipart/form-data" action="{{ $enrollment ? route('account.exam-attempts.submit', [$enrollment, $attempt]) : route('account.assessment-attempts.submit', $attempt) }}"
+            data-feedback-url="{{ $enrollment ? route('account.exam-attempts.feedback', [$enrollment, $attempt]) : route('account.assessment-attempts.feedback', $attempt) }}" class="mt-5 space-y-4">
             @csrf
             @if($attempt->snapshot['gamified'])
-                <p data-exam-progress class="text-sm font-semibold">0 answered of {{ count($attempt->snapshot['questions']) }}</p>
+                <label class="block text-sm font-semibold"><span data-exam-progress></span>
+                    <progress data-exam-meter value="0" max="{{ count($attempt->snapshot['questions']) }}" class="mt-1 block w-full"></progress>
+                </label>
             @endif
             @foreach($attempt->snapshot['questions'] as $index => $question)
-                <fieldset class="workspace-panel space-y-3 p-5">
-                    <legend class="max-w-full break-words px-2 font-bold">{{ $loop->iteration }}. {{ $question['prompt'] }}</legend>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">{{ $question['points'] }} {{ Str::plural('point', $question['points']) }}</p>
-                    @if(($question['format'] ?? 'choice') === 'short')
-                        <label class="builder-field">Your answer<input data-exam-answer name="answers[{{ $index }}]" maxlength="300" autocomplete="off"></label>
-                    @else
-                        @php($choices = ($question['format'] ?? 'choice') === 'boolean' ? ['true'=>'True','false'=>'False'] : collect($question)->only('a','b','c','d')->all())
-                        @foreach($choices as $choice => $label)
-                            @if(filled($label))
-                                <label class="flex items-start gap-3 rounded-lg border border-slate-300 p-3 text-sm dark:border-slate-700">
-                                    <input data-exam-answer class="mt-0.5" type="radio" name="answers[{{ $index }}]" value="{{ $choice }}">
-                                    <span class="min-w-0 break-words">{{ $label }}</span>
-                                </label>
-                            @endif
-                        @endforeach
-                    @endif
-                </fieldset>
+                @include('workspace.student.assessment-question')
             @endforeach
-            <button class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white">Submit attempt</button>
+            <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white">Submit attempt</button>
         </form>
     @endif
 @endsection

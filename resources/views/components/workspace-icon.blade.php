@@ -71,6 +71,8 @@
         'user-round-check' => 'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 22v-3a7 7 0 0 1 11-6M15 18l3 3 5-7',
         'chart-column' => 'M4 21V3M4 21h17M8 17v-5h3v5M13 17V7h3v10M18 17v-9h3v9',
         'chart-line' => 'M3 3v18h18M7 16l4-5 4 2 6-8',
+        'quiz-bank' => 'M4 4h16v13H9l-5 4zM9 8a3 3 0 0 1 6 0c0 2-3 2-3 4m0 2h.01',
+        'quiz-create' => 'M4 5h16v12H9l-5 4zM8 9h2m4 0h3m-9 4h2m5-1v4m-2-2h4',
         'exam-sheet' => 'M5 3h14v18H5zM8 7h8M8 11h2m3 0h3m-8 4h2m3 0h3',
         'exam-types' => 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 17.5h7m-3.5-3.5v7',
         'certificate-type' => 'M12 4l8 5-8 5-8-5 8-5ZM4 13l8 5 8-5M4 17l8 5 8-5',

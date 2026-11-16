@@ -8,6 +8,10 @@
         ['value'=>'4','label'=>'Choices per practice question','icon'=>'list-check'],
     ]"/>
 <x-learning-section id="exam-courses" :title="$a['course_heading']" eyebrow="Genuine reviewed practice" subtitle="Browse published course exams and practice quizzes. Approved enrollment is required to attempt them." tone="white">
+    <nav class="mb-5 flex flex-wrap gap-4 font-semibold">
+        <a href="{{ route('assessments.exams') }}">Standalone exams</a>
+        <a href="{{ route('assessments.quizzes') }}">Quick quizzes</a>
+    </nav>
     <form method="GET" role="search" action="{{ route('learning.exams') }}#exam-courses" class="flex max-w-3xl gap-2">
         <label for="exam-search" class="sr-only">Find courses with practice assessments</label>
         <input id="exam-search" type="search" name="q" value="{{ $search }}" maxlength="80" placeholder="Search published assessment topics" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm dark:border-slate-700 dark:bg-[#183755]">

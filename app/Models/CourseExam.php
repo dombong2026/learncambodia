@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 final class CourseExam extends Model
 {
-    protected $fillable = ['course_id', 'exam_type_id', 'title', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
+    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
 
     protected function casts(): array
     {
-        return ['questions' => 'array', 'shuffle' => 'boolean', 'gamified' => 'boolean', 'published' => 'boolean'];
+        return ['pricing' => 'array', 'questions' => 'array', 'shuffle' => 'boolean', 'gamified' => 'boolean', 'published' => 'boolean', 'live_feedback' => 'boolean'];
     }
 
     public function course(): \Illuminate\Database\Eloquent\Relations\BelongsTo

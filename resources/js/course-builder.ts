@@ -79,7 +79,7 @@ if (builder) {
 }
 
 
-const pricing = builder?.querySelector<HTMLElement>('[data-course-pricing]');
+const pricing = document.querySelector<HTMLElement>('[data-course-pricing]');
 if (pricing) {
     const model = pricing.querySelector<HTMLSelectElement>('[data-pricing-model]')!;
     const strategy = pricing.querySelector<HTMLSelectElement>('[data-pricing-strategy]')!;

@@ -10,6 +10,9 @@ use App\Models\EditorMedia;
 use App\Models\ExamAttempt;
 use App\Models\ExamType;
 use App\Support\EditorHtml;
+use App\Support\AssessmentQuestions;
+use App\Support\CoursePricing;
+use App\Models\AssessmentAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,83 +22,96 @@ use Illuminate\View\View;
 
 final class AdminExaminationController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $kind = $request->routeIs('admin.quizzes-manager.*') ? 'quiz' : 'exam';
+
         return view('workspace.admin.examination.index', [
-            'exams' => CourseExam::with('course', 'type')->latest('id')->paginate(15),
+            'kind' => $kind,
+            'exams' => CourseExam::where('kind', $kind)->with('course', 'type')->latest('id')->paginate(15),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return $this->editor(new CourseExam());
+        return $this->editor(new CourseExam(['kind' => $request->routeIs('admin.quizzes-manager.*') ? 'quiz' : 'exam']));
     }
 
-    public function edit(CourseExam $exam): View
+    public function edit(Request $request, CourseExam $exam): View
     {
+        abort_unless($exam->kind === ($request->routeIs('admin.quizzes-manager.*') ? 'quiz' : 'exam'), 404);
+
         return $this->editor($exam);
     }
 
     private function editor(CourseExam $exam): View
     {
         $attempts = $exam->exists
-            ? ExamAttempt::where('course_exam_id', $exam->id)->whereNotNull('submitted_at')->with('enrollment.student')
+            ? ExamAttempt::where('course_exam_id', $exam->id)->whereNotNull('submitted_at')->with('enrollment.student', 'student')
                 ->latest('id')->paginate(20)
             : null;
 
         return view('workspace.admin.examination.builder', [
-            'exam' => $exam, 'attempts' => $attempts, 'courses' => Course::orderBy('title')->get(['id', 'title']),
+            'exam' => $exam, 'accessRequests' => $exam->exists
+                ? AssessmentAccess::where('course_exam_id', $exam->id)->with('student')->latest('id')->paginate(15, ['*'], 'access_page')
+                : collect(), 'attempts' => $attempts, 'courses' => Course::orderBy('title')->get(['id', 'title']),
             'types' => ExamType::orderBy('name')->get(),
         ]);
     }
 
     public function save(Request $request, ?CourseExam $exam = null): RedirectResponse
     {
+        $kind = $request->routeIs('admin.quizzes-manager.*') ? 'quiz' : 'exam';
+        abort_if($exam && $exam->exists && $exam->kind !== $kind, 404);
+        if ($request->has('questions_payload')) {
+            $payload = $request->validate(['questions_payload' => ['required', 'string', 'json', 'max:4000000']])['questions_payload'];
+            $request->merge(['questions' => json_decode($payload, true, flags: JSON_THROW_ON_ERROR)]);
+        }
         $data = $request->validate([
-            'course_id' => ['required', 'integer', 'exists:courses,id'],
+            'course_id' => ['nullable', 'integer', 'exists:courses,id'],
             'exam_type_id' => ['required', 'integer', 'exists:exam_types,id'],
             'title' => ['required', 'string', 'max:160'],
             'instructions_html' => ['nullable', 'string', 'max:120000'],
             'instructions' => ['nullable', 'string', 'max:15000'],
-            'time_limit' => ['required', 'integer', 'between:1,240'],
+            'time_limit' => ['required', 'integer', $kind === 'quiz' ? 'between:1,30' : 'between:1,240'],
             'passing_percent' => ['required', 'integer', 'between:1,100'],
             'attempt_limit' => ['required', 'integer', 'between:1,10'],
             'shuffle' => ['sometimes', 'boolean'], 'gamified' => ['sometimes', 'boolean'],
-            'published' => ['sometimes', 'boolean'],
-            'questions' => ['required', 'array', 'list', 'min:1', 'max:50'],
-            'questions.*' => ['array:format,prompt,a,b,c,d,correct,points'],
-            'questions.*.format' => ['sometimes', Rule::in(['choice', 'boolean', 'short'])],
+            'published' => ['sometimes', 'boolean'], 'live_feedback' => ['sometimes', 'boolean'],
+            'questions' => ['required', 'array', 'list', 'min:1', $kind === 'quiz' ? 'max:50' : 'max:200'],
+            'questions.*' => ['array:format,prompt,a,b,c,d,correct,points,passage,media_id,feedback'],
+            'questions.*.format' => ['sometimes', Rule::in(array_keys(AssessmentQuestions::FORMATS))],
             'questions.*.prompt' => ['required', 'string', 'max:600'],
             'questions.*.a' => ['nullable', 'string', 'max:300'],
             'questions.*.b' => ['nullable', 'string', 'max:300'],
             'questions.*.c' => ['nullable', 'string', 'max:300'],
             'questions.*.d' => ['nullable', 'string', 'max:300'],
-            'questions.*.correct' => ['required', 'string', 'max:300'],
+            'questions.*.correct' => ['nullable', 'string', 'max:300'],
+            'questions.*.passage' => ['nullable', 'string', 'max:12000'],
+            'questions.*.media_id' => ['nullable', 'integer', 'min:1'],
+            'questions.*.feedback' => ['nullable', 'string', 'max:800'],
             'questions.*.points' => ['required', 'integer', 'between:1,100'],
         ]);
-        foreach ($data['questions'] as $index => $question) {
-            $format = $question['format'] ?? 'choice';
-            $correct = $question['correct'];
-            if ($format === 'boolean' && !in_array($correct, ['true', 'false'], true)) {
-                throw ValidationException::withMessages(["questions.$index.correct" => 'Enter true or false as the correct answer.']);
-            }
-            if ($format === 'choice' && (blank($question['a'] ?? null) || blank($question['b'] ?? null)
-                || !in_array($correct, ['a', 'b', 'c', 'd'], true) || blank($question[$correct] ?? null))) {
-                throw ValidationException::withMessages(["questions.$index.correct" => 'Provide at least options A and B and select a populated answer.']);
-            }
-            $data['questions'][$index]['format'] = $format;
+        $data['questions'] = AssessmentQuestions::validate($data['questions']);
+        if (count(array_filter($data['questions'], fn ($question) => $question['format'] === 'speaking')) > 10) {
+            throw ValidationException::withMessages(['questions' => 'An assessment can have up to 10 speaking recordings.']);
         }
+        $data['kind'] = $kind;
+        $data['course_id'] = $kind === 'quiz' ? null : ($data['course_id'] ?? null);
+        $data['pricing'] = $data['course_id'] === null && $kind === 'exam'
+            ? (CoursePricing::validate($request) + ['pricing' => $exam?->pricing])['pricing']
+            : null;
         $data['instructions_html'] = EditorHtml::clean($data['instructions_html']
             ?? nl2br(e($data['instructions'] ?? '')), lesson: true);
         unset($data['instructions']);
-        $data += ['shuffle' => false, 'gamified' => false, 'published' => false];
+        $data += ['shuffle' => false, 'gamified' => false, 'published' => false, 'live_feedback' => false];
 
         $saved = DB::transaction(function () use ($request, $exam, $data): CourseExam {
             $record = $exam ? CourseExam::lockForUpdate()->findOrFail($exam->id) : new CourseExam();
             if ($record->exists && (int) $record->course_id !== (int) $data['course_id']) {
-                abort_if(ExamAttempt::where('course_exam_id', $record->id)->exists(), 409, 'An exam with attempts stays linked to its original course.');
+                abort_if(ExamAttempt::where('course_exam_id', $record->id)->exists() || AssessmentAccess::where('course_exam_id', $record->id)->exists(), 409, 'An exam with attempts stays linked to its original course.');
             }
-            $ids = EditorHtml::sourceIds($data['instructions_html'], lesson: true);
+            $ids = AssessmentQuestions::mediaIds($data);
             $attached = $record->exists ? $record->media()->allRelatedIds() : [];
             $media = EditorMedia::whereIn('id', $ids)->where('context', 'exam')
                 ->where(fn ($query) => $query->where('uploaded_by', $request->user()->id)->orWhereIn('id', $attached))
@@ -103,13 +119,42 @@ final class AdminExaminationController extends Controller
             if ($media->count() !== count($ids)) {
                 throw ValidationException::withMessages(['instructions' => 'One or more resources are unavailable for this exam.']);
             }
+            foreach ($data['questions'] as $index => $question) {
+                if (($question['format'] ?? null) === 'listening'
+                    && !str_starts_with($media->firstWhere('id', (int) $question['media_id'])?->mime ?? '', 'audio/')) {
+                    throw ValidationException::withMessages(["questions.$index.media_id" => 'Select an audio recording for listening.']);
+                }
+            }
             $record->fill($data)->save();
             $record->media()->syncWithoutDetaching($ids);
 
             return $record;
         });
 
-        return redirect()->route('admin.exams.edit', $saved)->with('status', 'Exam saved.');
+        return redirect()->route($kind === 'quiz' ? 'admin.quizzes-manager.edit' : 'admin.exams.edit', $saved)->with('status', 'Assessment saved.');
+    }
+
+    public function grade(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        abort_unless($attempt->submitted_at, 404);
+        $data = $request->validate([
+            'grades' => ['required', 'array', 'max:50'], 'grades.*' => ['array:points,feedback'],
+            'grades.*.points' => ['required', 'integer', 'min:0'], 'grades.*.feedback' => ['nullable', 'string', 'max:1000'],
+        ]);
+        DB::transaction(function () use ($attempt, $data): void {
+            $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
+            $grades = $locked->grading ?? [];
+            foreach ($data['grades'] as $index => $update) {
+                $question = $locked->snapshot['questions'][$index] ?? null;
+                if (!$question || !AssessmentQuestions::manual($question) || $update['points'] > $question['points']) {
+                    throw ValidationException::withMessages(["grades.$index.points" => 'Enter a score within the points available for this response.']);
+                }
+                $grades[$index] = $update;
+            }
+            $locked->update(AssessmentQuestions::result($locked->snapshot, $locked->answers ?? [], $grades) + ['grading' => $grades]);
+        });
+
+        return back()->with('status', 'Grades saved.');
     }
 
     public function types(Request $request, string $kind): View

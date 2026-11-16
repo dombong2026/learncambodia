@@ -4,7 +4,7 @@
     <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <label class="builder-field sm:col-span-2">Activity type
             <select data-exam-format name="questions[{{ $index }}][format]" class="rounded-xl border px-3 py-2">
-                @foreach(['choice'=>'Multiple choice','boolean'=>'True or false','short'=>'Short answer'] as $value => $label)
+                @foreach(\App\Support\AssessmentQuestions::FORMATS as $value => $label)
                     <option value="{{ $value }}" @selected(($question['format'] ?? 'choice') === $value)>{{ $label }}</option>
                 @endforeach
             </select>
@@ -14,9 +14,21 @@
                 <input name="questions[{{ $index }}][{{ $choice }}]" maxlength="300" value="{{ $question[$choice] ?? '' }}">
             </label>
         @endforeach
-        <label class="builder-field">Correct answer
-            <input data-exam-correct name="questions[{{ $index }}][correct]" maxlength="300" required value="{{ $question['correct'] ?? '' }}">
+        <label class="builder-field" data-exam-key>Correct answer
+            <input data-exam-correct name="questions[{{ $index }}][correct]" maxlength="300" value="{{ $question['correct'] ?? '' }}">
             <small data-exam-answer-tip class="text-slate-600 dark:text-slate-300"></small>
+        </label>
+        <label data-exam-reading class="builder-field sm:col-span-2">Reading passage
+            <textarea name="questions[{{ $index }}][passage]" rows="5" maxlength="12000">{{ $question['passage'] ?? '' }}</textarea>
+        </label>
+        <div data-exam-listening class="space-y-2 sm:col-span-2">
+            <label class="builder-field">Listening audio<input type="file" data-exam-audio accept="audio/*"></label>
+            <input type="hidden" data-exam-media-id name="questions[{{ $index }}][media_id]" value="{{ $question['media_id'] ?? '' }}">
+            <audio controls preload="none" @if(isset($question['media_id'])) src="{{ route('editor-media.show', $question['media_id']) }}" @else hidden @endif></audio>
+            <p data-exam-upload-status class="text-sm" role="status"></p>
+        </div>
+        <label class="builder-field sm:col-span-2">Answer feedback (optional)
+            <textarea name="questions[{{ $index }}][feedback]" rows="2" maxlength="800">{{ $question['feedback'] ?? '' }}</textarea>
         </label>
         <label class="builder-field">Points<input name="questions[{{ $index }}][points]" type="number" min="1" max="100" required value="{{ $question['points'] ?? 1 }}"></label>
     </div>

@@ -47,7 +47,7 @@ class PremiumDashboardTest extends TestCase
         foreach (['admin','student','instructor','developer'] as $role) {
             $groups = WorkspaceMenu::groups($role);
             $this->assertGreaterThan(0, count($groups));
-            $this->assertLessThanOrEqual($role==='admin' ? 11 : 7, count($groups));
+            $this->assertLessThanOrEqual($role==='admin' ? 12 : 7, count($groups));
             foreach ($groups as $group) {
                 $this->assertNotEmpty($group['items']);
                 foreach ($group['items'] as $item) {

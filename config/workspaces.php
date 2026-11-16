@@ -495,6 +495,14 @@ return json_decode(<<<'JSON'
       ]
     },
     {
+      "key": "quiz-manager",
+      "title": "Quiz Manager",
+      "items": [
+        {"key": "quizzes", "label": "Quizzes & Builder", "route": "admin.quizzes-manager.index"},
+        {"key": "create", "label": "Create Quiz", "route": "admin.quizzes-manager.create"}
+      ]
+    },
+    {
       "key": "approvals",
       "title": "Review & Approvals",
       "icon": "shield",
@@ -642,6 +650,9 @@ return json_decode(<<<'JSON'
       "title": "Assessments",
       "icon": "graduation",
       "items": [
+        {"key": "standalone-exams", "label": "Standalone Exams", "route": "assessments.exams"},
+        {"key": "standalone-quizzes", "label": "Quick Quizzes", "route": "assessments.quizzes"},
+
         {
           "key": "placement",
           "label": "Placement Test"

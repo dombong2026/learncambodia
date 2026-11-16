@@ -7,7 +7,7 @@ use App\Models\Course;
 use App\Models\User;
 use App\Models\EditorMedia;
 use App\Models\ExamAttempt;
-use App\Support\EditorHtml;
+use App\Support\AssessmentQuestions;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
 use Illuminate\Database\ForeignKeyConstraintViolationException;
@@ -151,7 +151,7 @@ final class EditorMediaController extends Controller
     private function storeUpload(Request $request, bool $library): JsonResponse
     {
         $lesson = !$library && in_array($request->input('context'), ['lesson', 'exam'], true);
-        $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav'];
+        $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/webm'];
         if ($lesson) {
             $mimes = [...$mimes, ...self::DOCUMENT_MIMES];
         }
@@ -224,10 +224,12 @@ final class EditorMediaController extends Controller
             $enrolled = $viewer?->role === User::ROLE_STUDENT
                 && ExamAttempt::whereIn('course_exam_id', $media->exams()->select('course_exams.id'))
                     ->whereNull('submitted_at')->where('expires_at', '>', now())
-                    ->whereHas('enrollment', fn ($query) => $query->where('student_id', $viewer->id)
-                        ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published()))
+                    ->where(fn ($query) => $query
+                        ->where(fn ($standalone) => $standalone->whereNull('course_enrollment_id')->where('student_id', $viewer->id))
+                        ->orWhereHas('enrollment', fn ($enrollment) => $enrollment->where('student_id', $viewer->id)
+                            ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published())))
                     ->cursor()->contains(fn ($attempt) => in_array($media->id,
-                        EditorHtml::sourceIds($attempt->snapshot['instructions_html'], lesson: true), true));
+                        AssessmentQuestions::mediaIds($attempt->snapshot), true));
             abort_unless($viewer?->isAdministrator() || $enrolled, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
