@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SupportTicket;
+use App\Support\WorkspaceNotifications;
 use App\Models\SupportMessage;
 use App\Models\EditorMedia;
 use App\Support\EditorHtml;
@@ -83,6 +84,7 @@ final class SupportTicketController extends Controller
             ]);
             EditorMedia::claim($data['body_html'], $request->user(), 'ticket', $ticket->id);
             $ticket->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body'],'body_html'=>$data['body_html']]);
+            WorkspaceNotifications::administrators('New support ticket', 'support.tickets.show', ['ticket' => $ticket->id], $request->user()->id);
             return $ticket;
         });
         return redirect()->route('support.tickets.show',$ticket)->with('status','Ticket created.');
@@ -96,10 +98,16 @@ final class SupportTicketController extends Controller
             $active = SupportTicket::where('user_id',$request->user()->id)
                 ->where('kind','chat')->whereNotIn('status',['closed','resolved'])
                 ->orderByDesc('id')->first();
-            return $active ?? SupportTicket::create([
+            if ($active) {
+                return $active;
+            }
+            $ticket = SupportTicket::create([
                 'user_id'=>$request->user()->id,'kind'=>'chat',
                 'subject'=>'Live chat','priority'=>'normal','status'=>'open',
             ]);
+            WorkspaceNotifications::administrators('New live chat request', 'support.tickets.show', ['ticket' => $ticket->id], $request->user()->id);
+
+            return $ticket;
         });
         return redirect()->route('support.tickets.show',$chat);
     }
@@ -130,12 +138,19 @@ final class SupportTicketController extends Controller
             abort_if($locked->status==='closed',409,'Closed conversations cannot receive messages.');
             EditorMedia::claim($data['body_html'], $request->user(), 'ticket', $locked->id);
             $locked->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body'],'body_html'=>$data['body_html']]);
-            if ($request->user()->role==='admin' && $locked->status==='open')
+            if ($request->user()->isAdministrator() && $locked->status==='open')
                 $locked->status='in_progress';
-            if ($request->user()->role!=='admin' && $locked->status==='resolved')
+            if (!$request->user()->isAdministrator() && $locked->status==='resolved')
                 $locked->status='open';
             $locked->touch();
             $locked->save();
+            if ($locked->user_id !== $request->user()->id) {
+                WorkspaceNotifications::send($locked->user_id, 'New support reply', 'support.tickets.show', ['ticket' => $locked->id]);
+            } elseif ($locked->assigned_to && $locked->assigned_to !== $request->user()->id) {
+                WorkspaceNotifications::send($locked->assigned_to, 'New support reply', 'support.tickets.show', ['ticket' => $locked->id]);
+            } else {
+                WorkspaceNotifications::administrators('New support reply', 'support.tickets.show', ['ticket' => $locked->id], $request->user()->id);
+            }
         });
         return back()->with('status','Message sent.');
     }
@@ -187,7 +202,14 @@ final class SupportTicketController extends Controller
             'status'=>['required',Rule::in(['open','in_progress','resolved','closed'])],
             'priority'=>['required',Rule::in(['low','normal','high'])],
         ]);
-        $ticket->update($data+['assigned_to'=>$request->user()->id]);
+        DB::transaction(function () use ($request, $ticket, $data): void {
+            $locked = SupportTicket::whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+            $locked->update($data + ['assigned_to' => $request->user()->id]);
+            if ($locked->wasChanged('status') && $locked->user_id !== $request->user()->id) {
+                WorkspaceNotifications::send($locked->user_id, 'Support conversation status updated',
+                    'support.tickets.show', ['ticket' => $locked->id]);
+            }
+        });
         return back()->with('status','Support conversation updated.');
     }
 

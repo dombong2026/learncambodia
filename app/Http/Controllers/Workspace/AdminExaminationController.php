@@ -12,6 +12,7 @@ use App\Models\ExamType;
 use App\Support\EditorHtml;
 use App\Support\AssessmentQuestions;
 use App\Support\CoursePricing;
+use App\Support\WorkspaceNotifications;
 use App\Models\AssessmentAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -152,6 +153,12 @@ final class AdminExaminationController extends Controller
                 $grades[$index] = $update;
             }
             $locked->update(AssessmentQuestions::result($locked->snapshot, $locked->answers ?? [], $grades) + ['grading' => $grades]);
+            $enrollment = $locked->enrollment;
+            WorkspaceNotifications::send(
+                $enrollment?->student_id ?? $locked->student_id, 'New assessment feedback',
+                $enrollment ? 'account.exam-attempts.show' : 'account.assessment-attempts.show',
+                $enrollment ? ['enrollment' => $enrollment->id, 'attempt' => $locked->id] : ['attempt' => $locked->id],
+            );
         });
 
         return back()->with('status', 'Grades saved.');

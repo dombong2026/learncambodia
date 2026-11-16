@@ -26,5 +26,6 @@ final class ApprovalAudit
             'note' => $note,
             'created_at' => now(),
         ]);
+        WorkspaceNotifications::approval($type, $id, $actor, $action, $to);
     }
 }

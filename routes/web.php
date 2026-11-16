@@ -48,6 +48,7 @@ use App\Http\Controllers\Workspace\AdminPostTermController;
 use App\Http\Controllers\Workspace\AdminEditorialReviewController;
 use App\Http\Controllers\Workspace\DeveloperController;
 use App\Http\Controllers\Workspace\DeveloperTokenController;
+use App\Http\Controllers\Workspace\NotificationController;
 use App\Http\Controllers\Workspace\ProfileController;
 use App\Http\Controllers\Workspace\StudentResourcesController;
 use App\Http\Controllers\Workspace\WorkspaceController;
@@ -122,6 +123,13 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/account-avatar', [ProfileController::class, 'avatar'])->name('workspace.avatar');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('workspace.notifications');
+    Route::get('/notifications/unread', [NotificationController::class, 'unread'])
+        ->middleware('throttle:30,1,unread-notifications')->name('workspace.notifications.unread');
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll'])->name('workspace.notifications.read-all');
+    Route::post('/notifications/{id}/open', [NotificationController::class, 'open'])->whereUuid('id')->name('workspace.notifications.open');
+
     Route::post('/editor-media', [EditorMediaController::class,'store'])
         ->middleware('throttle:12,1')->name('editor-media.store');
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');

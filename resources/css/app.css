@@ -68,6 +68,25 @@ body { font-family: var(--font-sans); }
 
 
 /* Shared workspace visual primitives */
+.workspace-menu-type {
+    font-family: var(--font-sans);
+    font-size: .875rem;
+    line-height: 1.35;
+    letter-spacing: normal;
+}
+.workspace-nav summary.workspace-menu-type { font-weight: 700; }
+.workspace-sidebar { visibility: hidden; transform: translateX(-100%); }
+.workspace-shell[data-mobile-sidebar="open"] .workspace-sidebar { visibility: visible; transform: translateX(0); }
+@media (min-width: 64rem) {
+    .workspace-shell { padding-inline-start: 266px; }
+    .workspace-sidebar { visibility: visible; transform: translateX(0); }
+    html[data-desktop-sidebar="closed"] .workspace-shell { padding-inline-start: 0; }
+    html[data-desktop-sidebar="closed"] .workspace-sidebar { visibility: hidden; transform: translateX(-100%); }
+}
+@media (max-width: 39.999rem) {
+    .workspace-notification-panel { position: fixed; inset: 4rem .5rem auto; margin-top: .5rem; width: auto; }
+}
+
 .workspace-nav details > summary::-webkit-details-marker { display: none; }
 .workspace-nav details > summary::marker { content: ""; }
 .workspace-nav details .nav-chevron { transition: transform 0.16s ease; }

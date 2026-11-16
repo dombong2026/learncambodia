@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\WorkspaceNotifications;
 use App\Models\CertificateTemplate;
 use App\Models\CertificateType;
 use App\Models\Course;
@@ -96,7 +97,7 @@ final class CertificateController extends Controller
             abort_unless($lessonCount > 0 && $lessonCount === $completed && $passed === $exams->count(),
                 422, 'Complete every lesson and pass all published exams before issuing this certificate.');
 
-            return IssuedCertificate::firstOrCreate([
+            $issued = IssuedCertificate::firstOrCreate([
                 'course_enrollment_id' => $enrollment->id, 'certificate_template_id' => $template->id,
             ], [
                 'issued_by' => $request->user()->id, 'code' => (string) Str::uuid(),
@@ -104,6 +105,11 @@ final class CertificateController extends Controller
                     'type' => $template->type->name, 'learner' => $enrollment->student->name, 'course' => $course->title,
                 ],
             ]);
+            if ($issued->wasRecentlyCreated) {
+                WorkspaceNotifications::send($enrollment->student_id, 'Course certificate issued', 'certificates.show', ['certificate' => $issued->code]);
+            }
+
+            return $issued;
         });
 
         return redirect()->route('certificates.show', $certificate->code);

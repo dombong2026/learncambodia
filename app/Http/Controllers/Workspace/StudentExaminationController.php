@@ -10,6 +10,7 @@ use App\Models\ExamAttempt;
 use App\Support\AssessmentQuestions;
 use App\Support\CoursePricing;
 use App\Support\LearningAccess;
+use App\Support\WorkspaceNotifications;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,6 +157,10 @@ final class StudentExaminationController extends Controller
                 }
                 $result = AssessmentQuestions::result($locked->snapshot, $answers);
                 $locked->update($result + ['answers' => $answers, 'submitted_at' => now()]);
+                if (array_filter($locked->snapshot['questions'], AssessmentQuestions::manual(...)) !== []) {
+                    $route = ($locked->snapshot['kind'] ?? 'exam') === 'quiz' ? 'admin.quizzes-manager.edit' : 'admin.exams.edit';
+                    WorkspaceNotifications::administrators('Assessment response ready to grade', $route, ['exam' => $locked->course_exam_id]);
+                }
             });
         } catch (Throwable $error) {
             Storage::disk('local')->delete($files);

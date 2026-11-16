@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentAccess;
 use App\Models\CourseExam;
 use App\Support\CoursePricing;
+use App\Support\WorkspaceNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,7 @@ final class AssessmentAccessController extends Controller
             ]);
             if (!$record->exists || $record->status === 'declined' || !$record->matches($quote)) {
                 $record->fill(['quote' => $quote, 'status' => 'pending', 'reference' => null, 'reviewed_by' => null])->save();
+                WorkspaceNotifications::administrators('New assessment access request', 'admin.exams.edit', ['exam' => $exam->id]);
             }
         });
 
@@ -65,11 +67,15 @@ final class AssessmentAccessController extends Controller
             'decision' => ['required','in:approved,declined'],
             'reference' => ['required_if:decision,approved','nullable','string','max:160'],
         ]);
-        $updated = AssessmentAccess::whereKey($access->id)->where('status', 'pending')->update([
-            'status' => $data['decision'], 'reference' => $data['reference'] ?? null,
-            'reviewed_by' => $request->user()->id,
-        ]);
-        abort_unless($updated === 1, 409, 'This request already has a decision.');
+        DB::transaction(function () use ($request, $access, $data): void {
+            $updated = AssessmentAccess::whereKey($access->id)->where('status', 'pending')->update([
+                'status' => $data['decision'], 'reference' => $data['reference'] ?? null,
+                'reviewed_by' => $request->user()->id,
+            ]);
+            abort_unless($updated === 1, 409, 'This request already has a decision.');
+            WorkspaceNotifications::send($access->student_id, 'Assessment access '.$data['decision'], 'assessments.show',
+                ['exam' => $access->course_exam_id]);
+        });
 
         return back()->with('status', 'Access decision saved.');
     }
