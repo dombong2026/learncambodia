@@ -77,3 +77,18 @@ if (builder) {
         updateNotice();
     });
 }
+
+
+const pricing = builder?.querySelector<HTMLElement>('[data-course-pricing]');
+if (pricing) {
+    const model = pricing.querySelector<HTMLSelectElement>('[data-pricing-model]')!;
+    const strategy = pricing.querySelector<HTMLSelectElement>('[data-pricing-strategy]')!;
+    pricing.addEventListener('change', () => {
+        pricing.querySelectorAll<HTMLElement>('[data-pricing-mode]').forEach(panel => {
+            panel.hidden = panel.dataset.pricingMode !== model.value;
+        });
+        pricing.querySelectorAll<HTMLElement>('[data-pricing-option]').forEach(panel => {
+            panel.hidden = !panel.dataset.pricingOption!.split(' ').includes(strategy.value);
+        });
+    });
+}

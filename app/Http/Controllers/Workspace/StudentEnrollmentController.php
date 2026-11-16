@@ -8,6 +8,7 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseBookmark;
 use App\Models\User;
 use App\Support\ApprovalAudit;
+use App\Support\CoursePricing;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -67,7 +68,13 @@ class StudentEnrollmentController extends Controller
                 ->lockForUpdate()->firstOrFail();
             abort_unless($student->role === User::ROLE_STUDENT, 403);
 
-            abort_unless(Course::discoverable()->whereKey($course->id)->exists(), 404);
+            $availableCourse = Course::discoverable()->whereKey($course->id)->firstOrFail();
+            $quote = CoursePricing::quote($availableCourse->pricing);
+            if ($quote['model'] !== 'free') {
+                $submitted = $request->validate(['pricing_quote' => ['required', 'string']]);
+                abort_unless(hash_equals(json_encode($quote, JSON_THROW_ON_ERROR), $submitted['pricing_quote']),
+                    409, 'Course pricing changed. Return to the course page and review the current price.');
+            }
             $existing = CourseEnrollment::query()
                 ->where('student_id', $student->id)->where('course_id', $course->id)
                 ->first();
@@ -78,6 +85,7 @@ class StudentEnrollmentController extends Controller
                 'course_id' => $course->id,
                 'student_id' => $student->id,
                 'status' => 'pending',
+                'pricing_quote' => $quote['model'] === 'free' ? null : $quote,
             ]);
             ApprovalAudit::record('enrollment', $enrollment->id,
                 $student, 'requested', null, 'pending');

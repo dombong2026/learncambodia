@@ -23,7 +23,12 @@
                     <button type="submit" aria-label="{{ __('saved_courses.save_course', ['course' => $course->title]) }}" class="rounded-full border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-700 dark:border-slate-600 dark:text-slate-200">{{ __('saved_courses.save') }}</button>
                 </form>
             @endif
+            @php($quote = \App\Support\CoursePricing::quote($course->pricing))
             <form method="POST" action="{{ route('account.enrollments.store', $course) }}">@csrf
+                @if($quote['model'] !== 'free')
+                    <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
+                    <x-course-price :course="$course" :quote="$quote" class="mb-2 block text-sm" />
+                @endif
                 <button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">Request enrollment</button>
             </form>
         </div>

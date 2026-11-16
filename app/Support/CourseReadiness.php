@@ -61,6 +61,10 @@ final class CourseReadiness
             $data['course']['description_html'] = $course->description_html;
         }
 
+        if ($course->pricing !== null) {
+            $data['course']['pricing'] = $course->pricing;
+        }
+
         return hash('sha256',json_encode($data,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
     }
 }

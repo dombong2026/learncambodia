@@ -16,14 +16,14 @@ class Course extends Model
     protected $fillable = [
         ...self::FEATURED_FIELDS,
         'category_id', 'slug', 'title', 'summary', 'description', 'description_html',
-        'cefr_level', 'delivery_mode', 'status', 'published_at',
+        'cefr_level', 'delivery_mode', 'pricing', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
         'source_course_id', 'revision_number', 'superseded_at',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+        return ['pricing' => 'array', 'published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
     }
 
     public function featuredMedia(): BelongsTo

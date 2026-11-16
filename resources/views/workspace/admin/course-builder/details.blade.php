@@ -18,5 +18,6 @@
                 <x-course-description :course="$course" class="text-sm leading-7" />
             @endif
         </div>
+        @include('workspace.admin.course-builder.pricing')
     </fieldset>
 </form>

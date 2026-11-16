@@ -5,7 +5,6 @@
     --builder-blue: #174da1;
     --builder-primary: #1d4ed8;
     --builder-focus: #986310;
-    --lesson-player-focus-width: 1px;
     --builder-shadow: 0 12px 28px rgb(29 54 90 / .07);
     display: grid;
     gap: clamp(.9rem, 2vw, 1.4rem);

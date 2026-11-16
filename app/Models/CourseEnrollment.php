@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CourseEnrollment extends Model
 {
-    protected $fillable = ['course_id', 'student_id', 'status', 'reviewed_by', 'reviewed_at', 'review_note'];
+    protected $fillable = ['course_id', 'student_id', 'status', 'pricing_quote', 'reviewed_by', 'reviewed_at', 'review_note'];
 
     protected function casts(): array
     {
-        return ['reviewed_at' => 'datetime'];
+        return ['pricing_quote' => 'array', 'reviewed_at' => 'datetime'];
     }
 
     public function course(): BelongsTo

@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\CourseReviewSnapshot;
 use App\Models\EditorMedia;
 use App\Support\CourseReadiness;
+use App\Support\CoursePricing;
 use App\Support\EditorHtml;
 use App\Support\FeaturedMedia;
 use Illuminate\Http\RedirectResponse;
@@ -106,7 +107,7 @@ class AdminCourseController extends Controller
             $data['description_html'] = $html;
         }
 
-        return $data + FeaturedMedia::validate($request);
+        return $data + FeaturedMedia::validate($request) + CoursePricing::validate($request);
     }
 
     public function store(Request $request): RedirectResponse

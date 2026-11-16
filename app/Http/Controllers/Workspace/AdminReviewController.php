@@ -141,8 +141,9 @@ class AdminReviewController extends Controller
     public function enrollment(Request $request, CourseEnrollment $enrollment): RedirectResponse
     {
         $data = $this->reviewData($request, 'decline');
+        $evidence = $request->validate(['pricing_reference' => ['nullable', 'string', 'max:160']]);
 
-        DB::transaction(function () use ($request, $enrollment, $data): void {
+        DB::transaction(function () use ($request, $enrollment, $data, $evidence): void {
             $locked = CourseEnrollment::query()->whereKey($enrollment->id)
                 ->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'pending', 409);
@@ -154,15 +155,22 @@ class AdminReviewController extends Controller
                     ->where('role', User::ROLE_STUDENT)->exists(), 422);
             }
 
+            $note = $data['note'] ?? null;
+            if ($data['decision'] === 'approve' && filled($locked->pricing_quote)) {
+                $reference = validator($evidence, ['pricing_reference' => ['required', 'string', 'max:160']])
+                    ->validate()['pricing_reference'];
+                $note = 'Payment or membership verified. Reference: '.$reference;
+            }
+
             $status = $data['decision'] === 'approve' ? 'approved' : 'declined';
             $locked->update([
                 'status' => $status,
                 'reviewed_by' => $request->user()->id,
                 'reviewed_at' => now(),
-                'review_note' => $data['note'] ?? null,
+                'review_note' => $note,
             ]);
             ApprovalAudit::record('enrollment', $locked->id, $request->user(),
-                $data['decision'], 'pending', $status, $data['note'] ?? null);
+                $data['decision'], 'pending', $status, $note);
         });
 
         return back()->with('status', 'Enrollment review decision recorded.');

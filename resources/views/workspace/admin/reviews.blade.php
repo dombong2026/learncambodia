@@ -18,6 +18,7 @@
             </div>
             <p class="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
             <p class="mt-3 text-xs font-semibold text-slate-500">Created by account #{{ $course->created_by ?? 'Unknown' }} · Reviewer must be a different administrator.</p>
+            <p class="mt-2 text-sm">Current price <x-course-price :course="$course" class="ml-1" /></p>
             @if($course->created_by === auth()->id())
                 <p class="mt-4 text-sm font-semibold text-amber-700 dark:text-amber-400">You submitted this course. Another administrator must decide.</p>
             @else
@@ -66,7 +67,16 @@
             <p class="mt-2 text-sm text-slate-500">Student: {{ $enrollment->student?->name }} · {{ $enrollment->student?->email }}</p>
             <p class="mt-1 text-xs text-slate-500">Requested {{ $enrollment->created_at?->format('Y-m-d H:i') }}</p>
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                <form method="POST" action="{{ route('admin.reviews.enrollment',$enrollment) }}">@csrf<input type="hidden" name="decision" value="approve"><button type="submit" class="w-full rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Approve enrollment</button></form>
+                <form method="POST" action="{{ route('admin.reviews.enrollment',$enrollment) }}">@csrf<input type="hidden" name="decision" value="approve">
+                    @if($quote = $enrollment->pricing_quote)
+                        <p class="mb-2 text-sm font-semibold">
+                            {{ $quote['model'] === 'paid' ? \App\Support\CoursePricing::formatAmount($quote['amount_minor'], $quote['currency']) : $quote['plan'].' membership' }}
+                        </p>
+                        <label class="mb-3 block text-sm">Verified payment or membership reference
+                            <input name="pricing_reference" required maxlength="160" class="mt-1 block w-full rounded-lg border px-3 py-2">
+                        </label>
+                    @endif
+                    <button type="submit" class="w-full rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white">Approve enrollment</button></form>
                 <form method="POST" action="{{ route('admin.reviews.enrollment',$enrollment) }}" class="flex flex-col gap-2">@csrf<input type="hidden" name="decision" value="decline"><label class="text-xs font-bold" for="enrollment-note-{{ $enrollment->id }}">Decline reason</label><textarea id="enrollment-note-{{ $enrollment->id }}" name="note" maxlength="500" rows="2" required class="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea><button type="submit" class="self-end rounded-full border border-red-300 px-5 py-3 text-sm font-bold text-red-700">Decline</button></form>
             </div>
         </article>

@@ -42,6 +42,7 @@ class AdminCourseRevisionController extends Controller
                 'description_html' => $source->description_html,
                 'cefr_level' => $source->cefr_level,
                 'delivery_mode' => $source->delivery_mode,
+                'pricing' => $source->pricing,
                 'status' => 'draft',
                 'published_at' => null,
                 'created_by' => $request->user()->id,

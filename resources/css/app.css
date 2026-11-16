@@ -13,7 +13,8 @@
     --font-sans: 'Inter', 'Noto Sans Khmer', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-html { scroll-behavior: smooth; }
+html { --platform-focus: #986310; scroll-behavior: smooth; }
+html.dark { --platform-focus: #e9b54b; }
 body { font-family: var(--font-sans); }
 
 /* Site-wide pointer affordances: Tailwind Preflight gives buttons the arrow
@@ -99,7 +100,7 @@ html[lang="km"] .workspace-nav, html[lang="km"] [data-workspace-body] { letter-s
 .workspace-sidebar [data-sidebar-settings]:focus-visible,
 .workspace-sidebar .nav-item:focus-visible,
 .workspace-sidebar summary:focus-visible {
-    outline: 2px solid #ffca65;
+    outline: 1px solid #ffca65;
     outline-offset: 2px;
 }
 .workspace-sidebar .workspace-nav details[open] > summary { color: #ffdc8d; }
@@ -165,8 +166,8 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
         box-shadow: 0 14px 30px rgba(12, 45, 91, .13);
     }
 }
-:is(a[href], button, input, summary):focus-visible {
-    outline: 2px solid #e2b34e;
+:is(a[href], button, input, select, textarea, summary, [contenteditable="true"]):focus-visible {
+    outline: 1px solid var(--platform-focus);
     outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -199,7 +200,7 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 }
 .premium-header-trigger[aria-expanded="true"] {
     transform: translateY(-1px) scale(1.04);
-    box-shadow: 0 0 0 2px rgba(245, 187, 69, .75);
+    box-shadow: 0 0 0 1px rgba(245, 187, 69, .75);
 }
 .premium-language-trigger:hover, .premium-language-trigger[aria-expanded="true"] {
     background-color: rgba(59, 130, 246, .10);
@@ -236,7 +237,7 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 }
 .dark .premium-menu-option:hover { background-color: rgba(148, 163, 184, .15); }
 .premium-menu-option:active { transform: translateX(1px) scale(.985); }
-.premium-menu-option:focus-visible { outline: 2px solid #2563eb; outline-offset: -2px; }
+.premium-menu-option:focus-visible { outline: 1px solid #2563eb; outline-offset: -2px; }
 
 /* Large SVGs become transparent artwork integrated in the card's own corner,
    never a separate icon button or link arrow. The card title remains in front. */
@@ -261,7 +262,7 @@ html[lang="zh"] .learning-hero-title { letter-spacing:0; line-height:1.4; }
 a.premium-card:focus-visible,
 .premium-card:focus-within:has(a[href]) {
     outline-offset: 4px;
-    box-shadow: 0 0 0 2px rgba(221, 175, 84, .65), 0 12px 30px rgba(12, 43, 87, .12);
+    box-shadow: 0 0 0 1px rgba(221, 175, 84, .65), 0 12px 30px rgba(12, 43, 87, .12);
 }
 .premium-corner-icon {
     position: absolute;
@@ -353,10 +354,9 @@ a.premium-card:focus-visible,
     transition: border-color .18s ease, box-shadow .18s ease;
 }
 .workspace-content :is(input,textarea,select):focus-visible {
-    outline: 2px solid #d5a746;
-    outline-offset: 2px;
-    border-color: #2a5e99;
-    box-shadow: 0 0 0 3px rgba(45, 103, 168, .13);
+    outline: 1px solid var(--platform-focus);
+    outline-offset: -1px;
+    box-shadow: none;
 }
 .workspace-content input::placeholder,
 .workspace-content textarea::placeholder { color: #64748b; opacity: 1; }
@@ -398,7 +398,7 @@ a.premium-card:focus-visible,
 .information-page { background: #f5f8fc; }
 .dark .information-page { background: #0a1f39; }
 .information-page .information-surface { transition: border-color .18s ease; }
-.information-page .information-quick-link:focus-visible { outline: 2px solid #e1b34d; outline-offset: 3px; }
+.information-page .information-quick-link:focus-visible { outline: 1px solid #e1b34d; outline-offset: 3px; }
 @media (max-width: 640px) {
     [data-workspace-heading] { padding-bottom: 1rem; }
     .workspace-content .workspace-empty-state { padding: 1.5rem 1rem; }
@@ -427,3 +427,10 @@ a.premium-card:focus-visible,
     .learning-focus-card .learning-focus-icon svg { transition: none !important; transform: none !important; }
 }
 
+
+
+/* Keep custom focus treatments consistent across public pages and workspaces. */
+:focus-visible { outline-width: 1px; }
+:is(input, textarea, select)[class*="focus:ring-"]:focus {
+    box-shadow: none;
+}

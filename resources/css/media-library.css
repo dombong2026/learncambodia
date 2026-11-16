@@ -91,7 +91,7 @@
 
 .media-library :is(button, a, input, select, summary):focus-visible,
 .library-primary:focus-visible {
-    outline: 2px solid var(--library-accent, #5486e8);
+    outline: 1px solid var(--library-accent, #5486e8);
     outline-offset: 2px;
 }
 
@@ -247,7 +247,7 @@
 
 .featured-video-compact .featured-video-controls button:is(:hover, [aria-expanded="true"]) { color: var(--video-fill); }
 .featured-video-compact .featured-video-controls :is(button, input):focus-visible {
-    outline: 2px solid var(--video-fill);
+    outline: 1px solid var(--video-fill);
     outline-offset: -2px;
 }
 .featured-video-compact [data-video-pause-icon],

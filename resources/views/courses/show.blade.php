@@ -41,6 +41,11 @@
                 <p class="text-[11px] font-black uppercase tracking-[.14em] text-[#f6cd7f]">{{ __('frontend.start_learning') }}</p>
                 <h2 class="mt-3 text-xl font-black">{{ __('pages.ready_to_study') }}</h2>
                 <p class="mt-3 flex-1 text-xs leading-7 text-[#d1e0ef]">{{ __('frontend.enrollment_note') }}</p>
+                @php($quote = \App\Support\CoursePricing::quote($course->pricing))
+                <x-course-price :course="$course" :quote="$quote" class="mt-3 text-sm font-bold text-[#f6cd7f]" />
+                @if($quote['model'] !== 'free')
+                    <p class="mt-2 text-xs leading-6 text-[#d1e0ef]">The school verifies payment or membership before granting access.</p>
+                @endif
                 @auth
                     @if(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
                         @if($existingEnrollment?->status === 'approved')
@@ -50,6 +55,9 @@
                             <a href="{{ route('account.enrollments.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.view_my_enrollments') }}</a>
                         @else
                             <form method="POST" action="{{ route('account.enrollments.store',$course) }}" class="mt-5">@csrf
+                                @if($quote['model'] !== 'free')
+                                    <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
+                                @endif
                                 <button type="submit" class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.request_enrollment') }}</button>
                             </form>
                         @endif
