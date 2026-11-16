@@ -73,6 +73,15 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
 
     await lessonEditor.getByRole('button', { name: 'Resource button', exact: true }).click();
     insert = lessonEditor.getByRole('dialog', { name: 'Insert resource button' });
+    await expect(insert).toBeVisible();
+    const modal = await insert.evaluate(dialog => {
+      const { x, y, width, height } = dialog.getBoundingClientRect();
+      return { x, y, width, height, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight };
+    });
+    expect(Math.abs(modal.x + modal.width / 2 - modal.viewportWidth / 2)).toBeLessThan(2);
+    expect(Math.abs(modal.y + modal.height / 2 - modal.viewportHeight / 2)).toBeLessThan(2);
+    expect(modal.x).toBeGreaterThanOrEqual(15);
+    expect(modal.y).toBeGreaterThanOrEqual(15);
     await insert.getByLabel('Label', { exact: true }).fill('Study guide');
     await insert.getByLabel('URL or video ID').fill('/reference');
     await insert.getByRole('button', { name: 'Insert', exact: true }).click();
