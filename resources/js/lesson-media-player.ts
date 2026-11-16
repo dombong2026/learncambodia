@@ -10,8 +10,8 @@ const icons = {
     mute: '<path d="M3 9v6h4l5 4V5L7 9H3m13 1 5 5m0-5-5 5"/>',
     speed: '<path d="M4.9 17a9 9 0 1 1 14.2 0M12 12l3.5-4M7 12h.01M12 7h.01M17 12h.01"/><circle cx="12" cy="12" r="1"/>',
     settings: '<circle cx="12" cy="12" r="3"/><path d="M10 3h4l.5 2.2 1.7 1 2.2-.7 2 3.5-1.6 1.5v2l1.6 1.5-2 3.5-2.2-.7-1.7 1-.5 2.2h-4l-.5-2.2-1.7-1-2.2.7-2-3.5 1.6-1.5v-2L3.6 9l2-3.5 2.2.7 1.7-1L10 3Z" transform="translate(0 1)"/>',
-    expand: '<path d="M9 4H4v5m11-5h5v5m0 6v5h-5M4 15v5h5"/>',
-    collapse: '<path d="M4 9h5V4m11 5h-5V4m5 11h-5v5M4 15h5v5"/>',
+    expand: '<path d="M4 9V4h5m-5 0 5 5m6-5h5v5m0-5-5 5M4 15v5h5m-5 0 5-5m6 5h5v-5m0 5-5-5"/>',
+    collapse: '<path d="M4 4l5 5m-5 0h5V4m11 0-5 5m0-5v5h5M4 20l5-5m-5 0h5v5m11 0-5-5m0 5v-5h5"/>',
 };
 
 function icon(name: keyof typeof icons): string {
@@ -60,7 +60,8 @@ template.innerHTML = `
                 <label class="setting"><span>Loop playback</span><input type="checkbox" data-loop></label>
             </div>
         </div>
-    </div>`;
+    </div>
+    <dialog class="expanded-view" aria-label="Lesson media full screen"></dialog>`;
 
 function time(seconds: number): string {
     const total = Math.floor(seconds);
@@ -88,11 +89,13 @@ class LessonMediaPlayer extends HTMLElement {
 
     disconnectedCallback(): void {
         this.media?.pause();
+        this.shadowRoot?.querySelector<HTMLDialogElement>('.expanded-view[open]')?.close();
         this.listeners?.abort();
         this.listeners = undefined;
         clearTimeout(this.idle);
         delete this.dataset.expanded;
         delete this.dataset.idle;
+        delete this.dataset.pointerSeek;
     }
 
     private mount(media: HTMLMediaElement, signal: AbortSignal): void {
@@ -105,6 +108,8 @@ class LessonMediaPlayer extends HTMLElement {
         const volume = get<HTMLInputElement>('[data-volume]');
         const mute = get<HTMLButtonElement>('[data-mute]');
         const full = get<HTMLButtonElement>('[data-fullscreen]');
+        const expandedView = get<HTMLDialogElement>('.expanded-view');
+        const surface = get('.surface');
         const retry = get<HTMLButtonElement>('[data-retry]');
         const loading = get<HTMLElement>('.loading');
         const message = get<HTMLElement>('[data-error]');
@@ -186,7 +191,7 @@ class LessonMediaPlayer extends HTMLElement {
             for (const option of Array.from(shadow.querySelectorAll<HTMLButtonElement>('[data-rate]'))) {
                 option.setAttribute('aria-pressed', String(Number(option.dataset.rate) === media.playbackRate));
             }
-            const expanded = document.fullscreenElement === this || this.hasAttribute('data-expanded');
+            const expanded = expandedView.open;
             full.innerHTML = icon(expanded ? 'collapse' : 'expand');
             full.title = expanded ? 'Exit full screen' : 'Full screen';
             full.setAttribute('aria-label', full.title);
@@ -262,7 +267,12 @@ class LessonMediaPlayer extends HTMLElement {
             media.volume = Number(volume.value) / 100;
             media.muted = false;
         });
-        seek.addEventListener('pointerdown', () => { seeking = true; });
+        seek.addEventListener('pointerdown', () => {
+            seeking = true;
+            this.dataset.pointerSeek = '';
+        });
+        seek.addEventListener('keydown', () => { delete this.dataset.pointerSeek; });
+        seek.addEventListener('blur', () => { delete this.dataset.pointerSeek; });
         seek.addEventListener('input', () => {
             media.currentTime = Number(seek.value);
             updateProgress();
@@ -271,34 +281,42 @@ class LessonMediaPlayer extends HTMLElement {
         const endSeek = (): void => { seeking = false; wake(); };
         for (const event of ['pointerup', 'pointercancel', 'blur', 'change']) seek.addEventListener(event, endSeek);
 
-        full.addEventListener('click', async () => {
+        const setExpanded = (expanded: boolean): void => {
             closePanel();
-            if (document.fullscreenElement === this) await document.exitFullscreen();
-            else if (this.hasAttribute('data-expanded')) delete this.dataset.expanded;
-            else if (this.requestFullscreen && document.fullscreenEnabled && !document.fullscreenElement) {
-                try { await this.requestFullscreen(); }
-                catch { if (this.isConnected) this.dataset.expanded = ''; }
-            } else this.dataset.expanded = '';
+            if (expanded) {
+                expandedView.append(surface);
+                expandedView.showModal();
+                this.dataset.expanded = '';
+            } else {
+                expandedView.close();
+                expandedView.before(surface);
+                delete this.dataset.expanded;
+            }
             update();
+            full.focus({ preventScroll: true });
             wake();
+        };
+        full.addEventListener('click', () => { setExpanded(!expandedView.open); });
+        expandedView.addEventListener('cancel', event => {
+            event.preventDefault();
+            setExpanded(false);
         });
 
-        this.addEventListener('fullscreenchange', () => { update(); wake(); }, { signal });
         for (const event of ['pointermove', 'pointerenter', 'pointerleave', 'pointerdown', 'focusin']) {
             this.addEventListener(event, wake, { signal });
         }
         this.addEventListener('pointerleave', event => {
+            if (this.hasAttribute('data-pointer-seek') && !seeking) seek.blur();
             if (event.pointerType === 'mouse' && !shadow.querySelector(':focus-visible')) closePanel();
             wake();
         }, { signal });
         shadow.addEventListener('keydown', event => {
             if (!(event instanceof KeyboardEvent)) return;
-            if (event.key === 'Escape' && (activePanel || this.hasAttribute('data-expanded'))) {
+            if (event.key === 'Escape' && (activePanel || expandedView.open)) {
                 event.preventDefault();
                 event.stopPropagation();
                 if (activePanel) closePanel(true);
-                else delete this.dataset.expanded;
-                update();
+                else setExpanded(false);
                 wake();
             }
         }, { signal });
@@ -315,7 +333,7 @@ class LessonMediaPlayer extends HTMLElement {
                 waiting = !media.paused && ['waiting', 'stalled', 'play'].includes(event)
                     && media.readyState < HTMLMediaElement.HAVE_FUTURE_DATA;
                 update();
-                wake();
+                if (['play', 'pause', 'ended', 'error', 'emptied'].includes(event)) wake();
             }, { signal });
         }
         update();

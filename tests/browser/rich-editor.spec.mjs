@@ -105,6 +105,17 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(player).toHaveAttribute('data-kind', 'video');
     await expect(player.locator('video')).not.toHaveAttribute('controls');
     await expect(player.getByRole('button', { name: 'Playback settings' })).toBeVisible();
+    await expect(player.locator('.overlay')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const fullScreen = player.getByRole('button', { name: 'Full screen', exact: true });
+    await expect(fullScreen.locator('svg')).toHaveCount(1);
+    await fullScreen.click();
+    const expanded = player.getByRole('dialog', { name: 'Lesson media full screen' });
+    await expect(expanded).toBeVisible();
+    expect(await page.evaluate(() => document.fullscreenElement)).toBeNull();
+    await expect(expanded.getByRole('button', { name: 'Exit full screen' }).locator('svg')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(expanded).toBeHidden();
+    await expect(fullScreen).toBeFocused();
     await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
     await expect(lessonSource).toHaveValue(/<video src="\/editor-media\/9999999"/);
     await expect(lessonSource).not.toHaveValue(/lesson-media-player|<button|<svg/);
