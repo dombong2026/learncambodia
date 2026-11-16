@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Support\LearningAccess;
+use App\Support\LessonQuiz;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -30,15 +31,9 @@ final class StudentLessonQuizController extends Controller
         $return .= "#lesson-quiz-{$lesson->id}";
 
         $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return redirect()->to($return)->with('lesson_quiz_result', [
-                'enrollment' => $enrollment->id, 'lesson' => $lesson->id, 'invalid' => true,
-            ]);
-        }
+        $answers = $validator->fails() ? null : $validator->validated()['answers'];
+        LessonQuiz::rememberResult($request->user()->id, $enrollment->id, $lesson->id, $answers);
 
-        return redirect()->to($return)->with('lesson_quiz_result', [
-            'enrollment' => $enrollment->id, 'lesson' => $lesson->id,
-            'answers' => $validator->validated()['answers'],
-        ]);
+        return redirect()->to($return);
     }
 }

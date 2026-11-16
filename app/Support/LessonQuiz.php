@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -11,6 +12,29 @@ final class LessonQuiz
     public const MAX_QUESTIONS = 10;
 
     public const CHOICES = ['a', 'b', 'c', 'd'];
+
+    public static function rememberResult(int $studentId, int $enrollmentId, int $lessonId, ?array $answers): void
+    {
+        Cache::put("lesson-quiz-result:{$studentId}", [
+            'enrollment' => $enrollmentId,
+            'lesson' => $lessonId,
+            'answers' => $answers,
+        ], now()->addMinutes(30));
+    }
+
+    public static function resultFor(Request $request, int $enrollmentId, int $lessonId): ?array
+    {
+        $studentId = $request->user()->id;
+        $key = "lesson-quiz-result:{$studentId}";
+        if (!$request->attributes->has($key)) {
+            $request->attributes->set($key, Cache::get($key));
+        }
+        $result = $request->attributes->get($key);
+
+        return ($result['enrollment'] ?? null) === $enrollmentId && ($result['lesson'] ?? null) === $lessonId
+            ? $result
+            : null;
+    }
 
     public static function validateQuestions(Request $request): ?array
     {

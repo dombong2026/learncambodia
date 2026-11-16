@@ -34,7 +34,15 @@ IFS=$'\t' read -r artifact_id digest <<< "$artifact"
 [[ "$artifact_id" =~ ^[0-9]+$ && "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
 
 stage="$(mktemp -d /var/backups/learncambodia/course-builder-focus-XXXXXXXX)"
-files=(resources/css/course-builder.css resources/css/lesson-media-player.css)
+php=/www/server/php/85/bin/php
+test -x "$php"
+files=(
+    resources/css/course-builder.css
+    resources/css/lesson-media-player.css
+    app/Support/LessonQuiz.php
+    app/Http/Controllers/Workspace/StudentLessonQuizController.php
+    resources/views/components/lesson-quiz.blade.php
+)
 manifest=public/build/manifest.json
 test ! -L public/build
 test ! -L "$manifest"
@@ -44,6 +52,9 @@ for file in "${files[@]}"; do
     asset="${file##*/}"
     gh api -H 'Accept: application/vnd.github.raw+json' "repos/$repo/contents/$file?ref=$baseline" > "$stage/previous-$asset"
     gh api -H 'Accept: application/vnd.github.raw+json' "repos/$repo/contents/$file?ref=$release" > "$stage/next-$asset"
+    if [[ "$file" == *.php && "$file" != *.blade.php ]]; then
+        "$php" -l "$stage/next-$asset" >/dev/null
+    fi
     if ! cmp -s "$file" "$stage/previous-$asset"; then
         printf 'Live file differs from the expected baseline: %s\n' "$file" >&2
         exit 1
@@ -71,6 +82,7 @@ replace() {
     install -o root -g www -m 0640 "$1" "$temp"
     mv -f "$temp" "$2"
 }
+artisan() { runuser -u www -- "$php" artisan "$@" --no-interaction; }
 rollback() {
     local code=$? file
     trap - EXIT
@@ -80,6 +92,7 @@ rollback() {
             replace "$stage/previous-${file##*/}" "$file"
         done
         replace "$stage/previous.manifest.json" "$manifest"
+        artisan view:cache
         rm -f -- "$marker"
         echo "COURSE_BUILDER_FOCUS_APPLY=FAILED Backup: $stage"
     fi
@@ -94,6 +107,7 @@ done
 replace "$stage/build/manifest.json" "$manifest"
 runuser -u www -- test -r "$manifest"
 cmp -s "$stage/build/manifest.json" "$manifest"
+artisan view:cache
 printf 'COURSE_BUILDER_FOCUS_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
 replace "$stage/marker" "$marker"
 echo COURSE_BUILDER_FOCUS_APPLY=PASS

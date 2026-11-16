@@ -93,7 +93,15 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
             ->assertOk()->assertSee('1 of 1 correct.')->assertSee($question['feedback']);
         $this->post($attempt, ['answers' => ['a'], 'view' => 'curriculum'])
             ->assertRedirect($study.'#lesson-quiz-'.$lesson->id);
+        $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()
+            ->assertDontSee('0 of 1 correct.');
         $this->get($study)->assertSee('0 of 1 correct.');
+        $otherLearner = User::factory()->create(['role' => 'student']);
+        $otherEnrollment = CourseEnrollment::create(['course_id' => $course->id,
+            'student_id' => $otherLearner->id, 'status' => 'approved']);
+        $this->actingAs($otherLearner)->get(route('account.lessons.watch', [$otherEnrollment, $lesson]))
+            ->assertOk()->assertDontSee($question['feedback'])->assertDontSee('0 of 1 correct.');
+        $this->actingAs($student);
         $enrollment->update(['status' => 'rejected']);
         $this->post($attempt, ['answers' => ['b']])->assertForbidden();
         $this->assertCount(0, $course->quizzes);

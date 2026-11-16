@@ -2,10 +2,10 @@
 
 @if(filled($lesson->quiz_questions))
     @php
-        $result = session('lesson_quiz_result');
-        $ownsResult = $enrollment && ($result['enrollment'] ?? null) === $enrollment->id
-            && ($result['lesson'] ?? null) === $lesson->id;
-        $answers = $ownsResult ? ($result['answers'] ?? null) : null;
+        $result = $enrollment
+            ? \App\Support\LessonQuiz::resultFor(request(), $enrollment->id, $lesson->id)
+            : null;
+        $answers = $result['answers'] ?? null;
         $questions = $lesson->quiz_questions;
         $correctCount = $answers === null ? null : count(array_filter($questions,
             fn ($question, $index) => $question['correct'] === ($answers[$index] ?? null), ARRAY_FILTER_USE_BOTH));
@@ -16,7 +16,7 @@
         @if($enrollment)
             @if($answers !== null)
                 <p role="status" class="mt-2 text-sm font-semibold">{{ $correctCount }} of {{ count($questions) }} correct.</p>
-            @elseif($ownsResult && ($result['invalid'] ?? false))
+            @elseif($result !== null)
                 <p role="alert" class="mt-2 text-sm font-semibold text-red-700 dark:text-red-300">Choose one answer for each question.</p>
             @endif
             <form method="POST" action="{{ route('account.lessons.quiz', [$enrollment, $lesson]) }}" class="mt-4 space-y-4">
