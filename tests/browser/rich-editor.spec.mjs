@@ -9,6 +9,40 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
   });
 
+  test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
+    await page.goto('/dashboard/course-builder/create?lang=en');
+    const builder = page.locator('[data-course-builder]');
+    const courseTitle = 'Builder Browser Course ' + info.project.name + ' ' + Date.now();
+    await builder.getByLabel('Course title').fill(courseTitle);
+    await builder.getByLabel('Category', { exact: true }).selectOption({ index: 1 });
+    await builder.getByLabel('Summary', { exact: true }).fill('A short English practice course.');
+    await builder.getByLabel('Full course description').fill('A guided session on introductions.');
+    await builder.getByRole('button', { name: /Create draft & continue/ }).click();
+    await expect(page).toHaveURL(/step=media/);
+
+    await builder.getByLabel('Media type').selectOption('color');
+    await expect(builder.getByText('Unsaved changes', { exact: true })).toBeVisible();
+    page.once('dialog', dialog => dialog.dismiss());
+    await builder.getByRole('link', { name: 'Back', exact: false }).filter({ hasText: '← Back' }).click();
+    await expect(page).toHaveURL(/step=media/);
+    await builder.getByRole('button', { name: /Save & continue/ }).click();
+    await expect(page).toHaveURL(/step=curriculum/);
+    await builder.getByRole('link', { name: '+ Add module' }).click();
+    await builder.getByLabel('Module title').fill('Introductions');
+    await builder.getByRole('button', { name: 'Save changes' }).click();
+    await builder.getByRole('link', { name: '+ Add lesson' }).click();
+    await builder.getByLabel('Lesson title').fill('Say hello');
+    await builder.getByLabel('Lesson content').fill('Hello, my name is Samith.');
+    await builder.getByRole('button', { name: 'Save changes' }).click();
+    await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveCount(1);
+    await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveValue('Hello, my name is Samith.');
+    await builder.getByRole('button', { name: /Save & continue/ }).click();
+    await expect(page).toHaveURL(/step=quizzes/);
+    await builder.getByRole('link', { name: /Continue/ }).click();
+    await expect(builder.getByRole('heading', { name: 'Review & Submit' })).toBeVisible();
+    await expect(builder.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
+  });
+
   test('six forms show the usable editor, mode switch and contextual sidebar', async ({ page }) => {
     for (const kind of ['pages', 'posts', 'policies', 'faqs', 'help-articles']) {
       await page.goto('/dashboard/editorial/' + kind + '/create?lang=en');
