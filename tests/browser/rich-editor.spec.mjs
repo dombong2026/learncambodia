@@ -94,7 +94,21 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     });
     await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
     await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
-    await expect(lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' })).toHaveValue(/data-language="python"/);
+    const lessonSource = lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' });
+    await expect(lessonSource).toHaveValue(/data-language="python"/);
+    const originalLesson = await lessonSource.inputValue();
+    // Check the player and its saved HTML independently of a platform's media codecs.
+    await page.route('**/editor-media/9999999', route => route.abort());
+    await lessonSource.fill(originalLesson + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Test playback</figcaption></figure>');
+    await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
+    const player = lessonContent.locator('lesson-media-player');
+    await expect(player).toHaveAttribute('data-kind', 'video');
+    await expect(player.locator('video')).not.toHaveAttribute('controls');
+    await expect(player.getByRole('button', { name: 'Playback settings' })).toBeVisible();
+    await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
+    await expect(lessonSource).toHaveValue(/<video src="\/editor-media\/9999999"/);
+    await expect(lessonSource).not.toHaveValue(/lesson-media-player|<button|<svg/);
+    await lessonSource.fill(originalLesson);
     await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
     await builder.getByRole('button', { name: 'Save changes' }).click();
     await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveCount(1);

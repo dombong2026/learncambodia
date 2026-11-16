@@ -1,4 +1,5 @@
 import './featured-video';
+import './lesson-media-player';
 import './policy-links';
 
 function initMenus(): void {
