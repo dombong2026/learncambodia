@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Workspace;
 
+use App\Support\AdminAccess;
+
 use App\Http\Controllers\Controller;
 use App\Support\WorkspaceNotifications;
 use App\Models\CertificateTemplate;
@@ -125,7 +127,7 @@ final class CertificateController extends Controller
     public function show(Request $request, IssuedCertificate $certificate): View
     {
         $viewer = $request->user();
-        if (!$viewer->isAdministrator()) {
+        if (!AdminAccess::can($viewer, 'learning')) {
             abort_if($certificate->revoked_at !== null, 404);
             LearningAccess::course($viewer, $certificate->enrollment);
         }

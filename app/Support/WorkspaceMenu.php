@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 final class WorkspaceMenu
@@ -11,7 +12,7 @@ final class WorkspaceMenu
      * retain their configuration for future releases but do not appear as
      * clickable promises in the production workspace.
      */
-    public static function groups(string $role): array
+    public static function groups(string $role, ?User $viewer = null): array
     {
         $sections = collect(config('workspaces.'.$role, []))->keyBy('key');
         $definitions = match ($role) {
@@ -75,6 +76,9 @@ final class WorkspaceMenu
                     'route'=>'admin.public-profiles.index',
                     'icon'=>'id-card','section_title'=>'People & Accounts',
                 ];
+            }
+            if ($role === 'admin' && $viewer !== null) {
+                $items = array_values(array_filter($items, fn (array $item) => AdminAccess::allowsRoute($viewer, $item['route'])));
             }
             if ($items !== []) {
                 $groups[] = compact('key', 'title', 'icon', 'items');
@@ -226,17 +230,28 @@ final class WorkspaceMenu
         };
     }
 
-    public static function topAction(string $role): array
+    public static function topAction(string $role): ?array
     {
+        if ($role === 'admin') {
+            $action = match (Route::currentRouteName()) {
+                'admin.users.index' => ['Add User', 'admin.users.create'],
+                'admin.courses.index' => [__('workspace.create_course'), 'admin.course-builder.create'],
+                'admin.categories.index' => ['Create Category', 'admin.categories.create'],
+                'admin.instructors.index' => ['Assign instructor', 'admin.instructors.index', '#assign-instructor'],
+                default => null,
+            };
+
+            return $action === null ? null : ['label' => $action[0], 'url' => route($action[1]).($action[2] ?? '')];
+        }
+
         return match ($role) {
-            'admin' => ['label' => __('workspace.create_course'), 'url' => route('admin.course-builder.create')],
             'instructor' => ['label' => __('workspace.my_courses'), 'url' => route('instructor.courses.index')],
             'developer' => ['label' => __('workspace.access_tokens'), 'url' => route('developer.tokens.index')],
             default => ['label' => __('workspace.my_learning'), 'url' => route('account.enrollments.index')],
         };
     }
 
-    public static function mobileItems(string $role): array
+    public static function mobileItems(string $role, ?User $viewer = null): array
     {
         $links = match ($role) {
             'admin' => [
@@ -274,7 +289,8 @@ final class WorkspaceMenu
             'url' => route($item[0]),
             'icon' => $item[2],
             'active' => Route::currentRouteName() === $item[0],
-        ], array_filter($links, fn ($item) => Route::has($item[0])));
+        ], array_filter($links, fn ($item) => Route::has($item[0])
+            && ($role !== 'admin' || $viewer === null || AdminAccess::allowsRoute($viewer, $item[0]))));
     }
 
     public static function trail(string $role, string $heading): array

@@ -58,7 +58,7 @@ class AssignAccountRole extends Command
                     ->where('instructor_id', $user->id)->where('status', 'active')
                     ->update(['status' => 'revoked', 'revoked_at' => now()]);
             }
-            $user->forceFill(['role' => $role])->save();
+            $user->forceFill(['role' => $role, 'admin_permissions' => null])->save();
             // Existing API tokens must never outlive a role transition.
             $user->tokens()->delete();
 

@@ -9,7 +9,6 @@
         <input id="category-query" type="search" name="q" value="{{ $query }}" maxlength="80" placeholder="Search code or category…" class="w-full max-w-md rounded-full border border-slate-300 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-900">
         <button type="submit" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Search</button>
     </form>
-    <a href="{{ route('admin.categories.create') }}" class="rounded-full bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800">Create Category</a>
 </div>
 <div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <table class="min-w-[780px] w-full text-left text-sm">

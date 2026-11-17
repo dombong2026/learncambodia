@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Support\AdminAccess;
+
 use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
 use App\Models\User;
@@ -176,7 +178,7 @@ final class GoogleSignInController extends Controller
 
     private function settingsRoute(Request $request): string
     {
-        return $request->user()->isAdministrator() ? 'admin.system-settings.social-auth' : 'security.methods';
+        return AdminAccess::can($request->user(), 'settings') ? 'admin.system-settings.social-auth' : 'security.methods';
     }
 
     private function pendingRegistration(Request $request): ?array

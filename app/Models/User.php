@@ -17,7 +17,7 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path', 'two_factor_secret', 'two_factor_recovery_codes', 'google_subject'])]
+#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path', 'two_factor_secret', 'two_factor_recovery_codes', 'google_subject', 'admin_permissions'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
@@ -87,6 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'profile_details' => 'encrypted:array',
             'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
+            'admin_permissions' => 'array',
         ];
     }
 }

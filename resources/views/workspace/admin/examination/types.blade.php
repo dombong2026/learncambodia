@@ -9,14 +9,12 @@
 @section('title', $heading)
 @section('heading', $heading)
 @section('heading_action')
-    @if($kind !== 'certificate-types')
-        <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="{{ route($kind === 'quiz-types' ? 'admin.quizzes-manager.create' : 'admin.exams.create') }}">{{ $kind === 'quiz-types' ? 'Create Quiz' : 'Create Exam' }}</a>
-    @endif
+    <a class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white" href="#add-type">Add type</a>
 @endsection
 @section('content')
     @if($errors->any())<p role="alert" class="mb-4 text-red-600">{{ $errors->first() }}</p>@endif
     <div class="grid items-start gap-4 lg:grid-cols-[22rem_1fr]">
-        <form action="{{ route('admin.'.$kind.'.store') }}" method="post" class="workspace-panel space-y-4 p-5">
+        <form id="add-type" action="{{ route('admin.'.$kind.'.store') }}" method="post" class="workspace-panel space-y-4 p-5">
             @csrf
             <h2 class="font-extrabold">Add type</h2>
             <label class="builder-field">Name<input name="name" required maxlength="100"></label>

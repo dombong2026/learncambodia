@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Support\AdminAccess;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AccountSignIn;
@@ -37,7 +39,7 @@ final class AccountSecurityController extends Controller
         $request->validate(['password' => ['required', 'current_password']]);
         $request->session()->passwordConfirmed();
 
-        $route = $request->user()->isAdministrator() ? 'admin.system-settings.security' : 'security.methods';
+        $route = AdminAccess::can($request->user(), 'settings') ? 'admin.system-settings.security' : 'security.methods';
 
         return redirect()->intended(route($route));
     }

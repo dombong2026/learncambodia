@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Workspace;
 
+use App\Support\AdminAccess;
+
 use App\Http\Controllers\Controller;
 use App\Models\AssessmentAccess;
 use App\Models\CourseEnrollment;
@@ -202,7 +204,7 @@ final class StudentExaminationController extends Controller
 
     public function recording(Request $request, ExamAttempt $attempt, int $question): Response
     {
-        if (!$request->user()->isAdministrator()) {
+        if (!AdminAccess::can($request->user(), 'learning')) {
             $this->authorizeAttempt($request, $attempt, $attempt->enrollment);
         }
         abort_unless($attempt->submitted_at && ($attempt->snapshot['questions'][$question]['format'] ?? null) === 'speaking', 404);

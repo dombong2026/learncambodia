@@ -5,7 +5,7 @@
         $profileRole = $profileRole ?? $workspaceRole;
         $allowedRoles = ['admin', 'instructor', 'student', 'developer'];
         $roleIsKnown = in_array($profileRole, $allowedRoles, true) && $profileRole === $workspaceRole;
-        $navGroups = $roleIsKnown ? \App\Support\WorkspaceMenu::groups($profileRole) : [];
+        $navGroups = $roleIsKnown ? \App\Support\WorkspaceMenu::groups($profileRole, auth()->user()) : [];
     @endphp
     <div data-profile-divider class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
         <p class="truncate text-sm font-extrabold text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
