@@ -55,7 +55,11 @@ final class StarterCourseMediaTest extends TestCase
 
         $course->update(['status' => 'published', 'published_at' => now()]);
         $this->app['auth']->forgetGuards();
-        $this->get(route('courses.show', $course->slug))->assertOk()->assertSee($image);
+        $this->get(route('courses.show', $course->slug))->assertOk()
+            ->assertSeeInOrder(['data-detail-heading', $course->title, '<div class="detail-cover mt-4">', $image], false)
+            ->assertSeeInOrder(['3 lessons', 'Online', 'Published after academic review', 'Start learning'])
+            ->assertSeeInOrder(['Course instructors', 'Getting started', 'Continue exploring', 'Study readiness'])
+            ->assertDontSee('aria-label="Breadcrumb"', false);
         $this->get($image)->assertOk()->assertHeader('Content-Type', 'image/webp');
     }
 }

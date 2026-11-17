@@ -3,80 +3,49 @@
 @section('title', $course->title)
 @section('meta_description', $course->summary)
 @section('content')
-<section class="border-b border-slate-200 bg-gradient-to-br from-[#f8fafc] via-white to-[#edf2f9] dark:border-slate-700 dark:from-[#102b4b] dark:via-[#12365d] dark:to-[#0b284e]">
-    <div class="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" class="mb-7 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-300">
-            <a href="{{ route('home') }}" class="font-semibold hover:underline">{{ __('people.home') }}</a><span>/</span>
-            <a href="{{ route('courses.index') }}" class="font-semibold hover:underline">{{ __('frontend.courses_title') }}</a><span>/</span>
-            <a href="{{ route('categories.show',$course->category) }}" class="font-semibold hover:underline">{{ $course->category?->name }}</a><span>/</span>
-            <span aria-current="page" class="font-bold text-[#12335e] dark:text-[#f6cc7d]">{{ $course->title }}</span>
-        </nav>
-        <div class="grid items-stretch gap-6 lg:grid-cols-[1.1fr_.88fr_275px]">
-            <div class="min-w-0">
-                <div class="flex flex-wrap gap-2 text-xs font-black">
-                    <span class="rounded-lg bg-[#f5e1b4] px-3 py-1.5 text-[#7f5719]">{{ $course->category?->name }}</span>
-                    @if($course->cefr_level)<span class="rounded-lg bg-[#dfe8f5] px-3 py-1.5 text-[#17345f]">CEFR {{ $course->cefr_level }}</span>@endif
-                </div>
-                <h1 class="mt-5 break-words text-3xl font-black leading-tight text-[#0c2e5b] dark:text-white sm:text-4xl">{{ $course->title }}</h1>
-                <p class="mt-4 text-sm leading-8 text-slate-700 dark:text-[#d6e3ef]">{{ $course->summary }}</p>
-                <div class="mt-5 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    <span class="inline-flex items-center gap-1.5"><x-workspace-icon name="book-open" class="h-4 w-4 text-[#b58128]"/>{{ number_format($course->lessons_count) }} {{ __('frontend.lessons') }}</span>
-                    <span class="inline-flex items-center gap-1.5"><x-workspace-icon name="school" class="h-4 w-4 text-[#b58128]"/>{{ __('pages.mode_'.$course->delivery_mode) }}</span>
-                    <span class="inline-flex items-center gap-1.5"><x-workspace-icon name="shield-check" class="h-4 w-4 text-[#b58128]"/>{{ __('pages.academically_reviewed') }}</span>
-                </div>
-            </div>
-            @if($course->featured_kind)
-                <div class="flex min-w-0 items-center justify-center [&_.editorial-featured]:m-0 [&_.editorial-featured]:w-full">
-                    <x-editorial-featured-media :entry="$course"/>
-                </div>
-            @else
-            <div class="relative flex min-h-[230px] flex-col items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-[#133a68] to-[#0a284f] px-6 py-8 text-center text-white">
-                <div class="absolute -right-8 -top-10 h-44 w-44 rounded-full border-[22px] border-[#f5c468]/10" aria-hidden="true"></div>
-                <x-workspace-icon name="book-open" class="relative h-16 w-16 text-[#f0c570]"/>
-                <p class="relative mt-5 text-lg font-black leading-7">{{ $course->category?->name }}</p>
-                <p class="relative mt-2 text-xs font-semibold text-[#d7e5f4]">{{ __('pages.lesson_preview_note') }}</p>
-                <a href="#course-curriculum" class="relative mt-6 rounded-xl border border-white/40 px-5 py-2.5 text-xs font-bold hover:bg-white/10">{{ __('pages.view_curriculum') }}</a>
-            </div>
-            @endif
-            <aside class="flex flex-col rounded-3xl bg-[#0d305f] p-6 text-white shadow-xl">
-                <p class="text-[11px] font-black uppercase tracking-[.14em] text-[#f6cd7f]">{{ __('frontend.start_learning') }}</p>
-                <h2 class="mt-3 text-xl font-black">{{ __('pages.ready_to_study') }}</h2>
-                <p class="mt-3 flex-1 text-xs leading-7 text-[#d1e0ef]">{{ __('frontend.enrollment_note') }}</p>
-                @php($quote = \App\Support\CoursePricing::quote($course->pricing))
-                <x-course-price :course="$course" :quote="$quote" class="mt-3 text-sm font-bold text-[#f6cd7f]" />
-                @if($quote['model'] !== 'free')
-                    <p class="mt-2 text-xs leading-6 text-[#d1e0ef]">The school verifies payment or membership before granting access.</p>
-                @endif
-                @auth
-                    @if(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
-                        @if($existingEnrollment?->status === 'approved')
-                            <a href="{{ route('account.enrollments.show',$existingEnrollment) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('dashboard.resume_learning') }}</a>
-                        @elseif($existingEnrollment)
-                            <p class="mt-5 rounded-xl bg-white/10 p-4 text-xs font-bold text-[#ffe4a1]">{{ __('frontend.enrollment_requested') }}: {{ ucfirst($existingEnrollment->status) }}</p>
-                            <a href="{{ route('account.enrollments.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.view_my_enrollments') }}</a>
-                        @else
-                            <form method="POST" action="{{ route('account.enrollments.store',$course) }}" class="mt-5">@csrf
-                                @if($quote['model'] !== 'free')
-                                    <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
-                                @endif
-                                <button type="submit" class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.request_enrollment') }}</button>
-                            </form>
-                        @endif
-                    @else
-                        <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.open_my_workspace') }}</a>
-                    @endif
+<x-detail-hero :title="$course->title" :summary="$course->summary" :entry="$course" :label="__('detail.course')">
+    <x-slot:meta>
+        <li><x-workspace-icon name="book-open" class="h-4 w-4 text-[#b58128] dark:text-[#efbe62]"/>{{ number_format($course->lessons_count) }} {{ __('frontend.lessons') }}</li>
+        <li><x-workspace-icon name="school" class="h-4 w-4 text-[#b58128] dark:text-[#efbe62]"/>{{ __('pages.mode_'.$course->delivery_mode) }}</li>
+        <li><x-workspace-icon name="shield-check" class="h-4 w-4 text-[#b58128] dark:text-[#efbe62]"/>{{ __('pages.academically_reviewed') }}</li>
+        @if($course->cefr_level)<li class="rounded-md bg-blue-100 px-2 py-0.5 text-blue-950 dark:bg-white/10 dark:text-white">CEFR {{ $course->cefr_level }}</li>@endif
+    </x-slot:meta>
+    <x-slot:rail>
+        <h2 class="text-xl font-black">{{ __('frontend.start_learning') }}</h2>
+        <p class="mt-3 text-xs leading-7 text-[#d1e0ef]">{{ __('frontend.enrollment_note') }}</p>
+        @php($quote = \App\Support\CoursePricing::quote($course->pricing))
+        <x-course-price :course="$course" :quote="$quote" class="mt-3 text-sm font-bold text-[#f6cd7f]" />
+        @if($quote['model'] !== 'free')
+            <p class="mt-2 text-xs leading-6 text-[#d1e0ef]">The school verifies payment or membership before granting access.</p>
+        @endif
+        @auth
+            @if(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
+                @if($existingEnrollment?->status === 'approved')
+                    <a href="{{ route('account.enrollments.show',$existingEnrollment) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('dashboard.resume_learning') }}</a>
+                @elseif($existingEnrollment)
+                    <p class="mt-5 rounded-xl bg-white/10 p-4 text-xs font-bold text-[#ffe4a1]">{{ __('frontend.enrollment_requested') }}: {{ ucfirst($existingEnrollment->status) }}</p>
+                    <a href="{{ route('account.enrollments.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.view_my_enrollments') }}</a>
                 @else
-                    <a href="{{ route('register') }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.create_account') }}</a>
-                    <a href="{{ route('login') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.sign_in') }}</a>
-                @endauth
-                <p class="mt-5 border-t border-white/20 pt-4 text-[11px] leading-6 text-[#c5d7e9]">{{ __('frontend.no_certificate_claim') }}</p>
-            </aside>
-        </div>
-    </div>
-</section>
+                    <form method="POST" action="{{ route('account.enrollments.store',$course) }}" class="mt-5">@csrf
+                        @if($quote['model'] !== 'free')
+                            <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
+                        @endif
+                        <button type="submit" class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.request_enrollment') }}</button>
+                    </form>
+                @endif
+            @else
+                <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.open_my_workspace') }}</a>
+            @endif
+        @else
+            <a href="{{ route('register') }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.create_account') }}</a>
+            <a href="{{ route('login') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.sign_in') }}</a>
+        @endauth
+        <p class="mt-5 border-t border-white/20 pt-4 text-[11px] leading-6 text-[#c5d7e9]">{{ __('frontend.no_certificate_claim') }}</p>
+    </x-slot:rail>
+</x-detail-hero>
 
-<div class="mx-auto grid max-w-7xl gap-8 px-4 py-11 sm:px-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,.85fr)] lg:px-8">
-    <div class="space-y-7">
+<div class="detail-grid mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <div class="min-w-0 space-y-6">
         <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
             <p class="text-xs font-black uppercase tracking-[.12em] text-[#b27a25]">{{ __('pages.learning_objectives') }}</p>
             <h2 class="mt-2 text-xl font-black text-[#0c315c] dark:text-white">{{ __('pages.what_you_learn') }}</h2>
@@ -102,26 +71,21 @@
                 @endforelse
             </div>
         </section>
-        <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
-            <h2 class="text-xl font-black text-[#0d315c] dark:text-white">{{ __('pages.course_requirements') }}</h2>
-            <p class="mt-3 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ __('pages.course_requirements_desc') }}</p>
-            <a href="{{ route('cefr.index') }}" class="mt-4 inline-flex rounded-xl border border-[#e5b86a] px-5 py-3 text-xs font-black text-[#a06d26]">{{ __('pages.read_cefr') }}</a>
-        </section>
     </div>
 
-    <aside class="space-y-7">
+    <aside class="min-w-0 space-y-5">
         <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
             <h2 class="text-xl font-black text-[#12355e] dark:text-white">{{ __('pages.your_instructors') }}</h2>
-            <p class="mt-2 text-xs leading-7 text-slate-500">{{ __('pages.approved_teacher_note') }}</p>
+            <p class="mt-2 text-xs leading-7 text-slate-500 dark:text-slate-300">{{ __('pages.approved_teacher_note') }}</p>
             <div class="mt-5 space-y-3">
                 @forelse($educators as $profile)
                     <a href="{{ route('instructors.show',$profile) }}" class="flex items-center gap-3 rounded-2xl border border-slate-100 p-4 hover:border-[#e6bc70] dark:border-slate-700">
                         <span class="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#153c69] text-xl font-black text-[#e8bd62]">{{ mb_strtoupper(mb_substr($profile->display_name,0,1)) }}</span>
-                        <span class="min-w-0 flex-1"><strong class="block text-sm">{{ $profile->display_name }}</strong><small class="mt-1 block text-xs text-slate-500">{{ $profile->headline }}</small></span>
+                        <span class="min-w-0 flex-1"><strong class="block text-sm">{{ $profile->display_name }}</strong><small class="mt-1 block text-xs text-slate-500 dark:text-slate-300">{{ $profile->headline }}</small></span>
                         <x-workspace-icon name="arrow-up-right" class="h-4 w-4 text-[#b78a36]"/>
                     </a>
                 @empty
-                    <p class="rounded-2xl border border-dashed border-slate-200 p-5 text-sm leading-7 text-slate-500 dark:border-slate-700">{{ __('pages.no_public_instructors') }}</p>
+                    <p class="rounded-2xl border border-dashed border-slate-200 p-5 text-sm leading-7 text-slate-500 dark:border-slate-700 dark:text-slate-300">{{ __('pages.no_public_instructors') }}</p>
                 @endforelse
             </div>
             <a href="{{ route('instructors.index') }}" class="mt-4 block rounded-xl bg-[#123662] px-5 py-3 text-center text-xs font-bold text-white">{{ __('pages.meet_instructors') }}</a>
@@ -136,8 +100,12 @@
         </section>
         <section class="rounded-3xl bg-[#0c305e] p-6 text-white">
             <h2 class="text-lg font-black">{{ __('pages.explore_related') }}</h2>
-            <p class="mt-2 text-xs leading-7 text-[#d5e3f0]">{{ __('pages.related_intro') }}</p>
-            <a href="{{ route('courses.index',['category'=>$course->category->slug]) }}" class="mt-4 block rounded-xl bg-[#eebd61] px-5 py-3 text-center text-xs font-black text-[#0c315f]">{{ __('pages.more_in_category') }}</a>
+            <a href="{{ route('courses.index') }}" class="mt-4 block rounded-xl bg-[#eebd61] px-5 py-3 text-center text-xs font-black text-[#0c315f]">{{ __('frontend.courses_title') }}</a>
+        </section>
+        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
+            <h2 class="text-xl font-black text-[#0d315c] dark:text-white">{{ __('pages.course_requirements') }}</h2>
+            <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{{ __('pages.course_requirements_desc') }}</p>
+            <a href="{{ route('cefr.index') }}" class="mt-4 inline-flex rounded-xl border border-[#e5b86a] px-5 py-3 text-xs font-black text-[#a06d26] dark:text-[#efbe62]">{{ __('pages.read_cefr') }}</a>
         </section>
     </aside>
 </div>

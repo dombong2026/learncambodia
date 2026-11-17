@@ -1,6 +1,7 @@
 import './featured-video';
 import './lesson-media-player';
 import './policy-links';
+import './detail-title';
 
 function initMenus(): void {
     const menus = Array.from(document.querySelectorAll<HTMLElement>('[data-dropdown]'));
