@@ -33,12 +33,18 @@
         @endif
     </form>
 @endif
-<div class="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+<div @class([
+    'learning-manager learning-manager-scroll' => isset($userFilters),
+    'overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900' => ! isset($userFilters),
+])>
     <table class="w-full min-w-[680px] text-left text-sm">
         <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500 dark:border-slate-800 dark:bg-slate-900"><tr>@foreach($columns as $column)<th scope="col" class="px-5 py-4">{{ $column }}</th>@endforeach</tr></thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
             @forelse($records as $record)
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">@foreach($record as $value)<td class="max-w-sm px-5 py-4 text-slate-700 dark:text-slate-300">@if(is_array($value) && isset($value['account']))
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">@foreach($record as $value)<td @class([
+                    'max-w-sm px-5 py-4 text-slate-700 dark:text-slate-300',
+                    'learning-manager-actions' => is_array($value) && isset($value['account']),
+                ])>@if(is_array($value) && isset($value['account']))
                     @include('workspace.admin.user-row-actions', ['account' => $value['account']])
                 @elseif(is_array($value))
                     <a href="{{ $value['url'] }}" class="font-semibold text-blue-700 hover:underline dark:text-blue-300">{{ $value['value'] }}</a>
