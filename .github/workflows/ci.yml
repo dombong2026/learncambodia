@@ -49,3 +49,41 @@ jobs:
           php artisan migrate --seed --force
       - name: Verify Laravel route compilation
         run: php artisan route:list
+
+      - name: Check out the exact release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: release-source
+          persist-credentials: false
+
+      - name: Package locked production PHP dependencies
+        working-directory: release-source
+        shell: bash
+        env:
+          EXPECTED_RELEASE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_RELEASE_SHA"
+          composer config platform-check true
+          composer install --no-dev --prefer-dist --no-plugins --no-scripts --no-interaction --no-progress
+          composer check-platform-reqs --no-dev --no-plugins --no-interaction
+          git diff --exit-code -- composer.lock
+          test -s vendor/composer/platform_check.php
+          php -r 'require "vendor/autoload.php"; exit(class_exists(\Aws\S3\S3Client::class) ? 0 : 1);'
+          mkdir -p "$RUNNER_TEMP/learncambodia-vendor"
+          tar -czf "$RUNNER_TEMP/learncambodia-vendor/vendor.tar.gz" vendor
+          {
+            printf 'SOURCE_COMMIT=%s\n' "$EXPECTED_RELEASE_SHA"
+            printf 'COMPOSER_LOCK_SHA256=%s\n' "$(sha256sum composer.lock | cut -d' ' -f1)"
+            printf 'VENDOR_ARCHIVE_SHA256=%s\n' "$(sha256sum "$RUNNER_TEMP/learncambodia-vendor/vendor.tar.gz" | cut -d' ' -f1)"
+          } > "$RUNNER_TEMP/learncambodia-vendor/provenance.txt"
+
+      - name: Publish locked production PHP dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: learncambodia-cloud-storage-vendor
+          path: ${{ runner.temp }}/learncambodia-vendor/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

@@ -29,24 +29,22 @@ test ! -e storage/framework/down
 grep -Fxq "LEARNING_MANAGER_SHA=$old" storage/app/private/learncambodia-learning-manager-release.txt
 test "$old" != "$release"
 
-# aaPanel puts a shell wrapper on PATH that invokes PHP 8.3. Run the
-# actual Composer entry point with the same PHP as the application.
-composer="${COMPOSER_PHP_ENTRYPOINT:-/usr/bin/composer}"
-composer_php() {
-    COMPOSER_ALLOW_SUPERUSER=1 "$php" -d display_errors=stderr -d 'include_path=/usr/share/php:.' "$composer" "$@"
-}
-if [[ ! -r "$composer" ]] || ! version="$(composer_php --version --no-ansi)" || [[ "$version" != 'Composer version 2.'* ]]; then
-    printf '%s\n' 'Set COMPOSER_PHP_ENTRYPOINT to a Composer 2 PHP script or PHAR readable by the site PHP CLI.' >&2
-    exit 1
-fi
-
 quality="$(gh api "repos/$repo/actions/runs?head_sha=$release&status=success" --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml")][0].id // empty')"
-[[ "$quality" =~ ^[0-9]+$ ]]
+[[ "$quality" =~ ^[0-9]+$ ]] || { echo 'The pinned release must pass Foundation Quality.' >&2; exit 1; }
+bundle="$(gh api "repos/$repo/actions/runs/$quality/artifacts" --jq '
+    [.artifacts[] | select(.name == "learncambodia-cloud-storage-vendor" and (.expired | not)) | [.id, .digest]]
+    | if length == 1 then .[0] | @tsv else empty end
+')"
+IFS=$'\t' read -r bundle_id bundle_digest <<< "$bundle"
+[[ "$bundle_id" =~ ^[0-9]+$ && "$bundle_digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+    echo 'The verified dependency artifact is unavailable for this commit.' >&2
+    exit 1
+}
 
 stage="$(mktemp -d /var/backups/learncambodia/cloud-storage-XXXXXXXX)"
 git init -q "$stage/source"
 git -C "$stage/source" fetch -q --depth=1 "https://github.com/$repo.git" "$old" "$release"
-git -C "$stage/source" diff --name-only "$old" "$release" | awk '!/^(tests|docs|support\/operator)\// && $0 != ".env.example"' > "$stage/files"
+git -C "$stage/source" diff --name-only "$old" "$release" | awk '!/^(tests|docs|support\/operator)\// && $0 != ".env.example" && $0 != ".github/workflows/ci.yml"' > "$stage/files"
 test -s "$stage/files"
 while IFS= read -r file; do
     [[ "$file" =~ ^(app/(Console/Commands/|Support/|Http/Controllers/)|config/filesystems\.php$|database/seeders/|composer\.(json|lock)$) ]]
@@ -66,13 +64,40 @@ while IFS= read -r file; do
     git -C "$stage/source" show "$release:$file" > "$stage/next/$file"
     if [[ "$file" == *.php && "$file" != *.blade.php ]]; then "$php" -l "$stage/next/$file" >/dev/null; fi
 done < "$stage/files"
-git -C "$stage/source" checkout -q --detach "$release"
-composer_php --working-dir="$stage/source" install \
-    --no-dev --prefer-dist --no-plugins --no-scripts --no-interaction --no-progress
-composer_php --working-dir="$stage/source" check-platform-reqs --no-dev --no-plugins --no-interaction
-test -s "$stage/source/vendor/autoload.php"
-"$php" -r 'require $argv[1]; exit(class_exists(\Aws\S3\S3Client::class) ? 0 : 1);' "$stage/source/vendor/autoload.php"
-mv "$stage/source/vendor" "$stage/next-vendor"
+gh api "repos/$repo/actions/artifacts/$bundle_id/zip" > "$stage/vendor.zip"
+printf '%s  %s\n' "${bundle_digest#sha256:}" "$stage/vendor.zip" | sha256sum -c --status
+unzip -p "$stage/vendor.zip" provenance.txt > "$stage/provenance.txt"
+unzip -p "$stage/vendor.zip" vendor.tar.gz > "$stage/vendor.tar.gz"
+grep -Fxq "SOURCE_COMMIT=$release" "$stage/provenance.txt"
+lock_digest="$(sha256sum "$stage/next/composer.lock" | cut -d' ' -f1)"
+grep -Fxq "COMPOSER_LOCK_SHA256=$lock_digest" "$stage/provenance.txt"
+archive_digest="$(sha256sum "$stage/vendor.tar.gz" | cut -d' ' -f1)"
+grep -Fxq "VENDOR_ARCHIVE_SHA256=$archive_digest" "$stage/provenance.txt"
+
+python3 - "$stage/vendor.tar.gz" <<'PYTHON'
+import sys
+import tarfile
+from pathlib import PurePosixPath
+
+with tarfile.open(sys.argv[1], "r:gz") as archive:
+    members = set()
+    for member in archive:
+        path = PurePosixPath(member.name)
+        if (
+            not path.parts or path.parts[0] != "vendor" or ".." in path.parts
+            or not (member.isdir() or member.isfile()) or path in members
+        ):
+            sys.exit("Unsafe path or member type in the dependency archive")
+        members.add(path)
+    if not {PurePosixPath("vendor/autoload.php"), PurePosixPath("vendor/composer/platform_check.php")} <= members:
+        sys.exit("The dependency archive is missing its autoloader or platform check")
+PYTHON
+
+tar --no-same-owner --no-same-permissions -xzf "$stage/vendor.tar.gz" -C "$stage"
+test -s "$stage/vendor/autoload.php"
+test -s "$stage/vendor/composer/platform_check.php"
+"$php" -r 'require $argv[1]; exit(class_exists(\Aws\S3\S3Client::class) && class_exists(\Illuminate\Foundation\Application::class) ? 0 : 1);' "$stage/vendor/autoload.php"
+mv "$stage/vendor" "$stage/next-vendor"
 chown -R root:www "$stage/next-vendor"
 chmod -R g+rX,o-rwx "$stage/next-vendor"
 
