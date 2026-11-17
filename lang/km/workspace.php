@@ -19,6 +19,7 @@ return [
     'sign_out' => 'ចាកចេញ',
     'my_account' => 'គណនីរបស់ខ្ញុំ',
     'groups' => [
+        'system-settings' => 'ការកំណត់ប្រព័ន្ធ',
         'overview' => 'ទិដ្ឋភាពទូទៅ',
         'content' => 'មាតិកា',
         'appearance' => 'រូបរាង',
@@ -35,6 +36,9 @@ return [
         'operations' => 'ប្រតិបត្តិការ',
     ],
     'labels' => [
+        'Branding' => 'អត្តសញ្ញាណម៉ាក',
+        'Social Auth' => 'ការចូលតាមបណ្ដាញសង្គម',
+        'Cloud Storage' => 'ទំហំផ្ទុកលើពពក',
         'Saved Courses' => 'វគ្គសិក្សាបានរក្សាទុក',
         'Overview' => 'ទិដ្ឋភាពទូទៅ',
         'All Courses' => 'វគ្គសិក្សាទាំងអស់',

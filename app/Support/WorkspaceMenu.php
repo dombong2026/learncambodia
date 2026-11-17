@@ -29,6 +29,7 @@ final class WorkspaceMenu
                 ['people','People & Accounts','users',['user-manager']],
                 ['review','Reviews & Quality','shield',['approvals','academic-quality']],
                 ['reporting','Analytics','activity',['learning-insights']],
+                ['system-settings','System Settings','settings',['system-settings']],
             ],
             'student' => [
                 ['overview','Overview','layout',['dashboard']],
@@ -141,6 +142,10 @@ final class WorkspaceMenu
             'approvals/appearance-reviews' => 'eye',
             'approvals/enrollment-reviews' => 'user-round-check',
             'learning-insights/overview' => 'chart-column',
+            'system-settings/branding' => 'swatches',
+            'system-settings/security' => 'shield-check',
+            'system-settings/social-auth' => 'log-in',
+            'system-settings/cloud-storage' => 'cloud-storage',
             'academic-quality/gradebook' => 'chart-line',
             'academic-quality/evidence' => 'badge-check',
             'learning/categories' => 'compass',

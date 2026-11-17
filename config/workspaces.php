@@ -403,26 +403,11 @@ return json_decode(<<<'JSON'
       "title": "System Settings",
       "icon": "settings",
       "items": [
-        {
-          "key": "basic",
-          "label": "Basic"
-        },
-        {
-          "key": "branding",
-          "label": "Branding"
-        },
-        {
-          "key": "security",
-          "label": "Security"
-        },
-        {
-          "key": "cloud-storage",
-          "label": "Cloud Storage"
-        },
-        {
-          "key": "social-auth",
-          "label": "Social Auth"
-        }
+        {"key": "basic", "label": "Basic"},
+        {"key": "branding", "label": "Branding", "route": "admin.system-settings.branding"},
+        {"key": "security", "label": "Security", "route": "admin.system-settings.security"},
+        {"key": "social-auth", "label": "Social Auth", "route": "admin.system-settings.social-auth"},
+        {"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"}
       ]
     },
     {

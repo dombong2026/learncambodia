@@ -31,6 +31,7 @@ use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
+use App\Http\Controllers\Workspace\AdminSystemSettingsController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
@@ -161,6 +162,14 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {
+        Route::prefix('system-settings')->name('system-settings.')->controller(AdminSystemSettingsController::class)->group(function (): void {
+            Route::get('/branding', 'branding')->name('branding');
+            Route::get('/security', 'security')->name('security');
+            Route::get('/social-auth', 'socialAuth')->name('social-auth');
+            Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
+            Route::post('/cloud-storage/probe', 'probeCloudStorage')
+                ->middleware('throttle:3,1')->name('cloud-storage.probe');
+        });
         Route::get('/', [WorkspaceController::class, 'admin'])->name('overview');
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

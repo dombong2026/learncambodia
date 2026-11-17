@@ -19,6 +19,7 @@ return [
     'sign_out' => '退出登录',
     'my_account' => '我的账户',
     'groups' => [
+        'system-settings' => '系统设置',
         'overview' => '概览',
         'content' => '内容',
         'appearance' => '外观',
@@ -35,6 +36,9 @@ return [
         'operations' => '运营',
     ],
     'labels' => [
+        'Branding' => '品牌',
+        'Social Auth' => '社交登录',
+        'Cloud Storage' => '云存储',
         'Saved Courses' => '已收藏课程',
         'Overview' => '概览',
         'All Courses' => '所有课程',
