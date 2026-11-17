@@ -58,7 +58,8 @@ class AdminCategoryController extends Controller
         $validated = $this->validateCategory($request, $category);
         $category->update($validated);
 
-        return back()->with('status', 'Category updated.');
+        return back()->with('status', 'Category updated.')
+            ->with('category_navigation_changed', $category->wasChanged(['is_published', 'name', 'sort_order']));
     }
 
     private function validateCategory(Request $request, ?Category $category = null): array

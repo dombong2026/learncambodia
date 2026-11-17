@@ -43,6 +43,12 @@ class Category extends Model
         return $this->hasMany(ContentEntry::class)->publishedArticles();
     }
 
+    public function scopeForNavigation(Builder $query): Builder
+    {
+        return $query->visibleInCatalog()->orderBy('sort_order')->orderBy('id')
+            ->select(['id', 'slug', 'code', 'name']);
+    }
+
     public function scopeVisibleInCatalog(Builder $query): Builder
     {
         return $query->published()->where(function (Builder $content): void {

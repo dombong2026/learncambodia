@@ -47,6 +47,36 @@ final class CompactCategorySubheaderTest extends TestCase
         }
     }
 
+    public function test_category_visibility_changes_reach_both_navigation_responses_immediately(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $this->publishLearningCategoryFixtures();
+        $category = Category::where('code', 'ESL')->firstOrFail();
+        $default = $category->only(['code', 'name', 'group', 'description', 'sort_order']);
+        $change = route('admin.categories.update', $category);
+        $edit = route('admin.categories.edit', $category);
+        $feed = route('navigation.categories');
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->get('/?lang=en')->assertOk()->assertSee('data-category-short="ESL"', false);
+        $this->get($feed)->assertOk()->assertSee('data-category-short="ESL"', false)
+            ->assertHeader('X-Category-Navigation', '1');
+
+        $this->actingAs($admin)->from($edit)->patch($change, $default + ['is_published' => 0])
+            ->assertRedirect($edit)->assertSessionHas('category_navigation_changed', true);
+        $this->get($edit)->assertOk()->assertSee('data-category-navigation-changed', false);
+        $this->get('/cefr?lang=en')->assertOk()->assertDontSee('data-category-short="ESL"', false)
+            ->assertSee('data-category-short="EFL"', false);
+        $fragment = $this->get($feed)->assertOk()->assertDontSee('data-category-short="ESL"', false);
+        $this->assertStringContainsString('no-store', $fragment->headers->get('Cache-Control'));
+        $this->get(route('categories.show', $category))->assertNotFound();
+
+        $this->from($edit)->patch($change, $default + ['is_published' => 1])
+            ->assertRedirect($edit)->assertSessionHas('category_navigation_changed', true);
+        $this->get('/?lang=en')->assertOk()->assertSee('data-category-short="ESL"', false);
+        $this->get($feed)->assertOk()->assertSee('data-category-short="ESL"', false);
+    }
+
     public function test_category_pages_and_search_still_show_the_full_name(): void
     {
         $this->seed(CategorySeeder::class);

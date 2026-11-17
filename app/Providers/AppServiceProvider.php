@@ -19,8 +19,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('partials.header', function (ViewInstance $view): void {
             $view->with(
                 'navigationCategories',
-                Category::query()->visibleInCatalog()->orderBy('sort_order')
-                    ->get(['id', 'slug', 'code', 'name'])
+                Category::forNavigation()->get()
             );
         });
     }
