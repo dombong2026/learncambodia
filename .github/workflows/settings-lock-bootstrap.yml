@@ -1,0 +1,21 @@
+name: Resolve System Settings PHP dependencies
+on:
+  pull_request:
+    branches: [feature/admin-system-settings]
+permissions:
+  contents: read
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, bcmath, gmp, sodium, pdo_sqlite
+          coverage: none
+      - run: composer update laravel/fortify --with-dependencies --prefer-dist --no-install --no-scripts --no-interaction
+      - run: |
+          echo BEGIN_SETTINGS_LOCK_PATCH
+          git diff --binary -- composer.lock | gzip -c | base64 -w 120
+          echo END_SETTINGS_LOCK_PATCH

@@ -27,15 +27,28 @@
 
         @if($section === 'branding')
             <div class="grid gap-4 sm:grid-cols-2">
-                <section class="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 text-slate-800 shadow-sm sm:p-6">
+                <section class="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 system-settings-light-preview shadow-sm sm:p-6">
                     <h2 class="mb-4 text-sm font-bold">Light logo</h2>
                     <x-brand-logo surface="light" height="h-12" />
+                    <p class="mt-3 text-sm">1,924 × 383 px · PNG</p>
                 </section>
                 <section class="min-w-0 rounded-2xl border border-slate-700 bg-[#0c2d5b] p-5 text-slate-100 shadow-sm sm:p-6">
                     <h2 class="mb-4 text-sm font-bold">Dark logo</h2>
                     <x-brand-logo surface="dark" height="h-12" />
+                    <p class="mt-3 text-sm">1,902 × 375 px · PNG</p>
                 </section>
             </div>
+            <section class="rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <h2 class="text-sm font-bold">Favicon</h2>
+                <ul class="mt-4 flex flex-wrap gap-5">
+                    @foreach([16, 32] as $size)
+                        <li class="flex items-center gap-2 text-sm">
+                            <img src="{{ asset('brand/favicon-'.$size.'.png') }}" width="{{ $size }}" height="{{ $size }}" alt="">
+                            <span>{{ $size }} × {{ $size }} px · PNG</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
         @endif
 
         <dl class="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">

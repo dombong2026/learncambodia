@@ -20,3 +20,8 @@
         text-align: right;
     }
 }
+
+.system-settings-light-preview h2,
+.system-settings-light-preview p {
+    color: #1e293b;
+}

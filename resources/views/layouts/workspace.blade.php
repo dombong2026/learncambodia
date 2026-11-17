@@ -122,7 +122,7 @@
                     <div class="flex shrink-0 items-center gap-2">
                         @hasSection('heading_action')
                             @yield('heading_action')
-                        @else
+                        @elseif(!request()->routeIs('admin.system-settings.*', 'admin.profile.edit'))
                             <a href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
                         @endif
                     </div>
