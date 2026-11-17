@@ -6,7 +6,6 @@ test "$(id -u)" -eq 0
 cd /www/wwwroot/learncambodia.com
 test ! -L vendor
 test -d vendor
-composer="$(command -v composer)"
 
 repo=dombong2026/learncambodia
 old=75e74d0a81cdf045585b917530a80450012d529b
@@ -29,6 +28,18 @@ test ! -e "$marker"
 test ! -e storage/framework/down
 grep -Fxq "LEARNING_MANAGER_SHA=$old" storage/app/private/learncambodia-learning-manager-release.txt
 test "$old" != "$release"
+
+# aaPanel puts a shell wrapper on PATH that invokes PHP 8.3. Run the
+# actual Composer entry point with the same PHP as the application.
+composer="${COMPOSER_PHP_ENTRYPOINT:-/usr/bin/composer}"
+composer_php() {
+    COMPOSER_ALLOW_SUPERUSER=1 "$php" -d 'include_path=/usr/share/php:.' "$composer" "$@"
+}
+if [[ ! -r "$composer" ]] || ! version="$(composer_php --version --no-ansi)" || [[ "$version" != 'Composer version 2.'* ]]; then
+    printf '%s\n' 'Set COMPOSER_PHP_ENTRYPOINT to a Composer 2 PHP script or PHAR readable by the site PHP CLI.' >&2
+    exit 1
+fi
+
 quality="$(gh api "repos/$repo/actions/runs?head_sha=$release&status=success" --jq '[.workflow_runs[] | select(.path == ".github/workflows/ci.yml")][0].id // empty')"
 [[ "$quality" =~ ^[0-9]+$ ]]
 
@@ -56,8 +67,10 @@ while IFS= read -r file; do
     if [[ "$file" == *.php && "$file" != *.blade.php ]]; then "$php" -l "$stage/next/$file" >/dev/null; fi
 done < "$stage/files"
 git -C "$stage/source" checkout -q --detach "$release"
-COMPOSER_ALLOW_SUPERUSER=1 "$php" "$composer" --working-dir="$stage/source" install \
+composer_php --working-dir="$stage/source" install \
     --no-dev --prefer-dist --no-plugins --no-scripts --no-interaction --no-progress
+composer_php --working-dir="$stage/source" check-platform-reqs --no-dev --no-plugins --no-interaction
+test -s "$stage/source/vendor/autoload.php"
 "$php" -r 'require $argv[1]; exit(class_exists(\Aws\S3\S3Client::class) ? 0 : 1);' "$stage/source/vendor/autoload.php"
 mv "$stage/source/vendor" "$stage/next-vendor"
 chown -R root:www "$stage/next-vendor"
