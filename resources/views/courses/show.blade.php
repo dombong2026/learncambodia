@@ -40,6 +40,7 @@
             <a href="{{ route('register') }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.create_account') }}</a>
             <a href="{{ route('login') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.sign_in') }}</a>
         @endauth
+        <a href="#course-curriculum" class="mt-4 block text-center text-xs font-bold text-[#f6cd7f] hover:underline">{{ __('pages.view_curriculum') }}</a>
         <p class="mt-5 border-t border-white/20 pt-4 text-[11px] leading-6 text-[#c5d7e9]">{{ __('frontend.no_certificate_claim') }}</p>
     </x-slot:rail>
 </x-detail-hero>
