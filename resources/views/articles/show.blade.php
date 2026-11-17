@@ -2,6 +2,9 @@
 @section('canonical', e($article->publicUrl()))
 @section('title',$article->seo_title ?: $article->title)
 @section('meta_description', $article->seo_description ?: ($article->summary ?: \Illuminate\Support\Str::limit($article->body, 155)))
+@if($article->featured_kind === 'image' && $article->featuredMedia)
+    @section('og_image', route('editor-media.show', $article->featuredMedia))
+@endif
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_blog'); @endphp
 <x-detail-hero :title="$article->title" :entry="$article" icon="newspaper" :label="__('detail.article')">

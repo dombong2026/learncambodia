@@ -1,6 +1,10 @@
 <footer class="border-t border-slate-800 bg-slate-950 text-slate-200">
     <div data-footer-columns class="mx-auto grid max-w-7xl grid-cols-2 gap-x-5 gap-y-10 px-4 py-12 sm:gap-x-8 sm:px-6 md:grid-cols-4 lg:gap-x-10 lg:px-8">
-        <div><h2 class="mb-5 text-base font-bold text-white"><x-brand-logo surface="dark" height="h-8" imageClass="max-w-[195px]" /></h2><ul class="space-y-3 text-sm text-slate-400">
+        <div><h2 class="mb-5 text-base font-bold text-white"><x-brand-logo surface="dark" height="h-8" imageClass="max-w-[195px]" /></h2>
+            @if($tagline = \App\Support\PlatformBranding::text('tagline'))
+                <p class="mb-5 text-sm leading-relaxed text-slate-300">{{ $tagline }}</p>
+            @endif
+            <ul class="space-y-3 text-sm text-slate-400">
             <li><a class="hover:text-white" href="{{ route('information.show','about') }}">About Us <span lang="km"> (អំពីយើង)</span></a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','instructors') }}">Our Instructors</a></li>
             <li><a class="hover:text-white" href="{{ route('articles.index') }}">{{ __('frontend.articles') }}</a></li>
@@ -37,7 +41,7 @@
         $shareText = rawurlencode('LearnCambodia — '.route('home'));
     @endphp
     <div data-footer-bottom class="mx-auto flex max-w-7xl flex-col gap-5 border-t border-slate-800 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <p class="leading-6">© {{ date('Y') }} Learn Cambodia. All Rights Reserved.</p>
+        <p class="leading-6">© {{ date('Y') }} {{ \App\Support\PlatformBranding::name() }}. All Rights Reserved.</p>
         <nav data-footer-social aria-label="Share LearnCambodia" class="flex shrink-0 items-center gap-2">
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareHome }}" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share LearnCambodia on Facebook" title="Share on Facebook" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-transparent text-slate-300 transition duration-200 ease-out hover:-translate-y-0.5 hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transform-none motion-reduce:transition-none">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true" focusable="false"><path d="M13.75 21v-7.8h2.7l.4-3.25h-3.1V7.9c0-.93.25-1.56 1.58-1.56H17V3.43A21 21 0 0 0 14.54 3c-2.45 0-4.13 1.5-4.13 4.27v2.68H7.7v3.25h2.71V21z"/></svg>

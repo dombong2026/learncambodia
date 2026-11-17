@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#f8fafc">
     <meta name="robots" content="noindex,nofollow">
-    <title>@yield('title', 'Overview') · Learn Cambodia</title>
+    <title>@yield('title', 'Overview') · {{ \App\Support\PlatformBranding::name() }}</title>
     @include('partials.brand-head')
     @include('partials.theme-boot')
     <script>

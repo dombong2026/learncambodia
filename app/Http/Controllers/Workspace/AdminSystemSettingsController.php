@@ -17,15 +17,6 @@ use Illuminate\View\View;
 
 final class AdminSystemSettingsController extends Controller
 {
-    public function branding(): View
-    {
-        return $this->page('Branding', 'Preview the live brand assets and manage how the site presents them.', 'branding', [
-            ['Header', 'Manage the announcement and search placeholder.', 'Edit header', route('admin.appearance.edit', 'header')],
-            ['Footer', 'Manage the site-wide footer note.', 'Edit footer', route('admin.appearance.edit', 'footer')],
-            ['Typography', 'Manage the site’s font and text settings.', 'Edit typography', route('admin.appearance.edit', 'typography')],
-        ]);
-    }
-
     public function security(Request $request): View
     {
         return $this->page('Security', 'Review sign-in and session protections and manage your administrator password.', 'security', [

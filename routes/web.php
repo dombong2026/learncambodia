@@ -15,6 +15,7 @@ use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\BrandAssetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
+use App\Http\Controllers\Workspace\AdminBrandingController;
 use App\Http\Controllers\Workspace\AdminSystemSettingsController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
@@ -75,6 +77,9 @@ Route::post('/install/complete', [InstallController::class, 'complete'])
     ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
+Route::get('/brand/assets/{slot}/{version}', [BrandAssetController::class, 'image'])
+    ->where('version', '[0-9A-HJKMNP-TV-Z]{26}')->name('brand.asset');
+Route::get('/brand/platform.webmanifest', [BrandAssetController::class, 'manifest'])->name('brand.manifest');
 Route::get('/instructors', [PublicPeopleController::class, 'instructors'])->name('instructors.index');
 Route::get('/instructors/{profile}', [PublicPeopleController::class, 'instructor'])->name('instructors.show');
 Route::get('/students', [PublicPeopleController::class, 'students'])->name('students.index');
@@ -198,7 +203,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {
         Route::prefix('system-settings')->name('system-settings.')->controller(AdminSystemSettingsController::class)->group(function (): void {
-            Route::get('/branding', 'branding')->name('branding');
+            Route::get('/branding', [AdminBrandingController::class, 'edit'])->name('branding');
+            Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');

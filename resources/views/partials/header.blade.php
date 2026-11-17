@@ -3,7 +3,7 @@
         <div class="border-b border-blue-900 bg-blue-950 px-4 py-2 text-center text-xs font-semibold text-white">{{ \App\Support\Appearance::value('header','announcement') }}</div>
     @endif
     <header class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6 lg:px-8">
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" aria-label="Learn Cambodia home">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" aria-label="{{ __(':name home', ['name' => \App\Support\PlatformBranding::name()]) }}">
             <x-brand-logo height="h-8 sm:h-10" imageClass="max-w-[164px] sm:max-w-[210px]" />
         </a>
         <form action="{{ route('courses.index') }}" method="GET" role="search" class="relative mx-auto hidden min-w-0 w-full max-w-[440px] flex-1 sm:block">

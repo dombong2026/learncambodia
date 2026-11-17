@@ -2,6 +2,9 @@
 @section('canonical', e(route('courses.show', $course->getRouteKey())))
 @section('title', $course->title)
 @section('meta_description', $course->summary)
+@if($course->featured_kind === 'image' && $course->featuredMedia)
+    @section('og_image', route('editor-media.show', $course->featuredMedia))
+@endif
 @section('content')
 <x-detail-hero :title="$course->title" :entry="$course" :label="__('detail.course')">
     <x-slot:meta>
