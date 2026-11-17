@@ -93,6 +93,17 @@ final class AdminUserManagementTest extends TestCase
         $this->assertSame(0, $account->tokens()->count());
     }
 
+    public function test_admin_alerts_only_go_to_accounts_that_can_open_the_destination(): void
+    {
+        $full = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $scoped = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $scoped->forceFill(['admin_permissions' => ['users']])->save();
+
+        \App\Support\WorkspaceNotifications::administrators('Academic evidence pending', 'admin.academic.evidence');
+        $this->assertSame(1, $full->notifications()->count());
+        $this->assertSame(0, $scoped->notifications()->count());
+    }
+
     public function test_each_admin_navigation_page_has_its_own_header_action(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

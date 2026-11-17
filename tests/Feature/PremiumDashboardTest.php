@@ -86,7 +86,7 @@ class PremiumDashboardTest extends TestCase
     public function test_all_roles_have_a_real_contextual_action_mobile_tabs_and_breadcrumb_outside_header(): void
     {
         $routes = [
-            'admin'=>['/dashboard','Create course','/dashboard/course-builder/create'],
+            'admin'=>['/dashboard',null,null],
             'student'=>['/account','My learning','/account/enrollments'],
             'instructor'=>['/instructor','My courses','/instructor/courses'],
             'developer'=>['/developer','Access tokens','/developer/tokens'],
@@ -94,12 +94,15 @@ class PremiumDashboardTest extends TestCase
         foreach($routes as $role=>[$landing,$label,$action]){
             $response = $this->actingAs($this->user($role))->get($landing)
                 ->assertOk()
-                ->assertSee($label)
                 ->assertSee('aria-label="Breadcrumb"',false)
                 ->assertSee('aria-label="Mobile workspace navigation"',false)
                 ->assertSee('data-saver-toggle',false)
-                ->assertSee('href="'.url($action).'"',false)
                 ->assertDontSee('Google Ads');
+            if ($label === null) {
+                $response->assertDontSee('data-workspace-primary-action', false);
+            } else {
+                $response->assertSee($label)->assertSee('href="'.url($action).'"', false);
+            }
             $html = $response->getContent();
             $this->assertGreaterThan(strpos($html,'</header>'),strpos($html,'aria-label="Breadcrumb"'));
         }

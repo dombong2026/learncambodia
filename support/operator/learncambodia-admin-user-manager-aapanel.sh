@@ -59,9 +59,11 @@ while IFS= read -r file; do
         app/Models/User.php|\
         app/Support/AdminAccess.php|\
         app/Support/WorkspaceMenu.php|\
+        app/Support/WorkspaceNotifications.php|\
         database/migrations/2026_11_17_000004_add_admin_permissions_and_access_audit.php|\
         public/js/admin-user-access.js|\
         resources/views/layouts/workspace.blade.php|\
+        resources/views/partials/profile-menu-content.blade.php|\
         resources/views/workspace/admin/access-overview.blade.php|\
         resources/views/workspace/admin/categories.blade.php|\
         resources/views/workspace/admin/examination/types.blade.php|\

@@ -19,7 +19,8 @@ final class WorkspaceNotifications
 {
     public static function send(?int $userId, string $message, string $route, array $parameters = []): void
     {
-        if ($userId !== null && ($user = User::find($userId))) {
+        if ($userId !== null && ($user = User::find($userId))
+            && (!str_starts_with($route, 'admin.') || AdminAccess::allowsRoute($user, $route))) {
             $user->notify(new WorkspaceNotice($message, route($route, $parameters, absolute: false)));
         }
     }
@@ -29,7 +30,10 @@ final class WorkspaceNotifications
         $notification = new WorkspaceNotice($message, route($route, $parameters, absolute: false));
 
         User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_SUPERADMIN])->when($except, fn ($query) => $query->whereKeyNot($except))
-            ->chunkById(100, fn ($users) => Notification::sendNow($users, $notification));
+            ->chunkById(100, fn ($users) => Notification::sendNow(
+                $users->filter(fn (User $user) => AdminAccess::allowsRoute($user, $route)),
+                $notification
+            ));
     }
 
     public static function approval(string $type, int $id, User $actor, string $action, string $status): void

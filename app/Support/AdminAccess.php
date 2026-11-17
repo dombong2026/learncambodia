@@ -58,7 +58,8 @@ final class AdminAccess
     public static function unrestricted(User $user): bool
     {
         return $user->role === User::ROLE_SUPERADMIN
-            || ($user->role === User::ROLE_ADMIN && $user->admin_permissions === null);
+            || ($user->role === User::ROLE_ADMIN && ($user->admin_permissions === null
+                || array_diff(array_keys(self::PERMISSIONS), $user->admin_permissions) === []));
     }
 
     public static function can(?User $user, string $permission): bool
