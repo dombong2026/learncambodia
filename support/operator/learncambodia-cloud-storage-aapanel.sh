@@ -33,7 +33,7 @@ test "$old" != "$release"
 # actual Composer entry point with the same PHP as the application.
 composer="${COMPOSER_PHP_ENTRYPOINT:-/usr/bin/composer}"
 composer_php() {
-    COMPOSER_ALLOW_SUPERUSER=1 "$php" -d 'include_path=/usr/share/php:.' "$composer" "$@"
+    COMPOSER_ALLOW_SUPERUSER=1 "$php" -d display_errors=stderr -d 'include_path=/usr/share/php:.' "$composer" "$@"
 }
 if [[ ! -r "$composer" ]] || ! version="$(composer_php --version --no-ansi)" || [[ "$version" != 'Composer version 2.'* ]]; then
     printf '%s\n' 'Set COMPOSER_PHP_ENTRYPOINT to a Composer 2 PHP script or PHAR readable by the site PHP CLI.' >&2
