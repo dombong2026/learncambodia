@@ -12,13 +12,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\PasskeyAuthenticatable;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path'])]
-class User extends Authenticatable implements MustVerifyEmail
+#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path', 'two_factor_secret', 'two_factor_recovery_codes', 'google_subject'])]
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasPublicId, Notifiable;
+
+    use PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     public const ROLE_STUDENT = 'student';
     public const ROLE_ADMIN = 'admin';
@@ -78,6 +83,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
             'profile_details' => 'encrypted:array',
             'terms_accepted_at' => 'datetime',
             'password' => 'hashed',

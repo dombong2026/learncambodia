@@ -21,8 +21,8 @@ final class ManagedFiles
     {
         $name = config('filesystems.managed');
 
-        if (!in_array($name, ['local', 'r2'], true)) {
-            throw new RuntimeException('MANAGED_STORAGE_DISK must be local or r2.');
+        if (!in_array($name, ['local', 'r2', 's3'], true)) {
+            throw new RuntimeException('MANAGED_STORAGE_DISK must be local, r2, or s3.');
         }
 
         return $name;
@@ -42,7 +42,7 @@ final class ManagedFiles
             }
         }
 
-        return Storage::disk($name);
+        return Storage::disk($name === 's3' ? 'managed-s3' : $name);
     }
 
     public static function store(UploadedFile $file, string $directory, ?string $filename = null): string|false

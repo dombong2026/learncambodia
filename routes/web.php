@@ -8,6 +8,11 @@ use App\Http\Controllers\EditorMediaController;
 use App\Http\Controllers\PublicHelpController;
 use App\Http\Controllers\PublicDocumentController;
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\Auth\AccountPasskeyController;
+use App\Http\Controllers\Auth\AccountSecurityController;
+use App\Http\Controllers\Auth\GoogleSignInController;
+use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
+use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\CatalogController;
@@ -107,7 +112,20 @@ Route::post('/contact', [PublicContactController::class, 'store'])
     ->middleware('throttle:5,1')->name('contact.store');
 Route::post('/language', [LocaleController::class, 'update'])->name('language.update');
 
+Route::get('/sign-in/google/callback', [GoogleSignInController::class, 'callback'])
+    ->middleware('throttle:20,1')->name('social.google.callback');
+
 Route::middleware('guest')->group(function (): void {
+    Route::get('/sign-in/google', [GoogleSignInController::class, 'start'])->middleware('throttle:10,1')->name('social.google.start');
+    Route::get('/sign-in/google/register', [GoogleSignInController::class, 'registration'])->name('social.google.registration');
+    Route::post('/sign-in/google/register', [GoogleSignInController::class, 'finishRegistration'])->middleware('throttle:5,1')->name('social.google.register');
+    Route::get('/security/challenge', [AccountSecurityController::class, 'challenge'])->name('security.challenge');
+    Route::post('/security/challenge', [AccountSecurityController::class, 'finishChallenge'])
+        ->middleware('throttle:10,1')->block(10, 10)->name('security.challenge.finish');
+    Route::get('/passkeys/login/options', [PasskeyLoginController::class, 'index'])
+        ->middleware('throttle:10,1')->block(10, 10)->name('passkey.login-options');
+    Route::post('/passkeys/login', [AccountPasskeyController::class, 'store'])
+        ->middleware('throttle:10,1')->block(10, 10)->name('passkey.login');
     Route::get('/login', [SessionController::class, 'loginForm'])->name('login');
     Route::post('/login', [SessionController::class, 'login'])->name('login.store');
     Route::get('/register', [SessionController::class, 'registerForm'])->name('register');
@@ -127,6 +145,23 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/security/methods', [AccountSecurityController::class, 'methods'])->name('security.methods');
+    Route::get('/security/confirm-password', [AccountSecurityController::class, 'passwordForm'])->name('password.confirm');
+    Route::post('/security/confirm-password', [AccountSecurityController::class, 'confirmPassword'])
+        ->middleware('throttle:5,1')->name('security.password.confirm');
+
+    Route::middleware(['password.confirm', 'throttle:10,1'])->group(function (): void {
+        Route::post('/security/two-factor', [AccountSecurityController::class, 'enable'])->name('security.factor.enable');
+        Route::post('/security/two-factor/confirm', [AccountSecurityController::class, 'confirm'])->name('security.factor.confirm');
+        Route::post('/security/two-factor/recovery-codes', [AccountSecurityController::class, 'regenerate'])->name('security.factor.recovery');
+        Route::delete('/security/two-factor', [AccountSecurityController::class, 'disable'])->name('security.factor.disable');
+        Route::get('/user/passkeys/options', [PasskeyRegistrationController::class, 'index'])->block(10, 10)->name('passkey.registration-options');
+        Route::post('/user/passkeys', [PasskeyRegistrationController::class, 'store'])->block(10, 10)->name('passkey.store');
+        Route::delete('/user/passkeys/{passkey}', [PasskeyRegistrationController::class, 'destroy'])->name('passkey.destroy');
+        Route::post('/security/google', [GoogleSignInController::class, 'connect'])->name('social.google.connect');
+        Route::delete('/security/google', [GoogleSignInController::class, 'disconnect'])->name('social.google.disconnect');
+    });
+
     Route::get('/account-avatar', [ProfileController::class, 'avatar'])->name('workspace.avatar');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('workspace.notifications');
     Route::get('/notifications/unread', [NotificationController::class, 'unread'])
@@ -169,6 +204,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
             Route::post('/cloud-storage/probe', 'probeCloudStorage')
                 ->middleware('throttle:3,1')->name('cloud-storage.probe');
+            Route::post('/cloud-storage/transfer', 'transferCloudStorage')
+                ->middleware(['password.confirm', 'throttle:5,1'])->name('cloud-storage.transfer');
         });
         Route::get('/', [WorkspaceController::class, 'admin'])->name('overview');
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -6,12 +6,13 @@ use App\Models\Category;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View as ViewInstance;
+use Laravel\Fortify\Fortify;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        Fortify::ignoreRoutes();
     }
 
     public function boot(): void

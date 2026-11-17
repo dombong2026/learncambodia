@@ -71,3 +71,14 @@ test "$(rclone cat "$object" | sha256sum | cut -d' ' -f1)" = "$(sha256sum "$arch
 ```
 
 Run the backup verification with Bash `set -o pipefail`. Store the backup decryption key independently of the bucket and production application.
+
+
+## Amazon S3 and dashboard transfers
+
+Set AWS_BUCKET and AWS_DEFAULT_REGION for a private general-purpose S3 bucket. Use a role or the AWS SDK credential chain when available. For an aaPanel host without a role, use bucket-scoped AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY. Set AWS_SESSION_TOKEN for temporary credentials. The S3 bucket must permit listing its prefix and reading, writing, and deleting probe objects. Keep S3 bucket public access blocked. The managed S3 disk uses the standard AWS endpoint and does not change Laravel's global S3 disk.
+
+Cloud Storage in System Settings can test either configured bucket, queue a local copy, and queue checksum verification. Run the dedicated worker as the site's PHP user:
+
+    runuser -u www -- /www/server/php/85/bin/php /www/wwwroot/learncambodia.com/artisan queue:work managed-storage --queue=managed-storage --timeout=1800 --tries=1 --stop-when-empty
+
+Use a supervised worker with the same queue options (omit --stop-when-empty) if administrators need transfers to start automatically. Check the results on the same settings page. An operator can run the same storage command with --provider=s3 or --provider=r2 for a maintenance-window cutover. Once the final copy and verification pass in maintenance mode, set MANAGED_STORAGE_DISK=s3 for S3 or MANAGED_STORAGE_DISK=r2 for R2, rebuild cached configuration, and bring the site back online. For a return to local storage, follow the reverse-transfer instructions and include the provider that holds the current uploads.

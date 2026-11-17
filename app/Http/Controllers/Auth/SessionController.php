@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
 use App\Models\User;
 use App\Support\ReadingReturn;
+use App\Support\AccountSignIn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,7 +64,23 @@ class SessionController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $factorUser = null;
+        $authenticated = Auth::attemptWhen($credentials, function (User $user) use (&$factorUser): bool {
+            if (!$user->hasEnabledTwoFactorAuthentication()) {
+                return true;
+            }
+            $factorUser = $user;
+
+            return false;
+        }, $request->boolean('remember'));
+
+        if ($factorUser !== null) {
+            RateLimiter::clear($key);
+
+            return AccountSignIn::start($request, $factorUser, $request->boolean('remember'));
+        }
+
+        if (!$authenticated) {
             RateLimiter::hit($key, 60);
             RateLimiter::hit($ipKey, 60);
 

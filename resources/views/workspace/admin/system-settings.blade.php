@@ -7,16 +7,10 @@
     <link rel="stylesheet" href="{{ asset('css/system-settings.css') }}">
 @endpush
 
-@if($canProbe)
-    @section('heading_action')
-        <form method="POST" action="{{ route('admin.system-settings.cloud-storage.probe') }}">
-            @csrf
-            <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500">
-                <x-workspace-icon name="cloud-storage" class="h-4 w-4" />
-                Test R2 connection
-            </button>
-        </form>
-    @endsection
+@if($section === 'security')
+    @push('workspace_styles')
+        <script src="{{ asset('js/account-passkeys.js') }}" defer></script>
+    @endpush
 @endif
 
 @section('content')
@@ -72,10 +66,12 @@
             @endforeach
         </dl>
 
-        @if($canProbe)
-            <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">The test writes, reads, and deletes one temporary object in the configured bucket.</p>
+        @if($section === 'security')
+            @include('workspace.security-methods')
+        @elseif($section === 'social-auth')
+            @include('workspace.google-method')
         @elseif($section === 'cloud-storage')
-            <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">Set the private bucket’s R2 values in the server environment to enable connection testing.</p>
+            @include('workspace.admin.storage-transfers')
         @endif
     </div>
 @endsection

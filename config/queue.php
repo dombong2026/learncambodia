@@ -44,6 +44,14 @@ return [
             'after_commit' => false,
         ],
 
+        'managed-storage' => [
+            'driver' => 'database',
+            'table' => 'jobs',
+            'queue' => 'managed-storage',
+            'retry_after' => 1860,
+            'after_commit' => false,
+        ],
+
         'beanstalkd' => [
             'driver' => 'beanstalkd',
             'host' => env('BEANSTALKD_QUEUE_HOST', 'localhost'),

@@ -16,7 +16,8 @@ final class TransferManagedStorage extends Command
 {
     protected $signature = 'storage:managed-transfer
         {--mode=inventory : inventory, probe, copy, or verify}
-        {--direction=to-cloud : to-cloud or to-local}';
+        {--direction=to-cloud : to-cloud or to-local}
+        {--provider=r2 : r2 or s3}';
 
     protected $description = 'Inventory, copy or verify LearnCambodia uploads without removing source files';
 
@@ -24,22 +25,24 @@ final class TransferManagedStorage extends Command
     {
         $mode = $this->option('mode');
         $direction = $this->option('direction');
+        $provider = $this->option('provider');
         if (!in_array($mode, ['inventory', 'probe', 'copy', 'verify'], true)
-            || !in_array($direction, ['to-cloud', 'to-local'], true)) {
-            $this->error('Choose a supported mode and transfer direction.');
+            || !in_array($direction, ['to-cloud', 'to-local'], true)
+            || !in_array($provider, ['r2', 's3'], true)) {
+            $this->error('Choose a supported mode, transfer direction, and provider.');
 
             return self::INVALID;
         }
 
         try {
             if ($mode === 'probe') {
-                $this->probe(ManagedFiles::disk('r2'));
+                $this->probe(ManagedFiles::disk($provider));
                 $this->info('Cloud storage write, read, and delete checks passed.');
 
                 return self::SUCCESS;
             }
 
-            [$from, $to] = $direction === 'to-cloud' ? ['local', 'r2'] : ['r2', 'local'];
+            [$from, $to] = $direction === 'to-cloud' ? ['local', $provider] : [$provider, 'local'];
             $source = ManagedFiles::disk($from);
             $target = $mode === 'inventory' ? null : ManagedFiles::disk($to);
 

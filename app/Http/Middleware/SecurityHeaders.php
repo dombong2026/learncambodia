@@ -35,7 +35,7 @@ final class SecurityHeaders
         // the one-time installer against intermediary caching.
         if ($request->user() !== null
             || $request->is('install', 'install/*', 'login', 'register',
-                'dashboard', 'dashboard/*', 'account', 'account/*',
+                'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
                 'instructor', 'instructor/*', 'developer', 'developer/*')) {
             $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
         }
