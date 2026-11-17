@@ -31,8 +31,14 @@ final class ManagedFiles
     public static function disk(?string $name = null): FilesystemAdapter
     {
         $name ??= self::diskName();
-        if ($name === 'r2' && config('filesystems.disks.r2.driver') === 's3') {
-            $config = config('filesystems.disks.r2');
+        $disk = ManagedStorageSettings::diskKey($name);
+        if (!isset(ManagedStorageSettings::PROVIDERS[$name]) || config('filesystems.disks.'.$disk.'.driver') !== 's3') {
+            return Storage::disk($disk);
+        }
+
+        $saved = ManagedStorageSettings::saved($name);
+        $config = ManagedStorageSettings::effective($name, $saved);
+        if ($name === 'r2') {
             $endpoint = parse_url((string) $config['endpoint']);
 
             if (blank($config['key']) || blank($config['secret']) || blank($config['bucket'])
@@ -42,7 +48,7 @@ final class ManagedFiles
             }
         }
 
-        return Storage::disk($name === 's3' ? 'managed-s3' : $name);
+        return $saved === null ? Storage::disk($disk) : Storage::build($config);
     }
 
     public static function store(UploadedFile $file, string $directory, ?string $filename = null): string|false

@@ -13,6 +13,15 @@
     @endpush
 @endif
 
+@if($section === 'cloud-storage')
+    @section('heading_action')
+        <a href="{{ $canEditStorage ? '#bucket-configuration' : route('admin.system-settings.cloud-storage.configure') }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-800">
+            <x-workspace-icon name="cloud-storage" class="h-4 w-4" />
+            Configure buckets
+        </a>
+    @endsection
+@endif
+
 @section('content')
     <div class="max-w-5xl space-y-5">
         @error('probe')
@@ -71,6 +80,7 @@
         @elseif($section === 'social-auth')
             @include('workspace.google-method')
         @elseif($section === 'cloud-storage')
+            @include('workspace.admin.storage-configuration')
             @include('workspace.admin.storage-transfers')
         @endif
     </div>

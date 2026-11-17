@@ -202,6 +202,10 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
+            Route::get('/cloud-storage/configure', 'configureCloudStorage')
+                ->middleware('password.confirm')->name('cloud-storage.configure');
+            Route::patch('/cloud-storage/configure', 'saveCloudStorage')
+                ->middleware(['password.confirm', 'throttle:6,1'])->name('cloud-storage.save');
             Route::post('/cloud-storage/probe', 'probeCloudStorage')
                 ->middleware('throttle:3,1')->name('cloud-storage.probe');
             Route::post('/cloud-storage/transfer', 'transferCloudStorage')

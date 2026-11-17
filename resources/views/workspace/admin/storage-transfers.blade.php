@@ -20,7 +20,7 @@
             </div>
         </div>
     @empty
-        <p class="mt-3 text-sm">Configure R2 or S3 on the server to enable connection testing and file transfer.</p>
+        <p class="mt-3 text-sm">Save the settings for R2 or S3 to enable its connection test and file transfer controls.</p>
     @endforelse
     <p class="mt-4 text-sm">The connection test uses one temporary object. Copy retains local files. Verify compares checksums with the destination.</p>
     @if($transfers->isNotEmpty())

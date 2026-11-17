@@ -4,6 +4,10 @@ Cloud mode uses Cloudflare R2's S3 API. The application keeps the same file keys
 
 ## Configure the bucket
 
+Open **System Settings → Cloud Storage → Configure buckets** as an administrator and confirm your password. Save the private bucket settings for Cloudflare R2 or Amazon S3, then run its connection test. Dashboard credentials are encrypted with the application key and are never shown again. Preserve the application key with the normal server backup. Dashboard settings take precedence over the site's server settings for that provider. Saving a destination does not switch the active storage disk. Active bucket settings are locked in the dashboard, as are edits while a transfer is queued or running.
+
+### Server environment alternative
+
 Create a private bucket dedicated to LearnCambodia and create an Object Read & Write credential scoped to that bucket. Use the S3 endpoint shown in the R2 dashboard. Add these settings to the aaPanel site's private `.env` and keep the credential values out of Git, shell history, and deployment output.
 
 ```dotenv
