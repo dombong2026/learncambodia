@@ -17,7 +17,7 @@ use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path', 'two_factor_secret', 'two_factor_recovery_codes', 'google_subject', 'admin_permissions'])]
+#[Hidden(['password', 'remember_token', 'profile_details', 'avatar_path', 'two_factor_secret', 'two_factor_recovery_codes', 'google_subject', 'admin_permissions', 'phone', 'phone_verified_at', 'account_auth_version'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
@@ -32,7 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public const ROLE_INSTRUCTOR = 'instructor';
 
     // Match the database default for models created in the current request.
-    protected $attributes = ['role' => self::ROLE_STUDENT];
+    protected $attributes = ['role' => self::ROLE_STUDENT, 'account_status' => 'active', 'account_auth_version' => 0];
 
     private function publicIdDigits(): int
     {
@@ -59,6 +59,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         };
     }
 
+    public function isActiveAccount(): bool
+    {
+        return $this->account_status === 'active';
+    }
+
     public function isAdministrator(): bool
     {
         return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPERADMIN], true);
@@ -83,6 +88,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'account_auth_version' => 'integer',
             'two_factor_confirmed_at' => 'datetime',
             'profile_details' => 'encrypted:array',
             'terms_accepted_at' => 'datetime',

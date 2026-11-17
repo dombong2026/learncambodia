@@ -17,27 +17,34 @@ class AdminRecordsController extends Controller
     {
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:80'],
+            'status' => ['nullable', \Illuminate\Validation\Rule::in(['active', 'deactivated', 'deleted'])],
             'role' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(AdminAccess::ROLES))],
         ]);
         $query = trim($filters['q'] ?? '');
         $role = $filters['role'] ?? null;
+        $status = $filters['status'] ?? null;
 
-        $users = User::query()->select(['id', 'public_id', 'name', 'email', 'role', 'created_at'])
+        $users = User::query()->select([
+            'id', 'public_id', 'name', 'email', 'role', 'created_at', 'account_status',
+            'admin_permissions', 'phone', 'phone_verified_at', 'email_verified_at',
+        ])
             ->when($query, fn ($builder) => $builder->where(function ($inner) use ($query) {
                 $inner->where('name', 'like', '%'.$query.'%')
                     ->orWhere('email', 'like', '%'.$query.'%')
                     ->when(preg_match('/^[1-9][0-9]{7}$/D', $query), fn ($match) => $match->orWhere('public_id', $query));
             }))
+            ->when($status, fn ($builder) => $builder->where('account_status', $status),
+                fn ($builder) => $builder->where('account_status', '!=', 'deleted'))
             ->when($role, fn ($builder) => $builder->where('role', $role))
             ->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('workspace.admin.records', [
             'title' => 'User Manager',
             'description' => 'Create accounts and manage access to LearnCambodia.',
-            'columns' => ['User ID', 'Name', 'Email', 'Role', 'Joined'],
-            'userFilters' => ['q' => $query, 'role' => $role],
+            'columns' => ['User ID', 'Name', 'Email', 'Role', 'Status', 'Joined', 'Actions'],
+            'userFilters' => ['q' => $query, 'role' => $role, 'status' => $status],
             'records' => $users->through(fn (User $user) => [
-                ['value' => $user->public_id, 'url' => route('admin.users.show', $user)], $user->name, $user->email, AdminAccess::ROLES[$user->role] ?? $user->role, $user->created_at?->format('Y-m-d'),
+                ['value' => $user->public_id, 'url' => route('admin.users.show', $user)], $user->name, $user->email, AdminAccess::ROLES[$user->role] ?? $user->role, ucfirst($user->account_status), $user->created_at?->format('Y-m-d'), ['account' => $user],
             ]),
         ]);
     }

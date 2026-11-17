@@ -11,12 +11,14 @@ final class AccountSignIn
 {
     public static function start(Request $request, User $user, bool $remember = false): RedirectResponse
     {
+        abort_unless($user->isActiveAccount(), 403);
         $request->session()->forget('auth.factor');
 
         if ($user->hasEnabledTwoFactorAuthentication()) {
             $request->session()->regenerate();
             $request->session()->put('auth.factor', [
                 'user' => $user->getKey(), 'remember' => $remember, 'expires' => now()->addMinutes(5)->timestamp,
+                'version' => $user->account_auth_version,
             ]);
 
             return redirect()->route('security.challenge');
@@ -27,6 +29,9 @@ final class AccountSignIn
 
     public static function complete(Request $request, User $user, bool $remember): RedirectResponse
     {
+        $factor = $request->session()->get('auth.factor');
+        abort_unless($user->isActiveAccount()
+            && ($factor === null || $user->account_auth_version === (int) ($factor['version'] ?? 0)), 403);
         $request->session()->forget('auth.factor');
         Auth::login($user, $remember);
         $request->session()->regenerate();

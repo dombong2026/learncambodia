@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseInstructorAssignment;
 use App\Models\User;
 use App\Support\AdminAccess;
+use App\Support\ManagedAccount;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +36,19 @@ final class AdminUserController extends Controller
                     'email' => $data['email'],
                     'password' => $data['password'],
                 ]);
-                $account->forceFill(['role' => $data['role'], 'admin_permissions' => $permissions])->save();
+                $account->forceFill([
+                    'role' => $data['role'],
+                    'admin_permissions' => $permissions,
+                    'phone' => $data['phone'] ?? null,
+                    'phone_verified_at' => ! empty($data['verify_phone']) ? now() : null,
+                    'email_verified_at' => ! empty($data['verify_email']) ? now() : null,
+                ])->save();
+                if ($account->hasVerifiedEmail()) {
+                    ManagedAccount::audit($actor, $account, 'email_verified');
+                }
+                if ($account->phone_verified_at) {
+                    ManagedAccount::audit($actor, $account, 'phone_verified');
+                }
                 $this->audit($actor, $account, 'unassigned', null, 'Account created through User Manager.');
 
                 return $account;
@@ -53,41 +66,59 @@ final class AdminUserController extends Controller
 
     public function editAccess(Request $request, User $user): View
     {
-        abort_unless(AdminAccess::canEdit($request->user(), $user), 403);
+        abort_unless(AdminAccess::canEdit($request->user(), $user) && $user->account_status !== 'deleted', 403);
 
         return $this->form($request->user(), $user);
     }
 
     public function updateAccess(Request $request, User $user): RedirectResponse
     {
-        abort_unless(AdminAccess::canEdit($request->user(), $user), 403);
-        $data = $this->validateAccount($request, true);
+        abort_unless(AdminAccess::canEdit($request->user(), $user) && $user->account_status !== 'deleted', 403);
+        $data = $this->validateAccount($request, $user);
 
-        DB::transaction(function () use ($request, $user, $data): void {
-            $actorId = $request->user()->id;
-            $accounts = User::query()->whereKey([$actorId, $user->id])->orderBy('id')
-                ->lockForUpdate()->get()->keyBy('id');
-            $actor = $accounts->get($actorId);
-            $account = $accounts->get($user->id);
-            abort_unless($actor && $account && AdminAccess::canEdit($actor, $account), 403);
-            $permissions = $this->authorizedPermissions($actor, $data);
-            $previousRole = $account->role;
-            $previousPermissions = $account->admin_permissions;
+        try {
+            DB::transaction(function () use ($request, $user, $data): void {
+                [$actor, $account] = ManagedAccount::lockPair($request, $user);
+                abort_if($account->account_status === 'deleted', 403);
+                $permissions = $this->authorizedPermissions($actor, $data);
+                $previousRole = $account->role;
+                $previousPermissions = $account->admin_permissions;
+                $accessChanged = $previousRole !== $data['role']
+                    || ($data['role'] === User::ROLE_ADMIN && AdminAccess::grants($account) !== $permissions);
 
-            if ($previousRole === $data['role']
-                && ($data['role'] !== User::ROLE_ADMIN || AdminAccess::grants($account) === $permissions)) {
-                return;
+                $account->fill(array_intersect_key($data, ['name' => true, 'email' => true]));
+                $emailChanged = $account->isDirty('email');
+                if ($emailChanged) {
+                    $account->forceFill(['email_verified_at' => null, 'google_subject' => null]);
+                }
+                if (array_key_exists('phone', $data) && $account->phone !== $data['phone']) {
+                    $account->forceFill(['phone' => $data['phone'], 'phone_verified_at' => null]);
+                }
+                $detailsChanged = $account->isDirty();
+                if ($previousRole === User::ROLE_INSTRUCTOR && $data['role'] !== User::ROLE_INSTRUCTOR) {
+                    CourseInstructorAssignment::query()->where('instructor_id', $account->id)
+                        ->where('status', 'active')->update(['status' => 'revoked', 'revoked_at' => now()]);
+                }
+
+                if ($accessChanged || $emailChanged) {
+                    ManagedAccount::revokeSessions($account);
+                }
+                if ($accessChanged) {
+                    $account->forceFill(['role' => $data['role'], 'admin_permissions' => $permissions]);
+                    $this->audit($actor, $account, $previousRole, $previousPermissions, 'Account access updated through User Manager.');
+                }
+                if ($detailsChanged) {
+                    ManagedAccount::audit($actor, $account, 'details_updated');
+                }
+                $account->save();
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            if (! isset($data['email']) || ! User::where('email', $data['email'])->whereKeyNot($user->id)->exists()) {
+                throw $e;
             }
 
-            if ($previousRole === User::ROLE_INSTRUCTOR && $data['role'] !== User::ROLE_INSTRUCTOR) {
-                CourseInstructorAssignment::query()->where('instructor_id', $account->id)
-                    ->where('status', 'active')->update(['status' => 'revoked', 'revoked_at' => now()]);
-            }
-
-            $account->forceFill(['role' => $data['role'], 'admin_permissions' => $permissions])->save();
-            $account->tokens()->delete();
-            $this->audit($actor, $account, $previousRole, $previousPermissions, 'Account access updated through User Manager.');
-        });
+            throw ValidationException::withMessages(['email' => __('validation.unique', ['attribute' => 'email'])]);
+        }
 
         return to_route('admin.users.show', $user)->with('status', 'User access saved.');
     }
@@ -102,7 +133,7 @@ final class AdminUserController extends Controller
         ]);
     }
 
-    private function validateAccount(Request $request, bool $editing = false): array
+    private function validateAccount(Request $request, ?User $editing = null): array
     {
         $rules = [
             'role' => ['required', Rule::in(array_keys(AdminAccess::assignableRoles($request->user())))],
@@ -110,11 +141,28 @@ final class AdminUserController extends Controller
             'permissions.*' => ['required', 'string', 'distinct', Rule::in(array_keys(AdminAccess::PERMISSIONS))],
         ];
 
+        if (is_string($request->input('email'))) {
+            $request->merge(['email' => mb_strtolower(trim($request->input('email')))]);
+        }
+        if (is_string($request->input('phone'))) {
+            $request->merge(['phone' => preg_replace('/[\s().-]+/', '', $request->input('phone')) ?: null]);
+        }
+
+        $presence = $editing ? 'sometimes' : 'required';
+        $emailRule = Rule::unique('users', 'email');
+        if ($editing) {
+            $emailRule->ignore($editing);
+        }
+        $rules += [
+            'name' => [$presence, 'required', 'string', 'max:120'],
+            'email' => [$presence, 'required', 'email', 'max:255', $emailRule],
+            'phone' => ['nullable', 'required_if:verify_phone,1', 'regex:/^\+[1-9]\d{7,14}$/D'],
+        ];
+
         if (! $editing) {
-            $request->merge(['email' => is_string($request->input('email')) ? mb_strtolower(trim($request->input('email'))) : $request->input('email')]);
             $rules += [
-                'name' => ['required', 'string', 'max:120'],
-                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'verify_email' => ['sometimes', 'boolean'],
+                'verify_phone' => ['sometimes', 'boolean'],
                 'password' => ['bail', 'required', 'string', 'confirmed', 'max:72', Password::min(12),
                     function (string $attribute, string $value, \Closure $fail): void {
                         if (strlen($value) > 72 || str_contains($value, "\0")) {
@@ -130,7 +178,7 @@ final class AdminUserController extends Controller
 
     private function authorizedPermissions(User $actor, array $data): ?array
     {
-        abort_unless(AdminAccess::can($actor, 'users') && array_key_exists($data['role'], AdminAccess::assignableRoles($actor)), 403);
+        abort_unless($actor->isActiveAccount() && AdminAccess::can($actor, 'users') && array_key_exists($data['role'], AdminAccess::assignableRoles($actor)), 403);
 
         if ($data['role'] !== User::ROLE_ADMIN) {
             return null;

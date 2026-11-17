@@ -40,6 +40,7 @@
 <body class="{{ $fontClass }} {{ $scaleClass }} min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-slate-900">{{ __('ui.skip_content') }}</a>
     @include('partials.header')
+    @include('partials.account-preview')
     <main id="main-content" class="min-h-[50vh]">@yield('content')</main>
     @include('partials.footer')
 </body>

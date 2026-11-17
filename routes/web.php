@@ -33,6 +33,7 @@ use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminUserController;
+use App\Http\Controllers\Workspace\AdminUserActionsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
 use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
@@ -151,6 +152,7 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::post('/account-preview/stop', [AdminUserActionsController::class, 'stop'])->name('account-preview.stop');
     Route::get('/security/methods', [AccountSecurityController::class, 'methods'])->name('security.methods');
     Route::get('/security/confirm-password', [AccountSecurityController::class, 'passwordForm'])->name('password.confirm');
     Route::post('/security/confirm-password', [AccountSecurityController::class, 'confirmPassword'])
@@ -262,6 +264,16 @@ Route::middleware('auth')->group(function (): void {
             ->name('policy-history.show');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
         Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::get('/users/{user}/actions/{action}', [AdminUserActionsController::class, 'confirm'])
+            ->where('user', '[1-9][0-9]{7}')->whereIn('action', ['verify', 'delete', 'sign-in-as'])->name('users.actions');
+        Route::patch('/users/{user}/verify', [AdminUserActionsController::class, 'verify'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.verify');
+        Route::patch('/users/{user}/status', [AdminUserActionsController::class, 'status'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.status');
+        Route::delete('/users/{user}', [AdminUserActionsController::class, 'destroy'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:8,1')->name('users.destroy');
+        Route::post('/users/{user}/sign-in-as', [AdminUserActionsController::class, 'signInAs'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:5,1')->name('users.sign-in-as');
         Route::post('/users', [AdminUserController::class, 'store'])->middleware('throttle:15,1')->name('users.store');
         Route::get('/users/{user}/access', [AdminUserController::class, 'editAccess'])
             ->where('user', '[1-9][0-9]{7}')->name('users.access.edit');

@@ -66,6 +66,10 @@ class SessionController extends Controller
 
         $factorUser = null;
         $authenticated = Auth::attemptWhen($credentials, function (User $user) use (&$factorUser): bool {
+            if (! $user->isActiveAccount()) {
+                return false;
+            }
+
             if (!$user->hasEnabledTwoFactorAuthentication()) {
                 return true;
             }
