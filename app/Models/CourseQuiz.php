@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CourseQuiz extends Model
 {
+    use HasPublicId;
+
     protected $fillable = [
         'course_id', 'title', 'instructions', 'position', 'passing_percent',
     ];

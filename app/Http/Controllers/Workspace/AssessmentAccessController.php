@@ -23,9 +23,9 @@ final class AssessmentAccessController extends Controller
         return view('learning.standalone-assessments', compact('items', 'kind'));
     }
 
-    public function show(Request $request, CourseExam $exam): View
+    public function show(Request $request, CourseExam $exam, ?string $kind = null): View
     {
-        abort_unless($exam->published && $exam->course_id === null, 404);
+        abort_unless($exam->published && $exam->course_id === null && ($kind === null || $exam->kind === $kind), 404);
         $student = $request->user();
         $access = $history = null;
         if ($student?->role === 'student') {
@@ -54,7 +54,7 @@ final class AssessmentAccessController extends Controller
             ]);
             if (!$record->exists || $record->status === 'declined' || !$record->matches($quote)) {
                 $record->fill(['quote' => $quote, 'status' => 'pending', 'reference' => null, 'reviewed_by' => null])->save();
-                WorkspaceNotifications::administrators('New assessment access request', 'admin.exams.edit', ['exam' => $exam->id]);
+                WorkspaceNotifications::administrators('New assessment access request', 'admin.exams.edit', ['exam' => $exam]);
             }
         });
 
@@ -73,8 +73,8 @@ final class AssessmentAccessController extends Controller
                 'reviewed_by' => $request->user()->id,
             ]);
             abort_unless($updated === 1, 409, 'This request already has a decision.');
-            WorkspaceNotifications::send($access->student_id, 'Assessment access '.$data['decision'], 'assessments.show',
-                ['exam' => $access->course_exam_id]);
+            WorkspaceNotifications::send($access->student_id, 'Assessment access '.$data['decision'], 'public.exams.show',
+                ['exam' => $access->exam]);
         });
 
         return back()->with('status', 'Access decision saved.');

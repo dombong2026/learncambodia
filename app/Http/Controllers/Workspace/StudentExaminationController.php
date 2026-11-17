@@ -159,7 +159,7 @@ final class StudentExaminationController extends Controller
                 $locked->update($result + ['answers' => $answers, 'submitted_at' => now()]);
                 if (array_filter($locked->snapshot['questions'], AssessmentQuestions::manual(...)) !== []) {
                     $route = ($locked->snapshot['kind'] ?? 'exam') === 'quiz' ? 'admin.quizzes-manager.edit' : 'admin.exams.edit';
-                    WorkspaceNotifications::administrators('Assessment response ready to grade', $route, ['exam' => $locked->course_exam_id]);
+                    WorkspaceNotifications::administrators('Assessment response ready to grade', $route, ['exam' => $locked->exam]);
                 }
             });
         } catch (Throwable $error) {

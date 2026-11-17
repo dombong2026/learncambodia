@@ -12,7 +12,7 @@
         <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             @forelse($items as $item)
                 @php($quote = \App\Support\CoursePricing::quote($item->pricing))
-                <x-learning-card :href="route('assessments.show', $item)" :title="$item->title" icon="clipboard-check"
+                <x-learning-card :href="$item->publicUrl()" :title="$item->title" icon="clipboard-check"
                     :eyebrow="$item->type?->name" :meta="$item->time_limit.' min · '.ucfirst($quote['model'])" :action="$kind === 'quiz' ? 'View quiz' : 'View exam'" />
             @empty
                 <p>There are no published {{ $kind === 'quiz' ? 'quizzes' : 'exams' }} yet.</p>

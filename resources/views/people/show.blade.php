@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e(route($kind === 'instructor' ? 'instructors.show' : 'students.show', $profile)))
 @section('title', $profile->display_name)
 @if($kind==='student')@section('robots','noindex,nofollow')@endif
 @section('content')

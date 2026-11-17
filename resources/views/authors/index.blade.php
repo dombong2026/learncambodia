@@ -67,7 +67,7 @@
         </form>
         <div class="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#e0b766] hover:shadow-lg dark:border-slate-700 dark:bg-[#193653]">
+                <a href="{{ route('articles.show',$article->getRouteKey()) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm transition hover:border-[#e0b766] hover:shadow-lg dark:border-slate-700 dark:bg-[#193653]">
                     <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><div class="premium-card-content flex items-center justify-between gap-4"><span class="rounded-full bg-[#f8ecd3] px-3 py-1 text-xs font-black text-[#946b22]">{{ __('longpage.approved_article') }}</span></div>
                     <h3 class="mt-5 break-words text-xl font-black text-[#12345e] group-hover:underline dark:text-white">{{ $article->title }}</h3>
                     <p class="mt-3 flex-1 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p>

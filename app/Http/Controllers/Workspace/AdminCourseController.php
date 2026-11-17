@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicId;
 use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
@@ -93,7 +94,8 @@ class AdminCourseController extends Controller
             'delivery_mode' => ['required', Rule::in(['online','onsite','hybrid'])],
         ]);
 
-        $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['title']);
+        $preferred = ($data['slug'] ?? null) ?: (Str::slug($data['title']) ?: 'course');
+        $data['slug'] = PublicId::availableSlug(Course::query()->when($course, fn ($query) => $query->whereKeyNot($course->id)), $preferred, 180);
         validator($data, [
             'slug' => ['required', 'string', 'max:180',
                 Rule::unique('courses', 'slug')->ignore($course?->id)],

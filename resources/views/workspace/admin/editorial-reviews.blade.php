@@ -11,7 +11,7 @@
     @forelse($entries as $entry)
         <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex flex-wrap items-start justify-between gap-3"><div>
-                <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Content #{{ $entry->id }} · Pending review</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Content #{{ $entry->public_id }} · Pending review</p>
                 <h2 class="mt-2 text-xl font-black">{{ $entry->title }}</h2>
                 <p class="mt-2 text-xs text-slate-500">Author: {{ $entry->creator?->name }} · Last revision: {{ $entry->updated_at?->format('Y-m-d H:i') }}</p>
             </div></div>

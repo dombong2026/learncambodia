@@ -27,7 +27,7 @@ class AdminReviewController extends Controller
         return view('workspace.admin.reviews', [
             'role' => 'admin', 'focus' => $focus,
             'courses' => Course::where('status', 'pending_review')
-                ->with('category')->orderBy('submitted_at')
+                ->with('category', 'creator:id,public_id')->orderBy('submitted_at')
                 ->paginate(10, ['*'], 'courses_page'),
             'appearances' => AppearanceRevision::where('status', 'pending_review')
                 ->with('creator')->orderBy('submitted_at')

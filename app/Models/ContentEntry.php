@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContentEntry extends Model
 {
-    use SoftDeletes;
+    use HasPublicId, SoftDeletes;
 
     public const DIRECT_PUBLICATION_TYPES = ['page', 'post', 'policy', 'help_article'];
 
@@ -65,9 +67,9 @@ class ContentEntry extends Model
     public function publicUrl(): string
     {
         return match ($this->type) {
-            'page' => route('pages.show', $this->slug),
-            'post' => route('articles.show', $this->slug),
-            'policy' => route('policies.show', $this->slug),
+            'page' => route('pages.show', $this->getRouteKey()),
+            'post' => route('articles.show', $this->getRouteKey()),
+            'policy' => route('policies.show', $this->getRouteKey()),
             'help_article' => route('help.show', ['kind' => 'articles', 'entry' => $this->slug]),
             'faq' => route('help.show', ['kind' => 'faqs', 'entry' => $this->slug]),
         };

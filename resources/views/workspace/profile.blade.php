@@ -69,6 +69,7 @@
                     </label>
                 @endforeach
             </fieldset>
+            <p class="text-sm font-semibold">User ID <span class="ml-2 tabular-nums">{{ auth()->user()->public_id }}</span></p>
             <div><label class="mb-2 block text-sm font-semibold">Email address</label><input value="{{ auth()->user()->email }}" disabled class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-800"></div>
             <div><label class="mb-2 block text-sm font-semibold">Account role</label><input value="{{ ucfirst(auth()->user()->role) }}" disabled class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-800"></div>
             <div class="flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">Save changes</button></div>

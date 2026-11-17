@@ -14,6 +14,11 @@ final class ExamAttempt extends Model
     }
 
     protected $hidden = ['snapshot', 'answers', 'grading'];
+    public function exam(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(CourseExam::class, 'course_exam_id');
+    }
+
     public function enrollment(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(CourseEnrollment::class, 'course_enrollment_id');

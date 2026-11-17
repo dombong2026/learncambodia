@@ -11,6 +11,7 @@
             <article class="workspace-panel flex flex-wrap items-center justify-between gap-4 p-5">
                 <div>
                     <h2 class="font-extrabold">{{ $exam->title }}</h2>
+                    <p class="text-xs tabular-nums">#{{ $exam->public_id }}</p>
                     <p class="mt-1 text-sm">{{ $exam->course?->title ?? 'Standalone' }} · {{ $exam->type?->name }}</p>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $exam->published ? 'Published' : 'Draft' }} · {{ count($exam->questions) }} questions · {{ $exam->time_limit }} min</p>
                 </div>

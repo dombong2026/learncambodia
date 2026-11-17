@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e($article->publicUrl()))
 @section('title',$article->seo_title ?: $article->title)
 @section('meta_description', $article->seo_description ?: ($article->summary ?: \Illuminate\Support\Str::limit($article->body, 155)))
 @section('content')
@@ -51,7 +52,7 @@
 <x-learning-section :title="$a['related_heading']" eyebrow="Continue reading" subtitle="Only other genuinely published articles appear below." tone="mist">
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         @forelse($related as $entry)
-            <x-learning-card :href="route('articles.show',$entry->slug)" :title="$entry->title" :description="$entry->summary" icon="newspaper" eyebrow="Educational article" action="Read article"/>
+            <x-learning-card :href="route('articles.show',$entry->getRouteKey())" :title="$entry->title" :description="$entry->summary" icon="newspaper" eyebrow="Educational article" action="Read article"/>
         @empty
             <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-9 text-sm text-slate-500">No other published articles yet. <a href="{{ route('articles.index') }}" class="font-bold underline">Browse the article directory</a>.</p>
         @endforelse

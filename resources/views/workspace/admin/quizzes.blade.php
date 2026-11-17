@@ -9,7 +9,7 @@
 <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500 dark:border-slate-800 dark:bg-slate-900"><tr><th class="px-5 py-4">Practice quiz</th><th class="px-5 py-4">Course</th><th class="px-5 py-4">Questions</th><th class="px-5 py-4">Pass threshold</th><th class="px-5 py-4 text-right">Action</th></tr></thead>
 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
 @forelse($quizzes as $quiz)
-<tr><td class="px-5 py-4 font-bold">{{ $quiz->title }}</td><td class="px-5 py-4">{{ $quiz->course?->title }}</td><td class="px-5 py-4 tabular-nums">{{ $quiz->questions_count }}</td><td class="px-5 py-4 tabular-nums">{{ $quiz->passing_percent }}%</td>
+<tr><td class="px-5 py-4 font-bold">{{ $quiz->title }} <span class="text-xs font-normal tabular-nums">#{{ $quiz->public_id }}</span></td><td class="px-5 py-4">{{ $quiz->course?->title }}</td><td class="px-5 py-4 tabular-nums">{{ $quiz->questions_count }}</td><td class="px-5 py-4 tabular-nums">{{ $quiz->passing_percent }}%</td>
 <td class="px-5 py-4 text-right"><a href="{{ route('admin.course-builder.quizzes.edit', [$quiz->course_id,$quiz]) }}" class="rounded-full border border-slate-300 px-4 py-2 text-xs font-bold hover:border-blue-500 dark:border-slate-700">Open quiz</a></td></tr>
 @empty
 <tr><td colspan="5" class="px-5 py-12 text-center text-slate-500">No practice quizzes yet. Add a quiz to a draft course in Course Builder.</td></tr>

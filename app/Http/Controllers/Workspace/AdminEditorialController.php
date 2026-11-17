@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicId;
 use App\Models\ContentEntry;
 use App\Models\Category;
 use App\Models\PostTerm;
@@ -236,8 +237,11 @@ class AdminEditorialController extends Controller
         $slug = Str::slug((string) $request->input('slug', ''));
 
         if ($slug === '') {
-            $slug = Str::slug((string) $request->input('title', ''));
+            $slug = Str::slug((string) $request->input('title', '')) ?: str_replace('_', '-', $type);
         }
+
+        $slug = PublicId::availableSlug(ContentEntry::withTrashed()->where('type', $type)
+            ->when($entry, fn ($query) => $query->whereKeyNot($entry->id)), $slug, 200);
 
         $clean = EditorHtml::clean($request->input('body_html'));
         $request->merge(['slug' => $slug, 'body_html' => $clean]);

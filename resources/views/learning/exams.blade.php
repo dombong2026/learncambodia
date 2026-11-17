@@ -19,7 +19,7 @@
     </form>
     <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @forelse($courses as $course)
-            <x-learning-card :href="route('learning.exam.show',$course->slug)" :title="$course->title" :description="$course->summary" icon="clipboard-check" :eyebrow="$course->category?->name" :meta="$course->course_exams_count.' course exams · '.$course->practice_quizzes_count.' practice quizzes'" action="View assessments"/>
+            <x-learning-card :href="route('learning.exam.show',$course->getRouteKey())" :title="$course->title" :description="$course->summary" icon="clipboard-check" :eyebrow="$course->category?->name" :meta="$course->course_exams_count.' course exams · '.$course->practice_quizzes_count.' practice quizzes'" action="View assessments"/>
         @empty
             <p class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-[#f8fafc] p-10 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#193757]">No approved courses with published assessments match your search. <a href="{{ route('courses.index') }}" class="font-black underline">Explore all courses</a>.</p>
         @endforelse

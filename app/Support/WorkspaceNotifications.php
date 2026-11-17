@@ -58,8 +58,9 @@ final class WorkspaceNotifications
                 'grade' => 'graded', 'return' => 'returned', 'decline' => 'declined',
                 'reject', 'rejected' => 'rejected', default => 'approved',
             };
+            $course = $type === 'course' ? Course::find($id) : null;
             $destination = match ($type) {
-                'course' => [Course::find($id)?->created_by, "Course $outcome", 'admin.course-builder.edit', ['course' => $id]],
+                'course' => [$course?->created_by, "Course $outcome", 'admin.course-builder.edit', ['course' => $course]],
                 'appearance' => [AppearanceRevision::find($id)?->created_by, "Appearance change $outcome", 'admin.reviews.index', ['focus' => 'appearance']],
                 'enrollment' => [CourseEnrollment::find($id)?->student_id, "Enrollment request $outcome", 'account.enrollments.show', ['enrollment' => $id]],
                 'homework_assignment' => [CourseHomeworkAssignment::find($id)?->author_id, "Assignment $outcome", 'instructor.homework.index', []],

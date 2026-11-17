@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e(route('courses.show', $course->getRouteKey())))
 @section('title', $course->title)
 @section('meta_description', $course->summary)
 @section('content')

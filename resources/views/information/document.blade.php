@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e($document->publicUrl()))
 @section('title', $document->seo_title ?: $document->title)
 @section('meta_description', $document->seo_description ?: ($document->summary ?: \Illuminate\Support\Str::limit($document->body, 155)))
 @section('content')

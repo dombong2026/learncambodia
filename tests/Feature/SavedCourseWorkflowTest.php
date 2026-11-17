@@ -67,7 +67,7 @@ class SavedCourseWorkflowTest extends TestCase
         $this->get('/account/courses')->assertOk()->assertSee('Remove saved course');
         $this->get('/account/saved-courses')->assertOk()
             ->assertSee('Reviewed Beginner Course')
-            ->assertSee(route('courses.show', ['course' => $course->slug]), false);
+            ->assertSee(route('courses.show', ['course' => $course->getRouteKey()]), false);
 
         $this->delete('/account/saved-courses/'.$course->id)
             ->assertRedirect(route('account.saved-courses.index'));

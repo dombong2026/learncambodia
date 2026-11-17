@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
+
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -16,7 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasPublicId, Notifiable;
 
     public const ROLE_STUDENT = 'student';
     public const ROLE_ADMIN = 'admin';
@@ -26,6 +28,21 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // Match the database default for models created in the current request.
     protected $attributes = ['role' => self::ROLE_STUDENT];
+
+    private function publicIdDigits(): int
+    {
+        return 8;
+    }
+
+    public function getRouteKey()
+    {
+        return $this->public_id;
+    }
+
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        return $query->where($field ?? 'public_id', $value);
+    }
 
     public function homeRouteName(): string
     {

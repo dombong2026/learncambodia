@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e($exam->publicUrl()))
 @section('title', $exam->title)
 @section('content')
     @php

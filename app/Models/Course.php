@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
+    use HasPublicId;
+
     public const FEATURED_FIELDS = ['featured_kind', 'featured_media_id', 'featured_value', 'featured_alt'];
 
     protected $fillable = [
@@ -24,6 +28,11 @@ class Course extends Model
     protected function casts(): array
     {
         return ['pricing' => 'array', 'published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function featuredMedia(): BelongsTo

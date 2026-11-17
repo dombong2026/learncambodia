@@ -80,7 +80,9 @@ Route::get('/exam-catalog', [LearningHubController::class,'exams'])->name('learn
 Route::get('/exam-catalog/{course:slug}', [LearningHubController::class,'exam'])->name('learning.exam.show');
 Route::get('/assessments/exams', [AssessmentAccessController::class, 'catalog'])->name('assessments.exams');
 Route::get('/assessments/quizzes', [AssessmentAccessController::class, 'catalog'])->name('assessments.quizzes');
-Route::get('/assessments/{exam}', [AssessmentAccessController::class, 'show'])->whereNumber('exam')->name('assessments.show');
+Route::get('/assessments/{exam}', [AssessmentAccessController::class, 'show'])->name('assessments.show');
+Route::get('/exams/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'exam')->name('public.exams.show');
+Route::get('/quizzes/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'quiz')->name('public.quizzes.show');
 Route::get('/recommendations', [LearningHubController::class,'recommendations'])->name('learning.recommendations');
 Route::get('/leaderboard', [LearningHubController::class,'leaderboard'])->name('learning.leaderboard');
 Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learning.watch');
@@ -196,6 +198,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/policy-history/{entry}/{revision}', [AdminEditorialController::class, 'policyRevision'])
             ->name('policy-history.show');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
+        Route::get('/users/{user}', [AdminRecordsController::class, 'user'])->where('user', '[1-9][0-9]{7}')->name('users.show');
         Route::get('/support/{kind}', [SupportTicketController::class,'adminIndex'])->name('support.index');
         Route::patch('/support/{kind}/{ticket}', [SupportTicketController::class,'adminUpdate'])->name('support.update');
         Route::delete('/support/{kind}/{ticket}', [SupportTicketController::class,'adminDestroy'])->name('support.destroy');

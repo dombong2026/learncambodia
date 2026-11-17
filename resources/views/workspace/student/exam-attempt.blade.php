@@ -3,7 +3,7 @@
 @section('content')
     @php
         $label = ($attempt->snapshot['kind'] ?? 'exam') === 'quiz' ? 'Quiz' : 'Exam';
-        $back = $enrollment ? route('account.enrollments.show', $enrollment) : route('assessments.show', $attempt->course_exam_id);
+        $back = $enrollment ? route('account.enrollments.show', $enrollment) : $attempt->exam->publicUrl();
     @endphp
     <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ $enrollment ? 'course' : strtolower($label) }}</a>
     <a class="mb-4 ml-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('support.tickets.create') }}">{{ $label }} support</a>

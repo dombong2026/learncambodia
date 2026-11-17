@@ -16,7 +16,7 @@
     </form>
     <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @forelse($articles as $article)
-            <x-learning-card :href="route('articles.show',$article->slug)" :title="$article->title" :description="$article->summary" icon="file" eyebrow="Published reading" meta="Read online" action="Open article"/>
+            <x-learning-card :href="route('articles.show',$article->getRouteKey())" :title="$article->title" :description="$article->summary" icon="file" eyebrow="Published reading" meta="Read online" action="Open article"/>
         @empty
             <p class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-[#f8fafc] p-10 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#193654]">No published library article matches this search. <a href="{{ route('learning.library') }}" class="font-bold underline">Reset search</a>.</p>
         @endforelse

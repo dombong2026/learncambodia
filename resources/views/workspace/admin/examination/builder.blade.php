@@ -79,7 +79,7 @@
         <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Save {{ $assessmentLabel }}</button>
     </form>
     @if($exam->published && !$exam->course_id)
-        <a class="my-5 inline-block text-sm font-semibold underline" href="{{ route('assessments.show', $exam) }}">Open learner page</a>
+        <a class="my-5 inline-block text-sm font-semibold underline" href="{{ $exam->publicUrl() }}">Open learner page</a>
     @endif
     @if($accessRequests->isNotEmpty())
         <section class="workspace-panel mt-5 space-y-4 p-5">
