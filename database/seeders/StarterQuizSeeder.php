@@ -7,8 +7,8 @@ use App\Models\EditorMedia;
 use App\Models\ExamType;
 use App\Models\User;
 use App\Support\AssessmentQuestions;
+use App\Support\ManagedFiles;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -18,7 +18,7 @@ final class StarterQuizSeeder
     public function run(?int $authorId = null): int
     {
         $bank = $this->bank();
-        $disk = Storage::disk('local');
+        $disk = ManagedFiles::disk();
         $paths = [];
 
         try {
@@ -44,7 +44,7 @@ final class StarterQuizSeeder
 
                     $path = 'editor-media/starter-quiz-'.Str::uuid().'.webp';
                     $paths[] = $path;
-                    if (!$disk->put($path, $entry['cover'])) {
+                    if (!ManagedFiles::put($disk, $path, $entry['cover'])) {
                         throw new RuntimeException("Could not save the featured image for $key.");
                     }
 

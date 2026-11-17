@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\WorkspaceNotifications;
+use App\Support\ManagedFiles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class ProfileController extends Controller
@@ -56,9 +56,9 @@ class ProfileController extends Controller
             'remove_avatar' => ['sometimes', 'boolean', 'prohibits:avatar'],
         ]);
 
-        $disk = Storage::disk('local');
+        $disk = ManagedFiles::disk();
         $avatar = $request->file('avatar');
-        $path = $avatar?->store('account-avatars', 'local');
+        $path = $avatar ? ManagedFiles::store($avatar, 'account-avatars') : null;
         if ($avatar && !$path) {
             throw ValidationException::withMessages(['avatar' => 'The photo could not be saved. Try again.']);
         }
@@ -98,17 +98,16 @@ class ProfileController extends Controller
         return back()->with('status', 'Profile updated successfully.');
     }
 
-    public function avatar(Request $request): BinaryFileResponse
+    public function avatar(Request $request): Response
     {
         $path = $request->user()->avatar_path;
-        $disk = Storage::disk('local');
         $types = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
         $type = $path ? ($types[pathinfo($path, PATHINFO_EXTENSION)] ?? null) : null;
-        abort_unless($type && str_starts_with($path, 'account-avatars/') && $disk->exists($path), 404);
+        abort_unless($type && str_starts_with($path, 'account-avatars/'), 404);
 
-        return response()->file($disk->path($path), [
-            'Content-Type' => $type, 'Cache-Control' => 'private, no-store',
-        ]);
+        return ManagedFiles::response($request, $path, [
+            'Content-Type' => $type, 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff',
+        ], seekable: true);
     }
 
     public function password(Request $request): RedirectResponse

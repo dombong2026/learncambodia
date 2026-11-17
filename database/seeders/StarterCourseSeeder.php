@@ -9,9 +9,9 @@ use App\Models\CurriculumLessonRevision;
 use App\Models\EditorMedia;
 use App\Models\User;
 use App\Support\CourseReadiness;
+use App\Support\ManagedFiles;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -96,7 +96,7 @@ class StarterCourseSeeder extends Seeder
                 return $total;
             });
         } catch (Throwable $exception) {
-            Storage::disk('local')->delete($paths);
+            ManagedFiles::disk()->delete($paths);
             throw $exception;
         }
 
@@ -148,7 +148,7 @@ class StarterCourseSeeder extends Seeder
         }
         $path = 'editor-media/course-'.Str::uuid().'.webp';
         $paths[] = $path;
-        if (!Storage::disk('local')->put($path, $bytes)) {
+        if (!ManagedFiles::put(ManagedFiles::disk(), $path, $bytes)) {
             throw new RuntimeException('Could not store cover '.$cover);
         }
 

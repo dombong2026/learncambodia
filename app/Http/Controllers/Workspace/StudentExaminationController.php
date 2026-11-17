@@ -11,13 +11,13 @@ use App\Support\AssessmentQuestions;
 use App\Support\CoursePricing;
 use App\Support\LearningAccess;
 use App\Support\WorkspaceNotifications;
+use App\Support\ManagedFiles;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 final class StudentExaminationController extends Controller
@@ -147,7 +147,7 @@ final class StudentExaminationController extends Controller
                             if (!$extension) {
                                 throw \Illuminate\Validation\ValidationException::withMessages(["recordings.$index" => 'Upload an MP3, M4A, Ogg, WAV, or WebM recording.']);
                             }
-                            $path = $recording->storeAs('assessment-responses', ((string) \Illuminate\Support\Str::uuid()).'.'.$extension, 'local');
+                            $path = ManagedFiles::store($recording, 'assessment-responses', \Illuminate\Support\Str::uuid().'.'.$extension);
                             abort_unless($path, 500, 'The recording could not be saved.');
                             $files[] = $answers[$index] = $path;
                         }
@@ -163,7 +163,9 @@ final class StudentExaminationController extends Controller
                 }
             });
         } catch (Throwable $error) {
-            Storage::disk('local')->delete($files);
+            if ($files !== []) {
+                ManagedFiles::disk()->delete($files);
+            }
             throw $error;
         }
     }
@@ -198,7 +200,7 @@ final class StudentExaminationController extends Controller
         return $this->feedback($request, $attempt, $enrollment);
     }
 
-    public function recording(Request $request, ExamAttempt $attempt, int $question): BinaryFileResponse
+    public function recording(Request $request, ExamAttempt $attempt, int $question): Response
     {
         if (!$request->user()->isAdministrator()) {
             $this->authorizeAttempt($request, $attempt, $attempt->enrollment);
@@ -207,11 +209,11 @@ final class StudentExaminationController extends Controller
         $path = $attempt->answers[$question] ?? '';
         $types = ['mp3' => 'audio/mpeg', 'm4a' => 'audio/mp4', 'ogg' => 'audio/ogg', 'wav' => 'audio/wav', 'webm' => 'audio/webm'];
         $type = $types[pathinfo($path, PATHINFO_EXTENSION)] ?? null;
-        abort_unless($type && str_starts_with($path, 'assessment-responses/') && Storage::disk('local')->exists($path), 404);
+        abort_unless($type && str_starts_with($path, 'assessment-responses/'), 404);
 
-        return response()->file(Storage::disk('local')->path($path), [
+        return ManagedFiles::response($request, $path, [
             'Content-Type' => $type, 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ], seekable: true);
     }
 
     private function ensureOpen(ExamAttempt $attempt, ?CourseEnrollment $enrollment): void

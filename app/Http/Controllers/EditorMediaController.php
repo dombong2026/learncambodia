@@ -11,17 +11,16 @@ use App\Models\ExamAttempt;
 use App\Support\AssessmentQuestions;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
+use App\Support\ManagedFiles;
 use Illuminate\Database\ForeignKeyConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 final class EditorMediaController extends Controller
 {
@@ -80,8 +79,8 @@ final class EditorMediaController extends Controller
         ]);
 
         $replacement = $request->file('replacement');
-        $disk = Storage::disk('local');
-        $path = $replacement?->store('editor-media', 'local');
+        $disk = ManagedFiles::disk();
+        $path = $replacement ? ManagedFiles::store($replacement, 'editor-media') : null;
         abort_if($replacement && !$path, 500, 'The replacement file could not be saved.');
 
         try {
@@ -140,7 +139,7 @@ final class EditorMediaController extends Controller
             return back()->withErrors(['media' => 'This file is now in use and cannot be deleted.']);
         }
 
-        Storage::disk('local')->delete($path);
+        ManagedFiles::disk()->delete($path);
 
         return back()->with('status', 'Media deleted.');
     }
@@ -176,7 +175,7 @@ final class EditorMediaController extends Controller
         }
 
         $file = $request->file('file');
-        $path = $file->store('editor-media', 'local');
+        $path = ManagedFiles::store($file, 'editor-media');
         abort_unless($path, 500, 'Media upload was not saved.');
 
         try {
@@ -189,7 +188,7 @@ final class EditorMediaController extends Controller
                 'size' => $file->getSize(),
             ]);
         } catch (\Throwable $e) {
-            Storage::disk('local')->delete($path);
+            ManagedFiles::disk()->delete($path);
             throw $e;
         }
 
@@ -206,7 +205,7 @@ final class EditorMediaController extends Controller
         ];
     }
 
-    public function show(Request $request, EditorMedia $media): BinaryFileResponse|StreamedResponse
+    public function show(Request $request, EditorMedia $media): Response
     {
         $viewer = $request->user();
         if ($media->context === 'library') {
@@ -253,8 +252,6 @@ final class EditorMediaController extends Controller
                 (!$ticket && $media->support_ticket_id === null && $media->uploaded_by === $viewer->id)
             ), 403);
         }
-        $disk = Storage::disk('local');
-        abort_unless($disk->exists($media->path), 404);
         $headers = [
             'Content-Type' => $media->mime,
             'Content-Disposition' => 'inline',
@@ -263,14 +260,10 @@ final class EditorMediaController extends Controller
             'Content-Security-Policy' => "default-src 'none'; sandbox",
         ];
 
-        if (in_array($media->context, ['lesson', 'exam'], true) && in_array($media->mime, self::DOCUMENT_MIMES, true)) {
-            return $disk->download($media->path, $media->original_name, array_diff_key($headers, ['Content-Disposition' => true]));
-        }
+        $assessmentResource = in_array($media->context, ['lesson', 'exam'], true);
+        $downloadName = $assessmentResource && in_array($media->mime, self::DOCUMENT_MIMES, true) ? $media->original_name : null;
+        $seekable = str_starts_with($media->mime, 'video/') || ($assessmentResource && str_starts_with($media->mime, 'audio/'));
 
-        if (str_starts_with($media->mime, 'video/') || (in_array($media->context, ['lesson', 'exam'], true) && str_starts_with($media->mime, 'audio/'))) {
-            return new BinaryFileResponse($disk->path($media->path), 200, $headers, false);
-        }
-
-        return $disk->response($media->path, null, $headers);
+        return ManagedFiles::response($request, $media->path, $headers, $seekable, $downloadName);
     }
 }
