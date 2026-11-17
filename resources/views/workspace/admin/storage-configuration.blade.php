@@ -10,7 +10,7 @@
                     $profile = $profiles[$provider];
                     $messages = $errors->getBag($provider.'Storage');
                 @endphp
-                <details class="rounded-xl border border-slate-200 p-4 dark:border-slate-700" @if($messages->any() || !isset($providers[$provider])) open @endif>
+                <details class="rounded-xl border border-slate-200 p-4 dark:border-slate-700" @if($messages->any() || !isset($providers[$provider]) || session('cloud_storage_saved_provider') === $provider) open @endif>
                     <summary class="cursor-pointer font-semibold">{{ $label }}</summary>
                     @if($activeDisk === $provider)
                         <p class="mt-3 text-sm">This bucket is serving uploads. Its connection settings are locked.</p>
@@ -37,12 +37,16 @@
                                         <input name="region" type="text" maxlength="32" value="{{ $profile['region'] }}" required placeholder="ap-southeast-1" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-950">
                                     </label>
                                 @endif
-                                <label class="block text-sm font-semibold">Access Key ID
-                                    <input name="access_key_id" type="password" autocomplete="off" maxlength="256" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-950">
-                                </label>
-                                <label class="block text-sm font-semibold">Secret Access Key
-                                    <input name="secret_access_key" type="password" autocomplete="new-password" maxlength="256" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-950">
-                                </label>
+                                @foreach(['access_key_id' => ['Access Key ID', 'off'], 'secret_access_key' => ['Secret Access Key', 'new-password']] as $field => [$fieldLabel, $autocomplete])
+                                    @php $fieldId = $provider.'-'.$field; @endphp
+                                    <div class="text-sm font-semibold">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label for="{{ $fieldId }}">{{ $fieldLabel }}</label>
+                                            <span id="{{ $fieldId }}-status" class="text-xs {{ $profile['credentialStatus'][$field] === 'Not set' ? 'text-slate-500 dark:text-slate-400' : 'text-emerald-700 dark:text-emerald-300' }}">{{ $profile['credentialStatus'][$field] }}</span>
+                                        </div>
+                                        <input id="{{ $fieldId }}" name="{{ $field }}" type="password" autocomplete="{{ $autocomplete }}" maxlength="256" aria-describedby="{{ $fieldId }}-status" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-950">
+                                    </div>
+                                @endforeach
                                 @if($provider === 's3')
                                     <label class="block text-sm font-semibold">Session token <span class="font-normal">(temporary credentials only)</span>
                                         <input name="session_token" type="password" autocomplete="off" maxlength="4096" class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-950">

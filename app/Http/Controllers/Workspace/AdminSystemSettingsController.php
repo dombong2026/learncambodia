@@ -62,6 +62,10 @@ final class AdminSystemSettingsController extends Controller
                 'endpoint' => $settings['endpoint'] ?? '',
                 'region' => $settings['region'] ?? '',
                 'storedCredentials' => filled($saved['key'] ?? null),
+                'credentialStatus' => [
+                    'access_key_id' => filled($saved['key'] ?? null) ? 'Saved' : (filled($settings['key'] ?? null) ? 'Set on server' : 'Not set'),
+                    'secret_access_key' => filled($saved['secret'] ?? null) ? 'Saved' : (filled($settings['secret'] ?? null) ? 'Set on server' : 'Not set'),
+                ],
             ];
             if ($configured) {
                 $ready[$provider] = $label;
@@ -187,7 +191,9 @@ final class AdminSystemSettingsController extends Controller
 
             ManagedStorageSettings::save($provider, $settings);
 
-            return $destination->with('status', 'Bucket settings saved. Run the connection test to verify access.');
+            return $destination
+                ->with('status', 'Bucket settings saved. Run the connection test to verify access.')
+                ->with('cloud_storage_saved_provider', $provider);
         }) ?: $destination->withErrors(['settings' => 'A storage operation is starting. Try saving again.'], $provider.'Storage');
     }
 

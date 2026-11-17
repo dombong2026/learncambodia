@@ -73,21 +73,29 @@ final class AdminSystemSettingsTest extends TestCase
 
         $this->withSession(['auth.password_confirmed_at' => time()]);
         $this->get($configure)->assertRedirect($destination);
-        $this->get($destination)->assertSee('Save Cloudflare R2 settings')->assertSee('Save Amazon S3 settings');
+        $this->get($destination)->assertSee('Save Cloudflare R2 settings')->assertSee('Save Amazon S3 settings')
+            ->assertSeeText('Not set');
         $this->patch($save, array_replace($r2, ['endpoint' => 'https://objects.example.test']))
             ->assertRedirect($destination)->assertSessionHasErrors('endpoint', null, 'r2Storage');
         $this->assertNull(session()->getOldInput('secret_access_key'));
         $this->assertDatabaseCount('managed_storage_settings', 0);
 
-        $this->patch($save, $r2)->assertRedirect($destination)->assertSessionHas('status');
+        $this->patch($save, $r2)->assertRedirect($destination)->assertSessionHas('status')
+            ->assertSessionHas('cloud_storage_saved_provider', 'r2');
         $payload = DB::table('managed_storage_settings')->where('provider', 'r2')->value('payload');
         $this->assertStringNotContainsString($r2['secret_access_key'], $payload);
         $this->assertSame($r2['secret_access_key'], ManagedStorageSettings::saved('r2')['secret']);
         $this->assertSame($r2['bucket'], ManagedFiles::disk('r2')->getConfig()['bucket']);
         $this->assertSame('local', config('filesystems.managed'));
 
-        $this->get($settings)->assertOk()->assertSee('Test R2 connection')->assertSee($r2['bucket'])
+        $view = $this->get($settings)->assertOk()->assertSee('Test R2 connection')->assertSee($r2['bucket'])
             ->assertDontSee($r2['access_key_id'])->assertDontSee($r2['secret_access_key']);
+        foreach (['access_key_id', 'secret_access_key'] as $field) {
+            $this->assertMatchesRegularExpression(
+                '/id="r2-'.$field.'-status"[^>]*>Saved<\//',
+                $view->getContent()
+            );
+        }
 
         $this->patch($save, ['provider' => 's3', 'bucket' => 'dashboard-private-s3', 'region' => 'ap-southeast-1'])
             ->assertRedirect($destination)->assertSessionHas('status');
@@ -120,7 +128,8 @@ final class AdminSystemSettingsTest extends TestCase
             'filesystems.disks.r2.secret' => 'test-secret-value',
         ]);
 
-        $this->get($settings)->assertOk()->assertSee('Local server')->assertSee('Settings present')
+        $this->withSession(['auth.password_confirmed_at' => time()])->get($settings)
+            ->assertOk()->assertSee('Local server')->assertSee('Settings present')->assertSeeText('Set on server')
             ->assertSee('Test R2 connection')->assertDontSee('test-access-id')->assertDontSee('test-secret-value');
         $this->post($probe)->assertRedirect($settings)
             ->assertSessionHas('status', 'R2 write, read, and delete checks passed.');
