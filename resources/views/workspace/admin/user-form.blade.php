@@ -1,7 +1,7 @@
 @extends('layouts.workspace')
 @php
     $editing = $account->exists;
-    $heading = $editing ? 'Edit user access' : 'Add User';
+    $heading = $editing ? 'Edit User' : 'Add User';
     $fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100';
 @endphp
 @section('title', $heading)
@@ -26,18 +26,23 @@
         </div>
     @endif
 
-    @unless($editing)
-        <section class="workspace-panel p-5 sm:p-6" aria-labelledby="user-details-title">
+    <section class="workspace-panel p-5 sm:p-6" aria-labelledby="user-details-title">
             <h2 id="user-details-title" class="mb-4 text-lg font-bold">Account details</h2>
             <div class="grid gap-4 sm:grid-cols-2">
                 <label class="space-y-2 text-sm font-semibold">
                     <span class="block">Full name</span>
-                    <input name="name" required maxlength="120" value="{{ old('name') }}" autocomplete="off" class="{{ $fieldClass }}">
+                    <input name="name" required maxlength="120" value="{{ old('name', $account->name) }}" autocomplete="off" class="{{ $fieldClass }}">
                 </label>
                 <label class="space-y-2 text-sm font-semibold">
                     <span class="block">Email address</span>
-                    <input name="email" type="email" required maxlength="255" value="{{ old('email') }}" autocomplete="off" class="{{ $fieldClass }}">
+                    <input name="email" type="email" required maxlength="255" value="{{ old('email', $account->email) }}" autocomplete="off" class="{{ $fieldClass }}">
                 </label>
+                <label class="space-y-2 text-sm font-semibold sm:col-span-2">
+                    <span class="block">Phone number <span class="font-normal text-slate-500">(optional)</span></span>
+                    <input name="phone" type="tel" maxlength="32" value="{{ old('phone', $account->phone) }}" placeholder="+855…" autocomplete="off" class="{{ $fieldClass }}">
+                    <span class="block text-xs font-normal text-slate-600 dark:text-slate-400">Include the international country code.</span>
+                </label>
+                @unless($editing)
                 <label class="space-y-2 text-sm font-semibold">
                     <span class="block">Initial password</span>
                     <input name="password" type="password" required minlength="12" maxlength="72" autocomplete="new-password" class="{{ $fieldClass }}">
@@ -47,6 +52,17 @@
                     <span class="block">Confirm password</span>
                     <input name="password_confirmation" type="password" required minlength="12" maxlength="72" autocomplete="new-password" class="{{ $fieldClass }}">
                 </label>
+                @endunless
+            </div>
+        </section>
+
+    @unless($editing)
+        <section class="workspace-panel p-5 sm:p-6" aria-labelledby="user-verification-title">
+            <h2 id="user-verification-title" class="mb-2 text-lg font-bold">Contact verification</h2>
+            <p class="mb-3 text-sm text-slate-600 dark:text-slate-400">Use these options when you have already confirmed the user’s contact details.</p>
+            <div class="flex flex-wrap gap-x-8 gap-y-2">
+                <label class="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" name="verify_email" value="1" @checked(old('verify_email'))> Mark email verified</label>
+                <label class="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" name="verify_phone" value="1" @checked(old('verify_phone'))> Mark phone verified</label>
             </div>
         </section>
     @endunless
@@ -78,7 +94,7 @@
 
     <div class="flex justify-end">
         <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">
-            {{ $editing ? 'Save access' : 'Create user' }}
+            {{ $editing ? 'Save changes' : 'Create user' }}
         </button>
     </div>
 </form>

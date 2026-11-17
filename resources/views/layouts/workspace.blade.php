@@ -95,6 +95,7 @@
                 </div>
             </header>
             <main data-workspace-main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
+                @include('partials.account-preview')
                 @php
                     $workspaceHeading = html_entity_decode(trim($__env->yieldContent('heading', __('workspace.overview'))), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);

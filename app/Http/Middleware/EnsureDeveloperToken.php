@@ -15,7 +15,7 @@ class EnsureDeveloperToken
         $token = $user?->currentAccessToken();
 
         abort_unless(
-            $user?->isDeveloper()
+            $user?->isDeveloper() && $user->isActiveAccount()
                 && $token instanceof PersonalAccessToken
                 && $token->can('catalog:read')
                 && ($token->expires_at === null || $token->expires_at->isFuture()),
