@@ -25,7 +25,11 @@ final class AdminSystemSettingsTest extends TestCase
 
         foreach (['branding', 'security', 'social-auth', 'cloud-storage'] as $section) {
             $url = route('admin.system-settings.'.$section);
-            $this->get($url)->assertOk()->assertSee('href="'.$url.'" aria-current="page"', false);
+            $response = $this->get($url)->assertOk();
+            $this->assertMatchesRegularExpression(
+                '~href="'.preg_quote($url, '~').'"\s+aria-current="page"~',
+                $response->getContent()
+            );
         }
     }
 

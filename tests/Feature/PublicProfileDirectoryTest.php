@@ -132,8 +132,8 @@ final class PublicProfileDirectoryTest extends TestCase
             ->assertDontSee($instructor->email)
             ->assertSee('https://www.facebook.com/public-teacher')
             ->assertDontSee('https://www.youtube.com/@private-account')
-            ->assertDontSee('12K+')
-            ->assertDontSee('4.9');
+            ->assertDontSeeText('12K+')
+            ->assertDontSeeText('4.9');
         $this->get('/courses/'.$course->slug)->assertOk()
             ->assertSee('Published Teacher Profile')
             ->assertSee('href="https://www.facebook.com/public-teacher"', false)

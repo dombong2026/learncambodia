@@ -142,7 +142,7 @@ final class WorkspaceMenu
             'approvals/appearance-reviews' => 'eye',
             'approvals/enrollment-reviews' => 'user-round-check',
             'learning-insights/overview' => 'chart-column',
-            'system-settings/branding' => 'swatches',
+            'system-settings/branding' => 'brand-identity',
             'system-settings/security' => 'shield-check',
             'system-settings/social-auth' => 'log-in',
             'system-settings/cloud-storage' => 'cloud-storage',
