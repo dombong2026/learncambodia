@@ -12,9 +12,8 @@
     };
     $canStart = $quote['model'] === 'free' || ($access?->status === 'approved' && $access->matches($quote));
     $active = $history?->first(fn ($attempt) => !$attempt->submitted_at && $attempt->expires_at->isFuture());
-    $summary = __('detail.'.$label.'_summary');
 @endphp
-<x-detail-hero :title="$exam->title" :summary="$summary" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
+<x-detail-hero :title="$exam->title" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
     <x-slot:meta>
         @if($exam->type)<li>{{ $exam->type->name }}</li>@endif
         <li>{{ trans_choice('detail.minutes', $exam->time_limit) }}</li>
@@ -26,7 +25,7 @@
         @if(session('status'))<p class="mt-3 text-sm text-[#d1e0ef]" role="status">{{ session('status') }}</p>@endif
         @if($errors->any())<p class="mt-3 text-sm text-red-200" role="alert">{{ $errors->first() }}</p>@endif
         @guest
-            <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route('login') }}">Sign in as a learner to take this {{ $label }}</a>
+            <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}">Sign in as a learner to take this {{ $label }}</a>
         @elseif(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
             @if($active)
                 <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route('account.assessment-attempts.show', $active) }}">Continue {{ $label }}</a>
@@ -50,6 +49,7 @@
         @else
             <p class="mt-4 text-sm leading-6 text-[#d1e0ef]">Students take assessments from their learner accounts.</p>
         @endguest
+        <x-detail-share :url="$exam->publicUrl()" :title="$exam->title" />
     </x-slot:rail>
 </x-detail-hero>
 

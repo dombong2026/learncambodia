@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\PublicProfile;
+use App\Models\User;
 use App\Models\CourseInstructorAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -57,7 +58,7 @@ class PublicCourseController extends Controller
         ]);
     }
 
-    public function show(Course $course): View
+    public function show(Request $request, Course $course): View
     {
         abort_unless(Course::discoverable()->whereKey($course->id)->exists(),404);
 
@@ -66,9 +67,16 @@ class PublicCourseController extends Controller
             'modules.lessons:id,course_module_id,title,duration_minutes',
         ])->loadCount('lessons');
 
-        $existingEnrollment = auth()->check() && auth()->user()->role === \App\Models\User::ROLE_STUDENT
-            ? $course->enrollments()->where('student_id', auth()->id())->first()
+        $student = $request->user();
+        $existingEnrollment = $student?->role === User::ROLE_STUDENT
+            ? $course->enrollments()->where('student_id', $student->id)
+                ->withExists(['lessonProgress', 'attempts', 'examAttempts', 'homeworkSubmissions'])->first()
             : null;
+        $hasStarted = $existingEnrollment?->status === 'approved' && (
+            $existingEnrollment->started_at !== null || $existingEnrollment->lesson_progress_exists
+            || $existingEnrollment->attempts_exists || $existingEnrollment->exam_attempts_exists
+            || $existingEnrollment->homework_submissions_exists
+        );
 
         $instructorIds=CourseInstructorAssignment::query()
             ->where('course_id',$course->id)->where('status','active')
@@ -80,7 +88,7 @@ class PublicCourseController extends Controller
             ->orderBy('title')->limit(4)->get();
 
         return view('courses.show',compact(
-            'course','existingEnrollment','educators','relatedCourses'
+            'course','existingEnrollment','hasStarted','educators','relatedCourses'
         ));
     }
 }

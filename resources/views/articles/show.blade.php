@@ -4,11 +4,12 @@
 @section('meta_description', $article->seo_description ?: ($article->summary ?: \Illuminate\Support\Str::limit($article->body, 155)))
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_blog'); @endphp
-<x-detail-hero :title="$article->title" :summary="$article->summary" :entry="$article" icon="newspaper" :label="__('detail.article')">
+<x-detail-hero :title="$article->title" :entry="$article" icon="newspaper" :label="__('detail.article')">
     <x-slot:rail>
         <h2 class="text-xl font-black">{{ __('detail.start_reading') }}</h2>
         <a href="#article-body" class="mt-4 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ $a['reading_heading'] }}</a>
         <a href="{{ route('articles.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('detail.browse_articles') }}</a>
+        <x-detail-share :url="$article->publicUrl()" :title="$article->title" :instructors="$author ? [$author] : []" />
     </x-slot:rail>
 </x-detail-hero>
 

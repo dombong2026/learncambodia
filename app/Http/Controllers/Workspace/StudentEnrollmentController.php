@@ -51,6 +51,8 @@ class StudentEnrollmentController extends Controller
         $course = Course::published()->whereKey($enrollment->course_id)
             ->with('modules.lessons', 'exams.type', 'quizzes')->firstOrFail();
 
+        if ($request->isMethod('GET')) $enrollment->markStarted();
+
         return view('workspace.student.study', [
             'role' => 'student',
             'enrollment' => $enrollment,

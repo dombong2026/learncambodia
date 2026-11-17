@@ -13,6 +13,15 @@
             </div><span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">{{ __('people.review_pending') }}</span></div>
             <p class="mt-4 text-xs text-slate-500">{{ $profile->subjects }} @if($profile->city) · {{ $profile->city }} @endif</p>
             <p class="mt-4 max-h-48 overflow-y-auto whitespace-pre-line break-words rounded-xl bg-slate-50 p-4 text-sm leading-7 text-slate-600 dark:bg-[#0c2442] dark:text-slate-300">{{ $profile->bio }}</p>
+            @php($links = $profile->kind === 'instructor' ? \App\Support\InstructorSocialLinks::allowed($profile->social_links) : [])
+            @if($links)
+                <h3 class="mt-4 text-sm font-bold">{{ __('detail.public_social_links') }}</h3>
+                <ul class="mt-2 space-y-1 text-xs">
+                    @foreach($links as $platform => $url)
+                        <li class="break-all"><strong>{{ \App\Support\InstructorSocialLinks::LABELS[$platform] }}</strong> {{ $url }}</li>
+                    @endforeach
+                </ul>
+            @endif
             @if($profile->kind==='student')
                 <p class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-[#463924] dark:text-[#f9d89c]">{{ __('people.adult_review_warning') }}</p>
             @endif

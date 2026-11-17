@@ -18,6 +18,9 @@
                 <h1 class="mt-2 break-words text-4xl font-black leading-tight">{{ $profile->display_name }}</h1>
                 <p class="mt-3 max-w-3xl text-base leading-8 text-[#d7e5f4]">{{ $profile->headline }}</p>
                 @if($profile->subjects)<p class="mt-3 text-sm font-semibold text-[#ffe09f]">{{ $profile->subjects }}</p>@endif
+                @if($teaching && $profile->social_links)
+                    <div class="mt-4"><x-instructor-social-links :profile="$profile" :show-name="false" /></div>
+                @endif
             </div>
         </div>
     </div>

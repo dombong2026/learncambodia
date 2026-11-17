@@ -3,7 +3,7 @@
 @section('title', $course->title)
 @section('meta_description', $course->summary)
 @section('content')
-<x-detail-hero :title="$course->title" :summary="$course->summary" :entry="$course" :label="__('detail.course')">
+<x-detail-hero :title="$course->title" :entry="$course" :label="__('detail.course')">
     <x-slot:meta>
         <li><x-workspace-icon name="book-open" class="h-4 w-4 text-[#b58128] dark:text-[#efbe62]"/>{{ number_format($course->lessons_count) }} {{ __('frontend.lessons') }}</li>
         <li><x-workspace-icon name="school" class="h-4 w-4 text-[#b58128] dark:text-[#efbe62]"/>{{ __('pages.mode_'.$course->delivery_mode) }}</li>
@@ -12,36 +12,53 @@
     </x-slot:meta>
     <x-slot:rail>
         <h2 class="text-xl font-black">{{ __('frontend.start_learning') }}</h2>
-        <p class="mt-3 text-xs leading-7 text-[#d1e0ef]">{{ __('frontend.enrollment_note') }}</p>
-        @php($quote = \App\Support\CoursePricing::quote($course->pricing))
+        @php
+            $quote = \App\Support\CoursePricing::quote($course->pricing);
+            $student = auth()->user()?->role === \App\Models\User::ROLE_STUDENT;
+            $primary = 'mt-4 block w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]';
+            $secondary = 'mt-3 block rounded-xl border border-white/35 px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10';
+        @endphp
         <x-course-price :course="$course" :quote="$quote" class="mt-3 text-sm font-bold text-[#f6cd7f]" />
-        @if($quote['model'] !== 'free')
+        @if($quote['model'] !== 'free' && $existingEnrollment?->status !== 'approved')
             <p class="mt-2 text-xs leading-6 text-[#d1e0ef]">The school verifies payment or membership before granting access.</p>
         @endif
-        @auth
-            @if(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
-                @if($existingEnrollment?->status === 'approved')
-                    <a href="{{ route('account.enrollments.show',$existingEnrollment) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('dashboard.resume_learning') }}</a>
-                @elseif($existingEnrollment)
-                    <p class="mt-5 rounded-xl bg-white/10 p-4 text-xs font-bold text-[#ffe4a1]">{{ __('frontend.enrollment_requested') }}: {{ ucfirst($existingEnrollment->status) }}</p>
-                    <a href="{{ route('account.enrollments.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.view_my_enrollments') }}</a>
-                @else
-                    <form method="POST" action="{{ route('account.enrollments.store',$course) }}" class="mt-5">@csrf
-                        @if($quote['model'] !== 'free')
-                            <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
-                        @endif
-                        <button type="submit" class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.request_enrollment') }}</button>
-                    </form>
+        @guest
+            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.sign_in_to_enroll') }}</p>
+            <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}" class="{{ $primary }}">{{ __('detail.enroll') }}</a>
+            <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'register') }}" class="{{ $secondary }}">{{ __('frontend.create_account') }}</a>
+        @elseif(!$student)
+            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.student_enrollment_only') }}</p>
+            <a href="{{ route(auth()->user()->homeRouteName()) }}" class="{{ $secondary }}">{{ __('frontend.open_my_workspace') }}</a>
+        @elseif(!$existingEnrollment)
+            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.enroll_review_note') }}</p>
+            <form method="POST" action="{{ route('account.enrollments.store', $course) }}">
+                @csrf
+                @if($quote['model'] !== 'free')
+                    <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
                 @endif
+                <button type="submit" class="{{ $primary }}">{{ __('detail.enroll') }}</button>
+            </form>
+        @elseif($existingEnrollment->status === 'approved')
+            @if($hasStarted)
+                <a href="{{ route('account.progress.index', ['enrollment' => $existingEnrollment->id]) }}" class="{{ $primary }}">{{ __('detail.learning_progress') }}</a>
+                <a href="{{ route('account.enrollments.show', $existingEnrollment) }}" class="{{ $secondary }}">{{ __('dashboard.resume_learning') }}</a>
             @else
-                <a href="{{ route(auth()->user()->homeRouteName()) }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.open_my_workspace') }}</a>
+                <a href="{{ route('account.enrollments.show', $existingEnrollment) }}" class="{{ $primary }}">{{ __('detail.already_enrolled') }}</a>
             @endif
         @else
-            <a href="{{ route('register') }}" class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ __('frontend.create_account') }}</a>
-            <a href="{{ route('login') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('frontend.sign_in') }}</a>
-        @endauth
+            <p class="mt-4 rounded-xl bg-white/10 p-3 text-xs font-semibold text-[#ffe4a1]">
+                {{ match ($existingEnrollment->status) {
+                    'pending' => __('detail.enrollment_pending'),
+                    'cancelled' => __('detail.enrollment_cancelled'),
+                    'rejected' => __('detail.enrollment_rejected'),
+                    default => __('frontend.enrollment_requested'),
+                } }}
+            </p>
+            <a href="{{ route('account.enrollments.index') }}" class="{{ $secondary }}">{{ __('frontend.view_my_enrollments') }}</a>
+        @endguest
         <a href="#course-curriculum" class="mt-4 block text-center text-xs font-bold text-[#f6cd7f] hover:underline">{{ __('pages.view_curriculum') }}</a>
         <p class="mt-5 border-t border-white/20 pt-4 text-[11px] leading-6 text-[#c5d7e9]">{{ __('frontend.no_certificate_claim') }}</p>
+        <x-detail-share :url="route('courses.show', $course->getRouteKey())" :title="$course->title" :instructors="$educators" />
     </x-slot:rail>
 </x-detail-hero>
 
@@ -51,7 +68,7 @@
             <p class="text-xs font-black uppercase tracking-[.12em] text-[#805718] dark:text-[#efbe62]">{{ __('pages.learning_objectives') }}</p>
             <h2 class="mt-2 text-xl font-black text-[#0c315c] dark:text-white">{{ __('pages.what_you_learn') }}</h2>
             <div class="rich-public-content course-learning-checklist mt-4 break-words text-sm leading-7 text-slate-700 dark:text-slate-200">
-                {!! \App\Support\CourseDescriptionChecklist::render($course->description_html, $course->description) !!}
+                {!! \App\Support\CourseDescriptionChecklist::render($course->description_html, filled($course->description) ? $course->description : $course->summary) !!}
             </div>
         </section>
         <x-learning-detail-metadata :record="$course" kind="course" />

@@ -75,7 +75,7 @@ class SessionController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
 
-        // Explicit public reading journeys return to the same article/exam.
+        // Explicit public detail links return to the page that opened sign-in.
         // All other successful sign-ins go to the user's own role dashboard.
         $returnTo = ReadingReturn::valid($request->session()->pull('auth.reading_return'));
 

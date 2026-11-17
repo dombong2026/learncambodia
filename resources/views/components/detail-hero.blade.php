@@ -1,4 +1,4 @@
-@props(['title', 'summary' => null, 'entry' => null, 'icon' => 'book-open', 'label'])
+@props(['title', 'entry' => null, 'icon' => 'book-open', 'label'])
 <section class="detail-hero border-b border-slate-200 bg-gradient-to-br from-[#f8fafc] via-white to-[#edf2f9] dark:border-slate-700 dark:from-[#102b4b] dark:via-[#12365d] dark:to-[#0b284e]">
     <div class="detail-grid mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div class="min-w-0">
@@ -33,9 +33,6 @@
                 </div>
             @endif
 
-            @if(filled($summary))
-                <p class="mt-4 line-clamp-2 text-sm leading-6 text-slate-700 sm:text-base dark:text-slate-200">{{ $summary }}</p>
-            @endif
             @isset($meta)
                 <ul class="detail-meta mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-700 sm:text-sm dark:text-slate-200">{{ $meta }}</ul>
             @endisset

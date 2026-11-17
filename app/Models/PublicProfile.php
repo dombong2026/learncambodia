@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PublicProfile extends Model
 {
-    protected $fillable = ['user_id','kind','display_name','headline','subjects','city','bio','show_learning_summary'];
+    protected $fillable = ['user_id','kind','display_name','headline','subjects','city','bio','show_learning_summary', 'social_links'];
 
     protected function casts(): array
     {
         return [
             'show_learning_summary'=>'boolean',
+            'social_links'=>'array',
             'consented_at'=>'datetime',
             'adult_confirmed_at'=>'datetime',
             'reviewed_at'=>'datetime',

@@ -153,6 +153,7 @@ final class LearningHubController extends Controller
     {
         $course=LearningAccess::course($request->user(),$enrollment);
         LearningAccess::lesson($course,$lesson);
+        if ($request->isMethod('GET')) $enrollment->markStarted();
         $course->load('modules.lessons','quizzes');
         $completedIds=$enrollment->lessonProgress()->whereNotNull('completed_at')
             ->pluck('lesson_id')->all();

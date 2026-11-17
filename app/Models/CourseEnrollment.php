@@ -12,7 +12,7 @@ class CourseEnrollment extends Model
 
     protected function casts(): array
     {
-        return ['pricing_quote' => 'array', 'reviewed_at' => 'datetime'];
+        return ['pricing_quote' => 'array', 'reviewed_at' => 'datetime', 'started_at' => 'datetime'];
     }
 
     public function course(): BelongsTo
@@ -28,6 +28,19 @@ class CourseEnrollment extends Model
     public function attempts(): HasMany
     {
         return $this->hasMany(PracticeAttempt::class, 'enrollment_id');
+    }
+
+    public function examAttempts(): HasMany
+    {
+        return $this->hasMany(ExamAttempt::class, 'course_enrollment_id');
+    }
+
+    public function markStarted(): void
+    {
+        if ($this->started_at !== null) return;
+
+        self::whereKey($this->id)->where('status', 'approved')->whereNull('started_at')
+            ->update(['started_at' => now()]);
     }
 
     public function homeworkSubmissions(): HasMany

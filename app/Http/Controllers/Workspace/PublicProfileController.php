@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\PublicProfile;
 use App\Models\User;
 use App\Support\ApprovalAudit;
+use App\Support\InstructorSocialLinks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 final class PublicProfileController extends Controller
@@ -34,7 +36,19 @@ final class PublicProfileController extends Controller
             'show_learning_summary'=>['sometimes','boolean'],
             'public_consent'=>['required','accepted'],
             'adult_confirmation'=>[$kind===User::ROLE_STUDENT ? 'accepted' : 'nullable'],
+            'social_links' => $kind === User::ROLE_INSTRUCTOR
+                ? ['sometimes', 'array:'.implode(',', array_keys(InstructorSocialLinks::LABELS))]
+                : ['prohibited'],
+            'social_links.*' => ['nullable', 'string', 'max:300'],
         ]);
+
+        foreach ($data['social_links'] ?? [] as $platform => $link) {
+            if (filled($link) && !InstructorSocialLinks::valid($platform, $link)) {
+                throw ValidationException::withMessages([
+                    "social_links.$platform" => __('detail.invalid_social_url', ['platform' => InstructorSocialLinks::LABELS[$platform]]),
+                ]);
+            }
+        }
 
         DB::transaction(function () use ($request,$kind,$data): void {
             // Lock the account row to serialize first publication and prevent
@@ -54,6 +68,11 @@ final class PublicProfileController extends Controller
                 'show_learning_summary'=>$kind===User::ROLE_STUDENT &&
                     (bool)($data['show_learning_summary']??false),
             ];
+
+            if ($kind === User::ROLE_INSTRUCTOR && array_key_exists('social_links', $data)) {
+                $links = InstructorSocialLinks::allowed(array_replace($profile?->social_links ?? [], $data['social_links']));
+                $content['social_links'] = $links ?: null;
+            }
 
             if (!$profile) {
                 $profile=PublicProfile::create($content+['user_id'=>$user->id,'kind'=>$kind]);
