@@ -28,9 +28,26 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       await expect(main.locator('.system-settings-row').first()).toBeVisible();
     }
 
-    const cssUrl = await page.locator('link[href$="/css/system-settings.css"]').getAttribute('href');
+    const cssUrl = await page.locator('link[href*="/css/system-settings.css"]').getAttribute('href');
     const stylesheet = await page.request.get(cssUrl);
     expect(stylesheet.ok()).toBeTruthy();
+
+    const table = page.getByRole('table', { name: 'Storage providers' });
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await table.getByRole('link', { name: 'Configure Amazon S3' }).click();
+    await page.getByLabel('Current password').fill('Only-A-CI-Browser-Fixture-2026!');
+    await page.getByRole('button', { name: 'Confirm password' }).click();
+    const s3 = page.getByRole('dialog', { name: 'Configure Amazon S3' });
+    await expect(s3).toBeVisible();
+    await expect(s3.getByLabel('AWS region')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(table).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await table.getByRole('link', { name: 'Configure Cloudflare R2' }).click();
+    const r2 = page.getByRole('dialog', { name: 'Configure Cloudflare R2' });
+    await expect(r2.getByLabel('S3 API endpoint')).toBeVisible();
+    await r2.getByRole('link', { name: 'Close configuration' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {

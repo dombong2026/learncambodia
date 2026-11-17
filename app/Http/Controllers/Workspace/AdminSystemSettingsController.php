@@ -48,17 +48,19 @@ final class AdminSystemSettingsController extends Controller
     {
         $providers = ManagedStorageSettings::PROVIDERS;
         $disk = config('filesystems.managed');
-        $rows = [
-            ['Active storage', 'Managed media, avatars, and speaking assessment recordings.', $disk === 'local' ? 'Local server' : ($providers[$disk] ?? 'Invalid storage setting')],
-        ];
+        $activeStorage = $disk === 'local' ? 'Local server' : ($providers[$disk] ?? 'Invalid storage setting');
+        $canEdit = time() - (int) $request->session()->get('auth.password_confirmed_at', 0) < config('auth.password_timeout', 10800);
+        $selected = $request->query('configure');
+        $selected = $canEdit && is_string($selected) && isset($providers[$selected]) ? $selected : null;
         $profiles = [];
-        $ready = [];
-        foreach ($providers as $provider => $label) {
+        foreach (array_keys($providers) as $provider) {
             $saved = ManagedStorageSettings::saved($provider);
             $settings = ManagedStorageSettings::effective($provider, $saved);
             $configured = ManagedStorageSettings::configured($provider, $settings);
             $profiles[$provider] = [
                 'bucket' => $settings['bucket'] ?? '',
+                'configured' => $configured,
+                'source' => $saved === null ? 'Server environment' : 'Dashboard settings',
                 'endpoint' => $settings['endpoint'] ?? '',
                 'region' => $settings['region'] ?? '',
                 'storedCredentials' => filled($saved['key'] ?? null),
@@ -67,17 +69,14 @@ final class AdminSystemSettingsController extends Controller
                     'secret_access_key' => filled($saved['secret'] ?? null) ? 'Saved' : (filled($settings['secret'] ?? null) ? 'Set on server' : 'Not set'),
                 ],
             ];
-            if ($configured) {
-                $ready[$provider] = $label;
-            }
-            $rows[] = [$label, $configured ? ($saved === null ? 'Configured through the server environment.' : 'Configured through this dashboard.') : 'Add a private bucket to get started.', $configured ? 'Settings present' : 'Settings missing'];
         }
 
-        return $this->page('Cloud Storage', 'Test a bucket connection, copy managed uploads, and verify the destination.', 'cloud-storage', $rows, [
-            'providers' => $ready,
+        return $this->page('Cloud Storage', 'Configure private buckets, test access, and transfer managed files.', 'cloud-storage', [], [
+            'providers' => $providers,
             'profiles' => $profiles,
             'activeDisk' => $disk,
-            'canEditStorage' => time() - (int) $request->session()->get('auth.password_confirmed_at', 0) < config('auth.password_timeout', 10800),
+            'activeStorage' => $activeStorage,
+            'selectedStorageProvider' => $selected,
             'transfers' => DB::table('managed_storage_transfers')->latest('id')->limit(10)->get(),
         ]);
     }
@@ -129,9 +128,14 @@ final class AdminSystemSettingsController extends Controller
             : back()->withErrors(['probe' => 'A storage operation is already queued or running.']);
     }
 
-    public function configureCloudStorage(): RedirectResponse
+    public function configureCloudStorage(Request $request): RedirectResponse
     {
-        return redirect()->route('admin.system-settings.cloud-storage', ['configure' => 1]);
+        $provider = $request->query('provider');
+        $parameters = is_string($provider) && isset(ManagedStorageSettings::PROVIDERS[$provider])
+            ? ['configure' => $provider]
+            : [];
+
+        return redirect()->route('admin.system-settings.cloud-storage', $parameters);
     }
 
     public function saveCloudStorage(Request $request): RedirectResponse
@@ -139,7 +143,7 @@ final class AdminSystemSettingsController extends Controller
         $provider = $request->input('provider');
         abort_unless(is_string($provider) && isset(ManagedStorageSettings::PROVIDERS[$provider]), 422);
 
-        $destination = redirect()->route('admin.system-settings.cloud-storage', ['configure' => 1]);
+        $destination = redirect()->route('admin.system-settings.cloud-storage', ['configure' => $provider]);
         $validator = Validator::make($request->only(['bucket', 'endpoint', 'region', 'access_key_id', 'secret_access_key', 'session_token', 'server_credentials']), [
             'bucket' => ['required', 'string', 'min:3', 'max:63', 'regex:/\A(?!\d+\.\d+\.\d+\.\d+\z)(?!.*\.\.)[a-z0-9][a-z0-9.-]+[a-z0-9]\z/'],
             'access_key_id' => ['nullable', 'required_with:secret_access_key,session_token', 'string', 'max:256', 'regex:/\A[A-Za-z0-9]+\z/'],

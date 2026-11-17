@@ -57,8 +57,9 @@ final class AdminSystemSettingsTest extends TestCase
         $this->actingAs($admin);
         $settings = route('admin.system-settings.cloud-storage');
         $save = route('admin.system-settings.cloud-storage.save');
-        $configure = route('admin.system-settings.cloud-storage.configure');
-        $destination = route('admin.system-settings.cloud-storage', ['configure' => 1]);
+        $configure = route('admin.system-settings.cloud-storage.configure', ['provider' => 'r2']);
+        $destination = route('admin.system-settings.cloud-storage', ['configure' => 'r2']);
+        $s3Destination = route('admin.system-settings.cloud-storage', ['configure' => 's3']);
         $r2 = [
             'provider' => 'r2',
             'bucket' => 'dashboard-private-bucket',
@@ -67,14 +68,17 @@ final class AdminSystemSettingsTest extends TestCase
             'secret_access_key' => 'PrivateTokenOneNotForHtml',
         ];
 
-        $this->get($settings)->assertOk()->assertSee('Configure buckets')->assertDontSee('Save Cloudflare R2 settings');
+        $this->get($settings)->assertOk()->assertSee('Storage providers')->assertDontSee('<dialog', false);
+        $this->get($destination)->assertOk()->assertDontSee('<dialog', false);
         $this->get($configure)->assertRedirect(route('password.confirm'));
         $this->patchJson($save, $r2)->assertStatus(423);
 
         $this->withSession(['auth.password_confirmed_at' => time()]);
         $this->get($configure)->assertRedirect($destination);
-        $this->get($destination)->assertSee('Save Cloudflare R2 settings')->assertSee('Save Amazon S3 settings')
-            ->assertSeeText('Not set');
+        $this->get($settings)->assertOk()->assertDontSee('<dialog', false);
+        $this->get($destination)->assertSee('<dialog id="cloud-storage-configuration-dialog"', false)
+            ->assertSee('Save Cloudflare R2 settings')->assertDontSee('Save Amazon S3 settings')->assertSeeText('Not set');
+        $this->get($s3Destination)->assertSee('Save Amazon S3 settings')->assertDontSee('Save Cloudflare R2 settings');
         $this->patch($save, array_replace($r2, ['endpoint' => 'https://objects.example.test']))
             ->assertRedirect($destination)->assertSessionHasErrors('endpoint', null, 'r2Storage');
         $this->assertNull(session()->getOldInput('secret_access_key'));
@@ -88,7 +92,7 @@ final class AdminSystemSettingsTest extends TestCase
         $this->assertSame($r2['bucket'], ManagedFiles::disk('r2')->getConfig()['bucket']);
         $this->assertSame('local', config('filesystems.managed'));
 
-        $view = $this->get($settings)->assertOk()->assertSee('Test R2 connection')->assertSee($r2['bucket'])
+        $view = $this->get($destination)->assertOk()->assertSee('Test R2 connection')->assertSee($r2['bucket'])
             ->assertDontSee($r2['access_key_id'])->assertDontSee($r2['secret_access_key']);
         foreach (['access_key_id', 'secret_access_key'] as $field) {
             $this->assertMatchesRegularExpression(
@@ -98,7 +102,7 @@ final class AdminSystemSettingsTest extends TestCase
         }
 
         $this->patch($save, ['provider' => 's3', 'bucket' => 'dashboard-private-s3', 'region' => 'ap-southeast-1'])
-            ->assertRedirect($destination)->assertSessionHas('status');
+            ->assertRedirect($s3Destination)->assertSessionHas('status');
         $this->assertSame('ap-southeast-1', ManagedStorageSettings::saved('s3')['region']);
         $this->get($settings)->assertOk()->assertSee('Test S3 connection');
 
@@ -128,7 +132,7 @@ final class AdminSystemSettingsTest extends TestCase
             'filesystems.disks.r2.secret' => 'test-secret-value',
         ]);
 
-        $this->withSession(['auth.password_confirmed_at' => time()])->get($settings)
+        $this->withSession(['auth.password_confirmed_at' => time()])->get(route('admin.system-settings.cloud-storage', ['configure' => 'r2']))
             ->assertOk()->assertSee('Local server')->assertSee('Settings present')->assertSeeText('Set on server')
             ->assertSee('Test R2 connection')->assertDontSee('test-access-id')->assertDontSee('test-secret-value');
         $this->post($probe)->assertRedirect($settings)
