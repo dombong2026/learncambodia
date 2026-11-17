@@ -92,8 +92,23 @@
 
         <section class="{{ $panel }}" aria-labelledby="branding-sharing">
             <h2 id="branding-sharing" class="text-lg font-bold">{{ __('Social sharing') }}</h2>
-            <p class="mb-4 mt-1 text-sm text-slate-600 dark:text-slate-300">{{ __('Used when a public page has no sharing image of its own.') }}</p>
-            @include('workspace.admin.branding-asset', ['slot' => 'share-image'])
+            <p class="mb-4 mt-1 text-sm text-slate-600 dark:text-slate-300">{{ __('Public pages use their featured image first. The previews below show the fallback for each language.') }}</p>
+            <div class="grid gap-4 md:grid-cols-3">
+                @foreach($locales as $locale => $label)
+                    @include('workspace.admin.branding-asset', [
+                        'slot' => 'share-image-'.$locale,
+                        'sharingLocale' => $locale,
+                        'sharingLabel' => $label,
+                    ])
+                @endforeach
+            </div>
+            <details class="mt-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <summary class="cursor-pointer px-4 py-3 text-sm font-bold">{{ __('Shared fallback image') }}</summary>
+                <div class="px-4 pb-4">
+                    <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">{{ __('An uploaded shared image applies to languages without their own upload.') }}</p>
+                    @include('workspace.admin.branding-asset', ['slot' => 'share-image', 'sharingLabel' => __('Shared fallback image')])
+                </div>
+            </details>
         </section>
     </form>
 @endsection

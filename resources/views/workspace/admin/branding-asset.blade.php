@@ -1,8 +1,10 @@
 @php
-    $asset = \App\Support\PlatformBranding::asset($slot);
+    $asset = isset($sharingLocale)
+        ? \App\Support\PlatformBranding::sharingImage($sharingLocale)
+        : \App\Support\PlatformBranding::asset($slot);
     $logo = str_starts_with($slot, 'logo-');
-    $sharing = $slot === 'share-image';
-    $label = __($asset['label']).($logo || $sharing ? '' : ' '.$asset['width'].' × '.$asset['height']);
+    $sharing = str_starts_with($slot, 'share-image');
+    $label = ($sharingLabel ?? __($asset['label'])).($logo || $sharing ? '' : ' '.$asset['width'].' × '.$asset['height']);
     $hint = match (true) {
         $logo => __('PNG · 200–3,000 px wide · 40–1,200 px high'),
         $sharing => __('PNG, JPEG, or WebP · 1,200 × 630 px recommended · up to 2 MB'),
@@ -11,7 +13,7 @@
 @endphp
 <div class="min-w-0 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
     <label for="branding-{{ $slot }}" class="block text-sm font-semibold">{{ $label }}</label>
-    <div class="branding-preview branding-preview--{{ $slot }} my-3">
+    <div class="branding-preview branding-preview--{{ $sharing ? 'share-image' : $slot }} my-3">
         @if($asset['url'])
             <img src="{{ $asset['url'] }}" width="{{ $asset['width'] }}" height="{{ $asset['height'] }}" alt="{{ $label }}">
         @else

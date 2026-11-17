@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f172a">
     @php
+        $locale = app()->getLocale();
+        $socialLocale = ['en' => 'en_US', 'km' => 'km_KH', 'zh' => 'zh_CN'][$locale] ?? 'en_US';
+        $socialUrl = url()->query(url()->current(), ['lang' => $locale]);
         $meta = \App\Support\PlatformBranding::pageMeta(
             $__env->getSection('title'),
             $__env->getSection('meta_description'),
@@ -14,10 +17,13 @@
     <title>{{ $meta['title'] }}</title>
     <meta name="description" content="{{ $meta['description'] }}">
     <meta property="og:site_name" content="{{ \App\Support\PlatformBranding::name() }}">
+    <meta property="og:url" content="{{ $socialUrl }}">
+    <meta property="og:locale" content="{{ $socialLocale }}">
     <meta property="og:title" content="{{ $meta['title'] }}">
     <meta property="og:description" content="{{ $meta['description'] }}">
     @if($meta['image'])
         <meta property="og:image" content="{{ $meta['image'] }}">
+        <meta name="twitter:card" content="summary_large_image">
     @endif
     @hasSection('canonical')
         <link rel="canonical" href="@yield('canonical')">

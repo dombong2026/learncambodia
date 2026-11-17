@@ -94,6 +94,46 @@ final class PlatformBrandingTest extends TestCase
         $this->assertNotContains('maskable/192x192', array_map(fn (array $icon) => $icon['purpose'].'/'.$icon['sizes'], $icons));
     }
 
+    public function test_share_cards_follow_the_page_language_and_respect_image_overrides(): void
+    {
+        Storage::fake('local');
+
+        foreach (['km' => 'km_KH', 'en' => 'en_US', 'zh' => 'zh_CN'] as $locale => $socialLocale) {
+            $imagePath = 'brand/social-'.$locale.'.jpg';
+            $this->assertSame([1200, 630], array_slice(getimagesize(public_path($imagePath)), 0, 2));
+
+            $url = route('home', ['lang' => $locale]);
+            $response = $this->get($url)->assertOk()
+                ->assertSee('<meta property="og:locale" content="'.$socialLocale.'">', false)
+                ->assertSee('<meta property="og:url" content="'.$url.'">', false)
+                ->assertSee('<meta name="twitter:card" content="summary_large_image">', false)
+                ->assertSee('sharer.php?u='.rawurlencode($url), false);
+
+            $this->assertMatchesRegularExpression(
+                '~property="og:image" content="[^"]+/'.preg_quote($imagePath, '~').'\?v=~',
+                $response->getContent(),
+            );
+        }
+
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $this->put(route('admin.system-settings.branding.update'), [
+            'name' => 'Learn Cambodia',
+            'short_name' => 'LearnCambodia',
+            'uploads' => [
+                'share-image' => $this->bundledImage('social-en.jpg'),
+                'share-image-km' => $this->bundledImage('social-km.jpg'),
+            ],
+        ])->assertRedirect(route('admin.system-settings.branding'))
+            ->assertSessionHasNoErrors();
+
+        $this->get('/?lang=km')->assertOk()->assertSee('/brand/assets/share-image-km/', false);
+        $this->get('/?lang=zh')->assertOk()->assertSee('/brand/assets/share-image/', false);
+        $this->assertSame(
+            '/featured.jpg',
+            \App\Support\PlatformBranding::pageMeta('Example', null, '/featured.jpg')['image'],
+        );
+    }
+
     private function bundledImage(string $name): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($name, file_get_contents(public_path('brand/'.$name)));

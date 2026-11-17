@@ -37,8 +37,9 @@
     @php
         // Real social sharing actions, not unverified brand profiles. Share the
         // public homepage only, never a visitor's URL with private query data.
-        $shareHome = rawurlencode(route('home'));
-        $shareText = rawurlencode('LearnCambodia — '.route('home'));
+        $homeUrl = route('home', ['lang' => app()->getLocale()]);
+        $shareHome = rawurlencode($homeUrl);
+        $shareText = rawurlencode('LearnCambodia — '.$homeUrl);
     @endphp
     <div data-footer-bottom class="mx-auto flex max-w-7xl flex-col gap-5 border-t border-slate-800 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <p class="leading-6">© {{ date('Y') }} {{ \App\Support\PlatformBranding::name() }}. All Rights Reserved.</p>

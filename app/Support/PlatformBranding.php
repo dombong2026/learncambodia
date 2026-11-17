@@ -16,6 +16,9 @@ final class PlatformBranding
         'app-icon-192' => ['file' => 'android-chrome-192x192.png', 'width' => 192, 'height' => 192, 'label' => 'App icon'],
         'app-icon-512' => ['file' => 'android-chrome-512x512.png', 'width' => 512, 'height' => 512, 'label' => 'App icon'],
         'share-image' => ['file' => null, 'width' => 1200, 'height' => 630, 'label' => 'Default sharing image'],
+        'share-image-km' => ['file' => 'social-km.jpg', 'width' => 1200, 'height' => 630, 'label' => 'Default sharing image'],
+        'share-image-en' => ['file' => 'social-en.jpg', 'width' => 1200, 'height' => 630, 'label' => 'Default sharing image'],
+        'share-image-zh' => ['file' => 'social-zh.jpg', 'width' => 1200, 'height' => 630, 'label' => 'Default sharing image'],
     ];
 
     public static function settings(): array
@@ -62,6 +65,20 @@ final class PlatformBranding
         return ['url' => $url, 'custom' => $custom !== null] + ($custom ?? []) + $default;
     }
 
+    public static function sharingImage(string $locale): array
+    {
+        $shared = self::asset('share-image');
+        $slot = 'share-image-'.$locale;
+
+        if (! array_key_exists($slot, self::ASSETS)) {
+            return $shared;
+        }
+
+        $localized = self::asset($slot);
+
+        return $localized['custom'] || ! $shared['custom'] ? $localized : $shared;
+    }
+
     public static function usesCustomManifest(): bool
     {
         $settings = self::settings();
@@ -97,7 +114,7 @@ final class PlatformBranding
                 $pageDescription !== '' => $pageDescription,
                 default => $defaultDescription ?? $name.' — English learning, international exam preparation and teacher development.',
             },
-            'image' => filled($pageImage) ? $pageImage : self::asset('share-image')['url'],
+            'image' => filled($pageImage) ? $pageImage : self::sharingImage(app()->getLocale())['url'],
         ];
     }
 

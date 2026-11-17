@@ -40,13 +40,14 @@ final class AdminBrandingController extends Controller
         }
 
         foreach (PlatformBranding::ASSETS as $slot => $asset) {
+            $sharing = str_starts_with($slot, 'share-image');
             $dimensions = match (true) {
                 str_starts_with($slot, 'logo-') => 'dimensions:min_width=200,min_height=40,max_width=3000,max_height=1200',
-                $slot === 'share-image' => 'dimensions:min_width=600,min_height=315,max_width=2400,max_height=1260',
+                $sharing => 'dimensions:min_width=600,min_height=315,max_width=2400,max_height=1260',
                 default => 'dimensions:width='.$asset['width'].',height='.$asset['height'],
             };
 
-            $formats = $slot === 'share-image' ? ['png', 'jpg', 'jpeg', 'webp'] : ['png'];
+            $formats = $sharing ? ['png', 'jpg', 'jpeg', 'webp'] : ['png'];
             $rules['uploads.'.$slot] = ['nullable', File::image()->max(2048), File::types($formats), $dimensions];
         }
 
