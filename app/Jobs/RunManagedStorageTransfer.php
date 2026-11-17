@@ -30,6 +30,12 @@ final class RunManagedStorageTransfer implements ShouldQueue
             return;
         }
 
+        if (config('filesystems.managed') !== 'local') {
+            $this->finish('failed', 'The active disk changed before this operation started.');
+
+            return;
+        }
+
         $transfer = (clone $transfers)->find($this->transferId);
         $output = new BufferedOutput;
         $exitCode = Artisan::call('storage:managed-transfer', [

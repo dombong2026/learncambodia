@@ -8,12 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
-            $table->string('google_subject')->nullable()->unique();
-            $table->text('two_factor_secret')->nullable();
-            $table->text('two_factor_recovery_codes')->nullable();
-            $table->timestamp('two_factor_confirmed_at')->nullable();
-        });
+        $columns = [
+            'google_subject' => 'string',
+            'two_factor_secret' => 'text',
+            'two_factor_recovery_codes' => 'text',
+            'two_factor_confirmed_at' => 'timestamp',
+        ];
+        foreach ($columns as $column => $type) {
+            if (!Schema::hasColumn('users', $column)) {
+                Schema::table('users', fn (Blueprint $table) => $table->{$type}($column)->nullable());
+            }
+        }
+        if (!Schema::hasIndex('users', ['google_subject'], 'unique')) {
+            Schema::table('users', fn (Blueprint $table) => $table->unique('google_subject'));
+        }
 
         Schema::create('passkeys', function (Blueprint $table): void {
             $table->id();

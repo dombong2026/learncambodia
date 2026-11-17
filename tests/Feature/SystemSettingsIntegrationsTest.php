@@ -60,6 +60,20 @@ final class SystemSettingsIntegrationsTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'student@gmail.com', 'role' => 'student', 'google_subject' => 'google-test-identity']);
     }
 
+    public function test_passkey_options_are_password_confirmed_and_have_distinct_challenges(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->actingAs($user);
+        $endpoint = route('passkey.registration-options');
+        $this->getJson($endpoint)->assertStatus(423);
+
+        $this->withSession(['auth.password_confirmed_at' => time()]);
+        $first = $this->getJson($endpoint)->assertOk()->assertJsonPath('options.user.name', $user->email);
+        $second = $this->getJson($endpoint)->assertOk();
+        $this->assertIsString($first->json('options.challenge'));
+        $this->assertNotSame($first->json('options.challenge'), $second->json('options.challenge'));
+    }
+
     public function test_managed_s3_copy_and_verify_keep_the_local_source(): void
     {
         $local = Storage::fake('local');
