@@ -49,7 +49,7 @@
                                 $total = $entry['totalLessons'];
                                 $action = match (true) {
                                     $nextLesson === null => __('course_watch.view_curriculum'),
-                                    $completed === 0 => __('course_watch.start_course'),
+                                    $completed === 0 && $enrollment->started_at === null => __('course_watch.start_course'),
                                     default => __('course_watch.resume_lesson'),
                                 };
                                 $target = $nextLesson

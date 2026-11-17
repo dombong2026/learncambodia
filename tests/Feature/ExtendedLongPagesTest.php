@@ -85,7 +85,7 @@ final class ExtendedLongPagesTest extends TestCase
             '/library','/upload-studio',
         ] as $url) {
             $this->get($url)->assertOk()
-                ->assertSee('max-w-[1600px]',false)
+                ->assertSee($url === '/course-watch' ? 'data-course-watch' : 'max-w-[1600px]', false)
                 ->assertSee('Learn Cambodia home')
                 ->assertDontSee('50,000+');
         }
@@ -186,7 +186,8 @@ final class ExtendedLongPagesTest extends TestCase
         $this->actingAs($student)->get($url)->assertOk()
             ->assertSee($lesson->title)
             ->assertSee('Sensitive instructional passage for an approved learner only.')
-            ->assertSee('max-w-[1600px]',false)
+            ->assertSee('data-course-lesson', false)
+            ->assertSee('course-watch.css', false)
             ->assertSee('Mark this lesson complete');
 
         $enrollment->update(['status'=>'cancelled']);
@@ -229,7 +230,7 @@ final class ExtendedLongPagesTest extends TestCase
             ->assertDontSee($other->email)
             ->assertDontSee('15,420,000');
         $this->get('/course-watch')->assertOk()
-            ->assertSee('Open focused lesson');
+            ->assertSee('data-watch-resume', false);
     }
 
     public function test_studio_only_displays_an_authorized_instructors_owned_course_assignments(): void
