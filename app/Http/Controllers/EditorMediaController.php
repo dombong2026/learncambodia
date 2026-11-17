@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
 use App\Models\Course;
+use App\Models\CourseExam;
 use App\Models\User;
 use App\Models\EditorMedia;
 use App\Models\ExamAttempt;
@@ -123,10 +124,11 @@ final class EditorMediaController extends Controller
                 $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
                 $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
                     || Course::where('featured_media_id', $current->id)->exists()
+                    || CourseExam::where('featured_media_id', $current->id)->exists()
                     || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
                 if ($inUse) {
                     throw ValidationException::withMessages([
-                        'media' => 'This file is used by a course, editorial entry or policy revision and cannot be deleted.',
+                        'media' => 'This file is used by a course, quiz, editorial entry or policy revision and cannot be deleted.',
                     ]);
                 }
 
@@ -212,6 +214,9 @@ final class EditorMediaController extends Controller
                 ->where('status', 'published')->whereIn('featured_kind', ['image', 'video'])
                 ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
             $published = $published || Course::published()->where('featured_media_id', $media->id)
+                ->whereIn('featured_kind', ['image', 'video'])->exists();
+            $published = $published || CourseExam::query()->where('featured_media_id', $media->id)
+                ->where('kind', 'quiz')->whereNull('course_id')->where('published', true)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
             abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'lesson') {

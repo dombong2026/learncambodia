@@ -59,6 +59,10 @@
             @endunless
         </fieldset>
 
+        @if($quiz)
+            @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
+        @endif
+
         <section class="workspace-panel space-y-3 p-5">
             <h2 id="exam-instructions-label" class="font-extrabold">Instructions, activities & resources</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Add task instructions and reading passages. Upload video, audio, images, PDF, Word, or Excel files.</p>
@@ -79,6 +83,7 @@
         </section>
         <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Save {{ $assessmentLabel }}</button>
     </form>
+    @if($quiz)@include('workspace.admin.media-picker')@endif
     @if($exam->published && !$exam->course_id)
         <a class="my-5 inline-block text-sm font-semibold underline" href="{{ $exam->publicUrl() }}">Open learner page</a>
     @endif

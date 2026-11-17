@@ -5,16 +5,22 @@ namespace App\Models;
 use App\Models\Concerns\HasPublicId;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class CourseExam extends Model
 {
     use HasPublicId;
 
-    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
+    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'featured_kind', 'featured_media_id', 'featured_alt', 'featured_value', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
 
     protected function casts(): array
     {
         return ['pricing' => 'array', 'questions' => 'array', 'shuffle' => 'boolean', 'gamified' => 'boolean', 'published' => 'boolean', 'live_feedback' => 'boolean'];
+    }
+
+    public function featuredMedia(): BelongsTo
+    {
+        return $this->belongsTo(EditorMedia::class);
     }
 
     public function publicUrl(): string

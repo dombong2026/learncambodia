@@ -12,6 +12,7 @@ use App\Models\ExamType;
 use App\Support\EditorHtml;
 use App\Support\AssessmentQuestions;
 use App\Support\CoursePricing;
+use App\Support\FeaturedMedia;
 use App\Support\WorkspaceNotifications;
 use App\Models\AssessmentAccess;
 use Illuminate\Http\RedirectResponse;
@@ -98,6 +99,9 @@ final class AdminExaminationController extends Controller
         $data['questions'] = AssessmentQuestions::validate($data['questions']);
         if (count(array_filter($data['questions'], fn ($question) => $question['format'] === 'speaking')) > 10) {
             throw ValidationException::withMessages(['questions' => 'An assessment can have up to 10 speaking recordings.']);
+        }
+        if ($kind === 'quiz') {
+            $data += FeaturedMedia::validate($request);
         }
         $data['kind'] = $kind;
         $data['course_id'] = $kind === 'quiz' ? null : ($data['course_id'] ?? null);

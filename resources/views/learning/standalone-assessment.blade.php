@@ -13,7 +13,7 @@
     $canStart = $quote['model'] === 'free' || ($access?->status === 'approved' && $access->matches($quote));
     $active = $history?->first(fn ($attempt) => !$attempt->submitted_at && $attempt->expires_at->isFuture());
 @endphp
-<x-detail-hero :title="$exam->title" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
+<x-detail-hero :title="$exam->title" :entry="$isQuiz ? $exam : null" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
     <x-slot:meta>
         @if($exam->type)<li>{{ $exam->type->name }}</li>@endif
         <li>{{ trans_choice('detail.minutes', $exam->time_limit) }}</li>

@@ -1,0 +1,439 @@
+@a1-be|A1|grammar|Am, Is and Are
+I ____ Dara.|am|is|are
+You ____ early for class.|are|am|is
+It ____ warm today.|is|are|am
+My sister ____ at home.|is|am|are
+We ____ near the station.|are|is|am
+They ____ my neighbours.|are|am|is
+The cups ____ on the table.|are|is|am
+This ____ my blue bag.|is|are|am
+____ you from Siem Reap?|Are|Am|Is
+____ the shop open now?|Is|Are|Am
+____ I in the right room?|Am|Are|Is
+____ these your keys?|Are|Is|Am
+No, she ____ ready yet.|isn't|aren't|am not
+I ____ a teacher. I am a student.|am not|isn't|aren't
+We ____ lost. This is our street.|aren't|isn't|am not
+How old ____ your brother?|is|am|are
+Where ____ the toilets?|are|is|am
+My parents ____ at the market.|are|am|is
+The weather ____ nice this morning.|is|am|are
+____ your name Lina?|Is|Are|Am
+
+@a1-present|A1|grammar|Present Simple for Daily Routines
+I ____ breakfast at seven.|eat|eats|eating
+Sophea ____ to school by bike.|goes|go|going
+We ____ English on Tuesdays.|study|studies|studying
+His father ____ in a bank.|works|work|working
+The baby ____ after lunch.|sleeps|sleep|sleeping
+They ____ their house every Saturday.|clean|cleans|cleaning
+Thanh ____ his homework after dinner.|does|do|doing
+The library ____ at nine.|opens|open|opening
+Lina ____ two brothers.|has|have|having
+Our friends ____ near the park.|live|lives|living
+____ your sister play football?|Does|Do|Is
+____ they walk to work?|Do|Does|Are
+What time ____ your lessons begin?|do|does|are
+Where ____ your uncle live?|does|do|is
+She doesn't ____ coffee.|drink|drinks|drinking
+I ____ watch television on weekdays.|don't|doesn't|am not
+He ____ use this computer.|doesn't|don't|isn't
+The bus ____ at six every morning.|leaves|leave|leaving
+My aunt ____ her car on Sunday.|washes|wash|washing
+Our teacher ____ a lot of questions.|asks|ask|asking
+
+@a1-articles|A1|grammar|A, An and Plural Nouns
+Can I borrow ____ pencil?|a|an|two
+She eats ____ apple with lunch.|an|a|two
+I bought three ____ at the market.|tomatoes|tomato|tomatos
+There are two ____ beside the door.|boxes|box|boxs
+He has ____ orange in his bag.|an|a|three
+My cousin has two ____ at home.|cats|cat|cat's
+We saw three ____ in the garden.|birds|bird|bird's
+She needs ____ new notebook.|a|an|two
+This is ____ old photo of my family.|an|a|two
+Four ____ are playing outside.|children|child|childs
+There is ____ bus at the stop.|a|an|two
+The kitchen has six ____ on the shelf.|glasses|glass|glass's
+Please bring two ____ to the meeting.|chairs|chair|chair's
+She packed ____ egg for the picnic.|an|a|three
+Dara drew several ____ of the house.|pictures|picture|picture's
+There are two ____ in that shoe box.|shoes|shoe|shoies
+May I take ____ umbrella?|an|a|two
+We bought two ____ of bread.|loaves|loafs|loaf
+The flat has three ____ and a kitchen.|rooms|room|room's
+I can see two ____ in the river.|boats|boat|boates
+
+@a1-place|A1|grammar|Prepositions of Place
+The cat is ____ the chair; you can see it through the space below the seat.|under|above|between
+The picture hangs ____ the sofa, higher than the back of it.|above|under|inside
+The book is ____ the bag, so open the zip to get it.|inside|above|outside
+The bank is ____ the bakery and the pharmacy.|between|under|through
+Stop ____ the red door before you walk in.|at|between|above
+The bicycle is ____ the house in the garden, not in any room.|outside|inside|under
+Hang the keys ____ the hook.|on|under|between
+The children are walking ____ the bridge to reach the other bank.|across|under|behind
+Your name is ____ the first line of the form.|on|behind|outside
+The lamp stands ____ the desk, touching its surface.|on|under|in
+The kitchen is ____ the bedroom and the hall.|between|from|above
+Put your shoes ____ the door so we can find them on the way out.|by|through|over
+The dog is running ____ the tunnel and will come out at the other end.|through|above|along
+Our classroom is ____ the second floor.|on|at|between
+The bus stops ____ the school gate.|at|between|inside
+The sun is ____ the clouds, hidden from our view.|behind|between|underneath
+The shop is ____ the library; they share a wall.|next to|far from|above
+A plane flew ____ the building without touching it.|over|in|under
+She walked ____ the river path until she reached the bridge.|along|inside|above
+The town is ____ Cambodia.|in|on|over
+
+@a2-past|A2|grammar|Past Simple and Irregular Verbs
+Yesterday, I ____ a letter to my cousin.|wrote|write|written
+We ____ a bus to town last night.|took|take|taken
+Mina ____ the answer during the lesson.|knew|know|known
+She ____ her bag at home this morning and realised it at school.|left|leaves|leaving
+I ____ my old teacher at the station on Monday.|saw|see|seen
+He ____ two glasses of water after the race.|drank|drink|drunk
+They ____ a short film last weekend.|made|make|making
+Did you ____ the parcel yesterday?|get|got|getting
+We didn't ____ the museum on Sunday.|visit|visited|visiting
+The match ____ at two and finished at four.|began|begins|begun
+Last year, she ____ from Phnom Penh to Battambang.|moved|moves|moving
+Tan ____ his keys under the sofa yesterday.|found|find|finding
+My aunt ____ me a book for my birthday last week.|gave|give|given
+Who ____ the window five minutes ago?|opened|opens|opening
+I ____ at the hotel at noon yesterday.|arrived|arrive|arriving
+We ____ very well on the train last night.|slept|sleep|sleeping
+She ____ the cake to the party last Saturday.|brought|bring|bringing
+Nita ____ her phone last Tuesday.|lost|loses|losing
+We ____ the school competition yesterday.|won|win|winning
+What did you ____ at the market?|buy|bought|buying
+
+@a2-comparison|A2|grammar|Comparatives and Superlatives
+The blue box is ____ than the green one.|heavier|heaviest|more heavy
+Of these three trees, this is the ____.|tallest|taller|more tall
+The train is ____ than the bus on this route.|faster|fastest|more fast
+That was the ____ day of our trip.|coldest|colder|most coldest
+A book is usually ____ than a packet of paper clips.|more expensive|most expensive|expensiver
+This test is ____ than yesterday's test.|easier|easiest|more easier
+Which is the ____ of the four rooms?|biggest|bigger|most biggest
+This is the ____ film I have seen this year.|best|better|goodest
+The new timetable is ____ than the old one.|better|best|more better
+Her knee feels ____ today than it did yesterday.|worse|worst|badder
+The first street is ____ than the second one.|narrower|narrowest|more narrower
+That is the ____ route of all four options.|shortest|shorter|more shorter
+The flat upstairs is ____ at night than ours.|quieter|quietest|more quieter
+This is the ____ exercise in the workbook.|most difficult|more difficult|difficultest
+My brother is two years ____ than I am.|older|oldest|most old
+Of the three bags, mine is the ____.|lightest|lighter|more lighter
+Da Nang was ____ than I expected.|hotter|hottest|more hotter
+This phone is ____ than my old one.|less expensive|least expensive|as expensive
+She is the ____ runner on the team.|fastest|faster|most faster
+The new chair is ____ than the wooden one.|more comfortable|comfortabler|most comfortable
+
+@a2-countable|A2|grammar|Countable Nouns and Quantities
+How ____ water do you need?|much|many|few
+How ____ chairs are there in the hall?|many|much|little
+There are only a ____ eggs left.|few|little|much
+Add a ____ salt to the soup.|little|few|many
+I haven't got ____ apples left.|any|a little|much
+Would you like ____ tea?|some|many|a few
+Can I have a ____ of bread?|piece|glass|drop
+We have ____ rice for dinner, so we don't need to buy more.|enough|many|few
+There isn't ____ milk in the fridge.|much|many|few
+I put too ____ sugar in my coffee.|much|many|few
+There are too ____ people in this room.|many|much|little
+I'd like a ____ of coffee, please.|cup|slice|loaf
+Please buy two ____ of bread.|loaves|glasses|drops
+This bag contains a ____ of rice.|kilo|slice|cupfuls
+We need a ____ more minutes.|few|little|much
+There are ____ buses after midnight, so taking a taxi is usually necessary.|few|little|much
+We have very ____ time; please be quick.|little|few|many
+There aren't ____ tomatoes in the basket.|any|much|a little
+May I offer you ____ more coffee?|some|a few|many
+He took a ____ of water with him.|bottle|slice|loaf
+
+@a2-future|A2|grammar|Plans, Predictions and Timetables
+The museum ____ at ten tomorrow according to its timetable.|opens|opening|open
+We ____ our friends at six tomorrow; we have already arranged it.|are meeting|meets|meeting
+Look at those dark clouds. It ____ rain any minute.|is going to|going to|are going to
+I think the home team ____ win, but I am not sure.|will|to|does to
+I have already bought the paint. I ____ paint the room this weekend.|am going to|am go to|going
+The train ____ at eight tomorrow morning on the printed schedule.|leaves|leaving|leave
+I can't join you at four; I ____ the dentist then.|am seeing|sees|seeing
+Carry an umbrella; it ____ rain later.|may|may to|is may
+I promise I ____ call you tonight.|will|to|am will
+The two friends ____ a picnic on Saturday. They have already agreed on the time.|are having|has|having
+The final bus ____ at midnight on Fridays.|departs|departing|depart
+The bag looks heavy. I ____ help you with it.|will|will to|can to
+Are you ____ to apply for the job next week?|going|go|went
+I feel sure she ____ enjoy the concert.|will|does to|will to
+The school holiday ____ on Monday according to the calendar.|starts|starting|start
+Our family ____ to Kampot next week; the tickets are booked.|is travelling|travelling|travel
+Take a map because you ____ get lost.|might|might to|are might
+My cousin ____ to study art next year, and she has enrolled already.|is going|will going|goes to
+Will the shop ____ early tomorrow?|close|closes|closed
+We ____ be late if we leave right now.|won't|won't to|don't will
+
+@b1-perfect|B1|grammar|Present Perfect and Past Simple
+I ____ that film twice this year, most recently last week.|have seen|has seen|have saw
+Sokha ____ to Sihanoukville in 2022.|went|has gone in|has went
+Have you ever ____ a bicycle to work?|ridden|rode|ride
+I haven't found the receipt ____.|yet|yesterday|ago
+I met your brother two days ____.|ago|since|yet
+She has lived in Laos ____ 2020.|since|for|during
+They have owned the shop ____ ten years.|for|since|ago
+The last bus ____ the station at eight yesterday.|left|has left since|has leave
+I ____ my wallet yesterday, then found it in the afternoon.|lost|have lose|have lost since
+We have ____ returned from lunch; we came back a minute ago.|just|last|ago
+When did you ____ the email?|send|sent|sending
+Jin has not ____ the report yet.|finished|finishing|finish
+I have never ____ a film in that cinema.|seen|saw|see
+My sister ____ the keys to me last night.|gave|has give|giving
+He has ____ from his trip, so you can call him now.|returned|return|returning
+They haven't replied ____ the interview.|since|for|ago
+Kai has ____ eaten lunch, so he isn't hungry.|already|ago|last
+How long have you ____ each other?|known|knew|know
+Before the course ended last year, I ____ the teacher for her help.|thanked|have thank|thanking
+We ____ the tickets on Friday. They are in my pocket now.|bought|have buy|buying
+
+@b1-conditionals|B1|grammar|First and Second Conditionals
+If you ____ the bus this evening, take a taxi home.|miss|missed|will miss
+If I had more space, I ____ buy a larger table.|would|will|did
+If the power goes out tonight, the alarm ____ switch to its backup battery.|will|would|did
+If I ____ you, I would ask for a receipt.|were|will be|be
+If the weather improves tomorrow, we ____ go for a walk.|can|would have|could have
+What would you do if you ____ a wallet in the street?|found|will find|finds
+Unless we leave now, we ____ miss the train.|will|would have|were
+If she practised every day, she ____ become more confident.|would|has|does
+If the meeting ends before noon, I ____ call you at lunchtime.|will|would have|had
+If I ____ his address, I would send him an invitation.|knew|will know|knows
+You ____ get a discount if you book by Friday.|will|would have|were
+If I could choose any city, I ____ live near the sea.|would|am going|do
+If you see the instructor, ____ her about your timetable.|ask|asked|asking
+If I could speak Japanese, I ____ apply for that job.|would|am|had
+If the road is flooded tomorrow, ____ cross it.|don't|doesn't|didn't
+What ____ happen if we stopped using cash completely?|would|had|is
+If the printer is still broken tomorrow, I ____ print the form at the library.|will|would have|was
+If I ____ a bigger kitchen, I would cook for more people.|had|will have|have had
+If you won't be able to attend tomorrow, ____ the organiser today.|tell|told|telling
+If my dog could talk, I ____ ask it about its walks.|would|will|do
+
+@b1-relative|B1|grammar|Relative Pronouns and Clear References
+The nurse, ____ has worked here for ten years, will meet you outside.|who|which|whose
+The bicycle, ____ was repaired last week, now works well.|which|who|whose
+This is the village ____ my grandparents grew up.|where|which|who
+The person ____ phone rang has turned it off.|whose|who|which
+Friday is the day ____ the office closes early.|when|who|whose
+The package, ____ arrived yesterday, is for you.|which|who|where
+I know a student ____ handwriting is easy to read.|whose|who|whom
+The café ____ we first met has moved.|where|who|which
+Please meet Anya, ____ will be leading the tour.|who|where|whose
+My cousin, ____ bike was stolen, reported it to the police.|whose|who|whom
+We visited the park ____ the concert took place.|where|when|which
+The report, ____ contains several charts, is on your desk.|which|whose|who
+The woman ____ helped you yesterday is our librarian.|who|which|where
+2019 was the year ____ we opened this office.|when|where|who
+The village, ____ is close to the border, has a weekly market.|which|who|whose
+That is the man ____ car is blocking the gate.|whose|who|which
+This is the room ____ the club holds its meetings.|where|who|when
+My mother, ____ speaks three languages, enjoyed meeting the visitors.|who|whom|whose
+The Friday class, ____ starts at 9 a.m., is full.|which|who|whose
+She remembers the moment ____ her name was announced.|when|whose|who
+
+@b1-passive|B1|grammar|Using the Passive Voice
+Rice ____ in many parts of Cambodia.|is grown|is growing by farmers|was grow
+The classroom ____ after yesterday's lesson.|was cleaned|was clean|has cleaning
+The invitations will ____ on Monday.|be sent|send by mail|sent
+These books ____ by a local author in 2021.|were written|were wrote|have writing
+The floors are ____ every Friday.|washed|wash|washing by staff
+The lights must ____ before you leave.|be turned off|turning off|turned off
+The bag ____ yesterday by a visitor.|was found|was find|was founding
+French ____ in several countries.|is spoken|is spoke|speaking
+A new bridge ____ at present.|is being built|is being build|is building by builders
+The documents have ____ to the office already.|been delivered|delivering|being deliver
+The book can ____ from the library for two weeks.|be borrowed|borrowed|be borrow
+Last year, two new classrooms ____ on this site.|were built|was built|were building by workers
+The computer ____ when I arrived, so I could not use it.|was being repaired|was being repair|was repairing
+The results ____ tomorrow morning.|will be announced|will announced|will be announce
+Each ticket is ____ once at the entrance.|scanned|scan|scanning by staff
+Before the shop reopened, the windows had ____.|been replaced|being replaced|been replace
+The parcel should ____ before Friday.|be delivered|deliver by courier|been delivered
+Water ____ through this pipe to the main tank.|is pumped|is pump|is pumping by staff
+All the hotel keys ____ to the receptionist before we left yesterday.|were returned|had return|were return
+The final copy is ____ by two editors before publication.|checked|check|checking
+
+@b2-reported|B2|grammar|Reported Speech and Requests
+She said, “I am tired.” Use normal backshift: She said that she ____ tired.|was|were|has
+“I saw Rina.” Use past-perfect backshift: He said he ____ Rina.|had seen|had saw|has see
+“Please wait here.” At the same place: The guard asked us ____ here.|to wait|wait|waiting
+“Don't open the box.” She told them ____ the box.|not to open|to not opening|don't open
+“Where are my keys?” He asked where ____ keys were.|his|he|him
+“Do you work here?” She asked whether I ____ there.|worked|did I work|working
+“I'll call tomorrow.” He said that he ____ call the next day.|would|had|is
+“Can you help?” She asked ____ I could help.|whether|that|what
+“Who is coming?” They asked who ____ coming.|was|did|have
+“I have finished.” Use normal backshift: Maya told us she ____ finished.|had|does|is
+“Please send a copy.” The editor asked me ____ a copy.|to send|sending|have sent
+“I won't be late.” Use normal backshift: He said that he ____ be late.|wouldn't|hadn't|doesn't
+“Don't forget the key.” He reminded me ____ the key.|not to forget|not forgetting|don't forget
+“May I sit here?” She asked if she ____ sit there.|could|had|did
+“What time did they arrive?” Use backshift: He asked what time they ____ arrived.|had|did|will
+“I wasn't there yesterday.” She said she hadn't been there the ____ day.|previous|following|next
+“You should leave earlier.” She advised us ____ earlier.|to leave|leave|left
+“Turn down the music.” He told me ____ down the music.|to turn|turned|turning
+“How much does this cost?” Use backshift: She asked how much it ____.|cost|did cost|does it cost
+“Could you repeat that?” The listener asked me ____ it.|to repeat|repeated|repeating
+
+@b2-modals|B2|grammar|Modals of Deduction and Possibility
+The key doesn't fit and the number is different. This ____ be our room.|can't|must|should
+Her coat is still here. She ____ still be in the building, but I don't know.|might|must|will definitely
+You ran ten kilometres and then cycled home. You ____ be tired.|must|can't|mustn't
+I don't know why he is late. He ____ have missed his bus.|may|can't to|is
+The shop is locked and all the lights are off. It ____ be open now.|can't|must|will have
+The printer is working again. Someone must have ____ it.|repaired|repair|repairing
+We haven't found the answer yet. It ____ be in the last chapter.|might|must to|has
+The actor was filming abroad that day. He ____ have attended the local premiere.|can't|must|needn't
+Her bike is missing and the lock is cut. A thief may have ____ it.|taken|take|taking
+He has the exact same handwriting as the author. It ____ be his note; that seems almost certain.|must|can't|mustn't
+It is only a guess, but they ____ be waiting at the other entrance.|could|have to|are to
+The device is silent. Its battery could have ____ flat.|gone|go|going
+The bag is soaking wet. It must have ____ in the rain.|been|being|be
+The dated receipt says March, but we bought ours in April. This ____ be our receipt.|can't|must|will
+We can't find Nina's note. It ____ have fallen behind the desk.|might|would to|is
+The guide knows every detail of this building. She ____ have studied its history carefully.|must|can't|mustn't
+The window was locked from the inside all day. The cat can't have ____ through it.|come|coming|came
+A power cut may ____ caused yesterday's delay.|have|has|having
+His handwriting looks unfamiliar, so I can't be sure. This ____ be a note from a visitor.|could|has to|is to
+The photograph shows snow outside, and it was recorded in July in our hot coastal town. It ____ have been taken here that week.|can't|must|ought to
+
+@b2-connectors|B2|grammar|Linking Contrast, Cause and Result
+____ the heavy rain, the market stayed open.|Despite|Whereas|Although
+The hall was fully booked; ____, we moved the event online.|therefore|for instance|in comparison
+____ she was tired, she stayed to help with the cleanup.|Although|Despite|Due to
+We left early ____ we could catch the first train.|so that|despite|because of
+The road was closed ____ flooding.|because of|although|even though
+Tara cannot attend in person. ____, she can join by video.|However|Therefore|Similarly
+The two workshops share the same method. ____, they use different case studies.|Nevertheless|Consequently|Likewise
+We checked each figure twice ____ avoid mistakes.|in order to|despite|so that
+____ the package was small, it was surprisingly heavy.|Although|In spite of|Due to
+I didn't hear the announcement ____ the noise outside.|because of|because|whereas
+The samples were too small. ____, the results were treated as preliminary.|Consequently|For instance|By comparison
+Rina enjoys working early, ____ her colleague prefers the evening shift.|whereas|because of|despite
+The team saved a second copy ____ the first file was lost.|in case|although|in spite of
+The parcel arrived late ____ being sent by express post.|despite|though|because
+The heating stopped working. ____, the manager handed out blankets.|As a result|In contrast|Likewise
+Check the date before booking; ____, you might buy a ticket for the wrong day.|otherwise|for example|similarly
+The new method is slower. ____, it produces fewer errors.|On the other hand|In the same way|For instance
+The meeting ended on time ____ everyone kept their updates short.|because|due to|whereas
+You can return the book next week ____ nobody else has reserved it.|provided that|despite|whereas
+The starter files are small; the final video, ____, takes up nearly a gigabyte.|by contrast|as an example|therefore
+
+@b2-verb-patterns|B2|grammar|Gerunds, Infinitives and Verb Patterns
+She avoided ____ the topic during lunch.|discussing|to discuss|discuss
+They agreed ____ the deadline by two days.|to extend|extending|extend
+I remember ____ this photograph at the station years ago.|taking|take|took
+Please remember ____ the lights before leaving.|to turn off|turned off|turn off
+The coach made us ____ the exercise twice.|repeat|repeating|to repeated
+We look forward to ____ you in December.|seeing|see|saw
+He offered ____ the visitors around the building.|to show|showing|show
+The manager suggested ____ the meeting online.|holding|to hold|hold
+I'd rather ____ at home tonight.|stay|to stay|staying
+She couldn't afford ____ a new laptop that month.|to buy|buying|buy
+The instructor let the class ____ five minutes early.|leave|to leave|left
+Ari admitted ____ the wrong version of the report.|using|to use|use
+We hope ____ the results next week.|to receive|receiving|receive
+The assistant refused ____ the document without a signature.|to file|filing|file
+I miss ____ with my old neighbours.|chatting|to chat|chat
+They warned us against ____ the river during the flood.|crossing|cross|to cross
+Her parents encouraged her ____ for the scholarship.|to apply|applying|apply
+The team plans ____ the work before Friday.|to finish|finishing|finish
+Would you mind ____ the window?|closing|to close|close
+They succeeded in ____ the equipment on time.|repairing|repair|to repair
+
+@c1-inversion|C1|grammar|Inversion for Emphasis
+Rarely ____ such a detailed response from the supplier.|have we received|we have received|we received have
+Not until the final slide ____ the error.|did we notice|we noticed|we did noticed
+Never before ____ such an ambitious schedule.|had the team attempted|the team had attempted|had attempted the team
+Only after reading the letter ____ why she left.|did I understand|I understood|I did understood
+Under no circumstances ____ the document without permission.|should you copy|you should copy|you copy should
+Seldom ____ this library so crowded on a weekday.|is|does be|has stayed being
+No sooner had the meeting started ____ the connection failed.|than|when|as
+Hardly had we sat down ____ the fire alarm rang.|when|than|then
+Little ____ how quickly the plan would change.|did they realise|they realised|they did realised
+Not only ____ the plan, but she also prepared the budget.|did Rina write|Rina did write|wrote Rina did
+So convincing ____ that the committee requested a second demonstration.|was the argument|the argument was|did the argument
+Nowhere else ____ a better view of the valley than from this terrace.|will you find|you will find|you find will
+Only by practising regularly ____ these skills.|can you develop|you can develop|you develop can
+On no account ____ the password with another user.|may you share|you may share|you share may
+Had I known the answer, I ____ told you.|would have|would of|had been
+Should you need help, ____ the front desk.|contact|to contact|contacted
+Were the project to fail, the team ____ review its assumptions.|would|would have|had
+Only when a vacancy opens ____ review new applications.|will the office|the office will|the office to
+Neither ____ the delay nor did he offer an alternative.|did he explain|he explained|he did explained
+So little time ____ that we could only check the main figures.|was available|available was|did available
+
+@c1-clauses|C1|grammar|Participle Clauses and Concision
+____ the figures twice, we sent the report.|Having checked|Having check|To checking
+____ in haste, the notice contained several errors.|Written|Writing by committee|Wrote
+The participants ____ for the second trial received a separate schedule.|selected|who selecting|were selecting
+____ by the sudden noise, the dog ran outside.|Startled|Startling|Having startle
+____ the exit, I noticed that the door was open.|Approaching|Approached by|To approached
+____ an extension, the students submitted their work on Monday.|Having been granted|Having grant|Being grant
+____ from above, the lake looks like a crescent.|Seen|Seeing|Having see
+The files ____ on the desk need to be signed today.|lying|are lying|lie
+____ clear instructions, the volunteers began setting up the hall.|Given|Giving by the organiser|Had given
+____ the guests home, Maya locked the office.|Having driven|Have drove|Being driven
+The people ____ near the entrance heard the announcement first.|standing|stood by|were standing
+____ about the deadline, the team worked through lunch.|Concerned|Concerning about|Having concern
+____ the proposal, Tom forwarded it with two questions.|Having read|Having reading|Been read
+____ after use, the trays can be stored in the cupboard.|Washed and dried|Washing and drying them|Wash and dry
+____ in a dry place, the seeds should last until spring.|Stored|Storing|Has stored
+The applicant ____ the panel on Tuesday asked for written feedback.|meeting|meeting by|was meeting
+____ as a receptionist for five years, Leila knew how to help the visitors.|Having worked|Having been work|Worked by
+____ by the traffic, the courier called to say the delivery would be late.|Delayed|Delaying the traffic|Have delayed
+____ at the last minute, the change surprised the participants.|Announced|Announcing by organisers|Was announced
+The exhibition ____ next month will feature student photography.|opening|opens|will open
+
+@c1-clefts|C1|grammar|Cleft Sentences and Focus
+It was the train delay ____ made us miss the opening session.|that|what|whose
+____ the team needs now is a clear schedule.|What|That|Which
+It ____ the spare key that opened the cabinet.|was|were|had
+What surprised me ____ how quickly they responded.|was|were to|did
+It was in April ____ the policy took effect.|that|what|whose
+All I ____ was a chance to explain my idea.|wanted|wanting|was wanted
+The reason ____ I called was to confirm the address.|why|what|who
+What we did ____ review the original data.|was|were to|have
+It was Tola ____ first noticed the leak.|who|whose|what
+The place ____ we met was a café opposite the library.|where|when|who
+It was because of the storm ____ the match was postponed.|that|what|where
+____ changed my mind was the new evidence.|What|Whose|Who
+It ____ until noon that the office responded.|wasn't|hasn't|aren't
+The thing ____ matters most is accuracy.|that|what|whose
+____ the students asked for was more practice time.|What|How|Who
+It was after the second interview ____ the panel decided.|that|what|whose
+The person ____ we contacted was the safety officer.|whom|whose|which
+What I liked most about the trip ____ the quiet mornings.|was|did|had
+It was the spare battery ____ we forgot to pack.|that|what|whose
+All he ____ was ask for a clearer explanation.|did|doing|done
+
+@c1-counterfactual|C1|grammar|Past and Mixed Counterfactuals
+If we had brought a map, we ____ have got lost yesterday.|wouldn't|won't|didn't
+If she ____ earlier, she would have caught the last train.|had left|leaves|would leave
+If I hadn't lost my pass, I ____ be in the building right now.|would|will have|had
+If we'd known about the delay, we ____ have stayed at home.|could|can|did
+If our schedule ____ more flexible, we could have accepted last week's invitation.|were|will be|has been
+If he had checked the address, the parcel ____ have reached the correct office.|would|will|does
+I wish I ____ taken a photograph before clearing the whiteboard.|had|have|will have
+If they ____ used the reserved seats yesterday, we could have travelled together.|hadn't|don't|won't have
+Had the warning arrived sooner, the organisers ____ have cancelled the race.|might|may to|must to
+Supposing we ____ accepted that offer last year, where would we be living now?|had|will have|have to
+But for your help last night, I ____ have finished the report.|couldn't|can't|didn't
+If I were a fluent speaker, I ____ have interpreted at yesterday's meeting.|could|can|was
+She would be here now if the airline ____ cancelled her flight.|hadn't|doesn't|won't have
+I wish we ____ bought the larger printer; this one is too slow.|had|will have|having
+If the signal hadn't failed, the train ____ have reached the city on time.|would|will|did
+If the building had been better insulated, it ____ be warmer inside today.|would|will have|has
+Without the last-minute loan, the business ____ have closed last year.|would|will|does
+If I had checked the spelling, my name ____ be wrong on the badge now.|wouldn't|won't have|wasn't
+They could have met the deadline if they ____ divided the work differently.|had|have|will
+If we'd chosen the direct flight, we ____ be in Bangkok by now.|would|will have|had been

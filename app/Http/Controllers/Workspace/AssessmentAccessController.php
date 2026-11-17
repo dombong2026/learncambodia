@@ -18,7 +18,7 @@ final class AssessmentAccessController extends Controller
     {
         $kind = $request->routeIs('assessments.quizzes') ? 'quiz' : 'exam';
         $items = CourseExam::whereNull('course_id')->where('kind', $kind)->where('published', true)
-            ->with('type')->orderBy('title')->paginate(12);
+            ->with(['type', 'featuredMedia'])->orderBy('title')->paginate(12);
 
         return view('learning.standalone-assessments', compact('items', 'kind'));
     }
@@ -26,6 +26,7 @@ final class AssessmentAccessController extends Controller
     public function show(Request $request, CourseExam $exam, ?string $kind = null): View
     {
         abort_unless($exam->published && $exam->course_id === null && ($kind === null || $exam->kind === $kind), 404);
+        $exam->load('type', 'featuredMedia');
         $student = $request->user();
         $access = $history = null;
         if ($student?->role === 'student') {

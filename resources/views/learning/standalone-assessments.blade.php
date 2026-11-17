@@ -13,6 +13,7 @@
             @forelse($items as $item)
                 @php($quote = \App\Support\CoursePricing::quote($item->pricing))
                 <x-learning-card :href="$item->publicUrl()" :title="$item->title" icon="clipboard-check"
+                    :image="$item->featured_kind === 'image' && $item->featuredMedia ? route('editor-media.show', $item->featuredMedia) : null" :image-alt="$item->featured_alt ?? ''"
                     :eyebrow="$item->type?->name" :meta="$item->time_limit.' min · '.ucfirst($quote['model'])" :action="$kind === 'quiz' ? 'View quiz' : 'View exam'" />
             @empty
                 <p>There are no published {{ $kind === 'quiz' ? 'quizzes' : 'exams' }} yet.</p>

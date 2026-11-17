@@ -1,0 +1,129 @@
+@a1-reading|A1|reading|Reading Everyday Notices
+>Morning swimming starts at 8:30. The pool closes at noon on Tuesdays. Please bring a towel and a water bottle. The ticket desk takes cards, but it does not take cash. Children under eight must come with an adult.
+|When does morning swimming start?|At 8:30|At noon|At 8:00
+|On which day does the pool close at noon?|Tuesday|Monday|Friday
+|What should swimmers bring with a towel?|A water bottle|A swimming ticket from home|A bank card for the locker
+|How can someone pay at the ticket desk?|By card|With cash|By cheque
+|Who must come with an adult?|Children under eight|All first-time visitors|Anyone who comes at noon
+>Lunch is ready between 11:30 and 2:00. Today you can have chicken soup or a vegetable sandwich. The soup costs three dollars. The sandwich costs two dollars. Ask for a free glass of water at the counter.
+|When is the first time you can have lunch?|At 11:30|At 12:30|At 2:00
+|What is the sandwich made with?|Vegetables|Chicken|Fish
+|How much is the soup?|Three dollars|Two dollars|Five dollars
+|What can you get for free?|A glass of water|A sandwich|A small soup
+|Where do you ask for a drink?|At the counter|By the front door|At the ticket desk
+>The school library is on the second floor. Today the lift is not working. Please use the stairs next to Room 4. The library opens at nine. You can return books in the blue box outside the door.
+|Which floor is the library on?|The second floor|The first floor|The fourth floor
+|What is not working today?|The lift|The library door|The light in Room 4
+|Where are the stairs?|Next to Room 4|Inside the library|Behind the blue box
+|What time does the library open?|At nine|At four|At two
+|Why is there a blue box outside the door?|For people to return books|For people to put their bags in|For people to buy new books
+>The bus to the market leaves from Stop B. The next bus is at 10:15. It goes to the train station first and the market second. Buy your ticket from the driver. The trip to the market takes twenty minutes.
+|Which stop should a market passenger use?|Stop B|Stop A|Stop C
+|When does the next bus leave?|At 10:15|At 10:20|At 10:50
+|Where does the bus go before the market?|The train station|The school|The ticket office
+|Who sells the bus tickets?|The driver|A worker at the market|A worker at the station
+|How long is the trip to the market?|Twenty minutes|Ten minutes|Fifteen minutes
+
+@a2-reading|A2|reading|Reading Short Messages and Plans
+>Hi Mina, our art class has moved from Wednesday to Thursday this week. The usual room is being painted, so meet me at the main gate at 3:45. We'll walk to Room 7 together. Bring pencils and a notebook. The teacher has enough paper for everyone. Dara
+|Why is Dara writing?|To explain a change to the class arrangements|To cancel the art class for the week|To ask Mina to buy paint
+|When is this week's class?|Thursday|Wednesday|Friday
+|Where should Mina meet Dara first?|At the main gate|Inside Room 7|In the usual art room
+|Why won't they use their usual room?|It is being painted|There aren't enough chairs|Another class starts there at 3:45
+|Which thing does Mina get from the teacher?|Paper|Pencils|A notebook
+>On Saturday, meet the cycling group at 7:30 outside the post office. The ride takes about two hours, including a short stop for drinks. If it rains heavily, we will take the same route on Sunday instead. Check the group message before you leave home. You can borrow a helmet if you ask by Friday evening.
+|What is the planned meeting place?|Outside the post office|At the drinks shop|Outside the sports centre
+|Does the two-hour estimate include the drinks stop?|Yes, the short stop is included|No, the group stops only after two hours|No, the ride lasts just thirty minutes
+|What will happen if it rains heavily on Saturday?|The ride will move to Sunday|The group will choose a shorter route|The group will ride at a later time on Saturday
+|What should riders do before leaving home?|Read the group message|Buy their own helmet|Phone the post office
+|When must someone ask to borrow a helmet?|By Friday evening|At the Saturday meeting|After the ride begins
+>The community centre has a new book exchange. Bring one book in good condition and take one home. You can leave a book without taking another, but you cannot take a book without bringing one. The exchange is open on weekday afternoons. Ask at the reception desk for the key to the book cupboard.
+|What can someone do with a book they no longer need?|Leave it even if they take no book home|Trade it for two books|Sell it at the desk
+|What is required for taking a book home?|Bring a book in good condition|Pay the receptionist|Sign up the week before
+|When could someone visit the exchange?|Monday afternoon|Sunday morning|Saturday afternoon
+|What is kept at reception?|The cupboard key|The books themselves|A payment machine
+|Why would a damaged book be unsuitable?|Books brought in should be in good condition|The cupboard cannot hold large books|Only brand-new books are accepted
+>Thank you for booking a room at Hill House. Your room will be ready from 2 p.m. If you arrive earlier, you may leave your bags in reception. Breakfast is included and is served from 7 to 9. If you need to leave before 7, tell us the night before and we can prepare a breakfast bag.
+|What time can the guest first enter the room?|2 p.m.|7 a.m.|9 a.m.
+|What can an early guest do?|Leave bags at reception|Have breakfast in the room|Use a different room for free
+|What does the booking already pay for?|Breakfast|Lunch|A late checkout
+|What should a guest leaving at 6:30 a.m. do to get breakfast?|Tell staff the previous night|Wait until the dining room opens|Place a room key on the table
+|Why might the staff prepare a breakfast bag?|The guest will leave before breakfast service starts|The dining room has closed permanently|The guest asked to check in at 2 p.m.
+
+@b1-reading|B1|reading|Understanding Reports and Local Stories
+>The town opened a Saturday repair cafe after a survey found that many people threw away lamps for small faults. Volunteers now teach visitors simple repairs. The first event drew forty people, so the organisers moved the second event to a bigger room. They still ask people to reserve a time, because some repairs need a volunteer with particular experience.
+|What prompted the town to open the cafe?|People were discarding items with fixable faults|There were too few cafes open on Saturday|Volunteers needed somewhere to sell lamps
+|How do volunteers help visitors?|They teach practical repair skills|They replace everything visitors bring|They collect money for a waste service
+|Why was the second event held elsewhere?|The first event attracted many visitors|There were no tables at the first event|The survey was held in the larger room
+|Why does the group still use reservations?|Some jobs need a volunteer with the right skills|The room has become smaller|Visitors pay less if they reserve
+|Which headline best fits the report?|New cafe helps residents fix items they would throw away|Council plans to stop collecting broken lamps|Survey shows people prefer buying new lamps
+>Last year a local walking group published a map of routes along the river. One route was removed this spring after a landowner closed a gate. Rather than arguing about access, the group asked residents to suggest alternatives. A retired bus driver recommended a path behind the old station, which is flatter and also passes a public water tap. The group is checking signs before it updates the map.
+|Why did the group remove a route?|A gate on that route was closed|The map was too expensive to print|A water tap stopped working
+|What did the group do next?|It invited local people to suggest other paths|It bought the closed land|It stopped making maps
+|Which feature could make the proposed route easier?|It is flatter|It passes through the closed gate|It uses a bus for part of the journey
+|What remains to be done before the map is updated?|Check the signs|Interview the landowner again|Repair the water tap
+|Which conclusion is supported?|Local knowledge helped find an alternative route|The walking group avoided input from residents|The first map omitted all riverside paths
+>Before a small shop introduced online orders, it tested the idea with twelve regular customers. Most placed orders successfully, but several expected to collect them the same day. Staff needed one working day to prepare the orders. The shop added a clear collection date to each confirmation and ran the trial again before offering the service to everyone.
+|Who used the shop's first online trial?|Twelve regular customers|All customers on the website|Only shop staff
+|What problem did the trial reveal?|Some customers expected faster collection|Most payments did not go through|The shop had too many staff at collection time
+|What did the shop change?|It put a clear collection date in each confirmation|It started delivering every order immediately|It limited every order to one item
+|When did the shop open the service to everyone?|After running the trial again|Before testing with customers|As soon as the first order arrived
+|What does the example show about testing a service?|It can uncover a difference in expectations|It makes a preparation schedule unnecessary|It works only when no regular customers are involved
+>In May, a group of students began recording temperatures under trees and in open school yards. They expected shaded places to be cooler. This was usually true at midday, but on several cloudy mornings the difference was small. Their teacher suggested keeping both types of result in the report and clearly stating when each measurement was taken.
+|What did students compare?|Temperatures in shaded and open spots|The growth of two types of trees|The amount of rain in different months
+|When did the results usually match their expectation?|At midday|On every cloudy morning|Only after sunset
+|What happened on some cloudy mornings?|The two temperatures were similar|The thermometer stopped working|All open yards were much cooler
+|What advice did the teacher give?|Keep both patterns and report the measurement times|Leave out results that differ from the prediction|Use only one measurement from each yard
+|Which claim does the evidence support?|Shade often lowered temperature in this study, depending on conditions|Shade always lowered temperature by the same amount|Open school yards were never warmer than shaded places
+
+@b2-reading|B2|reading|Comparing Views in Short Articles
+>For six weeks, a town centre limited deliveries to before 10 a.m. Shop owners initially worried that the rule would raise costs, yet a survey found that most had adapted by sharing deliveries with neighbours. Residents welcomed quieter afternoons. The study did not ask delivery drivers, however, and the trial coincided with a seasonal drop in traffic. The council plans to collect a second set of evidence before considering a permanent rule.
+|What partly explains how shop owners adapted?|Some coordinated deliveries with nearby businesses|Residents offered to carry the goods|The delivery restriction was removed early
+|What did residents value?|Quieter afternoons|A later opening time for shops|New roads for delivery drivers
+|Which group was missing from the study?|Delivery drivers|Shop owners|Local residents
+|Why does the fall in seasonal traffic matter?|It may also have contributed to quieter afternoons|It proves deliveries were the only source of traffic|It made it impossible to count the deliveries at all
+|What best describes the council's position?|The early results are promising enough to investigate further|The evidence already justifies making the rule permanent|The trial should be abandoned because no business adapted
+>One museum curator argues that long object labels make visitors spend more time reading than looking. Her colleague agrees that dense text beside every object is tiring but says detailed information matters for visitors who arrive without a guide. They test a design with concise labels beside objects and fuller explanations available nearby in print. Follow-up interviews suggest visitors understand the basic story quickly, although many overlook the printed copies.
+|What is the first curator concerned about?|Labels can draw attention away from the objects|Visitors rely too much on tour guides|There are too few labels to read
+|On which point do the curators agree?|Dense labels can make a visit tiring|Detailed information should be removed everywhere|Printed copies always attract more readers
+|How did the trial balance their views?|It combined brief labels with optional detailed reading|It assigned each visitor a personal guide|It replaced object labels with a single long booklet
+|What weakness remained after the redesign?|Some visitors missed the longer explanations|Most visitors could not understand the main story|Visitors had nowhere to look at the objects
+|What next change fits the findings most closely?|Make the fuller print explanations easier to find|Return to dense labels beside each display|Remove the short labels and all print materials
+>In an opinion column, a technician argues that cities should repair public benches in workshops near where they are used. He claims nearby repair shops could save travel time and notice repeated failures. A procurement officer replies that one regional contract might cost less per repair. Both acknowledge that neither estimate includes the cost of benches being out of service while they wait for a contractor.
+|What is one advantage the technician expects?|Local repair shops might detect recurring problems|Local shops would no longer need transport|All benches would last for exactly the same period
+|Why might the officer prefer one regional contract?|It might reduce the cost of each repair|It makes the benches easier to reach on foot|It guarantees that repairs take less time
+|What have both estimates left out?|The cost of leaving benches unusable while they wait|The materials needed to build new benches|The number of suitable workshops nearby
+|When might the regional contract cost more overall despite cheaper repairs?|When longer waits create larger losses than the repair savings|When local workshops record recurring issues|When both providers finish at the same time with equal quality
+|How does the passage treat the dispute?|It gives reasons for both approaches and identifies a shared gap|It argues that one view has already been proved wrong|It reports a completed trial of both approaches
+>A school let teachers choose between one long training day and four shorter sessions. The longer day was easier to arrange and introduced the complete method in context. Teachers in the shorter sessions tried one technique each week and brought back examples. All participants were assigned by preference, so the researchers could not disentangle the format from differences in the groups.
+|What practical advantage did the longer day have?|It was easier to arrange|It had more chances to practise between meetings|It required no planning
+|How did teachers use the time between shorter sessions?|They tried techniques and collected examples|They wrote the whole training method from scratch|They were expected to avoid changing their classes
+|Why is the comparison hard to interpret?|Teachers selected the format they preferred|The event organisers gave everyone the same format|Researchers asked no teachers about their experience
+|What would better isolate the effect of the format?|Assigning comparable participants to the formats at random|Allowing the same type of teachers to choose again|Removing practice from both formats without comparing outcomes
+|Which conclusion is warranted by the text?|Each format had a distinct feature that may suit different needs|Shorter sessions were proved superior for every teacher|Teacher preference had no possible effect on the comparison
+
+@c1-reading|C1|reading|Reading Arguments and Implications
+>A committee proposes renewing a research grant only if a team meets its initial prediction. The chair argues that this would reward discipline rather than enthusiasm. An evaluator counters that a transparent departure from a prediction can reveal more than a result obtained by quietly redefining success. She supports milestones for publishing methods and reporting unexpected outcomes. Her position depends on distinguishing responsible revision from retrospective justification, a distinction the committee's draft currently leaves unexplained.
+|What is the evaluator's central objection?|The policy may reward the appearance of accuracy over informative research|Teams should never evaluate their predictions|The chair values enthusiasm more than evidence
+|Which practice fits the evaluator's proposed milestones?|Publishing the original method and documenting an unexpected result|Changing the success criterion without documenting it|Reporting only results that match the prediction
+|What distinction must the alternative policy handle?|A documented, reasoned change versus an excuse constructed after results|Enthusiasm for a topic versus willingness to work in a committee|Publication in print versus publication online
+|What does the passage suggest about meeting a prediction?|It may have little value if success was redefined privately|It always requires someone to alter the method|It provides stronger evidence regardless of the process
+|Why does the author mention what the draft leaves unexplained?|To show that the committee needs criteria for judging different kinds of revision|To prove the evaluator opposes all grant renewal|To imply that the committee has already accepted the alternative
+>A public agency proposes publishing a monthly ranking of neighbourhood service centres. Its director expects competition to improve response times. A former centre manager notes that staff could move complex requests to an unranked queue, improving the score without improving service. She favours sharing response distributions and auditing where cases go. Neither analyst disputes that waiting time matters, but they differ in how much a ranking can capture and in how it might change behaviour.
+|What is the former manager's strongest concern?|Centres could improve the ranking by shifting difficult cases elsewhere|A ranking would discourage every centre from resolving requests|Data on waiting times cannot be gathered
+|Why would an audit of case routing help?|It could expose changes to which requests enter the measured queue|It would make a distribution unnecessary in every case|It could guarantee low waiting times at all centres
+|What is shared by the two positions?|Waiting time is a meaningful aspect of service|Competition always improves outcomes|Only complex cases should count in the rankings
+|Which observation would most support the former manager's warning?|Reported waits drop while complex requests increase in the unranked queue|Reported waits and the volume of unranked work both steadily decline|Fewer requests arrive and the centres' scores stay the same
+|Which issue does the disagreement illustrate?|A public measure can influence the activity it measures|A simpler display necessarily yields a more accurate measure|Targets become irrelevant whenever data is public
+>Researchers discussing a night-bus trial identify a surprise. The busiest routes attracted regular passengers, but several lower-use routes coincided with more night workers renewing contracts. The sample was too small to tell whether the buses caused that change. The authors urge the transport board to measure workforce outcomes in a longer trial. They argue that a route with modest ridership could still have a substantial benefit if its trips solve a binding constraint for particular riders.
+|Why do the authors mention contract renewals?|They suggest a benefit that passenger counts might miss|They already establish that routes with fewer riders cause contract renewals|They explain why the busiest routes lost most passengers
+|What is a binding constraint in this argument?|A barrier that prevents a worker from taking or keeping a job|A minimum legal size for a route's passenger sample|A booking condition that makes fares refundable
+|What do the authors recommend measuring next?|Employment-related outcomes alongside use of the buses|Only route mileage and fuel consumption|Visitor opinion of daytime services
+|What limits the claim about cause and effect?|The small sample makes the association inconclusive|The trial ran during the day rather than at night|Only the busiest routes carried any night workers
+|What assumption makes the main recommendation relevant?|The board considers access to work among the aims of transport|The board must use passenger volume as its sole criterion|All low-use routes serve the same group of workers
+>An essay praises a translation for preserving the source text's abrupt pauses. A reviewer grants that the pauses can make readers feel the narrator's uncertainty, but points out that the translator has standardised every regional expression. The essayist responds that an English equivalent could attach a false location to the narrator. The reviewer proposes retaining a few distinctive patterns that require readers to notice difference without claiming to reproduce a particular region.
+|What achievement does the reviewer acknowledge?|The pauses can convey the narrator's uncertainty|The translation keeps all regional expressions intact|The translation locates the narrator in a precise region
+|What does the essayist identify as a risk?|A familiar substitute might imply the wrong geographical setting|Unusual rhythms would ensure readers stop too quickly|Keeping the pauses would reveal the translator's identity
+|What does the reviewer propose as a compromise?|Retain a few distinctive patterns without suggesting a specific region|Assign the narrator a new region readers know well|Replace the pauses with explanations of local speech
+|Which idea links the two sides of the disagreement?|Translation choices affect what readers infer about the speaker|Readers should never be asked to notice linguistic difference|Writing can preserve regional variety only by naming its location
+|Which evaluation fits the passage most closely?|The translation preserves one layer of style while smoothing another|The translation suppresses every unusual feature of the original|The translation adds regional language wherever the source is neutral
