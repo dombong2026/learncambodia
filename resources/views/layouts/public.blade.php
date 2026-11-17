@@ -31,6 +31,7 @@
     @include('partials.brand-head')
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
+    @stack('public-styles')
 </head>
 @php
     $typography = \App\Support\Appearance::approved('typography');

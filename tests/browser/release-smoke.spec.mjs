@@ -22,7 +22,7 @@ const pages = [
   ['course-watch', '/course-watch'],
   ['upload-studio', '/upload-studio'],
 ];
-const screenshots = new Set(['home', 'categories', 'library', 'about', 'exam-catalog', 'information-faq']);
+const screenshots = new Set(['home', 'categories', 'library', 'about', 'exam-catalog', 'information-faq', 'course-watch']);
 
 test.describe('Actual rendered public pages on isolated QA server', () => {
   for (const [name, path] of pages) {
@@ -32,6 +32,10 @@ test.describe('Actual rendered public pages on isolated QA server', () => {
       const response = await page.goto(path, { waitUntil: 'domcontentloaded' });
       expect(response?.status(), name + ': HTTP status').toBe(200);
       await expect(page.locator('#main-content')).toBeVisible();
+      if (name === 'course-watch') {
+        await expect(page.locator('[data-course-watch] h1')).toBeVisible();
+        await expect(page.locator('[data-course-watch]').getByRole('link', { name: 'Browse courses', exact: true })).toBeVisible();
+      }
       await expect(page.locator('a[aria-label="Learn Cambodia home"]')).toBeVisible();
       const width = await page.evaluate(() => ({
         scroll: document.documentElement.scrollWidth,

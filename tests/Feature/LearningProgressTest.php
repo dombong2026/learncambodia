@@ -71,6 +71,43 @@ class LearningProgressTest extends TestCase
         $this->get('/account/progress')->assertSee('0 of 2 lessons');
     }
 
+    public function test_course_watch_resumes_the_next_unfinished_lesson_and_shows_progress(): void
+    {
+        ['student' => $student, 'enrollment' => $enrollment, 'first' => $first, 'second' => $second] =
+            $this->enrolledCourse();
+
+        $watch = route('learning.watch', ['lang' => 'en']);
+        $firstUrl = route('account.lessons.watch', [$enrollment, $first]);
+        $secondUrl = route('account.lessons.watch', [$enrollment, $second]);
+
+        $this->get($watch)->assertOk()->assertSee('data-course-watch', false)
+            ->assertDontSee($firstUrl, false)->assertDontSee($first->content);
+        $this->actingAs($student)->get($watch)->assertOk()->assertSee($firstUrl, false)->assertSee('Start course');
+
+        $this->from($firstUrl)->post(route('account.progress.update', [$enrollment, $first]), [
+            'complete' => '1',
+        ])->assertRedirect($firstUrl);
+
+        $this->get($watch)->assertOk()->assertSee($secondUrl, false)
+            ->assertSee('Resume lesson')->assertSee('1 of 2 lessons completed');
+
+        $this->get($secondUrl)->assertOk()->assertSee('data-course-lesson', false)
+            ->assertSee('Lesson 2 of 2')->assertSee('1 of 2 lessons completed')
+            ->assertSee('aria-current="page"', false)->assertSee($second->content);
+        $this->from($secondUrl)->post(route('account.notes.store', [$enrollment, $second]), [
+            'title' => 'My study note', 'body' => 'Review the example tomorrow.', 'is_pinned' => '0',
+        ])->assertRedirect($secondUrl);
+        $this->get($secondUrl)->assertOk()->assertSee('Review the example tomorrow.');
+
+        $this->from($secondUrl)->post(route('account.progress.update', [$enrollment, $second]), [
+            'complete' => '1',
+        ])->assertRedirect($secondUrl);
+        $this->get($watch)->assertOk()->assertSee('Course complete')
+            ->assertSee(route('account.enrollments.show', $enrollment), false);
+
+        $this->actingAs(User::factory()->create())->get($secondUrl)->assertNotFound();
+    }
+
     public function test_other_students_cannot_change_progress_or_read_private_enrollments(): void
     {
         ['enrollment' => $enrollment, 'first' => $first] = $this->enrolledCourse();
