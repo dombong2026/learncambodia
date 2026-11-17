@@ -9,6 +9,30 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
   });
 
+  test('System Settings opens every administrator page below Analytics', async ({ page }) => {
+    const sidebarToggle = page.getByRole('button', { name: 'Toggle sidebar' });
+    const nav = page.getByRole('navigation', { name: 'Account navigation' });
+    const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
+
+    for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
+      if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
+        await sidebarToggle.click();
+      }
+      await expect(settings.locator('xpath=preceding-sibling::details[1]/summary')).toHaveText('Analytics');
+      if (await settings.getAttribute('open') === null) {
+        await settings.locator('summary').click();
+      }
+      await settings.getByRole('link', { name: label, exact: true }).click();
+      await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
+      const main = page.locator('[data-workspace-content]');
+      await expect(main.locator('.system-settings-row').first()).toBeVisible();
+    }
+
+    const cssUrl = await page.locator('link[href$="/css/system-settings.css"]').getAttribute('href');
+    const stylesheet = await page.request.get(cssUrl);
+    expect(stylesheet.ok()).toBeTruthy();
+  });
+
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
     await page.goto('/dashboard/course-builder/create?lang=en');
     const builder = page.locator('[data-course-builder]');
@@ -192,7 +216,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await page.locator('[data-seo-title]').fill('Reviewable SEO Title');
     await expect(page.locator('[data-seo-preview-title]')).toHaveText('Reviewable SEO Title');
     await page.locator('button[type="submit"][form="editorial-form"]').click();
-    await expect(page).toHaveURL(/\/dashboard\/editorial\/posts\/\d+\/edit/);
+    await expect(page).toHaveURL(/\/dashboard\/editorial\/posts\/\d{6}-[a-z0-9-]+\/edit(?:\?|$)/);
     await expect(page.locator('[data-editor-visual] h2')).toContainText('Structured learning');
     await page.getByRole('link', { name: 'Preview saved document' }).click();
     await expect(page.getByRole('heading', { name: /Preview:/ })).toBeVisible();
@@ -224,7 +248,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(sidebar.getByText('browser-cover.png')).toBeVisible();
     await sidebar.getByLabel('Image description').fill('Sample learning graphic');
     await publication.getByRole('button', { name: 'Publish', exact: true }).click();
-    await expect(page).toHaveURL(/dashboard\/editorial\/pages\/\d+\/edit/);
+    await expect(page).toHaveURL(/\/dashboard\/editorial\/pages\/\d{6}-[a-z0-9-]+\/edit(?:\?|$)/);
     await publication.getByRole('link', { name: 'View published' }).click();
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     const featured = page.getByRole('img', { name: 'Sample learning graphic' });
