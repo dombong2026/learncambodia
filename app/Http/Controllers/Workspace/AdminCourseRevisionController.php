@@ -27,7 +27,7 @@ class AdminCourseRevisionController extends Controller
 
             $number = $source->revision_number + 1;
             $slug = $source->slug.'-v'.$number;
-            abort_if(mb_strlen($slug) > 255 || Course::where('slug', $slug)->exists(), 409,
+            abort_if(mb_strlen($slug) > 255 || Course::withTrashed()->where('slug', $slug)->exists(), 409,
                 'The proposed revision URL is already in use.');
 
             $new = Course::create([

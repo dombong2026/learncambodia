@@ -6,6 +6,7 @@ use App\Models\Concerns\HasPublicId;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
-    use HasPublicId;
+    use HasPublicId, SoftDeletes;
 
     public const FEATURED_FIELDS = ['featured_kind', 'featured_media_id', 'featured_value', 'featured_alt'];
 
@@ -27,7 +28,7 @@ class Course extends Model
 
     protected function casts(): array
     {
-        return ['pricing' => 'array', 'published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+        return ['pricing' => 'array', 'published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime', 'deactivated_at' => 'datetime'];
     }
 
     public function creator(): BelongsTo
@@ -97,7 +98,16 @@ class Course extends Model
 
     public function scopeDiscoverable(Builder $query): Builder
     {
-        return $query->published()->whereNull('superseded_at');
+        return $query->published()->whereNull('superseded_at')->whereNull('deactivated_at');
+    }
+
+    public function managerStatus(): string
+    {
+        return match (true) {
+            $this->superseded_at !== null => 'Superseded',
+            $this->deactivated_at !== null => 'Inactive',
+            default => str($this->status)->replace('_', ' ')->title()->toString(),
+        };
     }
 
     public function sourceCourse(): BelongsTo

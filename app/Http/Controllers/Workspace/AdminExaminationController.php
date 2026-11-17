@@ -13,6 +13,7 @@ use App\Support\EditorHtml;
 use App\Support\AssessmentQuestions;
 use App\Support\CoursePricing;
 use App\Support\FeaturedMedia;
+use App\Support\LearningTable;
 use App\Support\WorkspaceNotifications;
 use App\Models\AssessmentAccess;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,12 @@ final class AdminExaminationController extends Controller
 
         return view('workspace.admin.examination.index', [
             'kind' => $kind,
-            'exams' => CourseExam::where('kind', $kind)->with('course', 'type')->latest('id')->paginate(15),
+            'exams' => LearningTable::paginate(
+                LearningTable::assessments(
+                    CourseExam::where('kind', $kind)->with('course.category', 'type'), LearningTable::search($request)
+                )->latest('id'),
+                $request
+            ),
         ]);
     }
 
@@ -132,7 +138,11 @@ final class AdminExaminationController extends Controller
                     throw ValidationException::withMessages(["questions.$index.media_id" => 'Select an audio recording for listening.']);
                 }
             }
-            $record->fill($data)->save();
+            $record->fill($data);
+            if ($record->published) {
+                $record->deactivated_at = null;
+            }
+            $record->save();
             $record->media()->syncWithoutDetaching($ids);
 
             return $record;

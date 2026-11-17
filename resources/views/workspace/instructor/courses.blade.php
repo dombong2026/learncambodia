@@ -1,21 +1,20 @@
 @extends('layouts.workspace')
 @section('title', 'My Assigned Courses')
 @section('heading', 'My Assigned Courses')
-@section('description', 'Only courses explicitly assigned to you by a school administrator are accessible in this teaching workspace.')
 @section('content')
-<div class="mb-5 flex flex-wrap gap-3"><a href="{{ route('instructor.insights.index') }}" class="rounded-xl border border-blue-600 px-5 py-3 text-sm font-bold text-blue-700 dark:text-blue-300">Teaching insights</a><a href="{{ route('instructor.feedback-templates.index') }}" class="rounded-xl border border-blue-600 px-5 py-3 text-sm font-bold text-blue-700 dark:text-blue-300">Feedback templates</a></div>
-<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-@forelse($assignments as $assignment)
-    <article class="flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Approved teaching assignment</p>
-        <h2 class="mt-3 text-xl font-extrabold">{{ $assignment->course?->title }}</h2>
-        <p class="mt-2 text-xs text-slate-500">Edition {{ $assignment->course?->revision_number }} · Assigned {{ $assignment->assigned_at?->format('Y-m-d') }}</p>
-        <p class="mt-4 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $assignment->course?->summary }}</p>
-        <div class="mt-6 flex justify-end"><a href="{{ route('instructor.courses.show',$assignment->course) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white">Open teaching workspace</a></div>
-    </article>
-@empty
-    <p class="col-span-full rounded-3xl border border-slate-200 bg-white p-8 text-sm leading-7 text-slate-500 dark:border-slate-800 dark:bg-slate-900">No active teaching assignments are available yet. An administrator must assign you to an academically approved course.</p>
-@endforelse
+<div class="mb-5 flex flex-wrap gap-2">
+    <a href="{{ route('instructor.insights.index') }}" class="learning-manager-control">Teaching insights</a>
+    <a href="{{ route('instructor.feedback-templates.index') }}" class="learning-manager-control">Feedback templates</a>
 </div>
-<div class="mt-7">{{ $assignments->links() }}</div>
+<x-learning-manager-table :items="$courses" name="Course" empty="No active teaching assignments are available yet.">
+    @foreach($courses as $course)
+        @php($teaching = route('instructor.courses.show', $course))
+        <x-learning-manager-row :number="$courses->firstItem() + $loop->index" :record="$course"
+            :category="$course->category?->name" :level="$course->cefr_level ?? 'All'" :measure="$course->modules_count"
+            :status="$course->managerStatus()" :href="$teaching">
+            <a href="{{ $teaching }}">Open teaching workspace</a>
+            @if(!$course->deactivated_at && !$course->superseded_at)<a href="{{ route('courses.show', $course) }}">Preview</a>@endif
+        </x-learning-manager-row>
+    @endforeach
+</x-learning-manager-table>
 @endsection

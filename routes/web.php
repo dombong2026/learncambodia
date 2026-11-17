@@ -27,6 +27,7 @@ use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
+use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
@@ -170,6 +171,11 @@ Route::middleware('auth')->group(function (): void {
             Route::post("/$path", [AdminExaminationController::class, 'save'])->name("$name.store");
             Route::get("/$path/{exam}/edit", [AdminExaminationController::class, 'edit'])->name("$name.edit");
             Route::patch("/$path/{exam}", [AdminExaminationController::class, 'save'])->name("$name.update");
+            Route::patch("/$path/{exam}/status", [AdminLearningRecordController::class, 'assessmentStatus'])->name("$name.status");
+            Route::delete("/$path/{exam}", [AdminLearningRecordController::class, 'deleteAssessment'])->name("$name.destroy");
+            Route::get("/$path/{exam}/preview", [AdminLearningRecordController::class, 'assessmentPreview'])->name("$name.preview");
+            Route::get("/$path/{exam}/assign", [AdminLearningRecordController::class, 'assessmentUsers'])->name("$name.users");
+            Route::post("/$path/{exam}/assign", [AdminLearningRecordController::class, 'assignAssessment'])->name("$name.assign");
         }
         Route::patch('/assessment-access/{access}', [AssessmentAccessController::class, 'review'])->name('assessment-access.review');
         Route::patch('/assessment-attempts/{attempt}/grade', [AdminExaminationController::class, 'grade'])->name('assessment-attempts.grade');
@@ -207,6 +213,11 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:30,1')->name('contact-inquiries.update');
         Route::delete('/contact-inquiries/{inquiry}', [AdminContactInquiryController::class, 'destroy'])->name('contact-inquiries.destroy');
         Route::get('/courses', [AdminCourseController::class, 'index'])->name('courses.index');
+        Route::patch('/courses/{course}/status', [AdminLearningRecordController::class, 'courseStatus'])->name('courses.status');
+        Route::delete('/courses/{course}', [AdminLearningRecordController::class, 'deleteCourse'])->name('courses.destroy');
+        Route::get('/courses/{course}/preview', [AdminLearningRecordController::class, 'coursePreview'])->name('courses.preview');
+        Route::get('/courses/{course}/assign', [AdminLearningRecordController::class, 'courseUsers'])->name('courses.users');
+        Route::post('/courses/{course}/assign', [AdminLearningRecordController::class, 'assignCourse'])->name('courses.assign');
         Route::get('/instructors', [AdminInstructorController::class, 'index'])->name('instructors.index');
         Route::get('/public-profiles', [AdminPublicProfileController::class, 'index'])->name('public-profiles.index');
         Route::post('/public-profiles/{profile}/review', [AdminPublicProfileController::class, 'review'])
@@ -323,6 +334,7 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:20,1')->name('saved-courses.destroy');
         Route::post('/courses/{course}/enroll', [StudentEnrollmentController::class, 'store'])->middleware('throttle:10,1')->name('enrollments.store');
         Route::delete('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+        Route::get('/assessments', [AssessmentAccessController::class, 'assigned'])->name('assessments.index');
         Route::post('/assessments/{exam}/start', [StudentExaminationController::class, 'startStandalone'])
             ->middleware('throttle:12,1,assessment-start')->name('assessment-attempts.start');
         Route::post('/assessments/{exam}/access', [AssessmentAccessController::class, 'requestAccess'])

@@ -666,6 +666,7 @@ return json_decode(<<<'JSON'
       "items": [
         {"key": "standalone-exams", "label": "Standalone Exams", "route": "assessments.exams"},
         {"key": "standalone-quizzes", "label": "Quick Quizzes", "route": "assessments.quizzes"},
+        {"key": "assigned", "label": "Assigned Assessments", "route": "account.assessments.index"},
 
         {
           "key": "placement",

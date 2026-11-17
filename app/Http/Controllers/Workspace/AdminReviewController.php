@@ -71,7 +71,7 @@ class AdminReviewController extends Controller
                 $source = Course::whereKey($locked->source_course_id)
                     ->lockForUpdate()->firstOrFail();
                 abort_unless($source->status === 'published'
-                    && $source->superseded_at === null, 409,
+                    && $source->superseded_at === null && $source->deactivated_at === null, 409,
                     'The source edition is no longer current.');
             }
 

@@ -13,6 +13,7 @@ use App\Support\CourseReadiness;
 use App\Support\CoursePricing;
 use App\Support\EditorHtml;
 use App\Support\FeaturedMedia;
+use App\Support\LearningTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,12 +26,15 @@ class AdminCourseController extends Controller
 {
     private const STEPS = ['details', 'media', 'curriculum', 'quizzes', 'review'];
 
-    public function index(): View
+    public function index(Request $request): View
     {
         return view('workspace.admin.courses', [
             'role' => 'admin',
-            'courses' => Course::with('category')->withCount('modules')
-                ->orderByDesc('id')->paginate(10),
+            'courses' => LearningTable::paginate(
+                LearningTable::courses(Course::with('category')->withCount('modules'), LearningTable::search($request))
+                    ->latest('id'),
+                $request
+            ),
         ]);
     }
 
@@ -97,7 +101,7 @@ class AdminCourseController extends Controller
         ]);
 
         $preferred = ($data['slug'] ?? null) ?: (Str::slug($data['title']) ?: 'course');
-        $data['slug'] = PublicId::availableSlug(Course::query()->when($course, fn ($query) => $query->whereKeyNot($course->id)), $preferred, 180);
+        $data['slug'] = PublicId::availableSlug(Course::withTrashed()->when($course, fn ($query) => $query->whereKeyNot($course->id)), $preferred, 180);
         validator($data, [
             'slug' => ['required', 'string', 'max:180',
                 Rule::unique('courses', 'slug')->ignore($course?->id)],

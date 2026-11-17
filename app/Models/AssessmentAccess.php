@@ -9,11 +9,11 @@ final class AssessmentAccess extends Model
 {
     protected $table = 'assessment_access';
 
-    protected $fillable = ['course_exam_id', 'student_id', 'quote', 'status', 'reference', 'reviewed_by'];
+    protected $fillable = ['course_exam_id', 'student_id', 'quote', 'status', 'reference', 'reviewed_by', 'assigned_at'];
 
     protected function casts(): array
     {
-        return ['quote' => 'array'];
+        return ['quote' => 'array', 'assigned_at' => 'datetime'];
     }
 
     public function matches(array $quote): bool

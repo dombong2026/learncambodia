@@ -42,14 +42,21 @@ class AdminInstructorController extends Controller
             'course_id' => ['required','integer','exists:courses,id'],
         ]);
 
-        DB::transaction(function () use ($request, $data): void {
-            $teacher = User::query()->whereKey($data['instructor_id'])
+        $this->assignToCourse((int) $data['course_id'], (int) $data['instructor_id'], $request->user());
+
+        return back()->with('status', 'Instructor assignment approved and recorded.');
+    }
+
+    public function assignToCourse(int $courseId, int $instructorId, User $actor, bool $currentOnly = false): void
+    {
+        DB::transaction(function () use ($courseId, $instructorId, $actor, $currentOnly): void {
+            $teacher = User::query()->whereKey($instructorId)
                 ->lockForUpdate()->firstOrFail();
             abort_unless($teacher->role === User::ROLE_INSTRUCTOR, 422,
                 'Select an operator-approved instructor account.');
-            $course = Course::query()->whereKey($data['course_id'])
+            $course = Course::query()->whereKey($courseId)
                 ->lockForUpdate()->firstOrFail();
-            abort_unless(Course::published()->whereKey($course->id)->exists(), 422,
+            abort_unless(($currentOnly ? Course::discoverable() : Course::published())->whereKey($course->id)->exists(), 422,
                 'Instructors can only be assigned to academically approved courses.');
 
             $record = CourseInstructorAssignment::query()
@@ -64,7 +71,7 @@ class AdminInstructorController extends Controller
             if ($record) {
                 $record->update([
                     'status' => 'active',
-                    'assigned_by' => $request->user()->id,
+                    'assigned_by' => $actor->id,
                     'assigned_at' => now(),
                     'revoked_at' => null,
                 ]);
@@ -72,17 +79,15 @@ class AdminInstructorController extends Controller
                 $record = CourseInstructorAssignment::create([
                     'course_id' => $course->id,
                     'instructor_id' => $teacher->id,
-                    'assigned_by' => $request->user()->id,
+                    'assigned_by' => $actor->id,
                     'status' => 'active',
                     'assigned_at' => now(),
                 ]);
             }
 
             ApprovalAudit::record('instructor_assignment', $record->id,
-                $request->user(), 'assigned', $from, 'active');
+                $actor, 'assigned', $from, 'active');
         });
-
-        return back()->with('status', 'Instructor assignment approved and recorded.');
     }
 
     public function revoke(Request $request, CourseInstructorAssignment $assignment): RedirectResponse

@@ -2,7 +2,7 @@
 @if($publishedExams->isNotEmpty() || $certificates->isNotEmpty())
     <section class="workspace-panel mt-6 space-y-4 p-5">
         @if($publishedExams->isNotEmpty())
-            <h2 class="text-lg font-extrabold">Course Exams</h2>
+            <h2 id="course-exams" class="text-lg font-extrabold">Course Exams</h2>
             @foreach($publishedExams as $exam)
                 @php($history = $attempts->get($exam->id, collect()))
                 @php($active = $history->first(fn ($entry) => !$entry->submitted_at && $entry->expires_at->isFuture()))

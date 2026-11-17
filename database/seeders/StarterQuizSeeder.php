@@ -32,7 +32,7 @@ final class StarterQuizSeeder
                 $created = 0;
 
                 foreach ($bank as $key => $entry) {
-                    if (CourseExam::where('starter_key', $key)->exists()) {
+                    if (CourseExam::withTrashed()->where('starter_key', $key)->exists()) {
                         continue;
                     }
 

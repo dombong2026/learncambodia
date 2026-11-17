@@ -9,6 +9,7 @@ use App\Models\CourseBookmark;
 use App\Models\User;
 use App\Support\ApprovalAudit;
 use App\Support\CoursePricing;
+use App\Support\LearningTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,16 +21,21 @@ class StudentEnrollmentController extends Controller
     {
         return view('workspace.student.enrollments', [
             'role' => 'student',
-            'enrollments' => CourseEnrollment::query()
-                ->where('student_id', $request->user()->id)
-                ->with('course.category')->orderByDesc('id')->paginate(10),
+            'enrollments' => LearningTable::paginate(
+                CourseEnrollment::where('student_id', $request->user()->id)
+                    ->whereHas('course', fn ($query) => LearningTable::courses($query, LearningTable::search($request)))
+                    ->with(['course' => fn ($query) => $query->with('category')->withCount('modules')])->latest('id'),
+                $request
+            ),
         ]);
     }
 
     public function catalog(Request $request): View
     {
-        $courses = Course::discoverable()->with('category')
-            ->orderBy('title')->paginate(10);
+        $query = Course::discoverable()->with('category')->withCount('modules')->orderBy('title')->orderBy('id');
+        $courses = LearningTable::paginate(LearningTable::courses($query, LearningTable::search($request)), $request);
+        $enrollments = CourseEnrollment::where('student_id', $request->user()->id)
+            ->whereIn('course_id', $courses->pluck('id'))->get()->keyBy('course_id');
 
         $savedCourseIds = CourseBookmark::query()
             ->where('student_id', $request->user()->id)
@@ -40,6 +46,7 @@ class StudentEnrollmentController extends Controller
             'role' => 'student',
             'courses' => $courses,
             'savedCourseIds' => $savedCourseIds,
+            'enrollments' => $enrollments,
         ]);
     }
 
@@ -72,7 +79,7 @@ class StudentEnrollmentController extends Controller
                 ->lockForUpdate()->firstOrFail();
             abort_unless($student->role === User::ROLE_STUDENT, 403);
 
-            $availableCourse = Course::discoverable()->whereKey($course->id)->firstOrFail();
+            $availableCourse = Course::discoverable()->whereKey($course->id)->lockForUpdate()->firstOrFail();
             $quote = CoursePricing::quote($availableCourse->pricing);
             if ($quote['model'] !== 'free') {
                 $submitted = $request->validate(['pricing_quote' => ['required', 'string']]);

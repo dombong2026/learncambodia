@@ -4,6 +4,7 @@ import './media-library';
 import './featured-video';
 import './course-builder';
 import './examination';
+import './learning-manager';
 
 const shell = document.querySelector<HTMLElement>('[data-workspace]');
 const sidebar = document.querySelector<HTMLElement>('[data-sidebar]');

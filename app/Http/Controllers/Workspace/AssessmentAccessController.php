@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\AssessmentAccess;
 use App\Models\CourseExam;
+use App\Models\CourseEnrollment;
 use App\Support\CoursePricing;
+use App\Support\LearningTable;
 use App\Support\WorkspaceNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,22 @@ final class AssessmentAccessController extends Controller
             ->with(['type', 'featuredMedia'])->orderBy('title')->paginate(12);
 
         return view('learning.standalone-assessments', compact('items', 'kind'));
+    }
+
+    public function assigned(Request $request): View
+    {
+        $student = $request->user();
+        $assignments = AssessmentAccess::where('student_id', $student->id)->whereNotNull('assigned_at')->where('status', 'approved');
+        $query = CourseExam::whereIn('id', $assignments->select('course_exam_id'))
+            ->with('type', 'course.category')->orderBy('title')->orderBy('id');
+        $exams = LearningTable::paginate(LearningTable::assessments($query, LearningTable::search($request)), $request);
+        $enrollments = CourseEnrollment::where('student_id', $student->id)->where('status', 'approved')
+            ->whereIn('course_id', $exams->pluck('course_id')->filter())
+            ->whereHas('course', fn ($course) => $course->published())->get()->keyBy('course_id');
+
+        return view('workspace.student.assigned-assessments', [
+            'role' => 'student', 'exams' => $exams, 'enrollments' => $enrollments,
+        ]);
     }
 
     public function show(Request $request, CourseExam $exam, ?string $kind = null): View

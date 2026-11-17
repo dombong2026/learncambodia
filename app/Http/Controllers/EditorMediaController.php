@@ -123,8 +123,8 @@ final class EditorMediaController extends Controller
             $path = DB::transaction(function () use ($media): string {
                 $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
                 $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
-                    || Course::where('featured_media_id', $current->id)->exists()
-                    || CourseExam::where('featured_media_id', $current->id)->exists()
+                    || Course::withTrashed()->where('featured_media_id', $current->id)->exists()
+                    || CourseExam::withTrashed()->where('featured_media_id', $current->id)->exists()
                     || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
                 if ($inUse) {
                     throw ValidationException::withMessages([
