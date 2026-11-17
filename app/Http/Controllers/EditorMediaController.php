@@ -4,21 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\ContentEntry;
 use App\Models\Course;
+use App\Models\CourseExam;
 use App\Models\User;
 use App\Models\EditorMedia;
+use App\Models\ExamAttempt;
+use App\Support\AssessmentQuestions;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
+use App\Support\ManagedFiles;
 use Illuminate\Database\ForeignKeyConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 final class EditorMediaController extends Controller
 {
@@ -77,8 +79,8 @@ final class EditorMediaController extends Controller
         ]);
 
         $replacement = $request->file('replacement');
-        $disk = Storage::disk('local');
-        $path = $replacement?->store('editor-media', 'local');
+        $disk = ManagedFiles::disk();
+        $path = $replacement ? ManagedFiles::store($replacement, 'editor-media') : null;
         abort_if($replacement && !$path, 500, 'The replacement file could not be saved.');
 
         try {
@@ -120,11 +122,12 @@ final class EditorMediaController extends Controller
             $path = DB::transaction(function () use ($media): string {
                 $current = EditorMedia::query()->lockForUpdate()->findOrFail($media->id);
                 $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
-                    || Course::where('featured_media_id', $current->id)->exists()
+                    || Course::withTrashed()->where('featured_media_id', $current->id)->exists()
+                    || CourseExam::withTrashed()->where('featured_media_id', $current->id)->exists()
                     || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
                 if ($inUse) {
                     throw ValidationException::withMessages([
-                        'media' => 'This file is used by a course, editorial entry or policy revision and cannot be deleted.',
+                        'media' => 'This file is used by a course, quiz, editorial entry or policy revision and cannot be deleted.',
                     ]);
                 }
 
@@ -136,7 +139,7 @@ final class EditorMediaController extends Controller
             return back()->withErrors(['media' => 'This file is now in use and cannot be deleted.']);
         }
 
-        Storage::disk('local')->delete($path);
+        ManagedFiles::disk()->delete($path);
 
         return back()->with('status', 'Media deleted.');
     }
@@ -148,30 +151,31 @@ final class EditorMediaController extends Controller
 
     private function storeUpload(Request $request, bool $library): JsonResponse
     {
-        $lesson = !$library && $request->input('context') === 'lesson';
-        $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav'];
+        $lesson = !$library && in_array($request->input('context'), ['lesson', 'exam'], true);
+        $mimes = $library ? FeaturedMedia::MIMES : [...FeaturedMedia::MIMES, 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/mp4', 'audio/webm'];
         if ($lesson) {
             $mimes = [...$mimes, ...self::DOCUMENT_MIMES];
         }
         $data = $request->validate([
-            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course', 'lesson'])],
+            'context' => ['required', Rule::in($library ? ['library'] : ['editorial', 'ticket', 'course', 'lesson', 'exam'])],
             'file' => ['required', 'file', ($library || $lesson) ? 'max:51200' : 'max:12288',
                 'mimetypes:'.implode(',', $mimes)],
         ]);
-        abort_if($data['context'] !== 'ticket' && $request->user()->role !== 'admin', 403);
+        abort_if($data['context'] !== 'ticket' && !$request->user()->isAdministrator(), 403);
 
         // Cap unclaimed private media rather than enabling unlimited anonymous staging.
         if (!$library) {
             $unclaimed = EditorMedia::query()->where('context', $data['context'])->where('uploaded_by', $request->user()->id)
                 ->whereNull('content_entry_id')->whereNull('support_ticket_id')
                 ->when($data['context'] === 'course', fn ($media) => $media->doesntHave('descriptionCourses'))
-                ->when($lesson, fn ($media) => $media->doesntHave('lessons'))
+                ->when($data['context'] === 'lesson', fn ($media) => $media->doesntHave('lessons'))
+                ->when($data['context'] === 'exam', fn ($media) => $media->doesntHave('exams'))
                 ->where('created_at', '>=', now()->subDay())->count();
             abort_if($unclaimed >= 20, 429, 'Save your current draft before uploading more files.');
         }
 
         $file = $request->file('file');
-        $path = $file->store('editor-media', 'local');
+        $path = ManagedFiles::store($file, 'editor-media');
         abort_unless($path, 500, 'Media upload was not saved.');
 
         try {
@@ -184,7 +188,7 @@ final class EditorMediaController extends Controller
                 'size' => $file->getSize(),
             ]);
         } catch (\Throwable $e) {
-            Storage::disk('local')->delete($path);
+            ManagedFiles::disk()->delete($path);
             throw $e;
         }
 
@@ -201,7 +205,7 @@ final class EditorMediaController extends Controller
         ];
     }
 
-    public function show(Request $request, EditorMedia $media): BinaryFileResponse|StreamedResponse
+    public function show(Request $request, EditorMedia $media): Response
     {
         $viewer = $request->user();
         if ($media->context === 'library') {
@@ -210,32 +214,44 @@ final class EditorMediaController extends Controller
                 ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
             $published = $published || Course::published()->where('featured_media_id', $media->id)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
-            abort_unless($published || ($viewer && $viewer->role === 'admin'), 403);
+            $published = $published || CourseExam::query()->where('featured_media_id', $media->id)
+                ->where('kind', 'quiz')->whereNull('course_id')->where('published', true)
+                ->whereIn('featured_kind', ['image', 'video'])->exists();
+            abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'lesson') {
             $enrolled = $viewer?->role === User::ROLE_STUDENT
                 && $media->lessons()->whereHas('module.course', fn ($courses) => $courses->published()
                     ->whereHas('enrollments', fn ($enrollments) => $enrollments
                         ->where('student_id', $viewer->id)->where('status', 'approved')))->exists();
-            abort_unless($viewer?->role === User::ROLE_ADMIN || $enrolled, 403);
+            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
+        } elseif ($media->context === 'exam') {
+            $enrolled = $viewer?->role === User::ROLE_STUDENT
+                && ExamAttempt::whereIn('course_exam_id', $media->exams()->select('course_exams.id'))
+                    ->whereNull('submitted_at')->where('expires_at', '>', now())
+                    ->where(fn ($query) => $query
+                        ->where(fn ($standalone) => $standalone->whereNull('course_enrollment_id')->where('student_id', $viewer->id))
+                        ->orWhereHas('enrollment', fn ($enrollment) => $enrollment->where('student_id', $viewer->id)
+                            ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published())))
+                    ->cursor()->contains(fn ($attempt) => in_array($media->id,
+                        AssessmentQuestions::mediaIds($attempt->snapshot), true));
+            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
-            abort_unless($published || $viewer?->role === 'admin', 403);
+            abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&
                 ContentEntry::query()->whereKey($media->content_entry_id)
                     ->where('status', 'published')->whereIn('type', [...ContentEntry::DIRECT_PUBLICATION_TYPES, 'faq'])
                     ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
-            abort_unless($approved || ($viewer && $viewer->role === 'admin'), 403);
+            abort_unless($approved || $viewer?->isAdministrator(), 403);
         } else {
             $ticket = $media->support_ticket_id
                 ? \App\Models\SupportTicket::find($media->support_ticket_id) : null;
             abort_unless($viewer && (
-                ($ticket && ($viewer->role === 'admin' || $ticket->user_id === $viewer->id)) ||
+                ($ticket && ($viewer->isAdministrator() || $ticket->user_id === $viewer->id)) ||
                 (!$ticket && $media->support_ticket_id === null && $media->uploaded_by === $viewer->id)
             ), 403);
         }
-        $disk = Storage::disk('local');
-        abort_unless($disk->exists($media->path), 404);
         $headers = [
             'Content-Type' => $media->mime,
             'Content-Disposition' => 'inline',
@@ -244,14 +260,10 @@ final class EditorMediaController extends Controller
             'Content-Security-Policy' => "default-src 'none'; sandbox",
         ];
 
-        if ($media->context === 'lesson' && in_array($media->mime, self::DOCUMENT_MIMES, true)) {
-            return $disk->download($media->path, $media->original_name, array_diff_key($headers, ['Content-Disposition' => true]));
-        }
+        $assessmentResource = in_array($media->context, ['lesson', 'exam'], true);
+        $downloadName = $assessmentResource && in_array($media->mime, self::DOCUMENT_MIMES, true) ? $media->original_name : null;
+        $seekable = str_starts_with($media->mime, 'video/') || ($assessmentResource && str_starts_with($media->mime, 'audio/'));
 
-        if (str_starts_with($media->mime, 'video/') || ($media->context === 'lesson' && str_starts_with($media->mime, 'audio/'))) {
-            return new BinaryFileResponse($disk->path($media->path), 200, $headers, false);
-        }
-
-        return $disk->response($media->path, null, $headers);
+        return ManagedFiles::response($request, $media->path, $headers, $seekable, $downloadName);
     }
 }

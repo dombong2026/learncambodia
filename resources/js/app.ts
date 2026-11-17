@@ -1,5 +1,9 @@
 import './featured-video';
+import './lesson-media-player';
 import './policy-links';
+import './detail-title';
+import './detail-share';
+import './category-navigation';
 
 function initMenus(): void {
     const menus = Array.from(document.querySelectorAll<HTMLElement>('[data-dropdown]'));
@@ -28,10 +32,12 @@ function initMenus(): void {
         for (const menu of menus) if (!menu.contains(event.target)) close(menu);
     });
     document.addEventListener('keydown', (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            menus.forEach(close);
-            (document.activeElement as HTMLElement | null)?.blur();
-        }
+        if (event.key !== 'Escape') return;
+        const open = menus.find(menu => menu.querySelector('[data-dropdown-trigger][aria-expanded="true"]'));
+        if (!open) return;
+        menus.forEach(close);
+        open.querySelector<HTMLElement>('[data-dropdown-trigger]')?.focus();
+        event.preventDefault();
     });
 }
 
@@ -169,3 +175,5 @@ function initThemeToggle(): void {
 }
 
 initThemeToggle();
+
+document.querySelector('[data-print-certificate]')?.addEventListener('click', () => window.print());

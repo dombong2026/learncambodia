@@ -15,5 +15,9 @@
     @error('terms')<p role="alert" class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
     <button type="submit" class="auth-primary w-full rounded-xl bg-[#0c2d5b] px-5 py-3 text-sm font-black text-white transition hover:bg-[#19467c] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dbad57]">{{ __('auth.create_account') }}</button>
 </form>
+@error('google')<p role="alert" class="mt-3 text-sm">{{ $message }}</p>@enderror
+@if(\App\Support\GoogleSignIn::enabled())
+    <a href="{{ route('social.google.start', $authReturnTo ? ['next' => $authReturnTo] : []) }}" class="mt-3 block rounded-xl border border-slate-300 px-5 py-3 text-center text-sm font-semibold dark:border-slate-600">Continue with Google</a>
+@endif
 <p class="mt-4 text-center text-xs leading-6 text-slate-600 dark:text-slate-300">{{ __('auth.have_account') }} <a href="{{ route('login', $authReturnTo ? ['next' => $authReturnTo] : []) }}" class="font-extrabold text-[#0c4a89] transition hover:underline dark:text-[#f2c778]">{{ __('auth.sign_in') }}</a></p>
 @endsection

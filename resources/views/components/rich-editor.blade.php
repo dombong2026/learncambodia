@@ -3,8 +3,8 @@
     'name' => 'body', 'htmlName' => 'body_html', 'labelledBy' => null, 'required' => true,
 ])
 @php
-    $courseEditor = in_array($context, ['course', 'lesson'], true);
-    $lessonEditor = $context === 'lesson';
+    $courseEditor = in_array($context, ['course', 'lesson', 'exam'], true);
+    $lessonEditor = in_array($context, ['lesson', 'exam'], true);
 @endphp
 <section data-rich-editor data-editor-context="{{ $context }}" data-editor-upload-url="{{ route('editor-media.store') }}"
     @class(['rich-editor min-w-0 rounded-xl border border-slate-300 dark:border-slate-700', 'course-description-editor' => $courseEditor])

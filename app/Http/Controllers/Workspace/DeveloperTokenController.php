@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\WorkspaceNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -37,6 +38,8 @@ class DeveloperTokenController extends Controller
             now()->addDays((int) $validated['days'])
         );
 
+        WorkspaceNotifications::send($user->id, 'Developer access token created', 'developer.tokens.index');
+
         // This plaintext value is shown on the following response only.
         // Sanctum persists only the SHA-256 hash, never the plaintext token.
         return redirect()->route('developer.tokens.index')
@@ -48,6 +51,7 @@ class DeveloperTokenController extends Controller
     {
         $record = $request->user()->tokens()->whereKey($token)->firstOrFail();
         $record->delete();
+        WorkspaceNotifications::send($request->user()->id, 'Developer access token revoked', 'developer.tokens.index');
 
         return back()->with('status', 'Token revoked.');
     }

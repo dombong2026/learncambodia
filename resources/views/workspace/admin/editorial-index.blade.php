@@ -22,7 +22,7 @@
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
         @forelse($entries as $entry)
             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <td class="px-5 py-4 font-bold">{{ $entry->title }}</td>
+                <td class="px-5 py-4 font-bold">{{ $entry->title }}<span class="block text-xs font-normal tabular-nums text-slate-500 dark:text-slate-400">#{{ $entry->public_id }}</span></td>
                 <td class="px-5 py-4 font-mono text-xs text-slate-500">{{ $entry->slug }}</td>
                 <td class="px-5 py-4"><span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">{{ ucfirst($entry->status) }}</span></td>
                 <td class="px-5 py-4 text-xs text-slate-500">{{ $entry->updated_at?->format('Y-m-d') }}</td>

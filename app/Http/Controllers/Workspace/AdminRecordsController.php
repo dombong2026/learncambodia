@@ -18,21 +18,27 @@ class AdminRecordsController extends Controller
 
         abort_if(mb_strlen($query) > 80, 422);
 
-        $users = User::query()->select(['id', 'name', 'email', 'role', 'created_at'])
+        $users = User::query()->select(['id', 'public_id', 'name', 'email', 'role', 'created_at'])
             ->when($query, fn ($builder) => $builder->where(function ($inner) use ($query) {
                 $inner->where('name', 'like', '%'.$query.'%')
-                    ->orWhere('email', 'like', '%'.$query.'%');
+                    ->orWhere('email', 'like', '%'.$query.'%')
+                    ->when(preg_match('/^[1-9][0-9]{7}$/D', $query), fn ($match) => $match->orWhere('public_id', $query));
             }))
             ->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('workspace.admin.records', [
             'title' => 'User Manager',
             'description' => 'Read-only account directory. Role changes require an independently approved operator workflow.',
-            'columns' => ['Name', 'Email', 'Role', 'Joined'],
+            'columns' => ['User ID', 'Name', 'Email', 'Role', 'Joined'],
             'records' => $users->through(fn (User $user) => [
-                $user->name, $user->email, ucfirst($user->role), $user->created_at?->format('Y-m-d'),
+                ['value' => $user->public_id, 'url' => route('admin.users.show', $user)], $user->name, $user->email, ucfirst($user->role), $user->created_at?->format('Y-m-d'),
             ]),
         ]);
+    }
+
+    public function user(User $user): View
+    {
+        return view('workspace.admin.user-record', ['account' => $user]);
     }
 
     public function courses(): View
@@ -43,9 +49,9 @@ class AdminRecordsController extends Controller
         return view('workspace.admin.records', [
             'title' => 'Course Manager',
             'description' => 'Review draft and published course records; publication remains subject to academic approval.',
-            'columns' => ['Course', 'Category', 'Level', 'Status'],
+            'columns' => ['Course ID', 'Course', 'Category', 'Level', 'Status'],
             'records' => $courses->through(fn (Course $course) => [
-                $course->title, $course->category?->name, $course->cefr_level ?: 'Any', ucfirst($course->status),
+                ['value' => $course->public_id, 'url' => route('admin.course-builder.edit', $course)], $course->title, $course->category?->name, $course->cefr_level ?: 'Any', ucfirst($course->status),
             ]),
         ]);
     }

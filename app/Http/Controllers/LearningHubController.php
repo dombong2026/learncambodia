@@ -61,12 +61,13 @@ final class LearningHubController extends Controller
     public function exams(Request $request): View
     {
         $search=$this->search($request);
-        $courses=Course::discoverable()->whereHas('quizzes',fn($q)=>$q->has('questions'))
+        $courses=Course::discoverable()->where(fn ($query) => $query->whereHas('quizzes', fn ($quizzes) => $quizzes->has('questions'))
+            ->orWhereHas('exams', fn ($exams) => $exams->where('published', true)))
             ->when($search!=='',fn($q)=>$q->where(fn($s)=>$s
                 ->where('title','like','%'.$search.'%')
                 ->orWhereHas('category',fn($c)=>$c->where('name','like','%'.$search.'%'))))
             ->with(['category', 'featuredMedia'])->withCount(['quizzes as practice_quizzes_count'=>
-                fn($q)=>$q->has('questions')])
+                fn($q)=>$q->has('questions'), 'exams as course_exams_count' => fn ($exams) => $exams->where('published', true)])
             ->orderBy('title')->paginate(9)->withQueryString();
         return view('learning.exams',compact('search','courses'));
     }
@@ -77,14 +78,15 @@ final class LearningHubController extends Controller
         $course->load('category')->loadCount('lessons');
         $quizzes=$course->quizzes()->has('questions')->withCount('questions')
             ->orderBy('position')->get();
-        abort_if($quizzes->isEmpty(),404);
+        $exams = $course->exams()->where('published', true)->with('type')->get(['id', 'course_id', 'exam_type_id', 'title', 'time_limit']);
+        abort_if($quizzes->isEmpty() && $exams->isEmpty(), 404);
         $student=$this->learner($request);
         $enrollment=$student ? $course->enrollments()->where('student_id',$student->id)
             ->where('status','approved')->first() : null;
         $related=Course::discoverable()->where('category_id',$course->category_id)
             ->whereKeyNot($course->id)->with(['category', 'featuredMedia'])->withCount('lessons')
             ->limit(4)->get();
-        return view('learning.exam',compact('course','quizzes','enrollment','related'));
+        return view('learning.exam',compact('course','quizzes','enrollment','related','exams'));
     }
 
     public function recommendations(Request $request): View
@@ -151,6 +153,7 @@ final class LearningHubController extends Controller
     {
         $course=LearningAccess::course($request->user(),$enrollment);
         LearningAccess::lesson($course,$lesson);
+        if ($request->isMethod('GET')) $enrollment->markStarted();
         $course->load('modules.lessons','quizzes');
         $completedIds=$enrollment->lessonProgress()->whereNotNull('completed_at')
             ->pluck('lesson_id')->all();

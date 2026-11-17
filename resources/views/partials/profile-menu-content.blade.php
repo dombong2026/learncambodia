@@ -1,9 +1,10 @@
 {{-- Shared public and workspace account menu, backed by real role-protected routes. --}}
 @auth
     @php
-        $profileRole = $profileRole ?? auth()->user()->role;
+        $workspaceRole = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role;
+        $profileRole = $profileRole ?? $workspaceRole;
         $allowedRoles = ['admin', 'instructor', 'student', 'developer'];
-        $roleIsKnown = in_array($profileRole, $allowedRoles, true) && $profileRole === auth()->user()->role;
+        $roleIsKnown = in_array($profileRole, $allowedRoles, true) && $profileRole === $workspaceRole;
         $navGroups = $roleIsKnown ? \App\Support\WorkspaceMenu::groups($profileRole) : [];
     @endphp
     <div data-profile-divider class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">

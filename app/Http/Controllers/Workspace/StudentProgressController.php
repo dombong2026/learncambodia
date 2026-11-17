@@ -16,14 +16,18 @@ class StudentProgressController extends Controller
 {
     public function index(Request $request): View
     {
+        $filter = $request->validate(['enrollment' => ['nullable', 'integer', 'min:1']]);
+        $enrollmentId = $filter['enrollment'] ?? null;
+
         $enrollments = CourseEnrollment::query()
             ->where('student_id', $request->user()->id)
             ->where('status', 'approved')
+            ->when($enrollmentId, fn ($query) => $query->whereKey($enrollmentId))
             ->whereHas('course', fn ($query) => $query->published())
             ->with(['course' => fn ($query) => $query->withCount('lessons')])
             ->withCount(['lessonProgress as completed_lessons_count' =>
                 fn ($query) => $query->whereNotNull('completed_at')])
-            ->orderByDesc('updated_at')->paginate(10);
+            ->orderByDesc('updated_at')->paginate(10)->withQueryString();
 
         return view('workspace.student.progress', [
             'role' => 'student', 'enrollments' => $enrollments,

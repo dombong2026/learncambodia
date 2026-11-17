@@ -1,5 +1,7 @@
 // Compact, dependency-free rich editor. Only the server-side allowlist decides
 // what is persisted/rendered; the client also sanitizes HTML before DOM insertion.
+import { enhanceLessonMedia, removeLessonVideoFileCaptions } from './lesson-media-player';
+
 const allowed = new Set([
     'p','div','br','strong','b','em','i','u','s','strike','h1','h2','h3','h4','h5','h6',
     'blockquote','pre','code','ul','ol','li','hr','a','img','figure','figcaption',
@@ -51,6 +53,7 @@ function safeCss(input: string, tag: string, node: Element): string {
 function safeMarkup(markup: string, lesson = false): string {
     const parsed = document.createElement('template');
     parsed.innerHTML = markup;
+    if (lesson) removeLessonVideoFileCaptions(parsed.content);
     const out = document.createElement('div');
 
     const copy = (node: Node): Node | null => {
@@ -59,6 +62,16 @@ function safeMarkup(markup: string, lesson = false): string {
         const element = node as Element;
         const tag = element.tagName.toLowerCase();
         if (discard.has(tag)) return null;
+        if (tag === 'lesson-media-player') {
+            const fragment = document.createDocumentFragment();
+            // The player UI lives in shadow DOM. Serialize only the actual media.
+            for (const media of Array.from(element.children)) {
+                if (!media.matches('audio, video')) continue;
+                const next = copy(media);
+                if (next) fragment.append(next);
+            }
+            return fragment;
+        }
         const el = document.createElement(allowed.has(tag) ? tag : 'span');
         const style = safeCss(element.getAttribute('style') ?? '', tag, element);
         if (style) el.setAttribute('style', style);
@@ -132,7 +145,7 @@ function initializeEditor(root: HTMLElement): void {
     if (!form || !visual || !source || !plain || !html || !enhanced) return;
 
     const locked = Boolean(root.closest('fieldset')?.disabled);
-    const lesson = root.dataset.editorContext === 'lesson';
+    const lesson = ['lesson', 'exam'].includes(root.dataset.editorContext ?? '');
     const course = lesson || root.dataset.editorContext === 'course';
     const clean = (markup: string): string => safeMarkup(markup, lesson);
     const htmlLimit = lesson ? 200000 : 120000;
@@ -146,6 +159,7 @@ function initializeEditor(root: HTMLElement): void {
     let mode: 'text' | 'html' = 'text';
     let selection: Range | null = null;
     visual.innerHTML = initial;
+    if (lesson) enhanceLessonMedia(visual);
     html.disabled = false;
     enhanced.hidden = false;
     plain.hidden = true;
@@ -180,10 +194,7 @@ function initializeEditor(root: HTMLElement): void {
         const meaningful = text || /<(?:img|audio|video|hr)\b| data-youtube=/.test(cleaned);
         const unchanged = course && cleaned === initial;
         html.value = unchanged ? startingHtml : (course && !meaningful ? '' : cleaned);
-        if (mode === 'html') {
-            // Keep raw input out of the live DOM until it has passed client sanitization.
-            if (visual.innerHTML !== cleaned) visual.innerHTML = cleaned;
-        }
+        if (!lesson && mode === 'html' && visual.innerHTML !== cleaned) visual.innerHTML = cleaned;
         plain.value = unchanged ? startingText : text;
         const words = plain.value ? plain.value.split(/\s+/u).length : 0;
         if (count) count.textContent = String(words) + ' words · ' + String(plain.value.length) + ' characters';
@@ -195,11 +206,13 @@ function initializeEditor(root: HTMLElement): void {
         sync();
         if (next === 'html') {
             source.value = clean(visual.innerHTML);
+            if (lesson) visual.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => media.pause());
             visual.hidden = true;
             source.hidden = false;
             source.focus();
         } else {
             visual.innerHTML = clean(source.value);
+            if (lesson) enhanceLessonMedia(visual);
             source.hidden = true;
             visual.hidden = false;
             if (!locked) visual.focus();
@@ -274,6 +287,7 @@ function initializeEditor(root: HTMLElement): void {
         updateSelectionTools();
     });
     visual.addEventListener('input', () => {
+        if (lesson) enhanceLessonMedia(visual);
         remember();
         if (selectedMedia && !visual.contains(selectedMedia)) selectedMedia = null;
         if (clickedBlock && !visual.contains(clickedBlock)) clickedBlock = null;
@@ -598,6 +612,8 @@ function initializeEditor(root: HTMLElement): void {
         if (!previewDialog || !previewContent) return;
         previewContent.innerHTML = clean(html.value);
         if (lesson) {
+            visual.querySelectorAll<HTMLMediaElement>('video, audio').forEach(media => media.pause());
+            enhanceLessonMedia(previewContent);
             previewContent.querySelectorAll<HTMLElement>('figure[data-youtube]').forEach(figure => {
                 const frame = document.createElement('iframe');
                 frame.src = 'https://www.youtube-nocookie.com/embed/' + figure.dataset.youtube;
@@ -667,7 +683,8 @@ function initializeEditor(root: HTMLElement): void {
             let markup = '';
             if (result.mime.startsWith('image/')) markup = '<figure><img src="' + href + '" alt="' + name + '"><figcaption>' + name + '</figcaption></figure><p></p>';
             else if (result.mime.startsWith('audio/')) markup = '<figure><audio src="' + href + '" controls preload="none"></audio><figcaption>' + name + '</figcaption></figure><p></p>';
-            else if (result.mime.startsWith('video/')) markup = '<figure><video src="' + href + '" controls preload="none"></video><figcaption>' + name + '</figcaption></figure><p></p>';
+            else if (result.mime.startsWith('video/')) markup = '<figure><video src="' + href + '" controls preload="none"></video>' +
+                (lesson ? '' : '<figcaption>' + name + '</figcaption>') + '</figure><p></p>';
             else if (lesson) markup = '<p><a data-resource="file" href="' + href + '">' + name + '</a></p>';
             if (insertion && visual.contains(insertion.startContainer)) selection = insertion;
             if (lesson) {

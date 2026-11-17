@@ -15,7 +15,7 @@
     </form>
     <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @forelse($articles as $article)
-            <x-learning-card :href="route('articles.show',$article->slug)" :title="$article->title" :description="$article->summary" icon="book-open" eyebrow="Read online" action="Start reading"/>
+            <x-learning-card :href="route('articles.show',$article->getRouteKey())" :title="$article->title" :description="$article->summary" icon="book-open" eyebrow="Read online" action="Start reading"/>
         @empty
             <p class="col-span-full rounded-3xl border border-dashed border-slate-300 p-10 text-sm text-slate-500 dark:border-slate-700">No approved reading materials match your search.</p>
         @endforelse

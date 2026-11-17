@@ -13,9 +13,9 @@
             <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span>
             <div class="premium-card-content flex flex-col justify-center p-7 sm:p-10 lg:p-12">
                 <span class="text-xs font-black uppercase tracking-widest text-[#b27b24]">Published article</span>
-                <h3 class="mt-5 text-2xl font-black leading-tight text-[#0d335d] dark:text-white sm:text-3xl"><a href="{{ route('articles.show',$featured->slug) }}" class="rounded hover:underline focus-visible:outline-2 focus-visible:outline-blue-600">{{ $featured->title }}</a></h3>
+                <h3 class="mt-5 text-2xl font-black leading-tight text-[#0d335d] dark:text-white sm:text-3xl"><a href="{{ route('articles.show',$featured->getRouteKey()) }}" class="rounded hover:underline focus-visible:outline-2 focus-visible:outline-blue-600">{{ $featured->title }}</a></h3>
                 <p class="mt-5 text-sm leading-9 text-slate-600 dark:text-slate-300">{{ $featured->summary }}</p>
-                <a href="{{ route('articles.show',$featured->slug) }}" class="mt-7 self-start rounded-xl bg-[#133967] px-6 py-3.5 text-xs font-black text-white hover:bg-[#235587]">Read the full article</a>
+                <a href="{{ route('articles.show',$featured->getRouteKey()) }}" class="mt-7 self-start rounded-xl bg-[#133967] px-6 py-3.5 text-xs font-black text-white hover:bg-[#235587]">Read the full article</a>
             </div>
             <div class="flex min-h-64 flex-col items-center justify-center bg-gradient-to-br from-[#0c315d] to-[#1c5080] p-10 text-center text-white">
                 <x-workspace-icon name="book-open" class="h-20 w-20 text-[#f1c46f]"/>

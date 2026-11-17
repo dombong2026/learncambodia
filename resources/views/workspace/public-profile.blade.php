@@ -25,6 +25,22 @@
                 <textarea name="bio" id="bio" maxlength="1500" rows="7" class="w-full rounded-xl border border-slate-300 bg-white p-4 text-sm leading-7 dark:border-slate-700 dark:bg-[#102845]">{{ old('bio',$profile?->bio) }}</textarea>
                 @error('bio')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
             </div>
+            @if($role==='instructor')
+                <fieldset class="grid min-w-0 gap-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+                    <legend class="px-1 text-sm font-bold">{{ __('detail.public_social_links') }}</legend>
+                    <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">{{ __('detail.public_social_note') }}</p>
+                    @error('social_links')<p class="text-xs text-red-600 dark:text-red-300">{{ $message }}</p>@enderror
+                    @foreach(\App\Support\InstructorSocialLinks::LABELS as $platform => $label)
+                        <div>
+                            <label for="public-social-{{ $platform }}" class="mb-1.5 block text-xs font-bold">{{ $label }}</label>
+                            <input type="url" name="social_links[{{ $platform }}]" id="public-social-{{ $platform }}" maxlength="300"
+                                value="{{ old('social_links.'.$platform, $profile?->social_links[$platform] ?? '') }}"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-[#102845]">
+                            @error('social_links.'.$platform)<p class="mt-1 text-xs text-red-600 dark:text-red-300">{{ $message }}</p>@enderror
+                        </div>
+                    @endforeach
+                </fieldset>
+            @endif
             @if($role==='student')
                 <label class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 text-xs leading-6 text-[#684b22] dark:bg-[#4c3c23] dark:text-[#f4deb1]"><input type="checkbox" name="adult_confirmation" value="1" required class="mt-1"> {{ __('people.adult_confirmation') }}</label>
                 <label class="flex items-start gap-3 text-xs leading-6"><input type="checkbox" name="show_learning_summary" value="1" @checked(old('show_learning_summary',$profile?->show_learning_summary)) class="mt-1"> {{ __('people.summary_consent') }}</label>

@@ -128,13 +128,26 @@ class FrontendAuthMilestoneTest extends TestCase
         $this->get('/courses?lang=km')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា');
     }
 
-    public function test_public_course_has_real_student_enrollment_action_and_resume_link(): void
+    public function test_public_course_actions_follow_enrollment_and_learning_progress(): void
     {
         $course = $this->publishedCourse();
-        $student = User::factory()->create();
+        $student = User::factory()->create(['password' => 'CourseTestPassword123!']);
+        $path = '/courses/'.$course->slug.'?lang=en';
+        $signIn = route('login', ['next' => $path]);
 
-        $this->actingAs($student)->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Request enrollment')
+        $this->get($path)->assertOk()
+            ->assertSee('href="'.e($signIn).'"', false)
+            ->assertSee('>Enroll</a>', false)
+            ->assertSee('data-share-url="'.route('courses.show', $course->getRouteKey()).'"', false)
+            ->assertDontSee('line-clamp-2 text-sm leading-6', false);
+
+        $this->get($signIn)->assertOk();
+        $this->post('/login', [
+            'email' => $student->email,
+            'password' => 'CourseTestPassword123!',
+        ])->assertRedirect($path);
+        $this->get($path)->assertOk()
+            ->assertSee('>Enroll</button>', false)
             ->assertSee('action="'.route('account.enrollments.store',$course).'"',false);
 
         $this->post('/account/courses/'.$course->id.'/enroll')->assertRedirect('/account/enrollments');
@@ -143,15 +156,32 @@ class FrontendAuthMilestoneTest extends TestCase
         ]);
 
         $this->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Enrollment status')
+            ->assertSee('Enrollment pending')
             ->assertDontSee('action="'.route('account.enrollments.store',$course).'"',false);
 
         $enrollment=\App\Models\CourseEnrollment::firstOrFail();
         $enrollment->update(['status'=>'approved']);
 
-        $this->get('/courses/'.$course->slug)->assertOk()
+        $study = route('account.enrollments.show', $enrollment);
+        $progress = route('account.progress.index', ['enrollment' => $enrollment->id]);
+        $this->get($path)->assertOk()
+            ->assertSee('Already enrolled')
+            ->assertSee('href="'.$study.'"', false)
+            ->assertDontSee($progress);
+
+        $this->get($study)->assertOk();
+        $this->assertNotNull($enrollment->fresh()->started_at);
+        $this->assertDatabaseCount('lesson_progress', 0);
+        $this->get($path)->assertOk()
+            ->assertSee('Learning Progress')
             ->assertSee('Resume learning')
-            ->assertSee('href="'.route('account.enrollments.show',$enrollment).'"',false);
+            ->assertSee('href="'.$progress.'"', false)
+            ->assertSee('href="'.$study.'"', false);
+        $this->get($progress)->assertOk()->assertSee($course->title);
+
+        $other = User::factory()->create();
+        $this->actingAs($other)->get($progress)->assertOk()->assertDontSee($course->title);
+        $this->get($path)->assertOk()->assertDontSee('Already enrolled')->assertSee('>Enroll</button>', false);
     }
 
     public function test_existing_signup_still_creates_student_only(): void

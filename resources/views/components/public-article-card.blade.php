@@ -1,6 +1,6 @@
 @props(['article'])
 
-<a href="{{ route('articles.show', $article->slug) }}" class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm hover:border-[#dcb25e] focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-[#183b60]">
+<a href="{{ route('articles.show', $article->getRouteKey()) }}" class="group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm hover:border-[#dcb25e] focus-visible:ring-2 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-[#183b60]">
     @if($article->featured_kind === 'image' && $article->featuredMedia)
         <img class="aspect-video w-full object-cover" src="{{ route('editor-media.show', $article->featuredMedia) }}" alt="{{ $article->featured_alt ?? '' }}" loading="lazy" decoding="async">
     @elseif($article->featured_kind === 'color' && preg_match('/^#[a-f0-9]{6}$/D', $article->featured_value ?? ''))

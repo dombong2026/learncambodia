@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Http\Controllers\Workspace;
+
+use App\Http\Controllers\Controller;
+use App\Models\AssessmentAccess;
+use App\Models\CourseExam;
+use App\Models\CourseEnrollment;
+use App\Support\CoursePricing;
+use App\Support\LearningTable;
+use App\Support\WorkspaceNotifications;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+
+final class AssessmentAccessController extends Controller
+{
+    public function catalog(Request $request): View
+    {
+        $kind = $request->routeIs('assessments.quizzes') ? 'quiz' : 'exam';
+        $items = CourseExam::whereNull('course_id')->where('kind', $kind)->where('published', true)
+            ->with(['type', 'featuredMedia'])->orderBy('title')->paginate(12);
+
+        return view('learning.standalone-assessments', compact('items', 'kind'));
+    }
+
+    public function assigned(Request $request): View
+    {
+        $student = $request->user();
+        $assignments = AssessmentAccess::where('student_id', $student->id)->whereNotNull('assigned_at')->where('status', 'approved');
+        $query = CourseExam::whereIn('id', $assignments->select('course_exam_id'))
+            ->with('type', 'course.category')->orderBy('title')->orderBy('id');
+        $exams = LearningTable::paginate(LearningTable::assessments($query, LearningTable::search($request)), $request);
+        $enrollments = CourseEnrollment::where('student_id', $student->id)->where('status', 'approved')
+            ->whereIn('course_id', $exams->pluck('course_id')->filter())
+            ->whereHas('course', fn ($course) => $course->published())->get()->keyBy('course_id');
+
+        return view('workspace.student.assigned-assessments', [
+            'role' => 'student', 'exams' => $exams, 'enrollments' => $enrollments,
+        ]);
+    }
+
+    public function show(Request $request, CourseExam $exam, ?string $kind = null): View
+    {
+        abort_unless($exam->published && $exam->course_id === null && ($kind === null || $exam->kind === $kind), 404);
+        $exam->load('type', 'featuredMedia');
+        $student = $request->user();
+        $access = $history = null;
+        if ($student?->role === 'student') {
+            $access = AssessmentAccess::where('course_exam_id', $exam->id)->where('student_id', $student->id)->first();
+            $history = \App\Models\ExamAttempt::where('course_exam_id', $exam->id)
+                ->whereNull('course_enrollment_id')->where('student_id', $student->id)->latest('id')->get();
+        }
+        $quote = CoursePricing::quote($exam->pricing);
+
+        return view('learning.standalone-assessment', compact('exam', 'quote', 'access', 'history'));
+    }
+
+    public function requestAccess(Request $request, CourseExam $exam): RedirectResponse
+    {
+        $data = $request->validate(['pricing_quote' => ['required', 'string', 'max:1000']]);
+        DB::transaction(function () use ($request, $exam, $data): void {
+            $exam = CourseExam::lockForUpdate()->findOrFail($exam->id);
+            abort_unless($exam->published && $exam->course_id === null, 404);
+            $quote = CoursePricing::quote($exam->pricing);
+            abort_if($quote['model'] === 'free', 422);
+            abort_unless(hash_equals(json_encode($quote, JSON_THROW_ON_ERROR), $data['pricing_quote']),
+                409, 'The price has changed. Reload the assessment and review the current price.');
+
+            $record = AssessmentAccess::firstOrNew([
+                'course_exam_id' => $exam->id, 'student_id' => $request->user()->id,
+            ]);
+            if (!$record->exists || $record->status === 'declined' || !$record->matches($quote)) {
+                $record->fill(['quote' => $quote, 'status' => 'pending', 'reference' => null, 'reviewed_by' => null])->save();
+                WorkspaceNotifications::administrators('New assessment access request', 'admin.exams.edit', ['exam' => $exam]);
+            }
+        });
+
+        return back()->with('status', 'Access request received.');
+    }
+
+    public function review(Request $request, AssessmentAccess $access): RedirectResponse
+    {
+        $data = $request->validate([
+            'decision' => ['required','in:approved,declined'],
+            'reference' => ['required_if:decision,approved','nullable','string','max:160'],
+        ]);
+        DB::transaction(function () use ($request, $access, $data): void {
+            $updated = AssessmentAccess::whereKey($access->id)->where('status', 'pending')->update([
+                'status' => $data['decision'], 'reference' => $data['reference'] ?? null,
+                'reviewed_by' => $request->user()->id,
+            ]);
+            abort_unless($updated === 1, 409, 'This request already has a decision.');
+            WorkspaceNotifications::send($access->student_id, 'Assessment access '.$data['decision'], 'public.exams.show',
+                ['exam' => $access->exam]);
+        });
+
+        return back()->with('status', 'Access decision saved.');
+    }
+}

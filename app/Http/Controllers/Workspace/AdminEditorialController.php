@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicId;
 use App\Models\ContentEntry;
 use App\Models\Category;
 use App\Models\PostTerm;
@@ -236,8 +237,11 @@ class AdminEditorialController extends Controller
         $slug = Str::slug((string) $request->input('slug', ''));
 
         if ($slug === '') {
-            $slug = Str::slug((string) $request->input('title', ''));
+            $slug = Str::slug((string) $request->input('title', '')) ?: str_replace('_', '-', $type);
         }
+
+        $slug = PublicId::availableSlug(ContentEntry::withTrashed()->where('type', $type)
+            ->when($entry, fn ($query) => $query->whereKeyNot($entry->id)), $slug, 200);
 
         $clean = EditorHtml::clean($request->input('body_html'));
         $request->merge(['slug' => $slug, 'body_html' => $clean]);
@@ -257,7 +261,11 @@ class AdminEditorialController extends Controller
             'body_html' => ['nullable', 'string', 'max:120000'],
             'seo_title' => ['nullable', 'string', 'max:200'],
             'seo_description' => ['nullable', 'string', 'max:320'],
-            ...($type === 'post' ? ['category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('categories', 'id')]] : []),
+            ...($type === 'post' ? [
+                'category_id' => ['sometimes', 'nullable', 'integer', Rule::exists('categories', 'id')],
+                'public_requirement' => ['sometimes', 'nullable', 'string', 'max:2000'],
+                'content_language' => ['sometimes', 'nullable', 'string', 'max:100'],
+            ] : []),
             ...($type === 'policy' ? [
                 'policy_version' => ['sometimes', 'nullable', 'string', 'max:40'],
                 'policy_effective_on' => ['sometimes', 'nullable', 'date_format:Y-m-d'],

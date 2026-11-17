@@ -71,7 +71,10 @@ final class PublicProfileDirectoryTest extends TestCase
         $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);
         $admin=$this->person('admin');
         $instructor=$this->person('instructor');
-        $instructor->update(['name'=>'Private Legal Full Name']);
+        $instructor->forceFill([
+            'name' => 'Private Legal Full Name',
+            'profile_details' => ['social' => ['youtube' => 'https://www.youtube.com/@private-account']],
+        ])->save();
         $course=Course::create([
             'category_id'=>Category::where('code','GE')->firstOrFail()->id,
             'slug'=>'verified-course-for-public-teacher',
@@ -84,23 +87,39 @@ final class PublicProfileDirectoryTest extends TestCase
             'assigned_by'=>$admin->id,'status'=>'active','assigned_at'=>now(),
         ]);
 
+        $this->actingAs($instructor)->post('/instructor/public-profile', [
+            'display_name' => 'Teacher',
+            'headline' => 'English teacher',
+            'public_consent' => '1',
+            'social_links' => ['facebook' => 'https://facebook.com.example.test/teacher'],
+        ])->assertSessionHasErrors('social_links.facebook');
+
         $profile=$this->saveProfile($instructor,'instructor',[
             'display_name'=>'Published Teacher Profile',
+            'social_links'=>[
+                'facebook' => 'https://www.facebook.com/public-teacher',
+                'linkedin' => 'https://www.linkedin.com/in/public-teacher',
+                'tiktok' => 'https://www.tiktok.com/@public-teacher',
+            ],
             'headline'=>'Educational instructor · English',
             'bio'=>'Public biography that the author consented to share.',
         ]);
 
         $this->get('/instructors')->assertOk()->assertDontSee('Published Teacher Profile');
         $this->get('/instructors/'.$profile->id)->assertNotFound();
+        $this->get('/courses/'.$course->slug)->assertOk()->assertDontSee('https://www.facebook.com/public-teacher');
         $this->actingAs($instructor)->get('/instructor/public-profile')->assertOk()
-            ->assertSee('Public profile &amp; consent',false);
+            ->assertSee('Public profile &amp; consent',false)
+            ->assertSee('name="social_links[youtube]"', false)
+            ->assertDontSee('https://www.youtube.com/@private-account');
 
         $this->post('/instructor/public-profile/submit')->assertRedirect();
         $this->get('/instructors')->assertOk()->assertDontSee('Published Teacher Profile');
 
         $this->actingAs($admin)
             ->get('/dashboard/public-profiles')->assertOk()
-            ->assertSee('Published Teacher Profile');
+            ->assertSee('Published Teacher Profile')
+            ->assertSee('https://www.facebook.com/public-teacher');
         $this->post('/dashboard/public-profiles/'.$profile->id.'/review',[
             'decision'=>'approve',
         ])->assertRedirect();
@@ -111,10 +130,20 @@ final class PublicProfileDirectoryTest extends TestCase
             ->assertSee('Real Public Teacher Course')
             ->assertDontSee('Private Legal Full Name')
             ->assertDontSee($instructor->email)
-            ->assertDontSee('12K+')
-            ->assertDontSee('4.9');
+            ->assertSee('https://www.facebook.com/public-teacher')
+            ->assertDontSee('https://www.youtube.com/@private-account')
+            ->assertDontSeeText('12K+')
+            ->assertDontSeeText('4.9');
         $this->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Published Teacher Profile');
+            ->assertSee('Published Teacher Profile')
+            ->assertSee('href="https://www.facebook.com/public-teacher"', false)
+            ->assertSee('href="https://www.linkedin.com/in/public-teacher"', false)
+            ->assertSee('href="https://www.tiktok.com/@public-teacher"', false)
+            ->assertDontSee('https://www.youtube.com/@private-account');
+        $assignment = CourseInstructorAssignment::where('course_id', $course->id)->firstOrFail();
+        $assignment->update(['status' => 'revoked']);
+        $this->get('/courses/'.$course->slug)->assertOk()->assertDontSee('https://www.facebook.com/public-teacher');
+        $assignment->update(['status' => 'active']);
 
         $this->assertDatabaseHas('approval_events',[
             'subject_type'=>'public_profile','subject_id'=>$profile->id,
@@ -128,6 +157,7 @@ final class PublicProfileDirectoryTest extends TestCase
         $this->get('/instructors/'.$profile->id)->assertNotFound();
         $this->get('/instructors')->assertOk()->assertDontSee('Published Teacher Profile');
         $this->assertSame('withdrawn',$profile->fresh()->status);
+        $this->get('/courses/'.$course->slug)->assertOk()->assertDontSee('https://www.facebook.com/public-teacher');
     }
 
     public function test_student_profiles_remain_private_even_after_review_until_operator_flag(): void

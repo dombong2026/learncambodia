@@ -9,6 +9,7 @@ use App\Models\ContentEntry;
 use App\Models\PublicProfile;
 use App\Models\CourseInstructorAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
 
@@ -35,6 +36,13 @@ class CatalogController extends Controller
             'featuredInstructors','publishedCourseCount',
             'publishedCategoryCount','publishedArticleCount'
         ));
+    }
+
+    public function navigationCategories(): Response
+    {
+        return response()->view('partials.category-tray-links', [
+            'navigationCategories' => Category::forNavigation()->get(),
+        ], 200, ['Cache-Control' => 'no-store', 'X-Category-Navigation' => '1']);
     }
 
     public function index(Request $request): View

@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseHomeworkAssignment;
 use App\Models\CourseInstructorAssignment;
 use App\Support\InstructorAccess;
+use App\Support\LearningTable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -14,15 +15,13 @@ class InstructorTeachingController extends Controller
 {
     public function index(Request $request): View
     {
-        $assignments = CourseInstructorAssignment::query()
-            ->where('instructor_id', $request->user()->id)
-            ->where('status', 'active')
-            ->whereHas('course', fn ($query) => $query->published())
-            ->with('course')
-            ->orderByDesc('assigned_at')->paginate(10);
+        $courses = Course::published()->whereIn('id', CourseInstructorAssignment::query()
+            ->where('instructor_id', $request->user()->id)->where('status', 'active')->select('course_id'))
+            ->with('category')->withCount('modules')->orderBy('title')->orderBy('id');
 
         return view('workspace.instructor.courses', [
-            'role' => 'instructor', 'assignments' => $assignments,
+            'role' => 'instructor',
+            'courses' => LearningTable::paginate(LearningTable::courses($courses, LearningTable::search($request)), $request),
         ]);
     }
 

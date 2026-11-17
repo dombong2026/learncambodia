@@ -8,6 +8,8 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseBookmark;
 use App\Models\User;
 use App\Support\ApprovalAudit;
+use App\Support\CoursePricing;
+use App\Support\LearningTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,16 +21,21 @@ class StudentEnrollmentController extends Controller
     {
         return view('workspace.student.enrollments', [
             'role' => 'student',
-            'enrollments' => CourseEnrollment::query()
-                ->where('student_id', $request->user()->id)
-                ->with('course.category')->orderByDesc('id')->paginate(10),
+            'enrollments' => LearningTable::paginate(
+                CourseEnrollment::where('student_id', $request->user()->id)
+                    ->whereHas('course', fn ($query) => LearningTable::courses($query, LearningTable::search($request)))
+                    ->with(['course' => fn ($query) => $query->with('category')->withCount('modules')])->latest('id'),
+                $request
+            ),
         ]);
     }
 
     public function catalog(Request $request): View
     {
-        $courses = Course::discoverable()->with('category')
-            ->orderBy('title')->paginate(10);
+        $query = Course::discoverable()->with('category')->withCount('modules')->orderBy('title')->orderBy('id');
+        $courses = LearningTable::paginate(LearningTable::courses($query, LearningTable::search($request)), $request);
+        $enrollments = CourseEnrollment::where('student_id', $request->user()->id)
+            ->whereIn('course_id', $courses->pluck('id'))->get()->keyBy('course_id');
 
         $savedCourseIds = CourseBookmark::query()
             ->where('student_id', $request->user()->id)
@@ -39,6 +46,7 @@ class StudentEnrollmentController extends Controller
             'role' => 'student',
             'courses' => $courses,
             'savedCourseIds' => $savedCourseIds,
+            'enrollments' => $enrollments,
         ]);
     }
 
@@ -48,12 +56,16 @@ class StudentEnrollmentController extends Controller
         abort_unless($enrollment->status === 'approved', 403);
 
         $course = Course::published()->whereKey($enrollment->course_id)
-            ->with('modules.lessons')->firstOrFail();
+            ->with('modules.lessons', 'exams.type', 'quizzes')->firstOrFail();
+
+        if ($request->isMethod('GET')) $enrollment->markStarted();
 
         return view('workspace.student.study', [
             'role' => 'student',
             'enrollment' => $enrollment,
             'course' => $course,
+            'certificates' => \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->whereNull('revoked_at')->get(),
+            'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $enrollment->lessonProgress()
                 ->whereNotNull('completed_at')->pluck('lesson_id')->all(),
         ]);
@@ -67,7 +79,13 @@ class StudentEnrollmentController extends Controller
                 ->lockForUpdate()->firstOrFail();
             abort_unless($student->role === User::ROLE_STUDENT, 403);
 
-            abort_unless(Course::discoverable()->whereKey($course->id)->exists(), 404);
+            $availableCourse = Course::discoverable()->whereKey($course->id)->lockForUpdate()->firstOrFail();
+            $quote = CoursePricing::quote($availableCourse->pricing);
+            if ($quote['model'] !== 'free') {
+                $submitted = $request->validate(['pricing_quote' => ['required', 'string']]);
+                abort_unless(hash_equals(json_encode($quote, JSON_THROW_ON_ERROR), $submitted['pricing_quote']),
+                    409, 'Course pricing changed. Return to the course page and review the current price.');
+            }
             $existing = CourseEnrollment::query()
                 ->where('student_id', $student->id)->where('course_id', $course->id)
                 ->first();
@@ -78,6 +96,7 @@ class StudentEnrollmentController extends Controller
                 'course_id' => $course->id,
                 'student_id' => $student->id,
                 'status' => 'pending',
+                'pricing_quote' => $quote['model'] === 'free' ? null : $quote,
             ]);
             ApprovalAudit::record('enrollment', $enrollment->id,
                 $student, 'requested', null, 'pending');

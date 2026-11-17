@@ -1,20 +1,15 @@
 @props(['surface' => 'adaptive', 'height' => 'h-9', 'imageClass' => ''])
 @php
-    // surface=dark is for fixed navy UI such as the auth modal and sidebar.
-    // surface=adaptive swaps the approved navy/white lettering with the theme.
     $base = $height.' w-auto max-w-full object-contain object-left '.$imageClass;
+    $variants = match ($surface) {
+        'light', 'dark' => [$surface => ''],
+        default => ['light' => ' dark:hidden', 'dark' => ' hidden dark:block'],
+    };
 @endphp
 <span {{ $attributes->class(['inline-flex min-w-0 max-w-full items-center']) }}>
-    @if($surface === 'dark')
-        <img src="{{ asset('brand/logo-dark.png') }}" width="1902" height="375"
-             class="{{ $base }}" alt="LearnCambodia" decoding="async">
-    @elseif($surface === 'light')
-        <img src="{{ asset('brand/logo-light.png') }}" width="1924" height="383"
-             class="{{ $base }}" alt="LearnCambodia" decoding="async">
-    @else
-        <img src="{{ asset('brand/logo-light.png') }}" width="1924" height="383"
-             class="{{ $base }} dark:hidden" alt="LearnCambodia" decoding="async">
-        <img src="{{ asset('brand/logo-dark.png') }}" width="1902" height="375"
-             class="{{ $base }} hidden dark:block" alt="LearnCambodia" decoding="async">
-    @endif
+    @foreach($variants as $variant => $visibility)
+        @php $logo = \App\Support\PlatformBranding::asset('logo-'.$variant); @endphp
+        <img src="{{ $logo['url'] }}" width="{{ $logo['width'] }}" height="{{ $logo['height'] }}"
+             class="{{ $base.$visibility }}" alt="{{ \App\Support\PlatformBranding::name() }}" decoding="async">
+    @endforeach
 </span>

@@ -7,9 +7,9 @@ use App\Models\ContentEntry;
 use App\Models\EditorMedia;
 use App\Models\User;
 use App\Support\ApprovalAudit;
+use App\Support\ManagedFiles;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -72,7 +72,7 @@ class LearningCategoryArticleSeeder extends Seeder
                 }
             });
         } catch (Throwable $exception) {
-            Storage::disk('local')->delete($files);
+            ManagedFiles::disk()->delete($files);
             throw $exception;
         }
 
@@ -131,7 +131,7 @@ class LearningCategoryArticleSeeder extends Seeder
 
         $path = 'editor-media/learning-'.Str::uuid().'.webp';
         $files[] = $path;
-        if (!Storage::disk('local')->put($path, $bytes)) {
+        if (!ManagedFiles::put(ManagedFiles::disk(), $path, $bytes)) {
             throw new RuntimeException('Could not store the cover for '.$group);
         }
 

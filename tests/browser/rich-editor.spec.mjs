@@ -9,6 +9,47 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
   });
 
+  test('System Settings opens every administrator page below Analytics', async ({ page }) => {
+    const sidebarToggle = page.getByRole('button', { name: 'Toggle sidebar' });
+    const nav = page.getByRole('navigation', { name: 'Account navigation' });
+    const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
+
+    for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
+      if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
+        await sidebarToggle.click();
+      }
+      await expect(settings.locator('xpath=preceding-sibling::details[1]/summary')).toHaveText('Analytics');
+      if (await settings.getAttribute('open') === null) {
+        await settings.locator('summary').click();
+      }
+      await settings.getByRole('link', { name: label, exact: true }).click();
+      await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
+      const main = page.locator('[data-workspace-content]');
+      await expect(main.locator('.system-settings-row').first()).toBeVisible();
+    }
+
+    const cssUrl = await page.locator('link[href*="/css/system-settings.css"]').getAttribute('href');
+    const stylesheet = await page.request.get(cssUrl);
+    expect(stylesheet.ok()).toBeTruthy();
+
+    const table = page.getByRole('table', { name: 'Storage providers' });
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await table.getByRole('link', { name: 'Configure Amazon S3' }).click();
+    await page.getByLabel('Current password').fill('Only-A-CI-Browser-Fixture-2026!');
+    await page.getByRole('button', { name: 'Confirm password' }).click();
+    const s3 = page.getByRole('dialog', { name: 'Configure Amazon S3' });
+    await expect(s3).toBeVisible();
+    await expect(s3.getByLabel('AWS region')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(table).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await table.getByRole('link', { name: 'Configure Cloudflare R2' }).click();
+    const r2 = page.getByRole('dialog', { name: 'Configure Cloudflare R2' });
+    await expect(r2.getByLabel('S3 API endpoint')).toBeVisible();
+    await r2.getByRole('link', { name: 'Close configuration' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
     await page.goto('/dashboard/course-builder/create?lang=en');
     const builder = page.locator('[data-course-builder]');
@@ -94,7 +135,35 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     });
     await expect(lessonContent.getByRole('link', { name: 'lesson-handout.pdf' })).toBeVisible();
     await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
-    await expect(lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' })).toHaveValue(/data-language="python"/);
+    const lessonSource = lessonEditor.getByRole('textbox', { name: 'Edit safe HTML source' });
+    await expect(lessonSource).toHaveValue(/data-language="python"/);
+    const originalLesson = await lessonSource.inputValue();
+    // Check the player and its saved HTML independently of a platform's media codecs.
+    await page.route('**/editor-media/9999999', route => route.abort());
+    await lessonSource.fill(originalLesson + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Uploaded example.mp4</figcaption></figure>'
+      + '<figure><video src="/editor-media/9999999" controls></video><figcaption>Test playback</figcaption></figure>');
+    await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
+    await expect(lessonContent).not.toContainText('Uploaded example.mp4');
+    await expect(lessonContent).toContainText('Test playback');
+    const player = lessonContent.locator('lesson-media-player').last();
+    await expect(player).toHaveAttribute('data-kind', 'video');
+    await expect(player.locator('video')).not.toHaveAttribute('controls');
+    await expect(player.getByRole('button', { name: 'Playback settings' })).toBeVisible();
+    await expect(player.locator('.overlay')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const fullScreen = player.getByRole('button', { name: 'Full screen', exact: true });
+    await expect(fullScreen.locator('svg')).toHaveCount(1);
+    await fullScreen.click();
+    const expanded = player.getByRole('dialog', { name: 'Lesson media full screen' });
+    await expect(expanded).toBeVisible();
+    expect(await page.evaluate(() => document.fullscreenElement)).toBeNull();
+    await expect(expanded.getByRole('button', { name: 'Exit full screen' }).locator('svg')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(expanded).toBeHidden();
+    await expect(fullScreen).toBeFocused();
+    await lessonEditor.getByRole('button', { name: 'HTML', exact: true }).click();
+    await expect(lessonSource).toHaveValue(/<video src="\/editor-media\/9999999"/);
+    await expect(lessonSource).not.toHaveValue(/lesson-media-player|<button|<svg|Uploaded example\.mp4/);
+    await lessonSource.fill(originalLesson);
     await lessonEditor.getByRole('button', { name: 'Text', exact: true }).click();
     await builder.getByRole('button', { name: 'Save changes' }).click();
     await expect(builder.getByRole('textbox', { name: 'Lesson content' })).toHaveCount(1);
@@ -164,7 +233,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await page.locator('[data-seo-title]').fill('Reviewable SEO Title');
     await expect(page.locator('[data-seo-preview-title]')).toHaveText('Reviewable SEO Title');
     await page.locator('button[type="submit"][form="editorial-form"]').click();
-    await expect(page).toHaveURL(/\/dashboard\/editorial\/posts\/\d+\/edit/);
+    await expect(page).toHaveURL(/\/dashboard\/editorial\/posts\/\d{6}-[a-z0-9-]+\/edit(?:\?|$)/);
     await expect(page.locator('[data-editor-visual] h2')).toContainText('Structured learning');
     await page.getByRole('link', { name: 'Preview saved document' }).click();
     await expect(page.getByRole('heading', { name: /Preview:/ })).toBeVisible();
@@ -196,7 +265,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(sidebar.getByText('browser-cover.png')).toBeVisible();
     await sidebar.getByLabel('Image description').fill('Sample learning graphic');
     await publication.getByRole('button', { name: 'Publish', exact: true }).click();
-    await expect(page).toHaveURL(/dashboard\/editorial\/pages\/\d+\/edit/);
+    await expect(page).toHaveURL(/\/dashboard\/editorial\/pages\/\d{6}-[a-z0-9-]+\/edit(?:\?|$)/);
     await publication.getByRole('link', { name: 'View published' }).click();
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     const featured = page.getByRole('img', { name: 'Sample learning graphic' });

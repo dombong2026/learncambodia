@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class CourseLesson extends Model
 {
     protected $fillable = [
-        'course_module_id', 'title', 'content', 'content_html', 'position', 'duration_minutes', 'is_preview',
+        'course_module_id', 'title', 'content', 'content_html', 'quiz_questions', 'position', 'duration_minutes', 'is_preview',
     ];
+
+    protected $hidden = ['quiz_questions'];
 
     protected function casts(): array
     {
-        return ['is_preview' => 'boolean'];
+        return ['is_preview' => 'boolean', 'quiz_questions' => 'array'];
     }
 
     public function media(): BelongsToMany

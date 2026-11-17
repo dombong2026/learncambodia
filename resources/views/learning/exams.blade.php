@@ -2,12 +2,16 @@
 @section('title',\App\Support\Appearance::value('course_exam_catalog','hero_heading'))
 @section('content')
 @php $a=\App\Support\Appearance::approved('course_exam_catalog'); @endphp
-<x-learning-hero :title="$a['hero_heading']" :subtitle="$a['hero_intro']" eyebrow="Exam & practice preparation" icon="clipboard-check" :action-url="'#exam-courses'" action-label="Browse practice courses"
+<x-learning-hero :title="$a['hero_heading']" :subtitle="$a['hero_intro']" eyebrow="Exam & practice preparation" icon="clipboard-check" :action-url="'#exam-courses'" action-label="Browse assessments"
     :stats="[
-        ['value'=>number_format($courses->total()),'label'=>'Matching courses with practice quizzes','icon'=>'book-open'],
+        ['value'=>number_format($courses->total()),'label'=>'Matching courses with assessments','icon'=>'book-open'],
         ['value'=>'4','label'=>'Choices per practice question','icon'=>'list-check'],
     ]"/>
-<x-learning-section id="exam-courses" :title="$a['course_heading']" eyebrow="Genuine reviewed practice" subtitle="Courses below contain existing reviewed practice quizzes. Public pages show only metadata; answer keys are not exposed." tone="white">
+<x-learning-section id="exam-courses" :title="$a['course_heading']" eyebrow="Genuine reviewed practice" subtitle="Browse published course exams and practice quizzes. Approved enrollment is required to attempt them." tone="white">
+    <nav class="mb-5 flex flex-wrap gap-4 font-semibold">
+        <a href="{{ route('assessments.exams') }}">Standalone exams</a>
+        <a href="{{ route('assessments.quizzes') }}">Quick quizzes</a>
+    </nav>
     <form method="GET" role="search" action="{{ route('learning.exams') }}#exam-courses" class="flex max-w-3xl gap-2">
         <label for="exam-search" class="sr-only">Find courses with practice assessments</label>
         <input id="exam-search" type="search" name="q" value="{{ $search }}" maxlength="80" placeholder="Search published assessment topics" class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm dark:border-slate-700 dark:bg-[#183755]">
@@ -15,14 +19,14 @@
     </form>
     <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         @forelse($courses as $course)
-            <x-learning-card :href="route('learning.exam.show',$course->slug)" :title="$course->title" :description="$course->summary" icon="clipboard-check" :eyebrow="$course->category?->name" :meta="$course->practice_quizzes_count.' reviewed practice quizzes'" action="View practice"/>
+            <x-learning-card :href="route('learning.exam.show',$course->getRouteKey())" :title="$course->title" :description="$course->summary" icon="clipboard-check" :eyebrow="$course->category?->name" :meta="$course->course_exams_count.' course exams · '.$course->practice_quizzes_count.' practice quizzes'" action="View assessments"/>
         @empty
-            <p class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-[#f8fafc] p-10 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#193757]">No approved courses with active practice quizzes match your search. <a href="{{ route('courses.index') }}" class="font-black underline">Explore all courses</a>.</p>
+            <p class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-[#f8fafc] p-10 text-sm text-slate-500 dark:border-slate-700 dark:bg-[#193757]">No approved courses with published assessments match your search. <a href="{{ route('courses.index') }}" class="font-black underline">Explore all courses</a>.</p>
         @endforelse
     </div>
     <div class="mt-8">{{ $courses->links() }}</div>
 </x-learning-section>
-<x-learning-section :title="$a['format_heading']" eyebrow="Practice workflow" tone="mist" subtitle="These learning checks reuse the existing secure student assessment engine. They are not government or school examination bookings.">
+<x-learning-section :title="$a['format_heading']" eyebrow="Practice workflow" tone="mist" subtitle="Course exams and practice quizzes are available through the learner workspace after enrollment approval.">
     <div class="grid gap-5 md:grid-cols-3">
         @foreach([
             ['book-open','1. Choose a reviewed course','Explore a published learning program with reviewed practice questions.'],

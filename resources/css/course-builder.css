@@ -4,6 +4,7 @@
     --builder-active: #ecf4ff;
     --builder-blue: #174da1;
     --builder-primary: #1d4ed8;
+    --builder-focus: #986310;
     --builder-shadow: 0 12px 28px rgb(29 54 90 / .07);
     display: grid;
     gap: clamp(.9rem, 2vw, 1.4rem);
@@ -17,7 +18,21 @@
     --builder-active: #173453;
     --builder-blue: #a9d3ff;
     --builder-primary: #2855da;
+    --builder-focus: #e9b54b;
     --builder-shadow: 0 12px 28px rgb(0 0 0 / .16);
+}
+
+.workspace-content .course-builder :is(a[href], button, input, select, textarea, summary, [contenteditable="true"]):focus-visible {
+    outline: 1px solid var(--builder-focus);
+    outline-offset: 1px;
+}
+.workspace-content .course-builder :is(input, select, textarea, .rich-editor-canvas):focus-visible {
+    outline-offset: -1px;
+    border-color: var(--ws-border);
+    box-shadow: none;
+}
+.workspace-content .course-builder .rich-tool:has(:focus-visible) {
+    outline: 1px solid var(--builder-focus);
 }
 
 .builder-header { padding: .35rem 0; }
@@ -211,3 +226,25 @@ a.builder-step:not([aria-current]):hover, a.builder-row:hover, .builder-button:h
     .builder-media-grid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
     .builder-curriculum { grid-template-columns: minmax(13rem, .58fr) minmax(0, 1.42fr); }
 }
+
+.builder-drag-handle {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 2.25rem;
+    margin-left: -.3rem;
+    border-radius: .45rem;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.builder-drag-handle[hidden] { display: none; }
+.builder-drag-handle:is(:hover, :focus-visible), .builder-row[data-order-dragging] {
+    background: var(--builder-active);
+}
+.builder-row[data-order-dragging] { outline: 1px dashed currentColor; outline-offset: -1px; }
+.builder-row[data-order-dragging] .builder-drag-handle { cursor: grabbing; }
+[data-order-list][aria-busy="true"] .builder-drag-handle { cursor: wait; }
+.builder-row[data-order-target="before"] { box-shadow: 0 -2px 0 var(--builder-blue); }
+.builder-row[data-order-target="after"] { box-shadow: 0 2px 0 var(--builder-blue); }

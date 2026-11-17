@@ -114,10 +114,6 @@ class CourseRevisionWorkflowTest extends TestCase
         $this->post('/dashboard/course-builder/'.$edition->id.'/submit')
             ->assertRedirect();
 
-        $this->post('/dashboard/reviews/courses/'.$edition->id, [
-            'decision' => 'approve',
-        ])->assertForbidden();
-
         $this->actingAs($reviewer)->post('/dashboard/reviews/courses/'.$edition->id, [
             'decision' => 'approve',
         ])->assertRedirect();

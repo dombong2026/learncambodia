@@ -22,7 +22,8 @@ final class SecurityHeaders
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "camera=(), microphone=$microphone, geolocation=(), payment=()");
 
         // Enable HSTS only on actual HTTPS responses from the production app.
         // A short initial age prevents premature subdomain-wide commitment.
@@ -34,7 +35,7 @@ final class SecurityHeaders
         // the one-time installer against intermediary caching.
         if ($request->user() !== null
             || $request->is('install', 'install/*', 'login', 'register',
-                'dashboard', 'dashboard/*', 'account', 'account/*',
+                'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
                 'instructor', 'instructor/*', 'developer', 'developer/*')) {
             $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
         }

@@ -1,4 +1,5 @@
 @extends('layouts.public')
+@section('canonical', e(route('authors.show', $profile)))
 @section('title', $profile->display_name.' · '.__('longpage.authors'))
 @section('content')
 @php $appearance=\App\Support\Appearance::approved('author'); @endphp
@@ -33,7 +34,7 @@
         <div class="flex flex-wrap items-end justify-between gap-4"><div><p class="text-xs font-black uppercase tracking-widest text-[#b07c25]">{{ __('longpage.author_works_label') }}</p><h2 class="mt-2 text-3xl font-black text-[#10335d] dark:text-white">{{ $appearance['work_heading'] }}</h2></div><a href="{{ route('authors.index') }}" class="rounded-xl border border-[#d4a85b] px-5 py-3 text-sm font-bold text-[#b17e28]">{{ __('longpage.all_authors') }}</a></div>
         <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @foreach($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#e2b868] dark:border-slate-700 dark:bg-[#173657]">
+                <a href="{{ route('articles.show',$article->getRouteKey()) }}" class="group flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#e2b868] dark:border-slate-700 dark:bg-[#173657]">
                     <p class="text-xs font-black text-[#b07b26]">{{ __('longpage.approved_article') }}</p>
                     <h3 class="mt-4 text-lg font-black text-[#12355e] group-hover:underline dark:text-white">{{ $article->title }}</h3>
                     <p class="mt-3 flex-1 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p>

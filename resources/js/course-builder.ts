@@ -1,3 +1,6 @@
+import { initCurriculumOrder } from './curriculum-order';
+import { initLessonQuizEditor } from './lesson-quiz-editor';
+
 const builder = document.querySelector<HTMLElement>('[data-course-builder]');
 
 if (builder) {
@@ -8,7 +11,27 @@ if (builder) {
         new FormData(form).forEach((value, name) => fields.push([name, value]));
         return JSON.stringify(fields);
     };
-    const initial = editable ? values(editable) : '';
+    const quiz = editable?.querySelector<HTMLElement>('[data-lesson-quiz-editor]');
+    if (quiz) initLessonQuizEditor(quiz);
+    let initial = editable ? values(editable) : '';
+    const reorderPending = initCurriculumOrder(builder, (list, order) => {
+        if (!editable || editable.dataset.orderEditor !== list.dataset.orderList
+            || editable.dataset.orderParent !== list.dataset.orderParent) return;
+
+        const item = Number(editable.dataset.orderItem);
+        const index = order.indexOf(item);
+        if (index < 0 && item) return;
+        const position = String(index < 0 ? order.length + 1 : index + 1);
+        const field = editable.querySelector<HTMLInputElement>('input[name="position"]')!;
+        const fields = JSON.parse(initial) as [string, FormDataEntryValue][];
+        const saved = fields.find(([name]) => name === 'position');
+        if (saved) {
+            if (field.value === saved[1]) field.value = position;
+            saved[1] = position;
+            initial = JSON.stringify(fields);
+            updateNotice();
+        }
+    });
     const isDirty = () => editable !== null && values(editable) !== initial;
     let proceeding = false;
 
@@ -32,6 +55,10 @@ if (builder) {
 
     builder.addEventListener('submit', event => {
         if (event.defaultPrevented) return;
+        if (reorderPending()) {
+            event.preventDefault();
+            return;
+        }
         const form = event.target as HTMLFormElement;
         const warning = form.dataset.builderConfirm;
         if ((form !== editable && !confirmDiscard()) || (warning && !window.confirm(warning))) {
@@ -48,5 +75,20 @@ if (builder) {
     window.addEventListener('pageshow', () => {
         proceeding = false;
         updateNotice();
+    });
+}
+
+
+const pricing = document.querySelector<HTMLElement>('[data-course-pricing]');
+if (pricing) {
+    const model = pricing.querySelector<HTMLSelectElement>('[data-pricing-model]')!;
+    const strategy = pricing.querySelector<HTMLSelectElement>('[data-pricing-strategy]')!;
+    pricing.addEventListener('change', () => {
+        pricing.querySelectorAll<HTMLElement>('[data-pricing-mode]').forEach(panel => {
+            panel.hidden = panel.dataset.pricingMode !== model.value;
+        });
+        pricing.querySelectorAll<HTMLElement>('[data-pricing-option]').forEach(panel => {
+            panel.hidden = !panel.dataset.pricingOption!.split(' ').includes(strategy.value);
+        });
     });
 }

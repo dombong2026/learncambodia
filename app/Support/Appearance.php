@@ -97,12 +97,12 @@ final class Appearance
 
         if ($section==='single_blog') {
             $article=\App\Models\ContentEntry::query()->publishedArticles()->orderByDesc('id')->first();
-            return $article ? route('articles.show',$article->slug) : route('articles.index');
+            return $article ? route('articles.show',$article->getRouteKey()) : route('articles.index');
         }
         if ($section==='single_course_exam') {
             $course=\App\Models\Course::discoverable()->whereHas('quizzes',fn($q)=>$q->has('questions'))
                 ->orderBy('id')->first();
-            return $course ? route('learning.exam.show',$course->slug) : route('learning.exams');
+            return $course ? route('learning.exam.show',$course->getRouteKey()) : route('learning.exams');
         }
         if ($section==='single_category') {
             $category=\App\Models\Category::visibleInCatalog()->orderBy('sort_order')->first();

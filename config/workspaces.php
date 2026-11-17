@@ -44,6 +44,42 @@ return json_decode(<<<'JSON'
       ]
     },
     {
+      "key": "content",
+      "title": "Content",
+      "icon": "files",
+      "items": [
+        {
+          "key": "home",
+          "label": "Home",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "home"
+          }
+        },
+        {
+          "key": "about",
+          "label": "About",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "about"
+          }
+        },
+        {
+          "key": "contact",
+          "label": "Contact",
+          "route": "admin.appearance.edit",
+          "parameters": {
+            "section": "contact"
+          }
+        },
+        {
+          "key": "media-library",
+          "label": "Media Library",
+          "route": "admin.media-library.index"
+        }
+      ]
+    },
+    {
       "key": "appearance",
       "title": "Appearance",
       "icon": "palette",
@@ -83,46 +119,6 @@ return json_decode(<<<'JSON'
           "route": "admin.appearance.edit",
           "parameters": {
             "section": "typography"
-          }
-        },
-        {
-          "key": "home",
-          "label": "Home",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "home"
-          }
-        },
-        {
-          "key": "about",
-          "label": "About",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "about"
-          }
-        },
-        {
-          "key": "contact",
-          "label": "Contact",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "contact"
-          }
-        },
-        {
-          "key": "course",
-          "label": "Course",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "course"
-          }
-        },
-        {
-          "key": "catalog",
-          "label": "Catalog",
-          "route": "admin.appearance.edit",
-          "parameters": {
-            "section": "catalog"
           }
         },
         {
@@ -407,26 +403,11 @@ return json_decode(<<<'JSON'
       "title": "System Settings",
       "icon": "settings",
       "items": [
-        {
-          "key": "basic",
-          "label": "Basic"
-        },
-        {
-          "key": "branding",
-          "label": "Branding"
-        },
-        {
-          "key": "security",
-          "label": "Security"
-        },
-        {
-          "key": "cloud-storage",
-          "label": "Cloud Storage"
-        },
-        {
-          "key": "social-auth",
-          "label": "Social Auth"
-        }
+        {"key": "basic", "label": "Basic"},
+        {"key": "branding", "label": "Branding", "route": "admin.system-settings.branding"},
+        {"key": "security", "label": "Security", "route": "admin.system-settings.security"},
+        {"key": "social-auth", "label": "Social Auth", "route": "admin.system-settings.social-auth"},
+        {"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"}
       ]
     },
     {
@@ -436,12 +417,12 @@ return json_decode(<<<'JSON'
       "items": [
         {
           "key": "all",
-          "label": "All Categories",
+          "label": "Course Categories",
           "route": "admin.categories.index"
         },
         {
           "key": "create",
-          "label": "Create Category",
+          "label": "Create Course Category",
           "route": "admin.categories.create"
         },
         {
@@ -463,7 +444,7 @@ return json_decode(<<<'JSON'
         },
         {
           "key": "create",
-          "label": "Create",
+          "label": "Create Course",
           "route": "admin.course-builder.create"
         },
         {
@@ -489,6 +470,35 @@ return json_decode(<<<'JSON'
           "label": "Homework Reviews",
           "route": "admin.homework.reviews"
         }
+      ]
+    },
+    {
+      "key": "course-appearance",
+      "title": "Course Appearance",
+      "items": [
+        {"key": "course", "label": "Course Appearance", "route": "admin.appearance.edit", "parameters": {"section": "course"}},
+        {"key": "catalog", "label": "Catalog Appearance", "route": "admin.appearance.edit", "parameters": {"section": "catalog"}}
+      ]
+    },
+    {
+      "key": "examination",
+      "title": "Examination",
+      "items": [
+        {"key": "exams", "label": "Exams", "route": "admin.exams.index"},
+        {"key": "create", "label": "Create Exam", "route": "admin.exams.create"},
+        {"key": "exam-types", "label": "Exam Types", "route": "admin.exam-types.index"},
+        {"key": "certificate-types", "label": "Certificate Types", "route": "admin.certificate-types.index"},
+        {"key": "templates", "label": "Certificate Templates", "route": "admin.certificate-templates.index"},
+        {"key": "certificates", "label": "Issued Certificates", "route": "admin.certificates.index"}
+      ]
+    },
+    {
+      "key": "quiz-manager",
+      "title": "Quiz Manager",
+      "items": [
+        {"key": "quizzes", "label": "Quizzes", "route": "admin.quizzes-manager.index"},
+        {"key": "create", "label": "Create Quiz", "route": "admin.quizzes-manager.create"},
+        {"key": "quiz-types", "label": "Quiz Types", "route": "admin.quiz-types.index"}
       ]
     },
     {
@@ -639,6 +649,10 @@ return json_decode(<<<'JSON'
       "title": "Assessments",
       "icon": "graduation",
       "items": [
+        {"key": "standalone-exams", "label": "Standalone Exams", "route": "assessments.exams"},
+        {"key": "standalone-quizzes", "label": "Quick Quizzes", "route": "assessments.quizzes"},
+        {"key": "assigned", "label": "Assigned Assessments", "route": "account.assessments.index"},
+
         {
           "key": "placement",
           "label": "Placement Test"

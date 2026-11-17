@@ -86,6 +86,8 @@ final class CourseBuilderStepsTest extends TestCase
         $fields = [
             'title' => 'Structured Course',
             'summary' => 'A meaningful course summary.',
+            'public_requirement' => 'Bring a notebook.',
+            'content_language' => 'English and Khmer',
             'category_id' => Category::where('code', 'GE')->valueOrFail('id'),
             'delivery_mode' => 'online',
         ];
@@ -97,6 +99,7 @@ final class CourseBuilderStepsTest extends TestCase
 
         $this->post(route('admin.course-builder.store'), $fields + [
             'description_html' => '<h2>Overview</h2><p><strong>Practice</strong> &amp; review.</p>'
+                .'<p>• One typed bullet<br>• Another typed bullet</p><ul><li><strong>Native item</strong></li></ul>'
                 .'<script>unsafe()</script><img src="/editor-media/'.$media->id.'" onerror="unsafe()" alt="Example">'
                 .'<a href="javascript:unsafe()">Objectives</a>',
         ])->assertSessionHasNoErrors();
@@ -104,7 +107,7 @@ final class CourseBuilderStepsTest extends TestCase
         $mediaUrl = route('editor-media.show', $media);
         $public = route('courses.show', $course->slug);
 
-        $this->assertSame("Overview\nPractice & review.\nObjectives", $course->description);
+        $this->assertSame("Overview\nPractice & review.\n• One typed bullet\n• Another typed bullet\nNative item\nObjectives", $course->description);
         $this->assertSame([$media->id], $course->descriptionMedia()->allRelatedIds()->all());
         $this->get(route('admin.course-builder.edit', $course))->assertOk()->assertSee('Full course description')->assertSee('Overview');
         $this->get(route('admin.course-builder.edit', ['course' => $course, 'step' => 'review']))
@@ -114,7 +117,13 @@ final class CourseBuilderStepsTest extends TestCase
         $this->get($public)->assertNotFound();
 
         $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
-        $this->get($public)->assertOk()->assertSee('<h2>Overview</h2>', false)->assertDontSee('unsafe()', false);
+        $this->get($public.'?lang=zh')->assertOk()
+            ->assertSee('<h2>Overview</h2>', false)
+            ->assertSee('<ul><li>One typed bullet</li><li>Another typed bullet</li></ul>', false)
+            ->assertSee('<ul><li><strong>Native item</strong></li></ul>', false)
+            ->assertSee('Bring a notebook.')
+            ->assertSee('English and Khmer')
+            ->assertDontSee('unsafe()', false);
         $this->get($mediaUrl)->assertOk();
 
         $reviewer = User::factory()->create(['role' => 'admin']);
@@ -122,6 +131,8 @@ final class CourseBuilderStepsTest extends TestCase
             ->post(route('admin.course-builder.revise', $course))->assertRedirect();
         $revision = Course::where('source_course_id', $course->id)->sole();
         $this->assertSame($course->description_html, $revision->description_html);
+        $this->assertSame('Bring a notebook.', $revision->public_requirement);
+        $this->assertSame('English and Khmer', $revision->content_language);
         $this->assertSame([$media->id], $revision->descriptionMedia()->allRelatedIds()->all());
         $this->patch(route('admin.course-builder.update', $revision), $fields + [
             'slug' => $revision->slug, 'description' => null, 'description_html' => null,

@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\PublicId;
 use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\CourseReviewSnapshot;
 use App\Models\EditorMedia;
 use App\Support\CourseReadiness;
+use App\Support\CoursePricing;
 use App\Support\EditorHtml;
 use App\Support\FeaturedMedia;
+use App\Support\LearningTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,12 +26,15 @@ class AdminCourseController extends Controller
 {
     private const STEPS = ['details', 'media', 'curriculum', 'quizzes', 'review'];
 
-    public function index(): View
+    public function index(Request $request): View
     {
         return view('workspace.admin.courses', [
             'role' => 'admin',
-            'courses' => Course::with('category')->withCount('modules')
-                ->orderByDesc('id')->paginate(10),
+            'courses' => LearningTable::paginate(
+                LearningTable::courses(Course::with('category')->withCount('modules'), LearningTable::search($request))
+                    ->latest('id'),
+                $request
+            ),
         ]);
     }
 
@@ -87,12 +93,15 @@ class AdminCourseController extends Controller
             'summary' => ['required', 'string', 'max:1000'],
             'description' => ['nullable', 'string', 'max:25000'],
             'description_html' => ['nullable', 'string', 'max:120000'],
+            'public_requirement' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'content_language' => ['sometimes', 'nullable', 'string', 'max:100'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'cefr_level' => ['nullable', 'string', Rule::exists('cefr_levels', 'code')],
             'delivery_mode' => ['required', Rule::in(['online','onsite','hybrid'])],
         ]);
 
-        $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['title']);
+        $preferred = ($data['slug'] ?? null) ?: (Str::slug($data['title']) ?: 'course');
+        $data['slug'] = PublicId::availableSlug(Course::withTrashed()->when($course, fn ($query) => $query->whereKeyNot($course->id)), $preferred, 180);
         validator($data, [
             'slug' => ['required', 'string', 'max:180',
                 Rule::unique('courses', 'slug')->ignore($course?->id)],
@@ -106,7 +115,7 @@ class AdminCourseController extends Controller
             $data['description_html'] = $html;
         }
 
-        return $data + FeaturedMedia::validate($request);
+        return $data + FeaturedMedia::validate($request) + CoursePricing::validate($request);
     }
 
     public function store(Request $request): RedirectResponse
@@ -213,6 +222,6 @@ class AdminCourseController extends Controller
         });
 
         return redirect()->route('admin.course-builder.edit', ['course' => $course, 'step' => 'review'])
-            ->with('status', 'Course submitted for independent administrator review.');
+            ->with('status', 'Course submitted for administrator review.');
     }
 }

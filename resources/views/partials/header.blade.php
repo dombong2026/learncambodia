@@ -3,7 +3,7 @@
         <div class="border-b border-blue-900 bg-blue-950 px-4 py-2 text-center text-xs font-semibold text-white">{{ \App\Support\Appearance::value('header','announcement') }}</div>
     @endif
     <header class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6 lg:px-8">
-        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" aria-label="Learn Cambodia home">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600" aria-label="{{ __(':name home', ['name' => \App\Support\PlatformBranding::name()]) }}">
             <x-brand-logo height="h-8 sm:h-10" imageClass="max-w-[164px] sm:max-w-[210px]" />
         </a>
         <form action="{{ route('courses.index') }}" method="GET" role="search" class="relative mx-auto hidden min-w-0 w-full max-w-[440px] flex-1 sm:block">
@@ -34,11 +34,10 @@
             <button type="button" data-tray-scroll="-1" aria-label="Scroll categories left" class="shrink-0 rounded-full p-2 text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
             <div data-category-tray class="scrollbar-hide flex min-w-0 flex-1 snap-x gap-6 overflow-x-auto scroll-smooth whitespace-nowrap py-3">
                 <a class="snap-start text-sm font-bold text-[#0c2d5b] transition hover:text-[#bd882a] dark:text-[#f7cb77]" href="{{ route('courses.index') }}">{{ __('frontend.nav_courses') }}</a>
-                <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.index') }}">{{ __('frontend.all_categories') }}</a>
+                <a data-category-directory class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.index') }}">{{ __('frontend.all_categories') }}</a>
                 <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('articles.index') }}">{{ __('frontend.nav_articles') }}</a>
-                @foreach ($navigationCategories as $navigationCategory)
-                    <a data-category-short="{{ $navigationCategory->code }}" title="{{ $navigationCategory->name }}" aria-label="{{ $navigationCategory->code }} — {{ $navigationCategory->name }}" class="snap-start shrink-0 rounded-sm text-sm font-extrabold text-slate-600 transition hover:text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('categories.show', $navigationCategory) }}">{{ $navigationCategory->code }}</a>
-                @endforeach
+                @include('partials.category-tray-links')
+                <template data-category-navigation="{{ route('navigation.categories', absolute: false) }}"></template>
                 @if(\App\Support\Appearance::value('menu','show_cefr'))
                 <a class="snap-start text-sm font-semibold text-slate-600 transition hover:text-blue-700 dark:text-slate-300 dark:hover:text-blue-400" href="{{ route('cefr.index') }}">CEFR A1–C2</a>
                 @endif

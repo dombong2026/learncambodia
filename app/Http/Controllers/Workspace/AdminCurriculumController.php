@@ -9,6 +9,9 @@ use App\Models\CourseModule;
 use App\Models\CurriculumLessonRevision;
 use App\Models\EditorMedia;
 use App\Support\EditorHtml;
+use App\Support\LessonQuiz;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +81,10 @@ class AdminCurriculumController extends Controller
         }
         validator($data, ['content' => ['required', 'string', 'max:50000']])->validate();
 
+        if ($request->has('lesson_quiz_present')) {
+            $data['quiz_questions'] = LessonQuiz::validateQuestions($request);
+        }
+
         return $data;
     }
 
@@ -98,6 +105,53 @@ class AdminCurriculumController extends Controller
         }
 
         $lesson->media()->sync($ids);
+    }
+
+    public function reorderModules(Request $request, Course $course): JsonResponse
+    {
+        return $this->mutate($course, fn (Course $locked) =>
+            $this->reorder($request, $locked->modules())
+        );
+    }
+
+    public function reorderLessons(Request $request, Course $course, CourseModule $module): JsonResponse
+    {
+        return $this->mutate($course, function (Course $locked) use ($request, $module): JsonResponse {
+            $module = $locked->modules()->findOrFail($module->id);
+
+            return $this->reorder($request, $module->lessons(), $locked);
+        });
+    }
+
+    private function reorder(Request $request, HasMany $siblings, ?Course $course = null): JsonResponse
+    {
+        $data = $request->validate([
+            'order' => ['required', 'array', 'list', 'min:2', 'max:200'],
+            'order.*' => ['required', 'integer', 'distinct', 'min:1'],
+            'expected' => ['required', 'array', 'list', 'size:'.count($request->array('order'))],
+            'expected.*' => ['required', 'integer', 'distinct', 'min:1'],
+        ]);
+        $items = $siblings->get()->keyBy('id');
+        $expected = array_map('intval', $data['expected']);
+        $order = array_map('intval', $data['order']);
+
+        abort_unless($items->keys()->all() === $expected, 409, 'The curriculum order has changed. Refresh the page and try again.');
+        if (array_diff($order, $expected) !== []) {
+            throw ValidationException::withMessages(['order' => 'Choose items from this curriculum list.']);
+        }
+
+        foreach ($order as $index => $id) {
+            $item = $items->get($id);
+            $item->position = $index + 1;
+            if ($item->isDirty('position')) {
+                $item->save();
+                if ($course !== null) {
+                    CurriculumLessonRevision::capture($course, $item, $request->user(), 'reordered');
+                }
+            }
+        }
+
+        return response()->json(['order' => $order]);
     }
 
     public function storeModule(Request $request,Course $course): RedirectResponse
@@ -188,7 +242,8 @@ class AdminCurriculumController extends Controller
             abort_if($position>999,422,'Lesson order limit reached.');
             $copy=$module->lessons()->create([
                 'title'=>mb_substr($lesson->title,0,160).' (copy)',
-                'content'=>$lesson->content,'content_html'=>$lesson->content_html,'position'=>$position,
+                'content'=>$lesson->content,'content_html'=>$lesson->content_html,
+                'quiz_questions'=>$lesson->quiz_questions,'position'=>$position,
                 'duration_minutes'=>$lesson->duration_minutes,'is_preview'=>false,
             ]);
             $copy->media()->attach($lesson->media()->allRelatedIds());
@@ -211,6 +266,7 @@ class AdminCurriculumController extends Controller
             foreach($module->lessons as $lesson){
                 $duplicate=$copy->lessons()->create([
                     'title'=>$lesson->title,'content'=>$lesson->content,'content_html'=>$lesson->content_html,
+                    'quiz_questions'=>$lesson->quiz_questions,
                     'position'=>$lesson->position,'duration_minutes'=>$lesson->duration_minutes,
                     'is_preview'=>false,
                 ]);

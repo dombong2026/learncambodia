@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicId;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,19 +14,26 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Course extends Model
 {
+    use HasPublicId, SoftDeletes;
+
     public const FEATURED_FIELDS = ['featured_kind', 'featured_media_id', 'featured_value', 'featured_alt'];
 
     protected $fillable = [
         ...self::FEATURED_FIELDS,
         'category_id', 'slug', 'title', 'summary', 'description', 'description_html',
-        'cefr_level', 'delivery_mode', 'status', 'published_at',
+        'cefr_level', 'delivery_mode', 'public_requirement', 'content_language', 'pricing', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
         'source_course_id', 'revision_number', 'superseded_at',
     ];
 
     protected function casts(): array
     {
-        return ['published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime'];
+        return ['pricing' => 'array', 'published_at' => 'datetime', 'submitted_at' => 'datetime', 'reviewed_at' => 'datetime', 'superseded_at' => 'datetime', 'deactivated_at' => 'datetime'];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function featuredMedia(): BelongsTo
@@ -49,6 +59,16 @@ class Course extends Model
     public function lessons(): HasManyThrough
     {
         return $this->hasManyThrough(CourseLesson::class, CourseModule::class, 'course_id', 'course_module_id');
+    }
+
+    public function exams(): HasMany
+    {
+        return $this->hasMany(CourseExam::class);
+    }
+
+    public function certificateTemplates(): BelongsToMany
+    {
+        return $this->belongsToMany(CertificateTemplate::class, 'course_certificate_templates');
     }
 
     public function quizzes(): HasMany
@@ -78,7 +98,16 @@ class Course extends Model
 
     public function scopeDiscoverable(Builder $query): Builder
     {
-        return $query->published()->whereNull('superseded_at');
+        return $query->published()->whereNull('superseded_at')->whereNull('deactivated_at');
+    }
+
+    public function managerStatus(): string
+    {
+        return match (true) {
+            $this->superseded_at !== null => 'Superseded',
+            $this->deactivated_at !== null => 'Inactive',
+            default => str($this->status)->replace('_', ' ')->title()->toString(),
+        };
     }
 
     public function sourceCourse(): BelongsTo

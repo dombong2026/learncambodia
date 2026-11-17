@@ -1,13 +1,25 @@
 @extends('layouts.public')
-@section('title',$course->title.' · Practice Assessments')
+@section('canonical', e(route('learning.exam.show', $course->getRouteKey())))
+@section('title',$course->title.' · Course Assessments')
 @section('meta_description',$course->summary)
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_course_exam'); @endphp
-<x-learning-hero :title="$course->title" :subtitle="$course->summary" eyebrow="Course exam / Reviewed practice" icon="clipboard-check" :action-url="'#practice-quiz-list'" action-label="View course practice"
+<x-learning-hero :title="$course->title" :subtitle="$course->summary" eyebrow="Course assessments" icon="clipboard-check" :action-url="$exams->isNotEmpty() ? '#course-exams' : '#practice-quiz-list'" action-label="View assessments"
     :stats="[
         ['value'=>number_format($quizzes->count()),'label'=>'Reviewed practice quizzes','icon'=>'list-check'],
         ['value'=>number_format($quizzes->sum('questions_count')),'label'=>'Practice questions','icon'=>'clipboard-check'],
     ]"/>
+@if($exams->isNotEmpty())
+    <x-learning-section id="course-exams" title="Course exams" tone="white">
+        <div class="grid gap-4 sm:grid-cols-2">
+            @foreach($exams as $exam)
+                <x-learning-card :href="$enrollment ? route('account.enrollments.show',$enrollment) : route('courses.show',$course->getRouteKey())"
+                    :title="$exam->title" :description="$exam->type->name.' · '.$exam->time_limit.' minutes'"
+                    icon="clipboard-check" :action="$enrollment ? 'Open enrolled course' : 'View course'" />
+            @endforeach
+        </div>
+    </x-learning-section>
+@endif
 <x-learning-section :title="$a['intro_heading']" eyebrow="About this course" tone="white" subtitle="The preparation area uses the existing reviewed quiz engine. Course content remains protected until your enrollment is approved.">
     <div class="grid gap-7 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,.6fr)]">
         <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-8 dark:border-slate-700 dark:bg-[#183657]">
@@ -26,7 +38,7 @@
             @if($enrollment)
                 <a href="{{ route('account.enrollments.show',$enrollment) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Open approved course</a>
             @elseif(auth()->check() && auth()->user()->role==='student')
-                <a href="{{ route('courses.show',$course->slug) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Request enrollment</a>
+                <a href="{{ route('courses.show',$course->getRouteKey()) }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Request enrollment</a>
             @elseif(auth()->guest())
                 <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}" class="mt-6 block rounded-xl bg-[#f1c673] px-5 py-3.5 text-center text-xs font-black text-[#0d3159]">Sign in to learn</a>
             @else
@@ -46,7 +58,7 @@
                 @if($enrollment)
                     <a href="{{ route('account.practice.show',[$enrollment,$quiz]) }}" class="mt-6 rounded-xl bg-[#123b67] px-5 py-3 text-center text-xs font-black text-white">Start approved practice</a>
                 @else
-                    <a href="{{ route('courses.show',$course->slug) }}" class="mt-6 rounded-xl border border-[#d4ad66] px-5 py-3 text-center text-xs font-bold text-[#a77a29] dark:text-[#f5c878]">View enrollment requirements</a>
+                    <a href="{{ route('courses.show',$course->getRouteKey()) }}" class="mt-6 rounded-xl border border-[#d4ad66] px-5 py-3 text-center text-xs font-bold text-[#a77a29] dark:text-[#f5c878]">View enrollment requirements</a>
                 @endif
             </div>
         @endforeach
@@ -54,7 +66,7 @@
 </x-learning-section>
 <x-learning-section :title="$a['steps_heading']" eyebrow="Preparation path" tone="navy">
     <div class="grid gap-5 md:grid-cols-3">
-        <x-learning-card :href="route('courses.show',$course->slug)" title="Study the course outline" description="Understand objectives, learning units and assessment context." icon="book-open"/>
+        <x-learning-card :href="route('courses.show',$course->getRouteKey())" title="Study the course outline" description="Understand objectives, learning units and assessment context." icon="book-open"/>
         <x-learning-card :href="$enrollment?route('account.enrollments.show',$enrollment):route('login')" title="Review approved lessons" description="Only the enrolled learner may access private study content." icon="lock"/>
         <x-learning-card :href="$enrollment?route('account.practice.index'):route('login')" title="Complete your own practice" description="Submit answers securely and review results within your account." icon="clipboard-check"/>
     </div>
@@ -68,7 +80,7 @@
         @endforelse
     </div>
 </x-learning-section>
-<x-learning-section :title="$a['cta_heading']" eyebrow="Academic practice" tone="mist" :action-url="route('courses.show',$course->slug)" action-label="Course details" subtitle="Practice quizzes are optional, limited attempts for learning, and never official examination certification.">
+<x-learning-section :title="$a['cta_heading']" eyebrow="Academic practice" tone="mist" :action-url="route('courses.show',$course->getRouteKey())" action-label="Course details" subtitle="Practice quizzes are optional, limited attempts for learning, and never official examination certification.">
     <p class="text-sm leading-8 text-slate-600 dark:text-slate-300">For other educational materials, explore the <a href="{{ route('learning.library') }}" class="font-black text-[#a67b2d] underline">library</a> or <a href="{{ route('learning.reading') }}" class="font-black text-[#a67b2d] underline">reading hub</a>.</p>
 </x-learning-section>
 @endsection

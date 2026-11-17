@@ -23,6 +23,11 @@ final class EditorMedia extends Model
         return $this->belongsToMany(CourseLesson::class, 'course_lesson_media');
     }
 
+    public function exams(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseExam::class, 'course_exam_media');
+    }
+
     public static function claim(?string $html, User $actor, string $context, int $ownerId): void
     {
         $ids = EditorHtml::mediaIds($html);

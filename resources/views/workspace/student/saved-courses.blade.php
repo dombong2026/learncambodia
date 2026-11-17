@@ -18,7 +18,7 @@
                 @csrf @method('DELETE')
                 <button type="submit" aria-label="{{ __('saved_courses.remove_course', ['course' => $course->title]) }}" class="rounded-full border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:border-red-600 dark:border-slate-600 dark:text-slate-200">{{ __('saved_courses.remove') }}</button>
             </form>
-            <a href="{{ route('courses.show', ['course' => $course->slug]) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">{{ __('saved_courses.view') }}</a>
+            <a href="{{ route('courses.show', ['course' => $course->getRouteKey()]) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">{{ __('saved_courses.view') }}</a>
         </div>
     </article>
 @empty

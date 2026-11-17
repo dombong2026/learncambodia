@@ -685,6 +685,42 @@ test('compact public category nav retains full tooltip and accessible names on a
   await expect(page.locator('h1')).toContainText('English as a Second Language');
 });
 
+test('an open public tab refreshes category links and keeps fixed navigation intact', async ({ page }) => {
+  let categoryIsActive = true;
+  await page.route('**/api/navigation/categories', async route => {
+    const response = await route.fetch();
+    const original = await response.text();
+    const body = categoryIsActive ? original
+      : original.replace(/<a\b[^>]*data-category-short="ESL"[^>]*>[^<]*<\/a>/u, '');
+    await route.fulfill({
+      response, body,
+      headers: { ...response.headers(), 'content-length': String(Buffer.byteLength(body)) },
+    });
+  });
+  const firstRefresh = page.waitForResponse('**/api/navigation/categories');
+  await page.goto('/?lang=km');
+  await firstRefresh;
+
+  const tray = page.locator('[data-category-tray]');
+  const category = tray.locator('[data-category-short="ESL"]');
+  const directory = tray.locator('[data-category-directory]');
+  await expect(category).toHaveCount(1);
+  await category.focus();
+
+  categoryIsActive = false;
+  await page.evaluate(() => window.dispatchEvent(new StorageEvent('storage', {
+    key: 'learncambodia.category-navigation.changed',
+  })));
+  await expect(category).toHaveCount(0);
+  await expect(directory).toBeFocused();
+  await expect(tray.locator('[data-category-short="EFL"]')).toHaveCount(1);
+
+  categoryIsActive = true;
+  await expect(category).toHaveCount(1, { timeout: 10000 });
+  await expect(category).toHaveAttribute('href', /lang=km/);
+  await expect(category).toHaveAttribute('title', 'English as a Second Language');
+});
+
 test('short category navigation does not shorten catalog cards or full search terms', async ({ page }) => {
   await page.goto('/categories?q=English%20as%20a%20Second%20Language&lang=en');
   await expect(page.locator('[data-category-tray] [data-category-short="ESL"]')).toHaveText('ESL');

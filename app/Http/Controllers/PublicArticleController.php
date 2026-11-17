@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
+use App\Support\PublicId;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -35,8 +36,7 @@ class PublicArticleController extends Controller
 
     public function show(string $article): View
     {
-        $article = ContentEntry::query()->publishedArticles()->with(['category', 'featuredMedia'])
-            ->where('slug',$article)->firstOrFail();
+        $article = PublicId::lookup(ContentEntry::publishedArticles()->with(['category', 'featuredMedia']), $article);
 
 
         $related=ContentEntry::query()->publishedArticles()

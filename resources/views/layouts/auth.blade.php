@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0c2d5b">
     <meta name="robots" content="noindex,nofollow">
-    <title>@yield('title') · Learn Cambodia</title>
+    <title>@yield('title') · {{ \App\Support\PlatformBranding::name() }}</title>
     @include('partials.brand-head')
     @include('partials.theme-boot')
     @vite(['resources/css/app.css','resources/js/app.ts'])

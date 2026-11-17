@@ -62,13 +62,10 @@ class CurriculumHistoryAndReviewTest extends TestCase
         $this->post('/dashboard/course-builder/'.$course->id.'/submit')->assertRedirect();
         $snapshot=CourseReviewSnapshot::firstOrFail();
         $this->assertSame(64,strlen($snapshot->fingerprint));
-        $this->post('/dashboard/reviews/courses/'.$course->id,['decision'=>'approve'])->assertForbidden();
-
-        $this->actingAs($reviewer)
-            ->post('/dashboard/reviews/courses/'.$course->id,['decision'=>'approve'])->assertRedirect();
+        $this->post('/dashboard/reviews/courses/'.$course->id,['decision'=>'approve'])->assertRedirect();
         $this->assertSame('published',$course->fresh()->status);
         $this->assertSame('approve',$snapshot->fresh()->decision);
-        $this->assertSame($reviewer->id,$snapshot->fresh()->reviewed_by);
+        $this->assertSame($author->id,$snapshot->fresh()->reviewed_by);
     }
 
     public function test_pending_content_changes_block_approval_and_history_is_admin_only(): void

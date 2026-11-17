@@ -2,18 +2,20 @@
 
 namespace App\Models;
 
+use App\Support\PublicId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PublicProfile extends Model
 {
-    protected $fillable = ['user_id','kind','display_name','headline','subjects','city','bio','show_learning_summary'];
+    protected $fillable = ['user_id','kind','display_name','headline','subjects','city','bio','show_learning_summary', 'social_links'];
 
     protected function casts(): array
     {
         return [
             'show_learning_summary'=>'boolean',
+            'social_links'=>'array',
             'consented_at'=>'datetime',
             'adult_confirmed_at'=>'datetime',
             'reviewed_at'=>'datetime',
@@ -26,6 +28,26 @@ final class PublicProfile extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function getRouteKey()
+    {
+        return $this->user?->public_id
+            ? PublicId::path($this->user->public_id, $this->display_name)
+            : parent::getRouteKey();
+    }
+
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        if ($field === null && ($id = PublicId::fromPath($value, 8))) {
+            return $query->whereHas('user', fn ($users) => $users->where('public_id', $id));
+        }
+
+        if ($field === null && !ctype_digit((string) $value)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return parent::resolveRouteBindingQuery($query, $value, $field);
+    }
+
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
@@ -33,7 +55,7 @@ final class PublicProfile extends Model
 
     public function scopeVisible(Builder $query): Builder
     {
-        return $query->where('status','published')->whereNotNull('consented_at')
+        return $query->with('user:id,public_id')->where('status','published')->whereNotNull('consented_at')
             ->whereNotNull('published_at')
             ->whereHas('user', fn(Builder $users) =>
                 $users->whereColumn('users.role','public_profiles.kind'))

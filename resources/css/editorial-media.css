@@ -43,7 +43,7 @@
 
 .featured-video-controls button[hidden] { display: none; }
 .featured-video-controls button:hover { background: #24425d; }
-.featured-video-controls button:focus-visible { outline: 2px solid #f8c867; outline-offset: -2px; }
+.featured-video-controls button:focus-visible { outline: 1px solid #f8c867; outline-offset: -2px; }
 .featured-video-controls svg { width: 1.2rem; height: 1.2rem; }
 .featured-video-controls input { min-width: 1.5rem; flex: 1; accent-color: #f8c867; }
 .featured-video-time { flex: 0 0 auto; font-size: .72rem; font-variant-numeric: tabular-nums; }

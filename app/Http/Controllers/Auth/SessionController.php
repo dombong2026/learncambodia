@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContentEntry;
 use App\Models\User;
 use App\Support\ReadingReturn;
+use App\Support\AccountSignIn;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,7 +64,23 @@ class SessionController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $factorUser = null;
+        $authenticated = Auth::attemptWhen($credentials, function (User $user) use (&$factorUser): bool {
+            if (!$user->hasEnabledTwoFactorAuthentication()) {
+                return true;
+            }
+            $factorUser = $user;
+
+            return false;
+        }, $request->boolean('remember'));
+
+        if ($factorUser !== null) {
+            RateLimiter::clear($key);
+
+            return AccountSignIn::start($request, $factorUser, $request->boolean('remember'));
+        }
+
+        if (!$authenticated) {
             RateLimiter::hit($key, 60);
             RateLimiter::hit($ipKey, 60);
 
@@ -75,7 +92,7 @@ class SessionController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
 
-        // Explicit public reading journeys return to the same article/exam.
+        // Explicit public detail links return to the page that opened sign-in.
         // All other successful sign-ins go to the user's own role dashboard.
         $returnTo = ReadingReturn::valid($request->session()->pull('auth.reading_return'));
 

@@ -68,7 +68,7 @@ class EditorialDirectPublicationTest extends TestCase
             'publication_intent' => 'publish',
         ])->assertRedirect();
         $entry = ContentEntry::firstOrFail();
-        $this->get('/information/privacy')->assertRedirect('/policies/privacy');
+        $this->get('/information/privacy')->assertRedirect(ContentEntry::where('type', 'policy')->where('slug', 'privacy')->firstOrFail()->publicUrl());
         $this->get('/information/contact')->assertOk()->assertSee('Privacy policy');
         $this->get('/policies')->assertOk()->assertSee('Privacy policy');
         $this->patch('/dashboard/editorial/policies/'.$entry->id, [

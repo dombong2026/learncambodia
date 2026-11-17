@@ -17,14 +17,17 @@ final class ReadingReturn
         }
 
         return preg_match(
-            '~\A/(?:articles/[a-z0-9][a-z0-9-]*|exam-catalog(?:/[a-z0-9][a-z0-9-]*)?)(?:\?lang=(?:en|km|zh))?\z~iD',
+            '~\A/(?:(?:articles|courses|assessments|exams|quizzes)/[a-z0-9][a-z0-9-]*|exam-catalog(?:/[a-z0-9][a-z0-9-]*)?)(?:\?lang=(?:en|km|zh))?\z~iD',
             $value
         ) === 1 ? $value : null;
     }
 
     public static function onPage(Request $request): ?string
     {
-        if (! $request->routeIs('articles.show', 'learning.exam.show', 'learning.exams')) {
+        if (! $request->routeIs(
+            'articles.show', 'courses.show', 'learning.exam.show', 'learning.exams',
+            'assessments.show', 'public.exams.show', 'public.quizzes.show',
+        )) {
             return null;
         }
 

@@ -3,7 +3,7 @@
         <h4 id="module-editor-heading" class="font-extrabold">{{ $editingModule ? 'Edit module' : 'Add module' }}</h4>
         <a class="builder-back" href="{{ $curriculumUrl($editingModule) }}">Cancel</a>
     </div>
-    <form id="course-curriculum-form" data-builder-edit method="POST" action="{{ $editingModule ? route('admin.course-builder.modules.update', [$course, $editingModule]) : route('admin.course-builder.modules.store', $course) }}" class="space-y-4">
+    <form id="course-curriculum-form" data-builder-edit data-order-editor="module" data-order-item="{{ $editingModule?->id }}" method="POST" action="{{ $editingModule ? route('admin.course-builder.modules.update', [$course, $editingModule]) : route('admin.course-builder.modules.store', $course) }}" class="space-y-4">
         @csrf @if($editingModule)@method('PATCH')@endif
         <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem]">
             <label class="builder-field">Module title<input name="title" required maxlength="180" value="{{ old('title', $editingModule?->title) }}"></label>

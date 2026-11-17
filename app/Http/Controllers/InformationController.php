@@ -31,9 +31,11 @@ class InformationController extends Controller
     {
         abort_unless(array_key_exists($page, self::PAGES), 404);
 
-        if (in_array($page, ['terms', 'privacy'], true)
-            && ContentEntry::query()->where('type', 'policy')->where('status', 'published')->where('slug', $page)->exists()) {
-            return redirect()->route('policies.show', $page);
+        if (in_array($page, ['terms', 'privacy'], true)) {
+            $policy = ContentEntry::where('type', 'policy')->where('status', 'published')->where('slug', $page)->first();
+            if ($policy) {
+                return redirect($policy->publicUrl());
+            }
         }
 
         [$title, $lede, $body] = self::PAGES[$page];

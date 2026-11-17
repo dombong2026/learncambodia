@@ -1,0 +1,84 @@
+.system-settings-alert {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.dark .system-settings-alert {
+    background: #450a0a;
+    border-color: #7f1d1d;
+    color: #fecaca;
+}
+
+@media (min-width: 640px) {
+    .system-settings-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
+
+    .system-settings-value {
+        text-align: right;
+    }
+}
+
+.workspace-content .system-settings-light-preview h2,
+.workspace-content .system-settings-light-preview p {
+    color: #1e293b;
+}
+
+.cloud-storage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cloud-storage-table th,
+.cloud-storage-table td {
+    padding: 0.85rem 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.cloud-storage-table .cloud-storage-actions {
+    text-align: right;
+}
+
+.cloud-storage-table .cloud-storage-name {
+    overflow-wrap: anywhere;
+}
+
+.cloud-storage-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(44rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: clamp(1rem, 3vw, 1.75rem);
+    border: 1px solid #cbd5e1;
+    border-radius: 1rem;
+    background: #fff;
+    color: #0f172a;
+    box-shadow: 0 0 0 100vmax #02061785;
+    z-index: 100;
+}
+
+.cloud-storage-dialog:modal {
+    box-shadow: 0 20px 60px #02061766;
+}
+
+.cloud-storage-dialog::backdrop {
+    background: #020617aa;
+}
+
+.dark .cloud-storage-dialog {
+    border-color: #334155;
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
+@media (max-width: 640px) {
+    .cloud-storage-table th,
+    .cloud-storage-table td {
+        padding: 0.65rem;
+    }
+}

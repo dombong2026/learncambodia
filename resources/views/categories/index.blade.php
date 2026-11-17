@@ -158,7 +158,7 @@
         <div class="flex flex-wrap items-end justify-between gap-4"><h2 class="text-3xl font-black text-[#10335e] dark:text-white">{{ __('longpage.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="font-bold text-[#a77725] hover:underline">{{ __('longpage.view_resources') }}</a></div>
         <div class="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @forelse($articles as $article)
-                <a href="{{ route('articles.show',$article->slug) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dfb465] dark:border-slate-700 dark:bg-[#163656]">
+                <a href="{{ route('articles.show',$article->getRouteKey()) }}" class="premium-card group flex flex-col rounded-3xl border border-slate-200 bg-white p-7 shadow-sm hover:border-[#dfb465] dark:border-slate-700 dark:bg-[#163656]">
                     <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><p class="premium-card-content text-xs font-black uppercase tracking-[.14em] text-[#ac782a]">{{ __('longpage.approved_article') }}</p>
                     <h3 class="mt-4 text-lg font-black text-[#11345e] group-hover:underline dark:text-white">{{ $article->title }}</h3><p class="mt-3 flex-1 text-sm leading-8 text-slate-600 dark:text-slate-300">{{ $article->summary }}</p>
                     <span class="mt-5 text-xs font-black text-[#aa782c]">{{ __('frontend.read_article') }}</span>

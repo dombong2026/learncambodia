@@ -55,6 +55,7 @@ $reviewable=in_array($kind,['posts','faqs','help-articles'],true);
                 </div>
             </details>
             @if($kind==='posts')
+            <x-learning-detail-fields :record="$entry" kind="article" />
             <div class="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-700">
                 <label class="block text-xs font-bold" for="learning_category_id">Learning category</label>
                 <select id="learning_category_id" name="category_id" class="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-900">

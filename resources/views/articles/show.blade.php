@@ -1,30 +1,42 @@
 @extends('layouts.public')
+@section('canonical', e($article->publicUrl()))
 @section('title',$article->seo_title ?: $article->title)
 @section('meta_description', $article->seo_description ?: ($article->summary ?: \Illuminate\Support\Str::limit($article->body, 155)))
+@if($article->featured_kind === 'image' && $article->featuredMedia)
+    @section('og_image', route('editor-media.show', $article->featuredMedia))
+@endif
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_blog'); @endphp
-<x-learning-hero :title="$article->title" :subtitle="$article->summary" eyebrow="Blog / Educational article" icon="newspaper" :action-url="'#article-body'" action-label="Start reading"/>
-<x-learning-section id="article-body" :title="$a['reading_heading']" eyebrow="Published educational content" tone="white">
-    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(290px,.6fr)]">
-        <article data-public-document="post" class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 dark:border-slate-700 dark:bg-[#183658]">
-            <x-editorial-featured-media :entry="$article"/>
+<x-detail-hero :title="$article->title" :entry="$article" icon="newspaper" :label="__('detail.article')">
+    <x-slot:rail>
+        <h2 class="text-xl font-black">{{ __('detail.start_reading') }}</h2>
+        <a href="#article-body" class="mt-4 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">{{ $a['reading_heading'] }}</a>
+        <a href="{{ route('articles.index') }}" class="mt-3 block rounded-xl border border-[#d9b464] px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10">{{ __('detail.browse_articles') }}</a>
+        <x-detail-share :url="$article->publicUrl()" :title="$article->title" :instructors="$author ? [$author] : []" />
+    </x-slot:rail>
+</x-detail-hero>
+
+<div class="detail-grid mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <div class="min-w-0 space-y-5">
+        <article id="article-body" data-public-document="post" class="min-w-0 scroll-mt-40 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-700 dark:bg-[#152e50]">
+            <h2 class="mb-5 text-xl font-black text-[#12355e] dark:text-white">{{ $a['reading_heading'] }}</h2>
             @if($article->body_html)
                 <div class="rich-public-content break-words text-base leading-8 text-slate-700 dark:text-slate-200">{!! \App\Support\EditorHtml::clean($article->body_html) !!}</div>
             @else
-            @forelse($paragraphs as $index=>$paragraph)
-                <section id="article-part-{{ $index+1 }}" class="scroll-mt-36 {{ $index>0?'border-t border-slate-200 pt-7 dark:border-slate-700':'' }} {{ $index>0?'mt-8':'' }}">
-                    <p class="whitespace-pre-line break-words text-base leading-10 text-slate-700 dark:text-slate-200">{{ $paragraph }}</p>
-                </section>
-            @empty
-                <p class="text-sm text-slate-500">No article body is available for reading.</p>
-            @endforelse
+                @forelse($paragraphs as $index=>$paragraph)
+                    <section id="article-part-{{ $index+1 }}" class="scroll-mt-36 {{ $index>0?'border-t border-slate-200 pt-7 dark:border-slate-700':'' }} {{ $index>0?'mt-8':'' }}">
+                        <p class="whitespace-pre-line break-words text-base leading-10 text-slate-700 dark:text-slate-200">{{ $paragraph }}</p>
+                    </section>
+                @empty
+                    <p class="text-sm text-slate-500">No article body is available for reading.</p>
+                @endforelse
             @endif
             <div class="mt-10 border-t border-slate-200 pt-6 text-xs leading-8 text-slate-500 dark:border-slate-700">Content on this page is for education and does not constitute an official examination result or qualification.</div>
         </article>
-        <aside class="space-y-5 lg:sticky lg:top-40">
-            @if($article->category)
-                <a href="{{ route('categories.show', $article->category) }}" class="block rounded-2xl border border-slate-200 p-4 text-sm font-bold hover:underline dark:border-slate-700">{{ $article->category->name }}</a>
-            @endif
+        <x-learning-detail-metadata :record="$article" kind="article" />
+    </div>
+    <aside class="min-w-0 space-y-5">
+        @if(!$article->body_html && count($paragraphs) > 1)
             <div class="rounded-3xl border border-slate-200 bg-[#f5f7fa] p-6 dark:border-slate-700 dark:bg-[#19395a]">
                 <h2 class="text-lg font-black text-[#10345d] dark:text-white">{{ $a['outline_heading'] }}</h2>
                 <p class="mt-2 text-xs text-slate-500 dark:text-slate-300">Jump between article paragraphs</p>
@@ -34,24 +46,24 @@
                     @endforeach
                 </nav>
             </div>
-            <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 dark:border-slate-700 dark:bg-[#19395a]">
-                <h2 class="text-lg font-black">Contributor information</h2>
-                @if($author)
-                    <p class="mt-3 text-base font-bold">{{ $author->display_name }}</p>
-                    <p class="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-300">{{ $author->headline }}</p>
-                    <a href="{{ route('authors.show',$author) }}" class="mt-4 inline-block text-xs font-black text-[#a67829]">Read approved author biography →</a>
-                @else
-                    <p class="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">Published by the editorial team. Individual contributor identity remains private unless the author consents and a reviewer approves the public profile.</p>
-                @endif
-            </div>
-            <a href="{{ route('information.show','contact') }}" class="block rounded-2xl bg-[#113862] px-6 py-4 text-center text-xs font-bold text-white">Question about this article? Contact support</a>
-        </aside>
-    </div>
-</x-learning-section>
+        @endif
+        <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 dark:border-slate-700 dark:bg-[#19395a]">
+            <h2 class="text-lg font-black">Contributor information</h2>
+            @if($author)
+                <p class="mt-3 text-base font-bold">{{ $author->display_name }}</p>
+                <p class="mt-2 text-sm leading-7 text-slate-500 dark:text-slate-300">{{ $author->headline }}</p>
+                <a href="{{ route('authors.show',$author) }}" class="mt-4 inline-block text-xs font-black text-[#a67829]">Read approved author biography →</a>
+            @else
+                <p class="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-300">Published by the editorial team. Individual contributor identity remains private unless the author consents and a reviewer approves the public profile.</p>
+            @endif
+        </div>
+        <a href="{{ route('information.show','contact') }}" class="block rounded-2xl bg-[#113862] px-6 py-4 text-center text-xs font-bold text-white">Question about this article? Contact support</a>
+    </aside>
+</div>
 <x-learning-section :title="$a['related_heading']" eyebrow="Continue reading" subtitle="Only other genuinely published articles appear below." tone="mist">
     <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         @forelse($related as $entry)
-            <x-learning-card :href="route('articles.show',$entry->slug)" :title="$entry->title" :description="$entry->summary" icon="newspaper" eyebrow="Educational article" action="Read article"/>
+            <x-learning-card :href="route('articles.show',$entry->getRouteKey())" :title="$entry->title" :description="$entry->summary" icon="newspaper" eyebrow="Educational article" action="Read article"/>
         @empty
             <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-9 text-sm text-slate-500">No other published articles yet. <a href="{{ route('articles.index') }}" class="font-bold underline">Browse the article directory</a>.</p>
         @endforelse

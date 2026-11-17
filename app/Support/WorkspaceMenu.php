@@ -17,15 +17,19 @@ final class WorkspaceMenu
         $definitions = match ($role) {
             'admin' => [
                 ['overview','Overview','layout',['dashboard']],
-                ['content','Content & Appearance','palette',['appearance']],
+                ['content','Content','content-folder',['content']],
+                ['appearance','Appearance','palette',['appearance']],
                 ['page-manager','Page Manager','files',['page-manager']],
                 ['post-manager','Post Manager','newspaper',['post-manager']],
                 ['policy-center','Policy Center','shield',['policy-center']],
                 ['support-center','Support Center','headphones',['support-center']],
-                ['programs','Academic Programs','book',['category','courses']],
+                ['course-manager','Course Manager','book',['courses','category','course-appearance']],
+                ['examination','Examination','graduation',['examination']],
+                ['quiz-manager','Quiz Manager','quiz-bank',['quiz-manager']],
                 ['people','People & Accounts','users',['user-manager']],
                 ['review','Reviews & Quality','shield',['approvals','academic-quality']],
                 ['reporting','Analytics','activity',['learning-insights']],
+                ['system-settings','System Settings','settings',['system-settings']],
             ],
             'student' => [
                 ['overview','Overview','layout',['dashboard']],
@@ -65,12 +69,6 @@ final class WorkspaceMenu
                     $items[] = $item;
                 }
             }
-            if ($role === 'admin' && $key === 'content' && Route::has('admin.media-library.index')) {
-                $items[] = [
-                    'key' => 'media-library', 'label' => 'Media Library', 'route' => 'admin.media-library.index',
-                    'icon' => 'media-library', 'section_title' => 'Content & Appearance',
-                ];
-            }
             if ($role === 'admin' && $key === 'people' && Route::has('admin.public-profiles.index')) {
                 $items[] = [
                     'key'=>'public-profiles','label'=>'Public Profile Reviews',
@@ -100,10 +98,21 @@ final class WorkspaceMenu
             'appearance/menu' => 'list-tree',
             'appearance/footer' => 'panel-bottom',
             'appearance/typography' => 'type',
-            'appearance/home' => 'house',
-            'appearance/about' => 'info',
-            'appearance/contact' => 'mail',
-            'appearance/course' => 'presentation',
+            'content/home' => 'house',
+            'content/about' => 'info',
+            'content/contact' => 'mail',
+            'content/media-library' => 'media-library',
+            'course-appearance/course' => 'presentation',
+            'course-appearance/catalog' => 'library',
+            'examination/exams' => 'exam-sheet',
+            'examination/create' => 'exam-create',
+            'quiz-manager/quizzes' => 'quiz-bank',
+            'quiz-manager/create' => 'quiz-create',
+            'quiz-manager/quiz-types' => 'quiz-types',
+            'examination/exam-types' => 'exam-types',
+            'examination/certificate-types' => 'certificate-type',
+            'examination/templates' => 'certificate-design',
+            'examination/certificates' => 'certificate-issued',
             'appearance/catalog' => 'library',
             'appearance/auth' => 'lock',
             'page-manager/all' => 'files',
@@ -133,6 +142,10 @@ final class WorkspaceMenu
             'approvals/appearance-reviews' => 'eye',
             'approvals/enrollment-reviews' => 'user-round-check',
             'learning-insights/overview' => 'chart-column',
+            'system-settings/branding' => 'brand-identity',
+            'system-settings/security' => 'shield-check',
+            'system-settings/social-auth' => 'log-in',
+            'system-settings/cloud-storage' => 'cloud-storage',
             'academic-quality/gradebook' => 'chart-line',
             'academic-quality/evidence' => 'badge-check',
             'learning/categories' => 'compass',
@@ -145,6 +158,9 @@ final class WorkspaceMenu
             'learning/lesson-notes' => 'notebook-text',
             'homework/available' => 'notebook-pen',
             'homework/submissions' => 'send',
+            'assessments/standalone-exams' => 'exam-sheet',
+            'assessments/standalone-quizzes' => 'quiz-bank',
+            'assessments/assigned' => 'clipboard-list',
             'assessments/practice' => 'list-check',
             'assessments/practice-history' => 'history',
             'support/help' => 'life-buoy',
@@ -165,6 +181,10 @@ final class WorkspaceMenu
 
     public static function find(string $role, string $section, string $item): ?array
     {
+        if ($role === 'admin' && $section === 'appearance' && in_array($item, ['home', 'about', 'contact'], true)) {
+            $section = 'content';
+        }
+
         foreach (config('workspaces.'.$role, []) as $group) {
             if ($group['key'] !== $section) continue;
             foreach ($group['items'] as $entry) {
@@ -299,7 +319,9 @@ final class WorkspaceMenu
         }
         if ($parent === null) foreach (self::groups($role) as $group) {
             foreach ($group['items'] as $item) {
-                if (($item['route'] ?? '') === $current) {
+                if (($item['route'] ?? '') === $current
+                    && collect($item['parameters'] ?? [])->every(fn ($value, $key) =>
+                        (string) (request()->route($key) ?? request()->query($key, $key === 'focus' ? 'courses' : '')) === (string) $value)) {
                     $parent = [
                         'label' => $group['title'],
                         'url' => self::href($role, $group, $group['items'][0]),
@@ -313,6 +335,11 @@ final class WorkspaceMenu
             $prefix = explode('.', $current)[1] ?? '';
             $route = match ($role.':'.$prefix) {
                 'admin:course-builder' => 'admin.courses.index',
+                'admin:exams' => 'admin.exams.index',
+                'admin:quizzes-manager' => 'admin.quizzes-manager.index',
+                'account:assessment-attempts' => 'assessments.exams',
+                'account:assessments' => 'account.assessments.index',
+                'admin:certificate-templates' => 'admin.certificate-templates.index',
                 'admin:appearance' => 'admin.appearance.index',
                 'admin:editorial' => 'admin.editorial.index',
                 'instructor:grading' => 'instructor.grading.index',

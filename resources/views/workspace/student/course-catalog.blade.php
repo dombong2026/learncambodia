@@ -1,36 +1,47 @@
 @extends('layouts.workspace')
 @section('title', 'Available Courses')
 @section('heading', 'Available Courses')
-@section('description', 'Apply to independently approved courses. Enrollment requires administrator approval; no payment or external test registration occurs.')
+@section('heading_action')
+    <a href="{{ route('account.saved-courses.index') }}" class="learning-manager-control">{{ __('saved_courses.title') }}</a>
+@endsection
 @section('content')
-<div class="mb-5 flex justify-end"><a href="{{ route('account.saved-courses.index') }}" class="rounded-full border border-blue-700 px-5 py-2.5 text-sm font-bold text-blue-700 dark:border-blue-400 dark:text-blue-300">{{ __('saved_courses.title') }}</a></div>
-<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-@forelse($courses as $course)
-    <article class="workspace-panel flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">{{ $course->category?->name }} · {{ $course->cefr_level ?? 'All levels' }}</p>
-        <h2 class="mt-3 text-xl font-extrabold">{{ $course->title }}</h2>
-        <p class="mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
-        <p class="mt-3 text-xs font-semibold text-slate-500">Delivery: {{ ucfirst($course->delivery_mode) }}</p>
-        <div class="mt-6 flex flex-wrap justify-end gap-2">
-            @if(in_array($course->id, $savedCourseIds, true))
-                <form method="POST" action="{{ route('account.saved-courses.destroy', $course) }}">
-                    @csrf @method('DELETE')
-                    <button type="submit" aria-label="{{ __('saved_courses.remove_course', ['course' => $course->title]) }}" class="rounded-full border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-700 dark:border-slate-600 dark:text-slate-200">{{ __('saved_courses.remove') }}</button>
-                </form>
-            @else
-                <form method="POST" action="{{ route('account.saved-courses.store', $course) }}">
+<x-learning-manager-table :items="$courses" name="Course" empty="No courses are available at the moment.">
+    <x-slot:empty-state>
+        <x-workspace-empty-state :title="__('ui.empty_courses')" description="No courses have passed academic review." icon="graduation" :href="route('categories.index')" :action="__('ui.explore_categories')" />
+    </x-slot:empty-state>
+    @foreach($courses as $course)
+        @php
+            $page = route('courses.show', $course);
+            $saved = in_array($course->id, $savedCourseIds, true);
+            $enrollment = $enrollments->get($course->id);
+            $quote = \App\Support\CoursePricing::quote($course->pricing);
+            $price = match ($quote['model']) {
+                'paid' => \App\Support\CoursePricing::formatAmount($quote['amount_minor'], $quote['currency']),
+                'membership' => $quote['plan'].' membership',
+                default => 'Free',
+            };
+        @endphp
+        <x-learning-manager-row :number="$courses->firstItem() + $loop->index" :record="$course"
+            :category="$course->category?->name" :level="$course->cefr_level ?? 'All'" :measure="$course->modules_count"
+            :status="$enrollment ? ucfirst($enrollment->status) : 'Available'" :href="$page" :secondary="$price">
+            <a href="{{ $page }}">Preview</a>
+            @if($enrollment?->status === 'approved')
+                <a href="{{ route('account.enrollments.show', $enrollment) }}">Open lessons</a>
+            @elseif(!$enrollment)
+                <form method="post" action="{{ route('account.enrollments.store', $course) }}">
                     @csrf
-                    <button type="submit" aria-label="{{ __('saved_courses.save_course', ['course' => $course->title]) }}" class="rounded-full border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-700 dark:border-slate-600 dark:text-slate-200">{{ __('saved_courses.save') }}</button>
+                    @if($quote['model'] !== 'free')<input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">@endif
+                    <button type="submit">Request enrollment</button>
                 </form>
             @endif
-            <form method="POST" action="{{ route('account.enrollments.store', $course) }}">@csrf
-                <button type="submit" class="rounded-full bg-blue-700 px-6 py-3 text-sm font-bold text-white hover:bg-blue-800">Request enrollment</button>
+            <form method="post" action="{{ route($saved ? 'account.saved-courses.destroy' : 'account.saved-courses.store', $course) }}">
+                @csrf
+                @if($saved)@method('DELETE')@endif
+                <button type="submit" aria-label="{{ __($saved ? 'saved_courses.remove_course' : 'saved_courses.save_course', ['course' => $course->title]) }}">
+                    {{ __($saved ? 'saved_courses.remove' : 'saved_courses.save') }}
+                </button>
             </form>
-        </div>
-    </article>
-@empty
-    <x-workspace-empty-state :title="__('ui.empty_courses')" description="No courses have passed academic review yet. You can explore published learning categories while new courses are prepared." icon="graduation" :href="route('categories.index')" :action="__('ui.explore_categories')" />
-@endforelse
-</div>
-<div class="mt-7">{{ $courses->links() }}</div>
+        </x-learning-manager-row>
+    @endforeach
+</x-learning-manager-table>
 @endsection

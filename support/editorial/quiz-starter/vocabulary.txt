@@ -1,0 +1,549 @@
+@a1-school|A1|vocabulary|Classroom Objects and School Words
+ruler|A straight tool you use to measure length or draw a straight line
+eraser|A small object you use to rub out pencil marks
+backpack|A bag with two straps that you carry on your back
+notebook|A set of blank or lined pages you can use for writing notes
+scissors|A tool with two blades and handles for cutting paper
+glue|A substance that makes two pieces of paper stick together
+marker|A thick pen used to write on a board
+folder|A cover or container for keeping loose papers together
+desk|A table where a learner can sit and write
+pencil|A writing tool you can sharpen and rub out
+whiteboard|A smooth white surface teachers can write on and wipe clean
+calendar|A chart or book showing the days and months of a year
+clock|An object on a wall or desk that shows the time
+dictionary|A book or website that explains what words mean
+library|A place where people can read or borrow books
+homework|School tasks that students do after class
+classmate|A student in the same class as you
+teacher|The person whose job is to help you learn in class
+timetable|A list showing when each lesson or activity happens
+worksheet|A single printed page with exercises for students to complete
+
+@a1-food|A1|vocabulary|Food and Drinks at the Market
+rice|Small white or brown grains that become soft when cooked
+watermelon|A large fruit with a green outside and usually red flesh
+banana|A long curved fruit with a yellow skin when ripe
+cucumber|A long green vegetable often sliced into salads
+egg|Food with a shell that a chicken can lay
+milk|A white drink that can come from a cow
+orange juice|A drink made by pressing oranges
+bread|Food baked from dough, often cut into slices
+cheese|A food made from milk that can be sliced or grated
+carrot|A hard orange root vegetable
+onion|A vegetable with layers that can make your eyes water when cut
+tomato|A round red fruit often used in salads or sauces
+lemon|A small yellow fruit with a sour taste
+potato|A vegetable that grows underground and can be made into chips
+salt|A white seasoning that makes food taste less plain but not sweet
+sugar|White or brown grains used to make food taste sweet
+noodles|Long, thin strips of food often eaten in soup or fried
+chicken|Meat that comes from a common farm bird
+fish|Food from an animal with fins that lives in water
+ice|Water that has become solid because it is very cold
+
+@a1-home|A1|vocabulary|Rooms and Things at Home
+kitchen|A room where people prepare meals
+bedroom|A room where someone usually sleeps
+bathroom|A room with a bath or shower
+living room|A room where a family can relax together and watch TV
+garden|An area outside a home where flowers or vegetables may grow
+roof|The top part that covers a building
+stairs|A set of steps between floors
+door|A panel you open to get in or out of a room
+window|An opening with glass that lets in light
+sofa|A long soft seat big enough for several people
+pillow|A soft object that supports your head in bed
+blanket|A warm cover you can put over yourself in bed
+curtain|A piece of cloth you can pull across a window
+mirror|A piece of glass in which you can see yourself
+fridge|A machine that keeps food and drinks cold
+sink|A bowl-shaped fixture where you can wash your hands or dishes
+shelf|A flat surface fixed to a wall or inside a cupboard for storing things
+wardrobe|A tall cabinet where you can hang clothes
+lamp|An object that gives light, often standing on a table or floor
+bin|A container where you put rubbish
+
+@a1-town|A1|vocabulary|Useful Places Around Town
+bakery|A shop that makes or sells bread and cakes
+pharmacy|A shop where people buy medicine
+museum|A building where people can see historical objects, art or other collections
+hospital|A place where sick or injured people get medical care
+bank|A place where you can pay money into an account or withdraw it
+bus stop|A marked place where passengers wait for a bus
+police station|A building where police officers work
+post office|A place where you can send a parcel or buy a postage stamp
+market|A place with stalls selling goods such as fruit and clothes
+park|A public outdoor area with paths and often grass or trees
+cinema|A building where people watch films on a large screen
+hotel|A place where visitors can pay to stay overnight
+restaurant|A place where people pay to eat a prepared meal
+swimming pool|An area of water made for people to swim in
+railway station|A place where passengers get on or off a train
+bridge|A structure people use to cross a river or a road
+car park|A place set aside for leaving cars
+playground|An outdoor place where children can use equipment such as slides
+airport|A place where planes arrive and leave
+petrol station|A place where drivers can buy fuel for their vehicles
+
+@a1-clothes|A1|vocabulary|Clothes and Personal Items
+shirt|A top with buttons down the front and often a collar
+jacket|An outer garment for your upper body, normally shorter than a coat
+trousers|A garment that covers both legs separately and goes down towards the ankles
+skirt|A garment that hangs from the waist without separate parts for each leg
+dress|A one-piece garment with a top and a skirt joined together
+socks|Soft clothing worn on the feet inside shoes
+sandals|Open shoes often held on with straps
+boots|Shoes that cover the feet and extend above the ankle
+hat|An item you wear on your head, often with a brim
+scarf|A long piece of cloth worn around the neck
+belt|A strip of material worn around the waist to hold clothes in place
+gloves|Items worn on the hands, usually with separate spaces for the fingers
+shorts|A garment with two leg openings that ends around or above the knee
+raincoat|An outer garment that keeps you dry in the rain
+uniform|Special clothes worn by members of the same school or group
+sunglasses|Dark glasses that protect your eyes from bright sunlight
+watch|A small object you wear on your wrist to tell the time
+wallet|A small holder for cards and paper money
+comb|An object with a row of teeth used to tidy your hair
+zip|A fastener with interlocking parts that opens and closes when you slide it
+
+@a2-travel|A2|vocabulary|Travel and Transport
+fare|The price you pay for a journey on a bus or train
+platform|The raised area beside a railway track where passengers wait
+luggage|Bags and cases that you take with you when travelling
+reservation|An arrangement made in advance to keep a room or seat for you
+departure|The act of leaving a place, or the time a service leaves
+arrival|The act of reaching a destination, or the time a service gets there
+destination|The place you are travelling to
+route|The way or path followed to reach a place
+delay|A situation in which something happens later than expected
+transfer|A service or change that takes travellers from one vehicle or place to another
+passport|An official document used to prove identity and nationality when travelling abroad
+visa|Permission to enter or stay in a country for a specified purpose or period
+border|The official line separating two countries or regions
+customs|The service that checks goods brought across a national border
+boarding pass|A document or digital pass allowing a traveller to get on a particular flight
+seat belt|A strap that holds a passenger safely in their seat
+single ticket|A ticket to go to a destination without a journey back included
+return ticket|A ticket that includes the trip to a destination and back again
+terminal|A building at an airport for departing or arriving passengers
+overnight stay|An occasion when you remain somewhere until the following morning
+
+@a2-services|A2|vocabulary|Shopping and Customer Service
+receipt|A written or digital record showing that you paid for something
+refund|Money returned to you after a payment, usually after you return an item
+discount|A reduction from the usual price
+exchange|An arrangement to return a purchase and receive a different item instead
+checkout|The place or stage where a customer pays for purchases
+cashier|The person who takes payments in a shop
+change|Money given back when you pay more than the amount due in cash
+price tag|A label attached to an item showing how much it costs
+order number|A reference used to identify a particular purchase request
+delivery|The act of bringing an order to a customer
+collection|Picking up something you ordered from the shop or another agreed place
+opening hours|The times when a business is open to customers
+fitting room|A small private space in a shop for trying on clothes
+in stock|Available for customers to buy now
+sold out|Unavailable because all units or tickets have already been sold
+warranty|A promise to repair or replace a product under stated conditions
+customer|A person who buys goods or services
+total|The amount when all the costs are added together
+card reader|A device that reads a payment card
+size guide|A chart that helps shoppers choose clothes or shoes that will fit
+
+@a2-health|A2|vocabulary|Health, Symptoms and Appointments
+appointment|An arrangement to see a professional at a particular time
+symptom|A change in how you feel that may indicate an illness
+cough|A sudden release of air from your throat, often making a sound
+fever|A body temperature higher than normal
+headache|Pain in the head
+sore throat|Pain or discomfort in the throat, especially when swallowing
+bruise|A dark mark under the skin caused by a knock or injury
+bandage|A strip of material placed around an injury to protect or support it
+prescription|An order from a qualified health professional for a medicine
+check-up|A routine examination to see how healthy someone is
+allergy|A condition where the body reacts to something usually harmless to others
+recovery|The process of becoming well again after illness or injury
+dentist|A professional who treats teeth and gums
+pharmacist|A trained professional who prepares and supplies medicines
+thermometer|A tool for measuring temperature
+rest|Time spent relaxing or sleeping to allow the body to recover
+clinic|A place where people receive medical advice, examination or treatment without usually staying overnight
+treatment|Care provided to help with an illness or injury
+waiting room|A place where people sit until it is their turn to be seen
+dose|The amount of medicine taken at one time
+
+@a2-weather|A2|vocabulary|Weather and the Outdoors
+forecast|A prediction of what the weather will be like
+drizzle|Light rain made of very small drops
+shower|A brief period of rain
+flood|An overflow of water that covers normally dry land
+drought|A long period with very little rain
+breeze|A light gentle wind
+thunder|The loud sound heard during a storm after a flash of lightning
+lightning|A bright flash of electricity in the sky during a storm
+fog|A thick cloud close to the ground that makes it hard to see
+shade|An area protected from direct sunlight
+temperature|A measure of how hot or cold something is
+humid|Having a lot of moisture in the air
+cloudy|Having much of the sky covered with clouds
+clear|Describing a sky with few or no clouds
+sunrise|The time when the sun appears above the horizon in the morning
+sunset|The time when the sun disappears below the horizon in the evening
+path|A narrow way that people can walk along
+waterproof|Made to stop water from passing through
+mud|Soft wet earth
+shelter|A place that protects someone from wind, rain or danger
+
+@a2-digital|A2|vocabulary|Everyday Digital Skills
+password|A secret word or set of characters used to sign in
+keyboard|A set of keys used for typing
+screen|The flat part of a device where pictures and text appear
+mouse|A handheld computer device used for pointing and clicking
+charger|A device used to put electricity back into a battery
+attachment|A file sent with an email or message
+download|To copy a file from an online service to your own device
+upload|To send a file from your device to a website or online service
+inbox|The place in an email app where new messages usually arrive
+link|Clickable text or an address that can take you to another page
+browser|A program used to open and view websites
+search engine|An online service for finding pages using keywords
+notification|A short alert telling you that something has happened
+file|A saved digital item such as a picture, document or recording
+folder|A named place used to organise files on a device
+settings|Controls used to choose how an app or device works
+delete|To remove a file, message or other item
+save|To store a copy of your work so that you can use it later
+sign out|To end your current access to an account on a device
+battery level|A measurement showing how much electrical charge is left
+
+@b1-work|B1|vocabulary|Workplace Tasks and Responsibilities
+deadline|The latest time by which work must be completed
+colleague|A person you work with
+shift|A scheduled period of work, such as from 8 a.m. to 4 p.m.
+training|Organised practice or instruction that helps someone do a task
+agenda|A list of topics to be discussed at a meeting
+minutes|An official written record of what happened at a meeting
+supervisor|A person who oversees the work of other employees
+recruitment|The process of finding and hiring new employees
+vacancy|A job position that is available because it has not been filled
+application|A formal request for a job or place, usually submitted in writing
+feedback|Comments on how well someone has done a task and how they can improve
+handover|The transfer of information and responsibility to someone taking over a task
+workload|The amount of work a person is expected to complete
+priority|A task or matter that should be dealt with before less important ones
+procedure|An established series of steps for doing a job
+overtime|Time that an employee works beyond the hours normally required
+department|A part of an organisation responsible for a particular kind of work
+supplier|A person or business that provides goods or materials to another business
+invoice|A document that lists goods or services supplied and requests payment
+expense|An amount of money spent for a purpose such as travel or supplies
+
+@b1-stories|B1|vocabulary|Storytelling and Narrative Vocabulary
+setting|The place and time in which a story happens
+plot|The connected series of events in a story
+narrator|The voice or person that tells a story
+character|A person, animal or imagined being in a story
+dialogue|The words spoken between characters
+scene|A section of a story or play that takes place in one situation or location
+chapter|One of the numbered or named divisions of a book
+climax|The point in a story where tension is greatest
+ending|The part that brings a story to a close
+flashback|A scene that shows something that happened before the main events
+conflict|A struggle or disagreement that creates tension in a story
+theme|A main idea explored throughout a story
+suspense|The feeling of waiting anxiously to discover what will happen
+twist|A surprising development that changes how the story is understood
+foreshadowing|A hint early in a story that suggests something that happens later
+description|Words that help a reader imagine what someone or something is like
+motivation|The reason a character wants to act in a particular way
+point of view|The position or perspective from which a story is told
+resolution|The part where the central problem is addressed or settled
+opening|The first part that introduces a story to the reader
+
+@b1-environment|B1|vocabulary|Environment and Community
+recycling|The process of turning used materials into products that can be used again
+compost|Plant and food waste that has broken down and can improve soil
+pollution|Harmful substances introduced into air, water or land
+habitat|The natural place where an animal or plant lives
+wildlife|Animals and plants that live in natural conditions
+conservation|The protection of nature and natural resources
+renewable energy|Power from sources such as wind or sunlight that are naturally replenished
+litter|Rubbish left on the ground in a public place
+landfill|A place where large amounts of waste are buried
+reuse|To use an item again instead of throwing it away
+emissions|Gases or particles released into the air from a source
+public transport|Services such as buses and trains that people can use to travel
+protected area|A place managed under rules to protect nature or important land
+community garden|A shared space where local people grow plants
+compostable|Able to break down into material that can help improve soil under suitable conditions
+energy efficiency|Using less energy to provide the same service or result
+urban heat|The higher temperatures often experienced in built-up places
+drainage|The system or process that removes excess water from an area
+rainwater harvesting|Collecting and storing rain for later use
+biodiversity|The variety of living things in a place
+
+@b1-travel|B1|vocabulary|Hotels and Travel Problem-Solving
+cancellation|The act of deciding that a booking or event will not happen
+deposit|A part-payment made in advance to secure an arrangement
+confirmation|A message showing that a booking or arrangement has been accepted
+amenities|Useful facilities or services provided at a place, such as Wi-Fi or a gym
+reception|The hotel area where staff welcome guests and handle check-in
+occupancy|A measure of how many rooms or places are currently being used
+itinerary|A planned list of the places and activities on a journey
+upgrade|A move to a better room, seat or level of service
+complaint|A statement that something is wrong or unsatisfactory
+maintenance|Work done to keep equipment or buildings in good condition
+accessible room|A room designed to be easier to use for guests with disabilities
+lost property|Items that were left behind and are kept until their owners claim them
+late checkout|Permission to leave a room after the usual departure time
+incident report|A written record of an unusual event or problem
+insurance|An arrangement that can cover specified losses in return for payments
+alternative|Another option that may be chosen instead of the original one
+no-show|A customer who made a reservation but did not arrive
+overbooking|Accepting more reservations than the available places
+relocation|Moving a guest or service to another location
+reimbursement|Money paid back to someone for costs they already paid themselves
+
+@b1-student|B1|vocabulary|Study Habits and Classroom Skills
+assignment|A piece of work given to a learner to complete
+draft|An early version of written work that can still be changed
+outline|A plan showing the main points of a piece of work
+revision|Reviewing study material again to prepare for a task or test
+summary|A short account of the main points of a text or talk
+source|A place or person from which information comes
+quotation|Words copied exactly from what someone wrote or said
+example|A specific case used to help explain a general idea
+definition|An explanation of what a word or term means
+presentation|A talk in which someone explains information to an audience
+peer|A person of a similar age, role or level
+rubric|A guide showing how work will be assessed
+reference list|A list of the sources used in a piece of work
+note-taking|Writing down the key information from a lesson or reading
+paraphrase|To express someone else's idea using different words while keeping its meaning
+proofread|To check writing for errors such as spelling and punctuation
+deadline extension|Extra time granted to finish a task
+handout|A printed or digital document given to participants in a lesson
+independent study|Learning that a student carries out on their own
+self-assessment|Judging one's own work using learning goals or criteria
+
+@b2-academic|B2|vocabulary|Academic Reading and Evidence
+claim|A statement presented as true or worth accepting
+evidence|Information used to support or challenge a statement
+assumption|An idea accepted as true without being demonstrated in the argument
+counterargument|An argument that challenges another argument
+inference|A conclusion drawn from evidence or clues
+limitation|A restriction that affects what a method or result can show
+sample|A subset selected from the larger group being studied
+finding|A piece of information discovered through investigation
+trend|A general direction in which measurements change over time
+variation|Differences between observations or results
+hypothesis|A statement that can be tested through observation or experiment
+methodology|The overall system of methods used for a study
+reliability|The extent to which a measurement gives consistent results
+validity|The extent to which a method measures what it is intended to measure
+citation|A reference that identifies a source used in a text
+preliminary|Describing early results that may change as work continues
+relevant|Connected in a useful way to the question being discussed
+peer review|Evaluation of work by people with expertise in the same field
+qualify|To make a claim less absolute by adding a condition or limit
+synthesis|Combining ideas from different sources into a coherent account
+
+@b2-business|B2|vocabulary|Negotiation and Project Language
+proposal|A suggested plan submitted for consideration
+deliverable|A specific item or result that a project must provide
+milestone|An important point marking progress in a project
+constraint|A condition such as a limited budget that restricts what can be done
+contingency|A provision or plan for an event that might occur
+compromise|An agreement in which both sides give up part of what they wanted
+concession|Something one party agrees to give up or allow in a negotiation
+stakeholder|A person or group affected by a project or interested in its outcome
+scope|The agreed range of work or activities included in a project
+trade-off|A situation where gaining one advantage means losing another
+forecast|A prediction based on current information about what may happen
+allocation|The assignment of money, time or resources to a purpose
+escalate|To refer an issue to someone with more authority
+procurement|The process of obtaining goods or services for an organisation
+benchmark|A standard used to compare quality or performance
+dependency|A condition or prior task on which another activity relies
+feasibility|Whether a proposed plan can be carried out successfully
+approval|Official permission for a decision or piece of work to proceed
+liability|A legal or financial responsibility, particularly for a debt or loss
+handover|The process of transferring completed work and responsibility to another team
+
+@b2-journalism|B2|vocabulary|News Literacy and Source Evaluation
+headline|The title of a news report
+byline|The line naming the writer of a published article
+editorial|A piece expressing the opinion of a publication's editors
+eyewitness|A person who saw an event happen directly
+corroboration|Independent support for a report or statement
+attribution|Identifying who supplied a quotation, claim or piece of information
+correction|A published statement fixing a factual error in earlier reporting
+retraction|A formal withdrawal of a previously published claim or story
+excerpt|A short part taken from a longer piece of writing or recording
+transcript|A written record of words spoken in a recording or event
+verification|Checking whether a claim or piece of information is accurate
+context|Background information that helps explain the meaning of an event or statement
+framing|The way a report selects and presents aspects of a story to shape interpretation
+omission|The act of leaving something out
+allegation|A statement that someone did something wrong, which has not yet been established
+credibility|The quality of being believable or deserving trust
+primary source|First-hand material such as an original document, interview or recording
+secondary source|A later account based on other sources
+embargo|A rule that material cannot be published before an agreed time
+sponsorship|Financial support from an organisation that may be named in the content
+
+@b2-community|B2|vocabulary|Community Projects and Public Services
+consultation|A process of seeking views before making a decision
+petition|A formal written request supported by signatures
+volunteer|A person who chooses to help without expecting payment
+grant|Money given for a specific purpose under stated conditions
+outreach|Effort to make services or information available to people who might not otherwise receive them
+eligibility|Meeting the conditions needed to receive a service or take part
+accessibility|How easily people with different needs can use a service or place
+participation|The act of taking part in a group or activity
+initiative|A new plan or organised effort intended to address a need
+evaluation|The process of judging how effective or useful something is
+survey|A set of questions used to gather information from people
+indicator|A specific measurement that helps show progress or change
+baseline|A starting measurement used for later comparisons
+outcome|A change or result that follows an activity
+beneficiary|A person or group that receives a benefit from a project
+procurement|The organised process used to buy goods or services
+implementation|Putting an agreed plan into practice
+partnership|An arrangement in which people or organisations work together
+maintenance|Continuing work needed to keep a service or facility operating
+accountability|The responsibility to explain actions and accept the consequences
+
+@b2-tech|B2|vocabulary|Technology and Online Collaboration
+version history|A record of earlier copies or edits made to a file
+permission|An allowed action, such as viewing or editing a document
+encryption|Transforming information so it cannot be read without the appropriate key
+backup|A spare copy used if the original is lost or damaged
+two-factor authentication|A sign-in method requiring two different forms of proof
+bandwidth|The amount of data a connection can carry in a given time
+latency|The delay between sending data and getting a response
+synchronisation|Keeping copies or devices updated so that they agree
+read-only|Allowing someone to view information without changing it
+offline access|Permission or ability to use material without an internet connection
+shared workspace|An online area where a group organises and works on common files
+audit trail|A record showing which actions took place, when and by whom
+cache|Temporary storage of data so it can be retrieved more quickly
+compatibility|The ability of systems or files to work together
+export|Converting or saving information so it can be used elsewhere
+import|Bringing information into an application from another source
+metadata|Descriptive information such as a file's creation date or author
+archive|A store for records that need to be kept but are used less often
+recovery|Restoring information or service after a loss or interruption
+attachment limit|A restriction on the size or number of files that can accompany a message
+
+@c1-policy|C1|vocabulary|Policy, Governance and Accountability
+mandate|Formal authority or instructions to carry out a particular task
+jurisdiction|The area or subject over which an authority can exercise power
+discretion|Freedom to decide within the limits of one's role
+precedent|An earlier decision used as a guide in a similar later case
+oversight|Independent or senior monitoring of how a process is carried out
+compliance|Following a rule, requirement or standard
+enforcement|Actions that make sure a rule is followed
+remediation|Steps taken to correct a problem that has been identified
+waiver|Official permission for a rule or obligation to be set aside
+exemption|A category or case that is excluded from a requirement
+delegation|Giving another person authority or responsibility to act
+transparency|Openness about information and processes affecting decisions
+redress|A remedy intended to correct an injustice or wrong
+recusal|Withdrawal from a decision because of a potential conflict of interest
+proportionality|The principle that a response should be no stronger than needed for its legitimate purpose
+due process|Fair treatment through established rules and procedures
+appeal|A request for a decision to be reviewed or changed by a higher authority
+ratification|Formal approval that makes an agreement or decision official
+sunset clause|A provision that makes a rule expire on a set date unless renewed
+conflict of interest|A situation where personal interests could improperly influence a professional decision
+
+@c1-research|C1|vocabulary|Research Methods and Interpretation
+confounder|A factor associated with both a proposed cause and its outcome that can distort the estimated relationship
+generalisation|Applying an observation or conclusion to a wider population or situation
+replication|Repeating a study to check whether the same result is obtained
+operationalisation|Defining how an abstract concept will be observed or measured in a study
+triangulation|Using multiple methods or sources to examine the same question
+attrition|Loss of participants from a study over time
+randomisation|Assignment by chance to reduce systematic differences between groups
+placebo|An inactive substitute used as a comparison in some trials
+effect size|A quantitative measure of the strength or magnitude of a relationship or difference
+confidence interval|A range calculated by a procedure with a stated long-run coverage rate
+systematic review|A research synthesis using explicit and reproducible methods to find and assess relevant studies
+meta-analysis|Statistical combination of results from multiple studies
+publication bias|Distortion arising when some results are more likely to be published than others
+selective reporting|Presenting only a selected subset of the outcomes or analyses that were conducted
+preregistration|Recording a study's planned methods and analyses before examining its results
+causal mechanism|The process through which one factor produces an effect on another
+proxy measure|An indirect indicator used when the target itself is difficult to measure
+longitudinal study|A study that observes participants or units repeatedly over time
+cross-sectional study|A study that measures variables at one point or period rather than following change over time
+sensitivity analysis|Checking whether results change under different reasonable assumptions or choices
+
+@c1-argument|C1|vocabulary|Argument, Nuance and Persuasion
+premise|A statement offered as a basis for a conclusion
+implication|A consequence suggested by a statement even if not made explicit
+rebuttal|A response intended to disprove or weaken an opposing claim
+concession|An acknowledgement that part of the opposing position is valid
+hedge|A word or phrase that lowers the certainty of a claim
+qualification|A limit or condition added to a statement
+analogy|An explanation that compares different things with a relevant similarity
+paradox|A statement or situation that appears contradictory but may be true
+fallacy|A mistake in reasoning that weakens an argument
+equivocation|Using the same expression with different meanings in one argument
+false dichotomy|Presenting two choices as the only possibilities when more exist
+circular reasoning|Supporting a claim by restating the claim itself in different words
+straw man|A distorted and easier-to-attack version of another person's argument
+inconsistency|A lack of agreement between statements that are meant to fit together
+coherence|The quality of ideas fitting together clearly and logically
+counterexample|A particular case showing that a general statement is false
+refutation|A demonstration that a claim or argument is false
+plausibility|The quality of seeming possible or reasonable
+presupposition|A background idea treated as already accepted by a statement
+recommendation|A suggested action supported by a reason or judgement
+
+@c1-economy|C1|vocabulary|Economics and Public Decisions
+opportunity cost|The value of the next best alternative given up when a choice is made
+externality|A cost or benefit of an activity affecting others outside the transaction
+subsidy|Financial support used to lower costs or encourage an activity
+tariff|A tax imposed on imported goods
+inflation|A sustained rise in the general level of prices
+productivity|The amount of output generated per unit of input such as labour time
+diversification|Spreading activity or investment across different areas to reduce dependence on one
+volatility|The degree to which prices or conditions change sharply over time
+scarcity|A condition in which resources are limited relative to demand
+incentive|Something that encourages a particular decision or behaviour
+market share|The proportion of sales in a market accounted for by a business
+public good|A good whose use by one person does not reduce availability to others and from which people are difficult to exclude
+sunk cost|A past cost that cannot be recovered
+income elasticity|How strongly demand changes when consumers' incomes change
+monopoly|A market structure with a single supplier for a product or service
+asymmetric information|A situation where one party to a transaction knows more than the other
+progressive tax|A tax for which the average rate is higher at higher incomes
+fiscal policy|Government decisions about spending and taxation
+recession|A broad decline in economic activity over a period
+cost-benefit analysis|An assessment that compares the expected costs and benefits of a proposal
+
+@c1-editing|C1|vocabulary|Advanced Editing and Register
+register|A style of language suited to a particular audience, purpose or situation
+ambiguity|The possibility that wording has more than one interpretation
+redundancy|Use of words or material that add nothing necessary
+parallelism|Using similar grammatical structures for corresponding ideas
+cohesion|How words and sentences are connected through grammar, reference and linking expressions
+nominalisation|Turning a verb or adjective into a noun or noun-based expression
+euphemism|A mild or indirect expression used in place of wording considered harsh
+jargon|Specialised vocabulary used by a particular group or profession
+colloquialism|An expression characteristic of informal everyday speech
+house style|A publisher's or organisation's established rules for spelling and presentation
+style guide|A reference document explaining preferred usage, formatting and conventions
+revision|Reworking ideas, structure or content to improve a draft
+copyediting|Editing a text for clarity, consistency, correctness and style
+proofreading|Checking a nearly final text for remaining errors and layout problems
+fact-checking|Verifying names, dates, quotations and claims against evidence
+antecedent|The noun or noun phrase to which a pronoun refers
+modifier|A word or phrase that adds information to another part of a sentence
+syntax|The system for arranging words and phrases into sentences
+diction|Choice of words in speech or writing
+tense consistency|Keeping the time frame expressed by verbs appropriate and stable unless the meaning requires a change

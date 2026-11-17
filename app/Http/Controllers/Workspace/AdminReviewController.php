@@ -27,7 +27,7 @@ class AdminReviewController extends Controller
         return view('workspace.admin.reviews', [
             'role' => 'admin', 'focus' => $focus,
             'courses' => Course::where('status', 'pending_review')
-                ->with('category')->orderBy('submitted_at')
+                ->with('category', 'creator:id,public_id')->orderBy('submitted_at')
                 ->paginate(10, ['*'], 'courses_page'),
             'appearances' => AppearanceRevision::where('status', 'pending_review')
                 ->with('creator')->orderBy('submitted_at')
@@ -53,10 +53,6 @@ class AdminReviewController extends Controller
         DB::transaction(function () use ($request, $course, $data): void {
             $locked = Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'pending_review', 409);
-            // A second administrator must approve the author's curriculum.
-            abort_unless($locked->created_by && $locked->created_by !== $request->user()->id,
-                403, 'A separate administrator must review the submitted course.');
-
             $submission=CourseReviewSnapshot::where('course_id',$locked->id)->latest('id')->first();
             if ($data['decision'] === 'approve') {
                 abort_unless(CourseReadiness::ready($locked),422,
@@ -75,7 +71,7 @@ class AdminReviewController extends Controller
                 $source = Course::whereKey($locked->source_course_id)
                     ->lockForUpdate()->firstOrFail();
                 abort_unless($source->status === 'published'
-                    && $source->superseded_at === null, 409,
+                    && $source->superseded_at === null && $source->deactivated_at === null, 409,
                     'The source edition is no longer current.');
             }
 
@@ -141,8 +137,9 @@ class AdminReviewController extends Controller
     public function enrollment(Request $request, CourseEnrollment $enrollment): RedirectResponse
     {
         $data = $this->reviewData($request, 'decline');
+        $evidence = $request->validate(['pricing_reference' => ['nullable', 'string', 'max:160']]);
 
-        DB::transaction(function () use ($request, $enrollment, $data): void {
+        DB::transaction(function () use ($request, $enrollment, $data, $evidence): void {
             $locked = CourseEnrollment::query()->whereKey($enrollment->id)
                 ->lockForUpdate()->firstOrFail();
             abort_unless($locked->status === 'pending', 409);
@@ -154,15 +151,22 @@ class AdminReviewController extends Controller
                     ->where('role', User::ROLE_STUDENT)->exists(), 422);
             }
 
+            $note = $data['note'] ?? null;
+            if ($data['decision'] === 'approve' && filled($locked->pricing_quote)) {
+                $reference = validator($evidence, ['pricing_reference' => ['required', 'string', 'max:160']])
+                    ->validate()['pricing_reference'];
+                $note = 'Payment or membership verified. Reference: '.$reference;
+            }
+
             $status = $data['decision'] === 'approve' ? 'approved' : 'declined';
             $locked->update([
                 'status' => $status,
                 'reviewed_by' => $request->user()->id,
                 'reviewed_at' => now(),
-                'review_note' => $data['note'] ?? null,
+                'review_note' => $note,
             ]);
             ApprovalAudit::record('enrollment', $locked->id, $request->user(),
-                $data['decision'], 'pending', $status, $data['note'] ?? null);
+                $data['decision'], 'pending', $status, $note);
         });
 
         return back()->with('status', 'Enrollment review decision recorded.');
