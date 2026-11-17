@@ -13,14 +13,21 @@ use App\Models\HomeworkSubmission;
 use App\Models\LessonProgress;
 use App\Models\PracticeAttempt;
 use App\Models\User;
+use App\Support\AdminAccess;
 use App\Support\WorkspaceMenu;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class WorkspaceController extends Controller
 {
-    public function admin(): View
+    public function admin(Request $request): View
     {
+        if (! AdminAccess::unrestricted($request->user())) {
+            return view('workspace.admin.access-overview', [
+                'groups' => WorkspaceMenu::groups('admin', $request->user()),
+            ]);
+        }
+
         $insights = \App\Support\DashboardInsights::admin();
         $insights['showcase'] = \App\Support\DashboardShowcase::forRole('admin', $insights);
         return view('workspace.overview', $insights);

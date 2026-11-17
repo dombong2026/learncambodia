@@ -32,6 +32,7 @@ use App\Http\Controllers\Workspace\PublicProfileController;
 use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
+use App\Http\Controllers\Workspace\AdminUserController;
 use App\Http\Controllers\Workspace\AdminCourseController;
 use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
@@ -260,6 +261,12 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/policy-history/{entry}/{revision}', [AdminEditorialController::class, 'policyRevision'])
             ->name('policy-history.show');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
+        Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::post('/users', [AdminUserController::class, 'store'])->middleware('throttle:15,1')->name('users.store');
+        Route::get('/users/{user}/access', [AdminUserController::class, 'editAccess'])
+            ->where('user', '[1-9][0-9]{7}')->name('users.access.edit');
+        Route::patch('/users/{user}/access', [AdminUserController::class, 'updateAccess'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.access.update');
         Route::get('/users/{user}', [AdminRecordsController::class, 'user'])->where('user', '[1-9][0-9]{7}')->name('users.show');
         Route::get('/support/{kind}', [SupportTicketController::class,'adminIndex'])->name('support.index');
         Route::patch('/support/{kind}/{ticket}', [SupportTicketController::class,'adminUpdate'])->name('support.update');

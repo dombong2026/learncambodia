@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AdminAccess;
+
 use App\Models\SupportTicket;
 use App\Support\WorkspaceNotifications;
 use App\Models\SupportMessage;
@@ -18,7 +20,7 @@ final class SupportTicketController extends Controller
 {
     private function authorizeTicket(Request $request, SupportTicket $ticket): void
     {
-        abort_unless($request->user()->isAdministrator() || $ticket->user_id === $request->user()->id, 403);
+        abort_unless(AdminAccess::can($request->user(), 'support') || $ticket->user_id === $request->user()->id, 403);
     }
 
     private function ticketKind(string $kind): string
@@ -138,9 +140,9 @@ final class SupportTicketController extends Controller
             abort_if($locked->status==='closed',409,'Closed conversations cannot receive messages.');
             EditorMedia::claim($data['body_html'], $request->user(), 'ticket', $locked->id);
             $locked->messages()->create(['user_id'=>$request->user()->id,'body'=>$data['body'],'body_html'=>$data['body_html']]);
-            if ($request->user()->isAdministrator() && $locked->status==='open')
+            if (AdminAccess::can($request->user(), 'support') && $locked->status==='open')
                 $locked->status='in_progress';
-            if (!$request->user()->isAdministrator() && $locked->status==='resolved')
+            if (!AdminAccess::can($request->user(), 'support') && $locked->status==='resolved')
                 $locked->status='open';
             $locked->touch();
             $locked->save();

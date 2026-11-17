@@ -39,7 +39,7 @@
                 </div>
             </div>
             <nav data-workspace-nav class="workspace-nav scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Account navigation">
-                @foreach(\App\Support\WorkspaceMenu::groups($role) as $group)
+                @foreach(\App\Support\WorkspaceMenu::groups($role, auth()->user()) as $group)
                     <details data-nav-group class="mb-2 rounded-xl" {{ $loop->first ? 'open' : '' }}>
                         <summary class="group flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#e9eef8] transition hover:bg-white/10">
                             <x-workspace-icon :name="$group['icon']" />
@@ -119,11 +119,11 @@
                         <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">@yield('heading', 'Overview')</h1>
                         @hasSection('description')<p class="mt-2 max-w-3xl text-sm leading-7 text-slate-500 dark:text-slate-400">@yield('description')</p>@endif
                     </div>
-                    <div class="flex shrink-0 items-center gap-2">
+                    <div data-workspace-heading-actions class="flex shrink-0 items-center gap-2">
                         @hasSection('heading_action')
                             @yield('heading_action')
-                        @elseif(!request()->routeIs('admin.system-settings.*', 'admin.profile.edit', 'security.methods'))
-                            <a href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
+                        @elseif($workspaceAction !== null && !request()->routeIs('security.methods'))
+                            <a data-workspace-primary-action href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
                         @endif
                     </div>
                 </div>
@@ -135,7 +135,7 @@
             </main>
         </div>
         <nav data-workspace-mobile-nav class="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.08)] backdrop-blur-xl lg:hidden dark:border-slate-800 dark:bg-slate-900/95" aria-label="Mobile workspace navigation">
-            @foreach(\App\Support\WorkspaceMenu::mobileItems($role) as $mobileItem)
+            @foreach(\App\Support\WorkspaceMenu::mobileItems($role, auth()->user()) as $mobileItem)
                 <a href="{{ $mobileItem['url'] }}" @if($mobileItem['active']) aria-current="page" @endif class="flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-[10px] font-semibold transition {{ $mobileItem['active'] ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700 dark:text-slate-400' }}"><x-workspace-icon :name="$mobileItem['icon']" class="h-5 w-5" /><span class="max-w-full truncate">{{ $mobileItem['label'] }}</span></a>
             @endforeach
         </nav>

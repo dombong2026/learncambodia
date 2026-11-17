@@ -11,6 +11,7 @@ use App\Models\ExamAttempt;
 use App\Support\AssessmentQuestions;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
+use App\Support\AdminAccess;
 use App\Support\ManagedFiles;
 use Illuminate\Database\ForeignKeyConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -161,7 +162,13 @@ final class EditorMediaController extends Controller
             'file' => ['required', 'file', ($library || $lesson) ? 'max:51200' : 'max:12288',
                 'mimetypes:'.implode(',', $mimes)],
         ]);
-        abort_if($data['context'] !== 'ticket' && !$request->user()->isAdministrator(), 403);
+        $permission = match ($data['context']) {
+            'library' => 'media',
+            'editorial' => 'editorial',
+            'course', 'lesson', 'exam' => 'learning',
+            default => null,
+        };
+        abort_if($permission !== null && ! AdminAccess::can($request->user(), $permission), 403);
 
         // Cap unclaimed private media rather than enabling unlimited anonymous staging.
         if (!$library) {
@@ -217,13 +224,13 @@ final class EditorMediaController extends Controller
             $published = $published || CourseExam::query()->where('featured_media_id', $media->id)
                 ->where('kind', 'quiz')->whereNull('course_id')->where('published', true)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
-            abort_unless($published || $viewer?->isAdministrator(), 403);
+            abort_unless($published || AdminAccess::can($viewer, 'media'), 403);
         } elseif ($media->context === 'lesson') {
             $enrolled = $viewer?->role === User::ROLE_STUDENT
                 && $media->lessons()->whereHas('module.course', fn ($courses) => $courses->published()
                     ->whereHas('enrollments', fn ($enrollments) => $enrollments
                         ->where('student_id', $viewer->id)->where('status', 'approved')))->exists();
-            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
+            abort_unless(AdminAccess::can($viewer, 'learning') || $enrolled, 403);
         } elseif ($media->context === 'exam') {
             $enrolled = $viewer?->role === User::ROLE_STUDENT
                 && ExamAttempt::whereIn('course_exam_id', $media->exams()->select('course_exams.id'))
@@ -234,21 +241,21 @@ final class EditorMediaController extends Controller
                             ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published())))
                     ->cursor()->contains(fn ($attempt) => in_array($media->id,
                         AssessmentQuestions::mediaIds($attempt->snapshot), true));
-            abort_unless($viewer?->isAdministrator() || $enrolled, 403);
+            abort_unless(AdminAccess::can($viewer, 'learning') || $enrolled, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
-            abort_unless($published || $viewer?->isAdministrator(), 403);
+            abort_unless($published || AdminAccess::can($viewer, 'learning'), 403);
         } elseif ($media->context === 'editorial') {
             $approved = $media->content_entry_id !== null &&
                 ContentEntry::query()->whereKey($media->content_entry_id)
                     ->where('status', 'published')->whereIn('type', [...ContentEntry::DIRECT_PUBLICATION_TYPES, 'faq'])
                     ->where(fn ($entries) => $entries->where('type', '!=', 'post')->orWhere(fn ($posts) => $posts->visibleArticleCategory()))->exists();
-            abort_unless($approved || $viewer?->isAdministrator(), 403);
+            abort_unless($approved || AdminAccess::can($viewer, 'editorial'), 403);
         } else {
             $ticket = $media->support_ticket_id
                 ? \App\Models\SupportTicket::find($media->support_ticket_id) : null;
             abort_unless($viewer && (
-                ($ticket && ($viewer->isAdministrator() || $ticket->user_id === $viewer->id)) ||
+                ($ticket && (AdminAccess::can($viewer, 'support') || $ticket->user_id === $viewer->id)) ||
                 (!$ticket && $media->support_ticket_id === null && $media->uploaded_by === $viewer->id)
             ), 403);
         }

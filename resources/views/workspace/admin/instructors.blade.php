@@ -7,7 +7,7 @@
     <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 class="text-xl font-extrabold">Assign teaching access</h2>
         <p class="mt-2 text-sm leading-7 text-slate-500">{{ $instructorCount }} instructor accounts provisioned. Teaching access is limited to the course selected below.</p>
-        <form method="POST" action="{{ route('admin.instructors.assign') }}" class="mt-6 space-y-5">@csrf
+        <form id="assign-instructor" method="POST" action="{{ route('admin.instructors.assign') }}" class="mt-6 space-y-5">@csrf
             <div><label for="teacher" class="mb-2 block text-sm font-bold">Instructor</label>
                 <select name="instructor_id" id="teacher" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
                     <option value="">Choose an instructor</option>

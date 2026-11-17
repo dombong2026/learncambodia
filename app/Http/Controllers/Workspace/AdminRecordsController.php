@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\User;
+use App\Support\AdminAccess;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -14,9 +15,12 @@ class AdminRecordsController extends Controller
 {
     public function users(Request $request): View
     {
-        $query = trim((string) $request->query('q', ''));
-
-        abort_if(mb_strlen($query) > 80, 422);
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:80'],
+            'role' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(AdminAccess::ROLES))],
+        ]);
+        $query = trim($filters['q'] ?? '');
+        $role = $filters['role'] ?? null;
 
         $users = User::query()->select(['id', 'public_id', 'name', 'email', 'role', 'created_at'])
             ->when($query, fn ($builder) => $builder->where(function ($inner) use ($query) {
@@ -24,14 +28,16 @@ class AdminRecordsController extends Controller
                     ->orWhere('email', 'like', '%'.$query.'%')
                     ->when(preg_match('/^[1-9][0-9]{7}$/D', $query), fn ($match) => $match->orWhere('public_id', $query));
             }))
+            ->when($role, fn ($builder) => $builder->where('role', $role))
             ->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('workspace.admin.records', [
             'title' => 'User Manager',
-            'description' => 'Read-only account directory. Role changes require an independently approved operator workflow.',
+            'description' => 'Create accounts and manage access to LearnCambodia.',
             'columns' => ['User ID', 'Name', 'Email', 'Role', 'Joined'],
+            'userFilters' => ['q' => $query, 'role' => $role],
             'records' => $users->through(fn (User $user) => [
-                ['value' => $user->public_id, 'url' => route('admin.users.show', $user)], $user->name, $user->email, ucfirst($user->role), $user->created_at?->format('Y-m-d'),
+                ['value' => $user->public_id, 'url' => route('admin.users.show', $user)], $user->name, $user->email, AdminAccess::ROLES[$user->role] ?? $user->role, $user->created_at?->format('Y-m-d'),
             ]),
         ]);
     }
