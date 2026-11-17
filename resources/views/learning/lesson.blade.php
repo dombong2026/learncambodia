@@ -1,88 +1,163 @@
 @extends('layouts.public')
-@section('title',$lesson->title.' · '.$course->title)
+@section('title', $lesson->title.' · '.$course->title)
+
+@push('public-styles')
+    <link rel="stylesheet" href="{{ asset('css/course-watch.css') }}?v=1">
+@endpush
+
 @section('content')
 @php
-    $a=\App\Support\Appearance::approved('course_watch');
-    $totalLessons=$course->modules->sum(fn($m)=>$m->lessons->count());
-    $percent=$totalLessons>0?round(count($completedIds)*100/$totalLessons):0;
-    $done=in_array($lesson->id,$completedIds,true);
+    $totalLessons = $course->modules->sum(fn ($module) => $module->lessons->count());
+    $completedCount = count($completedIds);
+    $done = in_array($lesson->id, $completedIds, true);
+    $hasQuiz = filled($lesson->quiz_questions);
 @endphp
-<x-learning-hero :title="$lesson->title" :subtitle="$course->title" eyebrow="Course Watch / Protected lesson" icon="book-open"
-    :action-url="route('account.enrollments.show',$enrollment)" action-label="Back to full curriculum"
-    :stats="[
-        ['value'=>number_format($lesson->duration_minutes).' min','label'=>'Lesson study duration','icon'=>'calendar'],
-        ['value'=>$percent.'%','label'=>'Your self-reported course completion','icon'=>'chart-line'],
-    ]"/>
-<x-learning-section id="lesson-content" title="Focused learning workspace" eyebrow="Approved student enrollment" tone="white" subtitle="This private view is available only to the owner of an active approved enrollment.">
-    <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,.65fr)]">
-        <article class="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9 dark:border-slate-700 dark:bg-[#173758]">
-            <div class="mb-8 flex flex-wrap items-center justify-between gap-3">
-                <span class="rounded-xl bg-[#f8eac9] px-4 py-2 text-xs font-black text-[#926b2b]">{{ $done?'Lesson marked complete':'Lesson in progress' }}</span>
-                <span class="text-xs font-semibold text-slate-500">{{ $lesson->duration_minutes }} minutes</span>
-            </div>
-            <h2 class="text-2xl font-black text-[#123661] dark:text-white">{{ $lesson->title }}</h2>
-            <x-lesson-content :lesson="$lesson" class="mt-7 text-base leading-10 text-slate-700 dark:text-slate-200" />
-            <x-lesson-quiz :lesson="$lesson" :enrollment="$enrollment" />
-            <form action="{{ route('account.progress.update',[$enrollment,$lesson]) }}" method="POST" class="mt-9 flex flex-wrap justify-end gap-3">@csrf
-                <input type="hidden" name="complete" value="{{ $done?'0':'1' }}">
-                <button type="submit" class="rounded-xl px-6 py-3 text-xs font-black {{ $done?'border border-[#d6a660] text-[#a47625] dark:text-[#f2c575]':'bg-[#123a67] text-white' }}">{{ $done?'Mark for more study':'Mark this lesson complete' }}</button>
-            </form>
-            <section class="mt-9 border-t border-slate-200 pt-7 dark:border-slate-700">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h3 class="text-lg font-black">My private lesson notes</h3>
-                    <a href="{{ route('account.notes.index') }}" class="text-xs font-bold text-blue-700 dark:text-blue-300">All notes</a>
+<div class="cw cw-lesson" data-course-lesson>
+    <div class="cw-shell">
+        <header class="cw-lesson-header">
+            <div>
+                <a class="cw-text-link cw-back" href="{{ route('account.enrollments.show', $enrollment) }}">
+                    <x-workspace-icon name="chevron-right" />{{ $course->title }}
+                </a>
+                <h1>{{ $lesson->title }}</h1>
+                <div class="cw-lesson-meta">
+                    @if($position !== false)
+                        <span>{{ __('course_watch.lesson_of', ['number' => $position + 1, 'total' => $totalLessons]) }}</span>
+                    @endif
+                    @if($lesson->duration_minutes > 0)
+                        <span>{{ __('course_watch.duration', ['minutes' => $lesson->duration_minutes]) }}</span>
+                    @endif
+                    @if($done)
+                        <span class="cw-complete-tag"><x-workspace-icon name="check-check" />{{ __('course_watch.completed') }}</span>
+                    @endif
                 </div>
-                <p class="mt-2 text-xs leading-6 text-slate-500">Notes are visible only to you, while your approved course access remains active.</p>
-                <form method="POST" action="{{ $studyNote ? route('account.notes.update',$studyNote) : route('account.notes.store',[$enrollment,$lesson]) }}" class="mt-5 space-y-3">
-                    @csrf @if($studyNote)@method('PATCH')@endif
-                    <label class="block text-xs font-bold" for="lesson-note-title">Note title</label>
-                    <input id="lesson-note-title" name="title" maxlength="140" required value="{{ old('title',$studyNote?->title ?? $lesson->title) }}" class="w-full rounded-xl border border-slate-300 p-3 dark:border-slate-700 dark:bg-[#0e2c4c]">
-                    <label class="block text-xs font-bold" for="lesson-note-body">Private note</label>
-                    <textarea id="lesson-note-body" name="body" maxlength="10000" rows="5" required class="w-full rounded-xl border border-slate-300 p-3 text-sm leading-7 dark:border-slate-700 dark:bg-[#0e2c4c]">{{ old('body',$studyNote?->body) }}</textarea>
-                    <label class="flex items-center gap-2 text-xs"><input type="hidden" name="is_pinned" value="0"><input type="checkbox" name="is_pinned" value="1" @checked(old('is_pinned',$studyNote?->is_pinned ?? false))> Pin in my notes</label>
-                    <button class="rounded-xl bg-blue-700 px-5 py-3 text-xs font-bold text-white">Save private note</button>
-                </form>
-            </section>
-            <div class="mt-7 flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-6 dark:border-slate-700">
-                @if($previous)<a href="{{ route('account.lessons.watch',[$enrollment,$previous]) }}" class="rounded-xl border border-slate-300 px-5 py-3 text-xs font-bold dark:border-slate-600">← Previous lesson</a>@else<span></span>@endif
-                @if($next)<a href="{{ route('account.lessons.watch',[$enrollment,$next]) }}" class="rounded-xl bg-[#10355e] px-5 py-3 text-xs font-black text-white">Next lesson →</a>@endif
             </div>
-        </article>
-        <aside class="space-y-5 lg:sticky lg:top-40">
-            <div class="rounded-3xl border border-slate-200 bg-[#f8fafc] p-6 dark:border-slate-700 dark:bg-[#173758]">
-                <h3 class="text-lg font-black text-[#123660] dark:text-white">{{ $a['curriculum_heading'] }}</h3>
-                <div class="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-[#344961]"><div class="h-full rounded-full bg-[#d4a448]" style="width:{{ $percent }}%"></div></div>
-                <p class="mt-2 text-xs font-bold text-slate-500 dark:text-slate-300">{{ count($completedIds) }} / {{ $totalLessons }} lessons marked complete</p>
-                <nav class="mt-5 space-y-3" aria-label="Protected course curriculum">
-                    @foreach($course->modules as $module)
-                        <details class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#0e2c4c]" {{ $module->lessons->contains('id',$lesson->id) ? 'open' : '' }}>
-                            <summary class="cursor-pointer text-xs font-black">{{ $module->title }}</summary>
-                            <div class="mt-3 space-y-2">
-                                @foreach($module->lessons as $item)
-                                    <a href="{{ route('account.lessons.watch',[$enrollment,$item]) }}" class="block rounded-lg p-3 text-xs leading-6 {{ $item->id===$lesson->id?'bg-[#12345d] font-black text-white':'bg-[#f4f6f9] text-slate-700 hover:bg-[#f1e3c6] dark:bg-[#244461] dark:text-white' }}">
-                                        {{ $item->title }}
-                                        @if(in_array($item->id,$completedIds,true))<span aria-label="Completed"> ✓</span>@endif
-                                    </a>
-                                @endforeach
-                            </div>
-                        </details>
-                    @endforeach
+            <nav class="cw-lesson-shortcuts" aria-label="{{ __('course_watch.lesson_sections') }}">
+                <a class="cw-button cw-button-quiet" href="#course-curriculum"><x-workspace-icon name="layers" />{{ __('course_watch.curriculum') }}</a>
+                @if($hasQuiz)
+                    <a class="cw-button cw-button-quiet" href="#lesson-quiz-{{ $lesson->id }}"><x-workspace-icon name="list-check" />{{ __('course_watch.lesson_quiz') }}</a>
+                @endif
+                <a class="cw-button cw-button-quiet" href="#private-lesson-notes"><x-workspace-icon name="notebook-pen" />{{ __('course_watch.notes') }}</a>
+            </nav>
+        </header>
+
+        @if(session('status'))
+            <p class="cw-feedback" role="status"><x-workspace-icon name="check-check" />{{ session('status') }}</p>
+        @endif
+
+        <div class="cw-lesson-grid">
+            <div class="cw-lesson-main">
+                <article id="lesson-content" class="cw-panel cw-study-panel" aria-label="{{ __('course_watch.lesson_content') }}">
+                    <x-lesson-content :lesson="$lesson" class="cw-content" />
+                    <x-lesson-quiz :lesson="$lesson" :enrollment="$enrollment" />
+
+                    <div class="cw-completion">
+                        <div>
+                            <strong>{{ __('course_watch.lesson_progress') }}</strong>
+                            <span>{{ $done ? __('course_watch.completed') : __('course_watch.in_progress') }}</span>
+                        </div>
+                        <form action="{{ route('account.progress.update', [$enrollment, $lesson]) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="complete" value="{{ $done ? '0' : '1' }}">
+                            <button type="submit" class="cw-button {{ $done ? 'cw-button-quiet' : 'cw-button-primary' }}">
+                                @unless($done)<x-workspace-icon name="check-check" />@endunless
+                                {{ $done ? __('course_watch.mark_for_review') : __('course_watch.mark_complete') }}
+                            </button>
+                        </form>
+                    </div>
+                </article>
+
+                @if($previous || $next)
+                    <nav class="cw-lesson-pagination" aria-label="{{ __('course_watch.lesson_navigation') }}">
+                        @if($previous)
+                            <a class="cw-panel cw-page-link cw-page-link-prev" href="{{ route('account.lessons.watch', [$enrollment, $previous]) }}" rel="prev">
+                                <x-workspace-icon name="chevron-right" />
+                                <span><small>{{ __('course_watch.previous_lesson') }}</small><strong>{{ $previous->title }}</strong></span>
+                            </a>
+                        @endif
+                        @if($next)
+                            <a class="cw-panel cw-page-link cw-page-link-next" href="{{ route('account.lessons.watch', [$enrollment, $next]) }}" rel="next">
+                                <span><small>{{ __('course_watch.next_lesson') }}</small><strong>{{ $next->title }}</strong></span>
+                                <x-workspace-icon name="chevron-right" />
+                            </a>
+                        @endif
+                    </nav>
+                @endif
+
+                <section id="private-lesson-notes" class="cw-panel cw-notes" aria-labelledby="lesson-notes-heading">
+                    <div class="cw-section-head">
+                        <h2 id="lesson-notes-heading">{{ __('course_watch.private_notes') }}</h2>
+                        <a class="cw-text-link" href="{{ route('account.notes.index') }}">{{ __('course_watch.all_notes') }} <x-workspace-icon name="chevron-right" /></a>
+                    </div>
+                    <form method="POST" action="{{ $studyNote ? route('account.notes.update', $studyNote) : route('account.notes.store', [$enrollment, $lesson]) }}">
+                        @csrf
+                        @if($studyNote) @method('PATCH') @endif
+                        <label class="cw-field">
+                            <span>{{ __('course_watch.note_title') }}</span>
+                            <input id="lesson-note-title" name="title" maxlength="140" required value="{{ old('title', $studyNote?->title ?? $lesson->title) }}">
+                            @error('title')<span class="cw-field-error" role="alert">{{ $message }}</span>@enderror
+                        </label>
+                        <label class="cw-field">
+                            <span>{{ __('course_watch.private_note') }}</span>
+                            <textarea id="lesson-note-body" name="body" maxlength="10000" rows="4" required>{{ old('body', $studyNote?->body) }}</textarea>
+                            @error('body')<span class="cw-field-error" role="alert">{{ $message }}</span>@enderror
+                        </label>
+                        <div class="cw-note-actions">
+                            <label>
+                                <input type="hidden" name="is_pinned" value="0">
+                                <input type="checkbox" name="is_pinned" value="1" @checked(old('is_pinned', $studyNote?->is_pinned ?? false))>
+                                {{ __('course_watch.pin_note') }}
+                            </label>
+                            <button class="cw-button cw-button-primary" type="submit">{{ __('course_watch.save_note') }}</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+
+            <aside id="course-curriculum" class="cw-sidebar">
+                <div class="cw-panel cw-curriculum">
+                    <div class="cw-curriculum-head">
+                        <h2 id="course-curriculum-title">{{ __('course_watch.curriculum') }}</h2>
+                        <div class="cw-progress">
+                            <label for="lesson-course-progress">{{ __('course_watch.completion_count', ['done' => $completedCount, 'total' => $totalLessons]) }}</label>
+                            <progress id="lesson-course-progress" value="{{ $completedCount }}" max="{{ $totalLessons }}"></progress>
+                        </div>
+                    </div>
+                    <nav class="cw-module-list" aria-labelledby="course-curriculum-title">
+                        @foreach($course->modules as $module)
+                            <details class="cw-module" @if($module->lessons->contains('id', $lesson->id)) open @endif>
+                                <summary>
+                                    <span>{{ $module->title }}</span>
+                                    <x-workspace-icon name="chevron-down" />
+                                </summary>
+                                <ul>
+                                    @foreach($module->lessons as $item)
+                                        @php
+                                            $isCurrent = $item->id === $lesson->id;
+                                            $isComplete = in_array($item->id, $completedIds, true);
+                                        @endphp
+                                        <li>
+                                            <a href="{{ route('account.lessons.watch', [$enrollment, $item]) }}" @if($isCurrent) aria-current="page" @endif>
+                                                <span class="cw-lesson-state @if($isComplete) cw-state-complete @endif">
+                                                    <x-workspace-icon :name="$isComplete ? 'check-check' : 'file'" />
+                                                </span>
+                                                <span>{{ $item->title }}@if($isComplete)<span class="sr-only"> · {{ __('course_watch.completed') }}</span>@endif</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </details>
+                        @endforeach
+                    </nav>
+                </div>
+
+                <nav class="cw-sidebar-links" aria-label="{{ __('course_watch.study_tools') }}">
+                    <a class="cw-text-link" href="{{ route('account.progress.index', ['enrollment' => $enrollment->id]) }}"><x-workspace-icon name="chart-line" />{{ __('course_watch.your_progress') }}</a>
+                    <a class="cw-text-link" href="{{ route('account.practice.index') }}"><x-workspace-icon name="list-check" />{{ __('course_watch.practice') }}</a>
+                    <a class="cw-text-link" href="{{ route('account.homework.index') }}"><x-workspace-icon name="notebook-pen" />{{ __('course_watch.assignments') }}</a>
                 </nav>
-            </div>
-            <div class="rounded-3xl bg-[#123760] p-6 text-white">
-                <h3 class="text-lg font-black">Practice & assignments</h3>
-                <p class="mt-3 text-xs leading-7 text-[#d2e2f0]">Practice results and assignments stay inside your own learning workspace.</p>
-                <a href="{{ route('account.practice.index') }}" class="mt-5 block rounded-xl bg-[#efc26b] px-5 py-3 text-center text-xs font-black text-[#103359]">My practice quizzes</a>
-                <a href="{{ route('account.homework.index') }}" class="mt-3 block rounded-xl border border-white/30 px-5 py-3 text-center text-xs font-bold">My assignments</a>
-            </div>
-        </aside>
+            </aside>
+        </div>
     </div>
-</x-learning-section>
-<x-learning-section title="Related learning actions" eyebrow="Keep practicing" tone="mist">
-    <div class="grid gap-5 md:grid-cols-3">
-        <x-learning-card :href="route('account.progress.index')" title="View your progress" description="See completed lessons and enrolled courses." icon="chart-line"/>
-        <x-learning-card :href="route('account.enrollments.show',$enrollment)" title="Return to full course" description="Review all approved course modules and lessons." icon="book-open"/>
-        <x-learning-card :href="route('learning.library')" title="Public library" description="Explore independently reviewed general educational materials." icon="library"/>
-    </div>
-</x-learning-section>
+</div>
 @endsection

@@ -139,14 +139,35 @@ final class LearningHubController extends Controller
 
     public function watch(Request $request): View
     {
-        $student=$this->learner($request);
-        $enrollments=$student ? CourseEnrollment::query()->where('student_id',$student->id)
-            ->where('status','approved')
-            ->whereHas('course',fn($q)=>$q->published())
-            ->with('course.modules.lessons')->orderByDesc('id')->limit(8)->get() : collect();
-        $courses=Course::discoverable()->with(['category', 'featuredMedia'])->withCount('lessons')
+        $student = $this->learner($request);
+        $enrollments = $student ? CourseEnrollment::query()
+            ->where('student_id', $student->id)
+            ->where('status', 'approved')
+            ->whereHas('course', fn ($query) => $query->published())
+            ->with([
+                'course.modules.lessons:id,course_module_id,title,position',
+                'lessonProgress' => fn ($query) => $query->whereNotNull('completed_at')
+                    ->select('id', 'enrollment_id', 'lesson_id'),
+            ])
+            ->orderByDesc('id')->limit(8)->get() : collect();
+        $resumeCourses = $enrollments->map(function (CourseEnrollment $enrollment): array {
+            $lessons = $enrollment->course->modules->flatMap(fn ($module) => $module->lessons);
+            $completedIds = $enrollment->lessonProgress->pluck('lesson_id');
+            $nextLesson = $lessons->first(fn (CourseLesson $lesson) => ! $completedIds->contains($lesson->id));
+            $totalLessons = $lessons->count();
+            $completedCount = $lessons->whereIn('id', $completedIds)->count();
+
+            return [
+                'enrollment' => $enrollment,
+                'nextLesson' => $nextLesson,
+                'totalLessons' => $totalLessons,
+                'completedCount' => $completedCount,
+            ];
+        });
+        $courses = Course::discoverable()->with(['category', 'featuredMedia'])->withCount('lessons')
             ->orderByDesc('published_at')->limit(6)->get();
-        return view('learning.watch',compact('student','enrollments','courses'));
+
+        return view('learning.watch', compact('student', 'resumeCourses', 'courses'));
     }
 
     public function lesson(Request $request,CourseEnrollment $enrollment,CourseLesson $lesson): View
@@ -155,16 +176,16 @@ final class LearningHubController extends Controller
         LearningAccess::lesson($course,$lesson);
         if ($request->isMethod('GET')) $enrollment->markStarted();
         $course->load('modules.lessons','quizzes');
-        $completedIds=$enrollment->lessonProgress()->whereNotNull('completed_at')
-            ->pluck('lesson_id')->all();
         $lessons=$course->modules->flatMap(fn($m)=>$m->lessons)->values();
+        $completedIds=$enrollment->lessonProgress()->whereNotNull('completed_at')
+            ->whereIn('lesson_id', $lessons->pluck('id'))->pluck('lesson_id')->all();
         $position=$lessons->search(fn($entry)=>$entry->id===$lesson->id);
         $previous=$position!==false && $position>0 ? $lessons[$position-1] : null;
         $next=$position!==false && $position+1<$lessons->count() ? $lessons[$position+1] : null;
         $studyNote=LessonNote::query()->where('student_id',$request->user()->id)
             ->where('enrollment_id',$enrollment->id)->where('lesson_id',$lesson->id)->first();
         return view('learning.lesson',compact(
-            'course','lesson','enrollment','completedIds','previous','next','studyNote'
+            'course','lesson','enrollment','completedIds','previous','next','studyNote','position'
         ));
     }
 
