@@ -80,9 +80,9 @@ Put your shoes ____ the door so we can find them on the way out.|by|through|over
 The dog is running ____ the tunnel and will come out at the other end.|through|above|along
 Our classroom is ____ the second floor.|on|at|between
 The bus stops ____ the school gate.|at|between|inside
-The sun is ____ the clouds, hidden from our view.|behind|between|underneath
+The trees are ____ the fence; we need to go through the gate to reach them.|behind|inside|above
 The shop is ____ the library; they share a wall.|next to|far from|above
-A plane flew ____ the building without touching it.|over|in|under
+A plane flew ____ the building, high above its roof.|over|inside|under
 She walked ____ the river path until she reached the bridge.|along|inside|above
 The town is ____ Cambodia.|in|on|over
 
@@ -242,7 +242,7 @@ She remembers the moment ____ her name was announced.|when|whose|who
 
 @b1-passive|B1|grammar|Using the Passive Voice
 Rice ____ in many parts of Cambodia.|is grown|is growing by farmers|was grow
-The classroom ____ after yesterday's lesson.|was cleaned|was clean|has cleaning
+The classroom ____ by the caretaker after yesterday's lesson.|was cleaned|was cleaning|has cleaning
 The invitations will ____ on Monday.|be sent|send by mail|sent
 These books ____ by a local author in 2021.|were written|were wrote|have writing
 The floors are ____ every Friday.|washed|wash|washing by staff
@@ -319,11 +319,11 @@ ____ the package was small, it was surprisingly heavy.|Although|In spite of|Due 
 I didn't hear the announcement ____ the noise outside.|because of|because|whereas
 The samples were too small. ____, the results were treated as preliminary.|Consequently|For instance|By comparison
 Rina enjoys working early, ____ her colleague prefers the evening shift.|whereas|because of|despite
-The team saved a second copy ____ the first file was lost.|in case|although|in spite of
+To protect their work from accidental deletion, the team saved a second copy ____ the first file was lost.|in case|even though|as long as
 The parcel arrived late ____ being sent by express post.|despite|though|because
 The heating stopped working. ____, the manager handed out blankets.|As a result|In contrast|Likewise
 Check the date before booking; ____, you might buy a ticket for the wrong day.|otherwise|for example|similarly
-The new method is slower. ____, it produces fewer errors.|On the other hand|In the same way|For instance
+The new method is slower. ____, it produces fewer errors.|On the other hand|In the same way|Put differently
 The meeting ended on time ____ everyone kept their updates short.|because|due to|whereas
 You can return the book next week ____ nobody else has reserved it.|provided that|despite|whereas
 The starter files are small; the final video, ____, takes up nearly a gigabyte.|by contrast|as an example|therefore
