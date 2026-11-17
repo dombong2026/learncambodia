@@ -40,6 +40,8 @@ class AdminCourseRevisionController extends Controller
                 'summary' => $source->summary,
                 'description' => $source->description,
                 'description_html' => $source->description_html,
+                'public_requirement' => $source->public_requirement,
+                'content_language' => $source->content_language,
                 'cefr_level' => $source->cefr_level,
                 'delivery_mode' => $source->delivery_mode,
                 'pricing' => $source->pricing,

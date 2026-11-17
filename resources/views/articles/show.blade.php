@@ -13,21 +13,24 @@
 </x-detail-hero>
 
 <div class="detail-grid mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-    <article id="article-body" data-public-document="post" class="min-w-0 scroll-mt-40 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-700 dark:bg-[#152e50]">
-        <h2 class="mb-5 text-xl font-black text-[#12355e] dark:text-white">{{ $a['reading_heading'] }}</h2>
-        @if($article->body_html)
-            <div class="rich-public-content break-words text-base leading-8 text-slate-700 dark:text-slate-200">{!! \App\Support\EditorHtml::clean($article->body_html) !!}</div>
-        @else
-            @forelse($paragraphs as $index=>$paragraph)
-                <section id="article-part-{{ $index+1 }}" class="scroll-mt-36 {{ $index>0?'border-t border-slate-200 pt-7 dark:border-slate-700':'' }} {{ $index>0?'mt-8':'' }}">
-                    <p class="whitespace-pre-line break-words text-base leading-10 text-slate-700 dark:text-slate-200">{{ $paragraph }}</p>
-                </section>
-            @empty
-                <p class="text-sm text-slate-500">No article body is available for reading.</p>
-            @endforelse
-        @endif
-        <div class="mt-10 border-t border-slate-200 pt-6 text-xs leading-8 text-slate-500 dark:border-slate-700">Content on this page is for education and does not constitute an official examination result or qualification.</div>
-    </article>
+    <div class="min-w-0 space-y-5">
+        <article id="article-body" data-public-document="post" class="min-w-0 scroll-mt-40 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-700 dark:bg-[#152e50]">
+            <h2 class="mb-5 text-xl font-black text-[#12355e] dark:text-white">{{ $a['reading_heading'] }}</h2>
+            @if($article->body_html)
+                <div class="rich-public-content break-words text-base leading-8 text-slate-700 dark:text-slate-200">{!! \App\Support\EditorHtml::clean($article->body_html) !!}</div>
+            @else
+                @forelse($paragraphs as $index=>$paragraph)
+                    <section id="article-part-{{ $index+1 }}" class="scroll-mt-36 {{ $index>0?'border-t border-slate-200 pt-7 dark:border-slate-700':'' }} {{ $index>0?'mt-8':'' }}">
+                        <p class="whitespace-pre-line break-words text-base leading-10 text-slate-700 dark:text-slate-200">{{ $paragraph }}</p>
+                    </section>
+                @empty
+                    <p class="text-sm text-slate-500">No article body is available for reading.</p>
+                @endforelse
+            @endif
+            <div class="mt-10 border-t border-slate-200 pt-6 text-xs leading-8 text-slate-500 dark:border-slate-700">Content on this page is for education and does not constitute an official examination result or qualification.</div>
+        </article>
+        <x-learning-detail-metadata :record="$article" kind="article" />
+    </div>
     <aside class="min-w-0 space-y-5">
         @if(!$article->body_html && count($paragraphs) > 1)
             <div class="rounded-3xl border border-slate-200 bg-[#f5f7fa] p-6 dark:border-slate-700 dark:bg-[#19395a]">

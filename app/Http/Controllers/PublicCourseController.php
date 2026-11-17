@@ -63,7 +63,7 @@ class PublicCourseController extends Controller
 
         $course->load([
             'category:id,slug,name,code', 'featuredMedia',
-            'modules' => fn ($query) => $query->withCount('lessons'),
+            'modules.lessons:id,course_module_id,title,duration_minutes',
         ])->loadCount('lessons');
 
         $existingEnrollment = auth()->check() && auth()->user()->role === \App\Models\User::ROLE_STUDENT

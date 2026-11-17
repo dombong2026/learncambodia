@@ -89,6 +89,8 @@ class AdminCourseController extends Controller
             'summary' => ['required', 'string', 'max:1000'],
             'description' => ['nullable', 'string', 'max:25000'],
             'description_html' => ['nullable', 'string', 'max:120000'],
+            'public_requirement' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'content_language' => ['sometimes', 'nullable', 'string', 'max:100'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
             'cefr_level' => ['nullable', 'string', Rule::exists('cefr_levels', 'code')],
             'delivery_mode' => ['required', Rule::in(['online','onsite','hybrid'])],

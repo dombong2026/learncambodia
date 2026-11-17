@@ -73,6 +73,8 @@ final class AdminExaminationController extends Controller
             'exam_type_id' => ['required', 'integer', Rule::exists('exam_types', 'id')->where('kind', $kind)],
             'title' => ['required', 'string', 'max:160'],
             'instructions_html' => ['nullable', 'string', 'max:120000'],
+            'public_requirement' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'content_language' => ['sometimes', 'nullable', 'string', 'max:100'],
             'instructions' => ['nullable', 'string', 'max:15000'],
             'time_limit' => ['required', 'integer', $kind === 'quiz' ? 'between:1,30' : 'between:1,240'],
             'passing_percent' => ['required', 'integer', 'between:1,100'],

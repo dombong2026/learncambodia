@@ -21,7 +21,7 @@ class ContentEntry extends Model
         'type', 'slug', 'title', 'summary', 'body', 'body_html', 'seo_title', 'seo_description',
         'status', 'created_by', 'updated_by', 'published_at',
         'featured_kind', 'featured_media_id', 'featured_value', 'featured_alt',
-        'policy_version', 'policy_effective_on', 'category_id',
+        'policy_version', 'policy_effective_on', 'category_id', 'public_requirement', 'content_language',
     ];
 
     protected function casts(): array

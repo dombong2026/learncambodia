@@ -20,7 +20,7 @@ class Course extends Model
     protected $fillable = [
         ...self::FEATURED_FIELDS,
         'category_id', 'slug', 'title', 'summary', 'description', 'description_html',
-        'cefr_level', 'delivery_mode', 'pricing', 'status', 'published_at',
+        'cefr_level', 'delivery_mode', 'public_requirement', 'content_language', 'pricing', 'status', 'published_at',
         'created_by', 'reviewed_by', 'submitted_at', 'reviewed_at', 'review_note',
         'source_course_id', 'revision_number', 'superseded_at',
     ];

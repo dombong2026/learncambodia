@@ -10,7 +10,7 @@ final class CourseExam extends Model
 {
     use HasPublicId;
 
-    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
+    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
 
     protected function casts(): array
     {

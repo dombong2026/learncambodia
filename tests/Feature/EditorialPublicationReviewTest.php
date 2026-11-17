@@ -29,6 +29,8 @@ class EditorialPublicationReviewTest extends TestCase
             'slug'=>'approved-english-guide',
             'summary'=>'Guidance on English language practice.',
             'body'=>'Study every day and practice with verified learning material.',
+            'public_requirement'=>'Read the introductory guide first.',
+            'content_language'=>'Khmer and English',
         ])->assertRedirect();
 
         $post=ContentEntry::query()->firstOrFail();
@@ -58,7 +60,7 @@ class EditorialPublicationReviewTest extends TestCase
 
         $this->assertSame('published',$post->fresh()->status);
         $this->get('/articles/'.$post->slug)->assertOk()
-            ->assertSee('Study every day');
+            ->assertSeeInOrder(['Study every day', 'Requirement', 'Read the introductory guide first.', 'Article Language', 'Khmer and English']);
         $this->get('/articles')->assertOk()->assertSee($post->title);
         $this->get('/')->assertOk()->assertSee($post->title);
         $this->patch('/dashboard/editorial/posts/'.$post->id,[

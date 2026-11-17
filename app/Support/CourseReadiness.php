@@ -65,6 +65,8 @@ final class CourseReadiness
             $data['course']['pricing'] = $course->pricing;
         }
 
+        $data['course'] += array_filter($course->only(['public_requirement', 'content_language']), fn ($value) => filled($value));
+
         return hash('sha256',json_encode($data,JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE));
     }
 }

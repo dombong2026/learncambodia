@@ -132,15 +132,24 @@ final class SevenPublicPagesTest extends TestCase
         $this->get('/courses?mode=unknown')->assertSessionHasErrors('mode');
     }
 
-    public function test_single_course_only_shows_public_module_outline_and_approved_instructor(): void
+    public function test_single_course_shows_lesson_outline_but_keeps_lesson_content_private(): void
     {
         $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);
         $course=$this->course('curriculum-only','Curriculum Outline Course');
-        $module=$course->modules()->create(['title'=>'Public Module Title','position'=>1]);
+        $course->update([
+            'description' => "Introductory text.\n\n• First <outcome>\n- Second outcome",
+        ]);
+        $course->modules()->create(['title' => 'Second Module', 'position' => 30]);
+        $module = $course->modules()->create(['title' => 'Public Module Title', 'position' => 10]);
         $module->lessons()->create([
-            'title'=>'Nonpublic Lesson Title',
-            'content'=>'Highly private lesson content and protected assessment',
-            'position'=>1,'duration_minutes'=>15,
+            'title' => 'Follow-up Lesson',
+            'content' => 'Highly private lesson content and protected assessment',
+            'position' => 30, 'duration_minutes' => 25,
+        ]);
+        $module->lessons()->create([
+            'title' => 'Introductory Lesson',
+            'content' => 'A different private lesson',
+            'position' => 10, 'duration_minutes' => 15,
         ]);
         $instructor=$this->approvedPerson('instructor','Consenting Course Instructor');
         $admin=User::factory()->create();
@@ -150,11 +159,18 @@ final class SevenPublicPagesTest extends TestCase
         ]);
 
         $this->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Public Module Title')
+            ->assertSee('<ul><li>First &lt;outcome&gt;</li><li>Second outcome</li></ul>', false)
+            ->assertSeeInOrder(['What you will learn', 'Requirement', 'Course Language', 'Course outline'])
+            ->assertSee('Language not specified.')
+            ->assertSeeInOrder([
+                'data-module-number>1', 'Public Module Title', 'Introductory Lesson', '15 minutes', 'Follow-up Lesson',
+                '25 minutes', 'data-module-number>2', 'Second Module',
+            ], false)
+            ->assertDontSee('Module names are public.')
             ->assertSee('Consenting Course Instructor')
             ->assertSee('View course outline')
             ->assertDontSee('Highly private lesson content')
-            ->assertDontSee('Nonpublic Lesson Title')
+            ->assertDontSee('A different private lesson')
             ->assertDontSee('Download Syllabus PDF')
             ->assertDontSee('Scan KHQR');
     }

@@ -44,6 +44,7 @@
                     </label>
                 @endforeach
             </div>
+            <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="sm:col-span-2 sm:grid-cols-2" />
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
                 <label class="flex items-center gap-2 text-sm font-semibold">
                     <input type="hidden" name="{{ $key }}" value="0">

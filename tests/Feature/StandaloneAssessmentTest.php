@@ -43,6 +43,7 @@ final class StandaloneAssessmentTest extends TestCase
         ];
         $data = ['title' => 'Independent language quiz', 'exam_type_id' => $type->id, 'time_limit' => 9,
             'passing_percent' => 70, 'attempt_limit' => 1, 'gamified' => 1, 'live_feedback' => 1, 'published' => 1,
+            'public_requirement' => 'Have headphones ready.', 'content_language' => 'English and Mandarin',
             'questions_payload' => json_encode(array_map(fn ($question) => $question + ['points' => 1], $questions))];
         $this->post(route('admin.quizzes-manager.store'), $data)->assertSessionHasNoErrors();
         $quiz = CourseExam::sole();
@@ -53,7 +54,9 @@ final class StandaloneAssessmentTest extends TestCase
 
         $this->actingAs($student)->get(route('assessments.quizzes'))->assertOk()->assertSee($quiz->title);
         $this->get(route('assessments.exams'))->assertOk()->assertDontSee($quiz->title);
-        $this->get(route('assessments.show', $quiz))->assertOk()->assertSee('Start quiz')->assertDontSee('Pick one');
+        $this->get($quiz->publicUrl())->assertOk()->assertSee('Start quiz')
+            ->assertSeeInOrder(['Assessment details', 'Requirement', 'Have headphones ready.', 'Quiz Language', 'English and Mandarin'])
+            ->assertDontSee('Pick one');
         $this->get($audio->json('url'))->assertForbidden();
         $this->post(route('account.assessment-attempts.start', $quiz))->assertRedirect();
         $attempt = ExamAttempt::sole();
@@ -102,7 +105,9 @@ final class StandaloneAssessmentTest extends TestCase
             $exam = CourseExam::latest('id')->firstOrFail();
             $this->assertNull($exam->course_id);
             $start = route('account.assessment-attempts.start', $exam);
-            $this->actingAs($student)->get(route('assessments.show', $exam))->assertOk();
+            $this->actingAs($student)->get($exam->publicUrl())->assertOk()
+                ->assertSeeInOrder(['Requirement', 'Use a student account to take this exam.', 'Exam Language', 'Language not specified.'])
+                ->assertDontSee('Select A');
             if ($pricing['model'] !== 'free') {
                 $this->post($start)->assertForbidden();
                 $request = route('account.assessment-access.request', $exam);

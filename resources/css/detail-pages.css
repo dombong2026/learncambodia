@@ -93,3 +93,65 @@
     align-items: center;
     gap: .4rem;
 }
+
+.course-learning-checklist ul {
+    padding-inline-start: 0;
+}
+
+.course-learning-checklist ul > li {
+    position: relative;
+    padding-inline-start: 1.9rem;
+    margin-block: .55rem;
+}
+
+.course-learning-checklist ul > li::marker {
+    color: transparent;
+    font-size: 0;
+}
+
+.course-learning-checklist ul > li::before,
+.course-learning-checklist ul > li::after {
+    position: absolute;
+    content: "";
+}
+
+.course-learning-checklist ul > li::before {
+    inset-block-start: .47rem;
+    inset-inline-start: 0;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 1px solid #a8bdd8;
+    border-radius: .35rem;
+    background: #edf4fe;
+}
+
+.course-learning-checklist ul > li::after {
+    inset-block-start: .74rem;
+    inset-inline-start: .44rem;
+    width: .3rem;
+    height: .53rem;
+    transform: rotate(45deg);
+    border: solid #1b4e81;
+    border-width: 0 2px 2px 0;
+}
+
+.dark .course-learning-checklist ul > li::before {
+    border-color: #8c6d38;
+    background: #382e1d;
+}
+
+.dark .course-learning-checklist ul > li::after {
+    border-color: #f5c76e;
+}
+
+.course-learning-checklist li > :is(p, div):first-child {
+    margin-block-start: 0;
+}
+
+.course-outline-module > summary::marker {
+    content: "";
+}
+
+.course-outline-module > summary::-webkit-details-marker {
+    display: none;
+}

@@ -47,28 +47,50 @@
 
 <div class="detail-grid mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
     <div class="min-w-0 space-y-6">
-        <section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
-            <p class="text-xs font-black uppercase tracking-[.12em] text-[#b27a25]">{{ __('pages.learning_objectives') }}</p>
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 dark:border-slate-700 dark:bg-[#152e50]">
+            <p class="text-xs font-black uppercase tracking-[.12em] text-[#805718] dark:text-[#efbe62]">{{ __('pages.learning_objectives') }}</p>
             <h2 class="mt-2 text-xl font-black text-[#0c315c] dark:text-white">{{ __('pages.what_you_learn') }}</h2>
-            <x-course-description :course="$course" class="mt-4 text-sm leading-8 text-slate-600 dark:text-slate-300" />
-        </section>
-        <section id="course-curriculum" class="scroll-mt-40 overflow-hidden rounded-3xl border border-[#c69a4d] bg-[#0e315e] p-7 text-white shadow-md">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <div><p class="text-xs font-black uppercase tracking-[.12em] text-[#f1c36b]">{{ __('pages.module_overview') }}</p><h2 class="mt-2 text-2xl font-black">{{ __('frontend.course_outline') }}</h2></div>
-                <span class="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">{{ $course->modules->count() }} {{ __('pages.modules') }}</span>
+            <div class="rich-public-content course-learning-checklist mt-4 break-words text-sm leading-7 text-slate-700 dark:text-slate-200">
+                {!! \App\Support\CourseDescriptionChecklist::render($course->description_html, $course->description) !!}
             </div>
-            <p class="mt-3 text-xs leading-7 text-[#ccdeec]">{{ __('frontend.curriculum_safe') }}</p>
-            <div class="mt-6 space-y-3">
+        </section>
+        <x-learning-detail-metadata :record="$course" kind="course" />
+        <section id="course-curriculum" class="scroll-mt-40 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 dark:border-slate-700 dark:bg-[#102d51]">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <p class="text-xs font-black uppercase tracking-[.12em] text-[#805718] dark:text-[#efbe62]">{{ __('pages.module_overview') }}</p>
+                    <h2 class="mt-2 text-2xl font-black text-[#0c315c] dark:text-white">{{ __('frontend.course_outline') }}</h2>
+                </div>
+                <span class="rounded-full bg-[#edf4fe] px-3 py-1.5 text-xs font-bold text-[#28517c] dark:bg-white/10 dark:text-slate-100">{{ $course->modules->count() }} {{ __('pages.modules') }}</span>
+            </div>
+            <div class="mt-5 space-y-3">
                 @forelse($course->modules as $module)
-                    <details class="group rounded-xl bg-white text-[#12355c]">
-                        <summary class="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-sm font-black">
-                            <span class="min-w-0 break-words">{{ $module->title }}</span>
-                            <span class="flex shrink-0 items-center gap-2 text-xs font-bold text-slate-500">{{ $module->lessons_count }} {{ __('frontend.lessons') }} <x-workspace-icon name="chevron-down" class="h-4 w-4 transition group-open:rotate-180"/></span>
+                    <details class="course-outline-module group rounded-xl border border-slate-200 bg-slate-50 text-[#12355c] dark:border-[#355475] dark:bg-[#17395f] dark:text-slate-100">
+                        <summary class="flex cursor-pointer items-center justify-between gap-2 rounded-xl px-3 py-3 text-sm font-bold sm:gap-4 sm:px-4">
+                            <span class="flex min-w-0 items-center gap-2 sm:gap-3">
+                                <span class="inline-grid min-h-7 min-w-7 shrink-0 place-items-center rounded-lg bg-[#e4eefc] px-1.5 text-xs tabular-nums text-[#234c7a] dark:bg-[#273f61] dark:text-[#f5c76e]" data-module-number>{{ $loop->iteration }}</span>
+                                <span class="min-w-0 break-words">{{ $module->title }}</span>
+                            </span>
+                            <span class="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">{{ trans_choice('detail.lesson_count', $module->lessons->count()) }} <x-workspace-icon name="chevron-down" class="h-4 w-4 transition group-open:rotate-180"/></span>
                         </summary>
-                        <div class="border-t border-slate-200 px-5 py-4 text-xs leading-7 text-slate-600">{{ __('pages.lesson_access_note') }}</div>
+                        @if($module->lessons->isEmpty())
+                            <p class="border-t border-slate-200 px-4 py-3 text-sm text-slate-600 dark:border-[#355475] dark:text-slate-300">{{ __('detail.no_module_lessons') }}</p>
+                        @else
+                            <ul class="divide-y divide-slate-200 rounded-b-xl border-t border-slate-200 bg-white dark:divide-[#355475] dark:border-[#355475] dark:bg-[#122b48]" aria-label="{{ __('frontend.lessons') }}">
+                                @foreach($module->lessons as $lesson)
+                                    <li class="flex items-start justify-between gap-3 px-3 py-3 text-sm sm:px-4">
+                                        <span class="flex min-w-0 items-start gap-2 break-words">
+                                            <x-workspace-icon name="book-open" class="mt-0.5 h-4 w-4 shrink-0 text-[#527295] dark:text-[#9bb6d3]" />
+                                            <span class="min-w-0">{{ $lesson->title }}</span>
+                                        </span>
+                                        <span class="shrink-0 tabular-nums text-slate-600 dark:text-slate-300">{{ trans_choice('detail.minutes', $lesson->duration_minutes) }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </details>
                 @empty
-                    <p class="rounded-xl border border-white/20 bg-white/10 p-6 text-sm">{{ __('frontend.no_outline') }}</p>
+                    <p class="rounded-xl border border-dashed border-slate-300 p-5 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-200">{{ __('frontend.no_outline') }}</p>
                 @endforelse
             </div>
         </section>

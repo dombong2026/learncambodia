@@ -59,6 +59,7 @@
             <h2 class="text-xl font-black text-[#12355e] dark:text-white">{{ __('detail.assessment_details') }}</h2>
             <p class="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-200">{{ __('detail.passing_score', ['score' => $exam->passing_percent]) }}</p>
         </section>
+        <x-learning-detail-metadata :record="$exam" :kind="$label" />
         @if($history?->isNotEmpty())
             <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
                 <h2 class="text-xl font-black text-[#12355e] dark:text-white">Your attempts</h2>

@@ -18,6 +18,7 @@
                 <x-course-description :course="$course" class="text-sm leading-7" />
             @endif
         </div>
+        <x-learning-detail-fields :record="$course" kind="course" class="sm:col-span-2 sm:grid-cols-2" />
         @include('workspace.admin.course-builder.pricing')
     </fieldset>
 </form>
