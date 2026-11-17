@@ -65,7 +65,9 @@ while IFS= read -r file; do
 
     test ! -L "$file"
     directory="$(dirname -- "$file")"
-    test "$(realpath -m "$directory")" = "$PWD/$directory"
+    if [[ "$directory" != . ]]; then
+        test "$(realpath -m "$directory")" = "$PWD/$directory"
+    fi
     if cd_source cat-file -e "$old:$file" 2>/dev/null; then
         test -f "$file"
         mkdir -p "$stage/original/$directory" "$stage/source/$directory"
