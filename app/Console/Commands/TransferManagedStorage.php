@@ -70,7 +70,7 @@ final class TransferManagedStorage extends Command
                     }
 
                     $digest = $this->digest($source, $path);
-                    if (!$target->exists($path)) {
+                    if (!$target->fileExists($path)) {
                         if ($mode === 'verify') {
                             throw new RuntimeException('Destination object missing.');
                         }
@@ -136,7 +136,7 @@ final class TransferManagedStorage extends Command
     {
         return is_string($path) && str_starts_with($path, "$prefix/")
             && !str_contains($path, '\\') && !in_array('..', explode('/', $path), true)
-            && $source->exists($path);
+            && $source->fileExists($path);
     }
 
     private function digest(FilesystemAdapter $disk, string $path): string
@@ -180,7 +180,7 @@ final class TransferManagedStorage extends Command
             $disk->delete($path);
         }
 
-        if ($disk->exists($path)) {
+        if ($disk->fileExists($path)) {
             throw new RuntimeException('Cloud probe could not be removed.');
         }
     }

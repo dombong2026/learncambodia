@@ -124,7 +124,7 @@ final class ManagedFiles
             return self::cloudStream($request, $disk, $path, $headers);
         }
 
-        abort_unless($disk->exists($path), 404);
+        abort_unless($disk->fileExists($path), 404);
 
         if ($downloadName !== null) {
             unset($headers['Content-Disposition']);
