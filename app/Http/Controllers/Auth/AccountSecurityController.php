@@ -26,6 +26,7 @@ final class AccountSecurityController extends Controller
         return view('workspace.account-security', [
             'account' => $request->user(),
             'passkeys' => $request->user()->passkeys()->latest()->get(),
+            'socialAccounts' => DB::table('social_identities')->where('user_id', $request->user()->getKey())->pluck('client', 'provider'),
         ]);
     }
 
