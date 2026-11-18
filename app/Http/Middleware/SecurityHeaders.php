@@ -31,11 +31,15 @@ final class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=86400');
         }
 
+        if ($request->is('invite/*')) {
+            $response->headers->set('Referrer-Policy', 'no-referrer');
+        }
+
         // Protect accounts, protected learning, authentication forms, and
         // the one-time installer against intermediary caching.
         if ($request->user() !== null
             || $request->is('install', 'install/*', 'login', 'register',
-                'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
+                'invite/*', 'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
                 'instructor', 'instructor/*', 'developer', 'developer/*')) {
             $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
         }

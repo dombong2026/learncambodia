@@ -21,14 +21,23 @@
         <label class="grid gap-1 text-sm font-semibold">
             Status
             <select name="status" class="rounded-xl border border-slate-300 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-900">
-                <option value="">Active and deactivated</option>
-                @foreach(['active', 'deactivated', 'deleted'] as $status)
-                    <option value="{{ $status }}" @selected($userFilters['status'] === $status)>{{ ucfirst($status) }}</option>
+                <option value="">All current accounts</option>
+                @foreach(['active', 'invited', 'deactivated', 'deleted'] as $status)
+                    <option value="{{ $status }}" @selected($userFilters['status'] === $status)>{{ $status === 'invited' ? __('invitations.invited') : ucfirst($status) }}</option>
+                @endforeach
+            </select>
+        </label>
+        <label class="grid gap-1 text-sm font-semibold">
+            {{ __('invitations.verification') }}
+            <select name="verification" class="rounded-xl border border-slate-300 px-4 py-2.5 dark:border-slate-700 dark:bg-slate-900">
+                <option value="">{{ __('invitations.all_verification') }}</option>
+                @foreach(['email_verified', 'email_unverified', 'phone_verified', 'phone_unverified'] as $verification)
+                    <option value="{{ $verification }}" @selected($userFilters['verification'] === $verification)>{{ __('invitations.'.$verification) }}</option>
                 @endforeach
             </select>
         </label>
         <button class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold dark:border-slate-700">Filter</button>
-        @if($userFilters['q'] || $userFilters['role'] || $userFilters['status'])
+        @if($userFilters['q'] || $userFilters['role'] || $userFilters['status'] || $userFilters['verification'])
             <a href="{{ route('admin.users.index') }}" class="rounded-xl px-4 py-2.5 text-sm text-blue-700 dark:text-blue-300">Clear</a>
         @endif
     </form>
@@ -46,6 +55,11 @@
                     'learning-manager-actions' => is_array($value) && isset($value['account']),
                 ])>@if(is_array($value) && isset($value['account']))
                     @include('workspace.admin.user-row-actions', ['account' => $value['account']])
+                @elseif(is_array($value) && isset($value['email']))
+                    <span class="block break-all">{{ $value['email'] }}</span>
+                    @unless($value['verified'])
+                        <span class="learning-manager-status mt-1" data-tone="waiting">{{ __('invitations.email_unverified') }}</span>
+                    @endunless
                 @elseif(is_array($value))
                     <a href="{{ $value['url'] }}" class="font-semibold text-blue-700 hover:underline dark:text-blue-300">{{ $value['value'] }}</a>
                 @else

@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Workspace;
 use App\Http\Controllers\Controller;
 use App\Models\CourseInstructorAssignment;
 use App\Models\User;
+use App\Support\AccountInvitations;
 use App\Support\AdminAccess;
 use App\Support\ManagedAccount;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
@@ -20,24 +22,29 @@ final class AdminUserController extends Controller
 {
     public function create(Request $request): View
     {
-        return $this->form($request->user(), new User);
+        return $this->form($request->user(), new User, $request->query('method') === 'invite');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $this->validateAccount($request);
+        $sendInvitation = $request->input('method') === 'invite';
+        if ($sendInvitation && ! AccountInvitations::deliveryEnabled()) {
+            return back()->withErrors(['method' => __('invitations.delivery_unavailable')])->withInput();
+        }
+        $data = $this->validateAccount($request, sendInvitation: $sendInvitation);
 
         try {
-            $account = DB::transaction(function () use ($request, $data): User {
+            [$account, $invitation] = DB::transaction(function () use ($request, $data, $sendInvitation): array {
                 $actor = User::query()->lockForUpdate()->findOrFail($request->user()->id);
                 $permissions = $this->authorizedPermissions($actor, $data);
                 $account = new User([
                     'name' => $data['name'],
                     'email' => $data['email'],
-                    'password' => $data['password'],
+                    'password' => $sendInvitation ? Str::random(64) : $data['password'],
                 ]);
                 $account->forceFill([
                     'role' => $data['role'],
+                    'account_status' => $sendInvitation ? 'invited' : 'active',
                     'admin_permissions' => $permissions,
                     'phone' => $data['phone'] ?? null,
                     'phone_verified_at' => ! empty($data['verify_phone']) ? now() : null,
@@ -51,8 +58,10 @@ final class AdminUserController extends Controller
                 }
                 $this->audit($actor, $account, 'unassigned', null, 'Account created through User Manager.');
 
-                return $account;
-            });
+                $invitation = $sendInvitation ? AccountInvitations::issue($actor, $account, $data['invite_locale']) : null;
+
+                return [$account, $invitation];
+            }, 3);
         } catch (UniqueConstraintViolationException $e) {
             if (! User::where('email', $data['email'])->exists()) {
                 throw $e;
@@ -61,7 +70,9 @@ final class AdminUserController extends Controller
             throw ValidationException::withMessages(['email' => __('validation.unique', ['attribute' => 'email'])]);
         }
 
-        return to_route('admin.users.show', $account)->with('status', 'User created.');
+        return to_route('admin.users.show', $account)->with(
+            'status', $invitation ? AccountInvitations::send(...$invitation) : 'User created.'
+        );
     }
 
     public function editAccess(Request $request, User $user): View
@@ -102,6 +113,9 @@ final class AdminUserController extends Controller
 
                 if ($accessChanged || $emailChanged) {
                     ManagedAccount::revokeSessions($account);
+                    if ($account->isInvitedAccount()) {
+                        AccountInvitations::revoke($actor, $account);
+                    }
                 }
                 if ($accessChanged) {
                     $account->forceFill(['role' => $data['role'], 'admin_permissions' => $permissions]);
@@ -123,17 +137,19 @@ final class AdminUserController extends Controller
         return to_route('admin.users.show', $user)->with('status', 'User access saved.');
     }
 
-    private function form(User $actor, User $account): View
+    private function form(User $actor, User $account, bool $sendInvitation = false): View
     {
         return view('workspace.admin.user-form', [
             'account' => $account,
+            'sendInvitation' => $sendInvitation,
+            'invitationDeliveryEnabled' => AccountInvitations::deliveryEnabled(),
             'roles' => AdminAccess::assignableRoles($actor),
             'permissionOptions' => array_intersect_key(AdminAccess::PERMISSIONS, array_flip(AdminAccess::grants($actor))),
             'selectedPermissions' => $account->exists ? AdminAccess::grants($account) : [],
         ]);
     }
 
-    private function validateAccount(Request $request, ?User $editing = null): array
+    private function validateAccount(Request $request, ?User $editing = null, bool $sendInvitation = false): array
     {
         $rules = [
             'role' => ['required', Rule::in(array_keys(AdminAccess::assignableRoles($request->user())))],
@@ -159,7 +175,9 @@ final class AdminUserController extends Controller
             'phone' => ['nullable', 'required_if:verify_phone,1', 'regex:/^\+[1-9]\d{7,14}$/D'],
         ];
 
-        if (! $editing) {
+        if ($sendInvitation) {
+            $rules['invite_locale'] = ['required', Rule::in(array_keys(config('learning.supported_locales')))];
+        } elseif (! $editing) {
             $rules += [
                 'verify_email' => ['sometimes', 'boolean'],
                 'verify_phone' => ['sometimes', 'boolean'],

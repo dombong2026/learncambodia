@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -62,6 +63,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function isActiveAccount(): bool
     {
         return $this->account_status === 'active';
+    }
+
+    public function isInvitedAccount(): bool
+    {
+        return $this->account_status === 'invited';
+    }
+
+    public function invitation(): HasOne
+    {
+        return $this->hasOne(UserInvitation::class);
     }
 
     public function isAdministrator(): bool

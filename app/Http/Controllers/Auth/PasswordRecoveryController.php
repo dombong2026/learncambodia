@@ -30,7 +30,9 @@ final class PasswordRecoveryController extends Controller
             return back()->with('status', __('auth.email_delivery_disabled'));
         }
 
-        Password::sendResetLink($request->only('email'));
+        if (User::query()->where('email', $request->input('email'))->where('account_status', 'active')->exists()) {
+            Password::sendResetLink($request->only('email'));
+        }
 
         // Generic response prevents account enumeration.
         return back()->with('status', __('auth.reset_requested_generic'));
@@ -51,6 +53,10 @@ final class PasswordRecoveryController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'confirmed', PasswordRule::defaults()],
         ]);
+
+        if (! User::query()->where('email', $credentials['email'])->where('account_status', 'active')->exists()) {
+            return back()->withErrors(['email' => __(Password::INVALID_TOKEN)])->onlyInput('email');
+        }
 
         $status = Password::reset($credentials, function (User $user, string $password): void {
             $user->forceFill([
