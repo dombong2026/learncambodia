@@ -56,6 +56,7 @@ while IFS= read -r file; do
         database/migrations/2026_11_18_000003_create_social_auth_tables.php|\
         resources/views/auth/login.blade.php|\
         resources/views/auth/register.blade.php|\
+        resources/views/auth/social-data-deletion.blade.php|\
         resources/views/auth/social-buttons.blade.php|\
         resources/views/auth/social-registration.blade.php|\
         resources/views/workspace/account-security.blade.php|\
@@ -155,8 +156,8 @@ done < "$stage/files"
 
 artisan migrate --force --path=database/migrations/2026_11_18_000003_create_social_auth_tables.php
 refresh_caches
-artisan route:list --name=social.provider.callback | grep -Fq 'sign-in/{provider}/callback'
-artisan route:list --name=admin.system-settings.social-auth.save | grep -Fq 'social-auth/{provider}'
+artisan route:list --json --name=social.provider.callback | grep -Fq 'sign-in/{provider}/callback'
+artisan route:list --json --name=admin.system-settings.social-auth.save | grep -Fq 'social-auth/{provider}'
 
 printf 'SOCIAL_AUTH_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
 install -o root -g www -m 0640 "$stage/marker" "$marker"

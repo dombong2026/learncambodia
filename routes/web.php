@@ -124,6 +124,8 @@ Route::post('/contact', [PublicContactController::class, 'store'])
     ->middleware('throttle:5,1')->name('contact.store');
 Route::post('/language', [LocaleController::class, 'update'])->name('language.update');
 
+Route::view('/social-sign-in/data-deletion', 'auth.social-data-deletion')->name('social.data-deletion');
+
 Route::get('/sign-in/google/callback', [GoogleSignInController::class, 'callback'])
     ->middleware('throttle:20,1')->block(35, 10)->name('social.google.callback');
 Route::get('/sign-in/{provider}/callback', [SocialAuthController::class, 'callback'])

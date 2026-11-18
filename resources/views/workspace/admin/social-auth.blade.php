@@ -43,6 +43,9 @@
                         <button type="button" data-copy-secret="social-callback-url" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">Copy callback URL</button>
                     </div>
                     <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Register this URL in your {{ $settings['label'] }} app.</p>
+                    @if($selected === 'facebook')
+                        <p class="mt-2 break-all text-sm">Data deletion instructions <a class="underline" href="{{ route('social.data-deletion') }}">{{ route('social.data-deletion') }}</a></p>
+                    @endif
                 </div>
                 <form method="POST" action="{{ route('admin.system-settings.social-auth.save', $selected) }}" class="space-y-4">
                     @csrf @method('PUT')

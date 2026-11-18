@@ -103,7 +103,7 @@ final class ManagedSocialAuthTest extends TestCase
         $this->post(route('social.provider.connect', 'linkedin'))->assertRedirect(route('password.confirm'));
         $start = $this->withSession(['auth.password_confirmed_at' => time()])
             ->post(route('social.provider.connect', 'linkedin'))->assertRedirect();
-        $this->get($this->callback('linkedin', $this->state($start->headers->get('Location'))))
+        $this->get($this->providerCallback('linkedin', $this->state($start->headers->get('Location'))))
             ->assertRedirect(route('security.methods'));
         $this->get(route('security.methods'))->assertSee('Disconnect LinkedIn');
         $this->post(route('logout'));
@@ -167,7 +167,7 @@ final class ManagedSocialAuthTest extends TestCase
     {
         $response = $this->get(route('social.provider.start', $provider))->assertRedirect();
 
-        return $this->callback($provider, $this->state($response->headers->get('Location')));
+        return $this->providerCallback($provider, $this->state($response->headers->get('Location')));
     }
 
     private function state(string $location): string
@@ -177,7 +177,7 @@ final class ManagedSocialAuthTest extends TestCase
         return $parameters['state'];
     }
 
-    private function callback(string $provider, string $state): string
+    private function providerCallback(string $provider, string $state): string
     {
         return route('social.provider.callback', compact('provider', 'state') + ['code' => 'fixture-code']);
     }

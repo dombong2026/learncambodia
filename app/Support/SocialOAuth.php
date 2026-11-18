@@ -89,9 +89,9 @@ final class SocialOAuth
         $verified = in_array($provider, ['linkedin', 'google'], true) && ($data['email_verified'] ?? false) === true;
         if ($provider === 'github') {
             $email = null;
-            $emails = $client->get('https://api.github.com/user/emails')->throw()->json();
+            $emails = $client->withHeaders(['User-Agent' => 'LearnCambodia'])->get('https://api.github.com/user/emails')->throw()->json();
             foreach (is_array($emails) ? $emails : [] as $candidate) {
-                if (($candidate['verified'] ?? false) === true && ($candidate['primary'] ?? false) === true) {
+                if (is_array($candidate) && ($candidate['verified'] ?? false) === true && ($candidate['primary'] ?? false) === true) {
                     $email = $candidate['email'] ?? null;
                     $verified = true;
                     break;
