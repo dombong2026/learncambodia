@@ -36,5 +36,6 @@ return [
     'confirm_email_intro' => 'Verify that you control this email address using a secure confirmation link.',
     'resend_confirmation' => 'Send confirmation link',
     'verification_link_sent' => 'If email delivery is configured, a verification message has been requested.',
+    'verification_delivery_failed' => 'We couldn’t send the confirmation email. Try again later or contact an administrator if the issue continues.',
     'email_confirmed' => 'Your email address has been confirmed.',
 ];

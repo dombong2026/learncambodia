@@ -10,30 +10,9 @@ use Illuminate\Support\Str;
 
 final class AccountInvitations
 {
-    public static function deliveryEnabled(?string $mailer = null, array $visited = []): bool
+    public static function deliveryEnabled(): bool
     {
-        $mailer ??= config('mail.default');
-        if (! is_string($mailer) || in_array($mailer, $visited, true)) {
-            return false;
-        }
-
-        $configuration = config("mail.mailers.{$mailer}", []);
-        $transport = $configuration['transport'] ?? null;
-        if ($transport === null || in_array($transport, ['log', 'array'], true)) {
-            return false;
-        }
-        if (in_array($transport, ['failover', 'roundrobin'], true)) {
-            $children = $configuration['mailers'] ?? [];
-            foreach ($children as $child) {
-                if (! self::deliveryEnabled($child, [...$visited, $mailer])) {
-                    return false;
-                }
-            }
-
-            return $children !== [];
-        }
-
-        return true;
+        return OutboundMail::deliveryEnabled();
     }
 
     /** Issue while holding the recipient account lock. Send only after commit. */

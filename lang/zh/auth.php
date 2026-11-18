@@ -36,5 +36,6 @@ return [
     'confirm_email_intro' => '使用安全验证链接确认您拥有此邮箱。',
     'resend_confirmation' => '发送确认链接',
     'verification_link_sent' => '如果邮件服务已配置，验证邮件请求已提交。',
+    'verification_delivery_failed' => '未能发送确认邮件。请稍后重试，如果问题仍然存在，请联系管理员。',
     'email_confirmed' => '您的电子邮箱已确认。',
 ];
