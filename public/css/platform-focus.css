@@ -4,7 +4,7 @@
 }
 
 /* Place the field indicator over its border so the two read as one line. */
-:root :is(input:where(:not([type]), [type="text"], [type="email"], [type="password"], [type="search"], [type="url"], [type="tel"], [type="number"], [type="date"], [type="datetime-local"], [type="time"], [type="week"], [type="month"]), select, textarea):focus {
+:root body :is(input:where(:not([type]), [type="text"], [type="email"], [type="password"], [type="search"], [type="url"], [type="tel"], [type="number"], [type="date"], [type="datetime-local"], [type="time"], [type="week"], [type="month"]), select, textarea):focus {
     outline: 1px solid var(--platform-focus, #986310);
     outline-offset: -1px;
     box-shadow: none !important;
