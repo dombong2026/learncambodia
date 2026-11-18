@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'viewer' => 'Lesson viewer',
+    'curriculum' => 'Full curriculum',
+    'download_pdf' => 'Download PDF',
     'details' => 'Details',
     'comment' => 'Comment',
     'resources' => 'Resources',

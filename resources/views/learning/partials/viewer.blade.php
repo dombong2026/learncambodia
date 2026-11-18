@@ -28,10 +28,7 @@
         </div>
         @break
     @case('pdf')
-        <div class="fl-file-view">
-            <iframe class="fl-pdf" src="{{ $viewer['url'] }}" title="{{ $viewer['label'] }}" loading="lazy"></iframe>
-            <a class="fl-link" href="{{ route('editor-media.show', $viewer['file']) }}">Download PDF</a>
-        </div>
+        <iframe class="fl-pdf" src="{{ $viewer['url'] }}" title="{{ $viewer['label'] }}" loading="lazy"></iframe>
         @break
     @case('document')
         <article class="fl-reader" aria-label="Document viewer">

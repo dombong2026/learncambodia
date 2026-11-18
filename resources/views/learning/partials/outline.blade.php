@@ -36,4 +36,9 @@
             </details>
         @endforeach
     </nav>
+    @if($showCurriculumLink ?? false)
+        <div class="fl-outline-return">
+            <a class="fl-link" href="{{ route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']) }}">{{ __('focused_learning.curriculum') }}</a>
+        </div>
+    @endif
 </aside>

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'viewer' => '课程查看器',
+    'curriculum' => '完整课程目录',
+    'download_pdf' => '下载 PDF',
     'details' => '详情',
     'comment' => '评论',
     'resources' => '资源',

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'viewer' => 'កម្មវិធីមើលមេរៀន',
+    'curriculum' => 'មាតិកាវគ្គសិក្សាទាំងមូល',
+    'download_pdf' => 'ទាញយក PDF',
     'details' => 'ព័ត៌មានលម្អិត',
     'comment' => 'មតិយោបល់',
     'resources' => 'ធនធាន',

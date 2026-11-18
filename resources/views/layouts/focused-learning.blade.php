@@ -10,11 +10,11 @@
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
     @stack('focused-scripts')
-    <link rel="stylesheet" href="{{ asset('css/focused-learning.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/focused-learning.css') }}?v=3">
     <script defer src="{{ asset('js/focused-learning.js') }}?v=1"></script>
 </head>
 <body class="focused-learning antialiased">
     <a class="fl-skip" href="#lesson-main">{{ __('ui.skip_content') }}</a>
-    <main id="lesson-main" class="fl-shell max-w-[1600px]">@yield('content')</main>
+    <main id="lesson-main" class="fl-shell max-w-[1600px] @yield('focused-layout-class')">@yield('content')</main>
 </body>
 </html>

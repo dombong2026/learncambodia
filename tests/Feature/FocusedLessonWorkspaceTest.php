@@ -83,7 +83,9 @@ class FocusedLessonWorkspaceTest extends TestCase
         ]);
 
         $this->actingAs($this->student)->get($this->watch(['viewer' => 'read']))
-            ->assertOk()->assertSee('Course outline')->assertSee('activity instructions')
+            ->assertOk()->assertSeeInOrder(['id="lesson-viewer"', '<h1>', 'class="fl-panel fl-tabs"'], false)
+            ->assertSee('Course outline')->assertSee('activity instructions')->assertSee('Full curriculum')
+            ->assertDontSee('class="fl-back"', false)->assertDontSee('class="fl-lesson-meta"', false)
             ->assertSee('aria-current="page"', false)->assertDontSee('<header', false)
             ->assertDontSee('<footer', false)->assertDontSee('workspace-sidebar')
             ->assertDontSee('unsafeScript()');
