@@ -87,6 +87,8 @@ class EditorialDirectPublicationTest extends TestCase
 
     public function test_public_policy_numbers_continue_across_pages_and_match_the_complete_sidebar(): void
     {
+        $author = User::factory()->create();
+
         foreach (range(1, 14) as $number) {
             ContentEntry::create([
                 'type' => 'policy',
@@ -94,6 +96,7 @@ class EditorialDirectPublicationTest extends TestCase
                 'title' => sprintf('Policy %02d', $number),
                 'status' => 'published',
                 'body' => 'Published policy content.',
+                'created_by' => $author->id,
             ]);
         }
 
@@ -101,6 +104,7 @@ class EditorialDirectPublicationTest extends TestCase
         ContentEntry::create([
             'type' => 'policy', 'slug' => 'draft', 'title' => 'A private draft',
             'status' => 'draft', 'body' => 'Private policy content.',
+            'created_by' => $author->id,
         ]);
 
         $this->get('/policies?lang=en&page=2')->assertOk()
