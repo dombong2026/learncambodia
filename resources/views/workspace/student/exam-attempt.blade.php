@@ -1,11 +1,22 @@
-@extends('layouts.workspace')
+@extends(isset($lesson) ? 'layouts.focused-learning' : 'layouts.workspace')
+@section('title', $attempt->snapshot['title'])
+@push('focused-scripts')
+    @vite('resources/js/workspace.ts')
+@endpush
 @section('heading', $attempt->snapshot['title'])
 @section('content')
     @php
         $label = ($attempt->snapshot['kind'] ?? 'exam') === 'quiz' ? 'Quiz' : 'Exam';
-        $back = $enrollment ? route('account.enrollments.show', $enrollment) : $attempt->exam->publicUrl();
+        $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];
+        $back = isset($lesson)
+            ? route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'exam-'.$attempt->course_exam_id])
+            : ($enrollment ? route('account.enrollments.show', $enrollment) : $attempt->exam->publicUrl());
     @endphp
-    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ $enrollment ? 'course' : strtolower($label) }}</a>
+    @isset($lesson)
+        <div class="fl-grid"><div class="fl-main fl-assessment">
+        <h1>{{ $attempt->snapshot['title'] }}</h1>
+    @endisset
+    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ isset($lesson) ? 'lesson' : ($enrollment ? 'course' : strtolower($label)) }}</a>
     <a class="mb-4 ml-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('support.tickets.create') }}">{{ $label }} support</a>
     @if($errors->any())
         <ul role="alert" class="mb-4 list-disc pl-5 text-red-600 dark:text-red-300">
@@ -45,7 +56,7 @@
                 <x-lesson-content :lesson="(object) ['content_html'=>$attempt->snapshot['instructions_html'], 'content'=>'']" class="mt-4" />
             @endif
         </section>
-        <form data-exam-attempt method="post" enctype="multipart/form-data" action="{{ $enrollment ? route('account.exam-attempts.submit', [$enrollment, $attempt]) : route('account.assessment-attempts.submit', $attempt) }}"
+        <form data-exam-attempt method="post" enctype="multipart/form-data" action="{{ $enrollment ? route('account.exam-attempts.submit', [$enrollment, $attempt] + $fromLesson) : route('account.assessment-attempts.submit', $attempt) }}"
             data-feedback-url="{{ $enrollment ? route('account.exam-attempts.feedback', [$enrollment, $attempt]) : route('account.assessment-attempts.feedback', $attempt) }}" class="mt-5 space-y-4">
             @csrf
             @if($attempt->snapshot['gamified'])
@@ -59,4 +70,7 @@
             <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white">Submit attempt</button>
         </form>
     @endif
+    @isset($lesson)
+        </div>@include('learning.partials.outline')</div>
+    @endisset
 @endsection

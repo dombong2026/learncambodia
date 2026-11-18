@@ -56,6 +56,7 @@ use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
 use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentLessonQuizController;
+use App\Http\Controllers\Workspace\LessonConversationController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
@@ -494,6 +495,12 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/comments', [LessonConversationController::class, 'comment'])
+            ->middleware('throttle:20,1,lesson-comments')->name('lessons.comment');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/comments/{comment}/reaction', [LessonConversationController::class, 'react'])
+            ->middleware('throttle:60,1,lesson-reactions')->name('lessons.react');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/support', [LessonConversationController::class, 'send'])
+            ->middleware('throttle:20,1,lesson-support')->name('lessons.support');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/quiz', [StudentLessonQuizController::class, 'store'])
             ->middleware('throttle:20,1')->name('lessons.quiz');
         Route::get('/homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
@@ -549,6 +556,10 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/submissions/{submission}/review', [InstructorGradingController::class, 'review'])
             ->middleware('throttle:30,1')->name('grading.review');
         Route::get('/guidance', [InstructorTeachingController::class, 'guidance'])->name('guidance');
+        Route::get('/lesson-support', [LessonConversationController::class, 'index'])->name('lesson-support.index');
+        Route::get('/lesson-support/{enrollment}/{lesson}', [LessonConversationController::class, 'show'])->name('lesson-support.show');
+        Route::post('/lesson-support/{enrollment}/{lesson}', [LessonConversationController::class, 'reply'])
+            ->middleware('throttle:30,1,lesson-support-replies')->name('lesson-support.reply');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 

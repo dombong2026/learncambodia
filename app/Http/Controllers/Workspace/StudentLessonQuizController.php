@@ -27,7 +27,7 @@ final class StudentLessonQuizController extends Controller
         }
         $return = $request->input('view') === 'curriculum'
             ? route('account.enrollments.show', $enrollment)
-            : route('account.lessons.watch', [$enrollment, $lesson]);
+            : route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz']);
         $return .= "#lesson-quiz-{$lesson->id}";
 
         $validator = Validator::make($request->all(), $rules);

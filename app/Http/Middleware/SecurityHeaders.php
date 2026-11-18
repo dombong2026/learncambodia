@@ -20,7 +20,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Frame-Options', $request->attributes->getBoolean('lessonPdfPreview') ? 'SAMEORIGIN' : 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
         $response->headers->set('Permissions-Policy', "camera=(), microphone=$microphone, geolocation=(), payment=()");

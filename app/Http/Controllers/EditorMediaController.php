@@ -268,8 +268,15 @@ final class EditorMediaController extends Controller
         ];
 
         $assessmentResource = in_array($media->context, ['lesson', 'exam'], true);
-        $downloadName = $assessmentResource && in_array($media->mime, self::DOCUMENT_MIMES, true) ? $media->original_name : null;
-        $seekable = str_starts_with($media->mime, 'video/') || ($assessmentResource && str_starts_with($media->mime, 'audio/'));
+        $pdfPreview = $media->context === 'lesson' && $media->mime === 'application/pdf' && $request->boolean('preview');
+        if ($pdfPreview) {
+            $request->attributes->set('lessonPdfPreview', true);
+            $headers['Content-Security-Policy'] = "default-src 'none'; frame-ancestors 'self'";
+        }
+        $downloadName = !$pdfPreview && $assessmentResource && in_array($media->mime, self::DOCUMENT_MIMES, true)
+            ? $media->original_name : null;
+        $seekable = $pdfPreview || str_starts_with($media->mime, 'video/')
+            || ($assessmentResource && str_starts_with($media->mime, 'audio/'));
 
         return ManagedFiles::response($request, $media->path, $headers, $seekable, $downloadName);
     }
