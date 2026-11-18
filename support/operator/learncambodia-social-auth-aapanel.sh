@@ -156,8 +156,54 @@ done < "$stage/files"
 
 artisan migrate --force --path=database/migrations/2026_11_18_000003_create_social_auth_tables.php
 refresh_caches
-artisan route:list --json --name=social.provider.callback | grep -Fq 'sign-in/{provider}/callback'
-artisan route:list --json --name=admin.system-settings.social-auth.save | grep -Fq 'social-auth/{provider}'
+runuser -u www -- "$php" <<'PHP'
+<?php
+
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
+
+require 'vendor/autoload.php';
+$app = require 'bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
+
+$routes = [
+    'social.google.callback' => ['GET', 'sign-in/google/callback'],
+    'social.provider.callback' => ['GET', 'sign-in/{provider}/callback'],
+    'social.provider.confirm-email' => ['GET', 'sign-in/{provider}/confirm-email'],
+    'admin.system-settings.social-auth' => ['GET', 'dashboard/system-settings/social-auth'],
+    'admin.system-settings.social-auth.save' => ['PUT', 'dashboard/system-settings/social-auth/{provider}'],
+    'admin.system-settings.social-auth.test' => ['POST', 'dashboard/system-settings/social-auth/{provider}/test'],
+];
+
+$problems = [];
+foreach ($routes as $name => [$method, $uri]) {
+    $route = Route::getRoutes()->getByName($name);
+    if ($route === null || $route->uri() !== $uri || !in_array($method, $route->methods(), true)) {
+        $problems[] = "Unexpected route registration: $name";
+    }
+}
+
+foreach (['managed_social_auth', 'social_identities'] as $table) {
+    if (!Schema::hasTable($table)) {
+        $problems[] = "Missing required table: $table";
+    }
+}
+
+foreach (['workspace.admin.social-auth', 'auth.social-buttons', 'auth.social-registration'] as $view) {
+    if (!View::exists($view)) {
+        $problems[] = "Missing required view: $view";
+    }
+}
+
+if ($problems !== []) {
+    file_put_contents('php://stderr', implode("\n", $problems)."\n");
+    exit(1);
+}
+
+echo "SOCIAL_AUTH_ROUTES_SCHEMA=PASS\n";
+PHP
 
 printf 'SOCIAL_AUTH_SHA=%s\nBACKUP=%s\n' "$release" "$stage" > "$stage/marker"
 install -o root -g www -m 0640 "$stage/marker" "$marker"
