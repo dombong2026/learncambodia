@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AccountInvitations;
 use App\Support\AccountPreview;
 use App\Support\AdminAccess;
 use App\Support\ManagedAccount;
@@ -19,6 +20,7 @@ final class AdminUserActionsController extends Controller
     public function confirm(Request $request, User $user, string $action): View
     {
         abort_unless(AdminAccess::canEdit($request->user(), $user) && $user->account_status !== 'deleted', 403);
+        abort_if($action === 'verify' && $user->isInvitedAccount(), 409);
         abort_if($action === 'sign-in-as' && ! AccountPreview::allowed($request->user(), $user), 403);
 
         return view('workspace.admin.user-action', ['account' => $user, 'action' => $action]);
@@ -33,7 +35,7 @@ final class AdminUserActionsController extends Controller
 
         DB::transaction(function () use ($request, $user, $data): void {
             [$actor, $account] = ManagedAccount::lockPair($request, $user);
-            abort_if($account->account_status === 'deleted', 403);
+            abort_if($account->account_status === 'deleted' || $account->isInvitedAccount(), 403);
             foreach ($data['channels'] as $channel) {
                 if ($channel === 'phone' && ! $account->phone) {
                     throw ValidationException::withMessages(['channels' => 'Add a phone number before verifying it.']);
@@ -60,10 +62,11 @@ final class AdminUserActionsController extends Controller
             $requested = $data['status'];
             if ($requested === 'restore') {
                 abort_unless($account->account_status === 'deleted', 409);
-                $account->forceFill(['account_status' => 'deactivated'])->save();
+                $pending = $account->invitation()->whereNull('accepted_at')->exists();
+                $account->forceFill(['account_status' => $pending ? 'invited' : 'deactivated'])->save();
                 ManagedAccount::audit($actor, $account, 'restored');
             } else {
-                abort_if($account->account_status === 'deleted', 409);
+                abort_if($account->account_status === 'deleted' || $account->isInvitedAccount(), 409);
                 if ($requested !== $account->account_status) {
                     if ($requested === 'deactivated') {
                         ManagedAccount::revokeSessions($account);
@@ -85,6 +88,9 @@ final class AdminUserActionsController extends Controller
             [$actor, $account] = ManagedAccount::lockPair($request, $user);
             if ($account->account_status !== 'deleted') {
                 ManagedAccount::revokeSessions($account);
+                if ($account->isInvitedAccount()) {
+                    AccountInvitations::revoke($actor, $account);
+                }
                 $account->forceFill(['account_status' => 'deleted'])->save();
                 ManagedAccount::audit($actor, $account, 'deleted');
             }

@@ -15,6 +15,7 @@ use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\UserInvitationController;
 use App\Http\Controllers\BrandAssetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CefrController;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
 use App\Http\Controllers\Workspace\AdminUserController;
+use App\Http\Controllers\Workspace\AdminUserInvitationController;
 use App\Http\Controllers\Workspace\AdminUserActionsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
 use App\Http\Controllers\Workspace\AdminLearningRecordController;
@@ -142,6 +144,10 @@ Route::middleware('guest')->group(function (): void {
 // Password reset links are token-protected, throttled, and never disclose whether
 // an email address exists. SMTP delivery is disabled in the initial log-only install.
 Route::middleware('guest')->group(function (): void {
+    Route::get('/invite/{token}', [UserInvitationController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:30,1')->name('invitations.show');
+    Route::post('/invite/{token}', [UserInvitationController::class, 'accept'])
+        ->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:8,1')->name('invitations.accept');
     Route::get('/forgot-password', [PasswordRecoveryController::class, 'requestForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordRecoveryController::class, 'sendLink'])
         ->middleware('throttle:3,1')->name('password.email');
@@ -274,6 +280,10 @@ Route::middleware('auth')->group(function (): void {
             ->where('user', '[1-9][0-9]{7}')->middleware('throttle:8,1')->name('users.destroy');
         Route::post('/users/{user}/sign-in-as', [AdminUserActionsController::class, 'signInAs'])
             ->where('user', '[1-9][0-9]{7}')->middleware('throttle:5,1')->name('users.sign-in-as');
+        Route::post('/users/{user}/invitation/resend', [AdminUserInvitationController::class, 'resend'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:5,1')->name('users.invitation.resend');
+        Route::post('/users/{user}/invitation/revoke', [AdminUserInvitationController::class, 'revoke'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.invitation.revoke');
         Route::post('/users', [AdminUserController::class, 'store'])->middleware('throttle:15,1')->name('users.store');
         Route::get('/users/{user}/access', [AdminUserController::class, 'editAccess'])
             ->where('user', '[1-9][0-9]{7}')->name('users.access.edit');

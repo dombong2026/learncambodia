@@ -11,6 +11,21 @@
 <div id="{{ $menu }}" popover class="learning-manager-menu">
     @if($actor->is($account))
         <a href="{{ route('admin.profile.edit') }}">Edit</a>
+    @elseif($manageable && $account->isInvitedAccount())
+        <a href="{{ route('admin.users.access.edit', $account) }}">Edit</a>
+        @if($invitationDeliveryEnabled)
+            <form method="post" action="{{ route('admin.users.invitation.resend', $account) }}">
+                @csrf
+                <button type="submit">{{ __('invitations.resend') }}</button>
+            </form>
+        @endif
+        @if($account->invitation && !$account->invitation->revoked_at)
+            <form method="post" action="{{ route('admin.users.invitation.revoke', $account) }}">
+                @csrf
+                <button type="submit">{{ __('invitations.revoke') }}</button>
+            </form>
+        @endif
+        <a href="{{ route('admin.users.actions', [$account, 'delete']) }}" class="learning-manager-delete">Delete</a>
     @elseif($manageable && ! $deleted)
         <a href="{{ route('admin.users.access.edit', $account) }}">Edit</a>
         <form method="post" action="{{ route('admin.users.status', $account) }}">
