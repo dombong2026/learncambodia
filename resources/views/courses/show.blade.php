@@ -33,7 +33,9 @@
             <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.student_enrollment_only') }}</p>
             <a href="{{ route(auth()->user()->homeRouteName()) }}" class="{{ $secondary }}">{{ __('frontend.open_my_workspace') }}</a>
         @elseif(!$existingEnrollment)
-            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.enroll_review_note') }}</p>
+            @if($quote['model'] !== 'free')
+                <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.enroll_review_note') }}</p>
+            @endif
             <form method="POST" action="{{ route('account.enrollments.store', $course) }}">
                 @csrf
                 @if($quote['model'] !== 'free')

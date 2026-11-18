@@ -150,19 +150,15 @@ class FrontendAuthMilestoneTest extends TestCase
             ->assertSee('>Enroll</button>', false)
             ->assertSee('action="'.route('account.enrollments.store',$course).'"',false);
 
-        $this->post('/account/courses/'.$course->id.'/enroll')->assertRedirect('/account/enrollments');
-        $this->assertDatabaseHas('course_enrollments', [
-            'student_id'=>$student->id, 'course_id'=>$course->id, 'status'=>'pending',
-        ]);
-
-        $this->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Enrollment pending')
-            ->assertDontSee('action="'.route('account.enrollments.store',$course).'"',false);
-
-        $enrollment=\App\Models\CourseEnrollment::firstOrFail();
-        $enrollment->update(['status'=>'approved']);
-
+        $response = $this->post('/account/courses/'.$course->id.'/enroll');
+        $enrollment = \App\Models\CourseEnrollment::firstOrFail();
         $study = route('account.enrollments.show', $enrollment);
+        $response->assertRedirect($study);
+        $this->assertSame('approved', $enrollment->status);
+        $this->get($path)->assertOk()
+            ->assertDontSee('Enrollment pending')
+            ->assertDontSee('action="'.route('account.enrollments.store', $course).'"', false);
+
         $progress = route('account.progress.index', ['enrollment' => $enrollment->id]);
         $this->get($path)->assertOk()
             ->assertSee('Already enrolled')

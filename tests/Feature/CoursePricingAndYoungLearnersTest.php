@@ -55,9 +55,16 @@ final class CoursePricingAndYoungLearnersTest extends TestCase
             ->assertSee('USD 15.25')->assertSee('USD 12.50');
         $request = route('account.enrollments.store', $course);
         $this->post($request, ['pricing_quote' => '{}'])->assertConflict();
-        $this->post($request, ['pricing_quote' => json_encode(CoursePricing::quote($course->pricing))])->assertRedirect();
+        $this->post($request, [
+            'pricing_quote' => json_encode(CoursePricing::quote($course->pricing)),
+            'payment_provider' => 'stripe',
+            'payment_status' => 'paid',
+            'payment_reference' => 'customer-supplied',
+        ])->assertRedirect(route('account.enrollments.index'));
         $enrollment = CourseEnrollment::sole();
         $this->assertSame(1250, $enrollment->pricing_quote['amount_minor']);
+        $this->assertSame('pending', $enrollment->status);
+        $this->get(route('account.enrollments.show', $enrollment))->assertForbidden();
         $review = route('admin.reviews.enrollment', $enrollment);
         $this->actingAs($author)->postJson($review, ['decision' => 'approve'])
             ->assertUnprocessable()->assertJsonValidationErrors('pricing_reference');
