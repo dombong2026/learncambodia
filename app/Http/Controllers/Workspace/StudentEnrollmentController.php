@@ -73,7 +73,7 @@ class StudentEnrollmentController extends Controller
 
     public function store(Request $request, Course $course): RedirectResponse
     {
-        DB::transaction(function () use ($request, $course): void {
+        $enrollment = DB::transaction(function () use ($request, $course): CourseEnrollment {
             // Lock the student row to serialize concurrent enrollment attempts.
             $student = User::query()->whereKey($request->user()->id)
                 ->lockForUpdate()->firstOrFail();
@@ -81,7 +81,8 @@ class StudentEnrollmentController extends Controller
 
             $availableCourse = Course::discoverable()->whereKey($course->id)->lockForUpdate()->firstOrFail();
             $quote = CoursePricing::quote($availableCourse->pricing);
-            if ($quote['model'] !== 'free') {
+            $free = $quote['model'] === 'free';
+            if (! $free) {
                 $submitted = $request->validate(['pricing_quote' => ['required', 'string']]);
                 abort_unless(hash_equals(json_encode($quote, JSON_THROW_ON_ERROR), $submitted['pricing_quote']),
                     409, 'Course pricing changed. Return to the course page and review the current price.');
@@ -95,12 +96,18 @@ class StudentEnrollmentController extends Controller
             $enrollment = CourseEnrollment::create([
                 'course_id' => $course->id,
                 'student_id' => $student->id,
-                'status' => 'pending',
-                'pricing_quote' => $quote['model'] === 'free' ? null : $quote,
+                'status' => $free ? 'approved' : 'pending',
+                'pricing_quote' => $free ? null : $quote,
             ]);
             ApprovalAudit::record('enrollment', $enrollment->id,
-                $student, 'requested', null, 'pending');
+                $student, $free ? 'auto_approved' : 'requested', null, $enrollment->status);
+
+            return $enrollment;
         });
+
+        if ($enrollment->status === 'approved') {
+            return redirect()->route('account.enrollments.show', $enrollment);
+        }
 
         return redirect()->route('account.enrollments.index')
             ->with('status', 'Enrollment request submitted for administrator review.');
