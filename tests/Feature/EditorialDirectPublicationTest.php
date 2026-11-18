@@ -120,6 +120,73 @@ class EditorialDirectPublicationTest extends TestCase
             ->assertDontSee('A private draft');
     }
 
+    public function test_public_policy_topic_icons_work_with_custom_slugs(): void
+    {
+        $author = User::factory()->create();
+        foreach ([
+            'Acceptable Use and Academic Integrity Policy', 'Account and Data Deletion Policy',
+            'Assessment Results and Certificate Review Procedure', 'Complaints and Consumer Dispute Procedure',
+            'Cookies and Browser Storage Notice', 'Copyright and Content Rights Policy',
+            'Course Information and Purchase Procedure', 'Email and Marketing Preferences',
+            'Enrollment, Fees and Refunds Policy', 'Learner Safeguarding and Accessibility Policy',
+            'Personal Data Requests Procedure', 'Privacy Policy',
+            'Security Reporting and Account Recovery', 'Terms of Service',
+            'A custom policy', 'Another custom policy',
+        ] as $index => $title) {
+            ContentEntry::create([
+                'type' => 'policy', 'slug' => 'legacy-document-'.$index, 'title' => $title,
+                'status' => 'published', 'body' => 'Policy body.', 'created_by' => $author->id,
+            ]);
+        }
+
+        $icons = [];
+        foreach ([1, 2] as $page) {
+            $response = $this->get('/policies?page='.$page)->assertOk();
+            preg_match_all('/<span class="policy-card-icon">\s*(<svg.*?<\/svg>)\s*<\/span>/s', $response->getContent(), $matches);
+            $icons = array_merge($icons, $matches[1]);
+        }
+        $this->assertCount(16, array_unique($icons));
+        $this->assertCount(14, array_filter($icons, fn ($icon) => str_contains($icon, '<path ')));
+    }
+
+    public function test_policy_manager_lists_ten_records_and_filters_by_title_or_public_id(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        foreach (range(1, 11) as $number) {
+            ContentEntry::create([
+                'type' => 'policy', 'slug' => 'legacy-policy-'.$number,
+                'title' => sprintf('Policy example %02d', $number), 'status' => 'published',
+                'policy_version' => '2.4', 'published_at' => '2026-11-18 08:00:00',
+                'body' => 'Published policy content.', 'created_by' => $admin->id,
+            ]);
+        }
+
+        $draft = ContentEntry::create([
+            'type' => 'policy', 'slug' => 'legacy-draft',
+            'title' => 'Practice draft', 'status' => 'draft',
+            'body' => 'Draft policy content.', 'created_by' => $admin->id,
+        ]);
+
+        $this->actingAs($admin)->get('/dashboard/editorial/policies?lang=en')->assertOk()
+            ->assertSeeInOrder(['>ID</th>', '>Title</th>', '>Version</th>', '>Status</th>', '>Published</th>', '>Updated</th>', '>Actions</th>'], false)
+            ->assertDontSee('>Slug</th>', false)
+            ->assertSee('Showing 1–10 of 12')->assertSee('Go to')
+            ->assertSee('Search by title or ID')
+            ->assertSee('Policies Manager')
+            ->assertSee('>2.4</td>', false)
+            ->assertSee('2026-11-18')
+            ->assertSee('popover class="learning-manager-menu"', false)
+            ->assertSee('href="'.route('admin.editorial.preview', ['kind' => 'policies', 'entry' => $draft, 'lang' => 'en']).'"', false);
+
+        $this->get('/dashboard/editorial/policies?lang=en&q=Policy+example&page=2')->assertOk()
+            ->assertSee('Showing 11–11 of 11')->assertSee('Policy example 01')
+            ->assertDontSee('Practice draft')
+            ->assertSee('name="q" value="Policy example"', false);
+
+        $this->get('/dashboard/editorial/policies?lang=en&q='.$draft->public_id)->assertOk()
+            ->assertSee('Showing 1–1 of 1')->assertSee('Practice draft')->assertDontSee('Policy example');
+    }
+
     public function test_media_library_reuse_respects_publication_and_rejects_private_editor_media(): void
     {
         Storage::fake('local');
