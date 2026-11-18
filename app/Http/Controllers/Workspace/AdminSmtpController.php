@@ -19,6 +19,10 @@ final class AdminSmtpController extends Controller
 {
     public function edit(Request $request): View
     {
+        if (time() - (int) $request->session()->get('auth.password_confirmed_at', 0) >= config('auth.password_timeout', 10800)) {
+            return view('workspace.admin.smtp', ['canManage' => false]);
+        }
+
         $unreadable = false;
         try {
             $saved = ManagedSmtpSettings::saved();
@@ -31,6 +35,7 @@ final class AdminSmtpController extends Controller
         $hasPassword = filled($settings['password']);
 
         return view('workspace.admin.smtp', [
+            'canManage' => true,
             'settings' => Arr::except($settings, ['password']),
             'hasPassword' => $hasPassword,
             'source' => $unreadable ? 'Unreadable dashboard settings' : ($saved ? 'Dashboard SMTP' : 'Server configuration'),
@@ -38,6 +43,11 @@ final class AdminSmtpController extends Controller
             'canSend' => OutboundMail::deliveryEnabled(),
             'email' => $request->user()->email,
         ]);
+    }
+
+    public function configure(): RedirectResponse
+    {
+        return to_route('admin.system-settings.smtp');
     }
 
     public function update(Request $request): RedirectResponse

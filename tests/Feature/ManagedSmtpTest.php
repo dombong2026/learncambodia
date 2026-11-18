@@ -33,7 +33,10 @@ final class ManagedSmtpTest extends TestCase
         $this->put($update, $this->settings())->assertForbidden();
 
         $admin = User::factory()->create(['role' => User::ROLE_SUPERADMIN]);
-        $this->actingAs($admin)->get($page)->assertRedirect(route('password.confirm'));
+        $this->actingAs($admin)->get($page)->assertOk()->assertSee('Confirm password')->assertDontSee('SMTP password');
+        $this->get(route('admin.system-settings.smtp.configure'))->assertRedirect(route('password.confirm'));
+        $this->post(route('admin.system-settings.smtp.test'), ['recipient' => 'recipient@example.test'])
+            ->assertRedirect(route('password.confirm'));
         $this->confirmPassword()->get($page)->assertOk()->assertSee('SMTP connection')->assertSee('Send a test email');
     }
 

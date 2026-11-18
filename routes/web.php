@@ -217,8 +217,9 @@ Route::middleware('auth')->group(function (): void {
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
-            Route::get('/smtp', [AdminSmtpController::class, 'edit'])
-                ->middleware('password.confirm')->name('smtp');
+            Route::get('/smtp', [AdminSmtpController::class, 'edit'])->name('smtp');
+            Route::get('/smtp/configure', [AdminSmtpController::class, 'configure'])
+                ->middleware('password.confirm')->name('smtp.configure');
             Route::put('/smtp', [AdminSmtpController::class, 'update'])
                 ->middleware(['password.confirm', 'throttle:6,1'])->name('smtp.update');
             Route::delete('/smtp', [AdminSmtpController::class, 'reset'])

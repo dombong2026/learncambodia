@@ -4,6 +4,13 @@
 @section('description', 'Configure outgoing account email and send a test message.')
 
 @section('content')
+@if(!$canManage)
+    <section class="workspace-panel max-w-xl p-5 sm:p-6" aria-labelledby="smtp-unlock-heading">
+        <h2 id="smtp-unlock-heading" class="text-lg font-bold">Confirm your password</h2>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Confirm your account password to view the SMTP settings, make changes, and send a test email.</p>
+        <a href="{{ route('admin.system-settings.smtp.configure') }}" class="mt-5 inline-flex rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">Confirm password</a>
+    </section>
+@else
 @php
     $fieldClass = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100';
 @endphp
@@ -84,4 +91,5 @@
         @endif
     </section>
 </div>
+@endif
 @endsection

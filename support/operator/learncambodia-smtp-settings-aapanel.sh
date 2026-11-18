@@ -55,7 +55,8 @@ while IFS= read -r file; do
         config/workspaces.php|\
         app/Support/WorkspaceMenu.php|\
         routes/web.php|\
-        resources/views/workspace/admin/smtp.blade.php) ;;
+        resources/views/workspace/admin/smtp.blade.php|\
+        resources/views/components/workspace-icon.blade.php) ;;
         *) printf 'Unexpected release file: %s\n' "$file" >&2; exit 1 ;;
     esac
 

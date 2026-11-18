@@ -149,7 +149,7 @@ final class WorkspaceMenu
             'system-settings/branding' => 'brand-identity',
             'system-settings/security' => 'shield-check',
             'system-settings/social-auth' => 'log-in',
-            'system-settings/smtp' => 'mail',
+            'system-settings/smtp' => 'smtp-envelope',
             'system-settings/cloud-storage' => 'cloud-storage',
             'academic-quality/gradebook' => 'chart-line',
             'academic-quality/evidence' => 'badge-check',
