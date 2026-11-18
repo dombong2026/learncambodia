@@ -1,7 +1,7 @@
 @extends('layouts.public')
 @section('title', 'Policy Center')
 @push('public_styles')
-    <link rel="stylesheet" href="{{ asset('css/public-policies.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/public-policies.css') }}?v=2">
 @endpush
 @section('content')
 <section class="policy-center">
@@ -11,7 +11,7 @@
             @foreach($policies as $policy)
                 @php($number = $policies->firstItem() + $loop->index)
                 <li>
-                    <a class="policy-card" href="{{ url()->query($policy->publicUrl(), ['lang' => app()->getLocale()]) }}" aria-labelledby="policy-title-{{ $number }}">
+                    <a class="policy-card" href="{{ url()->query($policy->publicUrl(), ['lang' => app()->getLocale()]) }}" aria-labelledby="policy-title-{{ $number }}" aria-describedby="policy-version-{{ $number }}">
                         <div class="policy-card-header">
                             <span class="policy-card-icon"><x-policy-card-icon :policy="$policy" /></span>
                             <span class="policy-card-number" aria-hidden="true">{{ sprintf('%02d', $number) }}</span>
@@ -20,9 +20,12 @@
                         @if($policy->summary)
                             <p class="policy-card-summary">{{ $policy->summary }}</p>
                         @endif
-                        @if($policy->policy_effective_on)
-                            <p class="policy-card-date">Effective <time datetime="{{ $policy->policy_effective_on->toDateString() }}">{{ $policy->policy_effective_on->toFormattedDateString() }}</time></p>
-                        @endif
+                        <div class="policy-card-meta">
+                            @if($policy->policy_effective_on)
+                                <p class="policy-card-date">Effective <time datetime="{{ $policy->policy_effective_on->toDateString() }}">{{ $policy->policy_effective_on->toFormattedDateString() }}</time></p>
+                            @endif
+                            <p class="policy-card-version" id="policy-version-{{ $number }}">Version {{ $policy->policy_version ?? '—' }}</p>
+                        </div>
                     </a>
                 </li>
             @endforeach

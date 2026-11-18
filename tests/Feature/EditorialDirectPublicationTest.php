@@ -97,6 +97,8 @@ class EditorialDirectPublicationTest extends TestCase
                 'status' => 'published',
                 'body' => 'Published policy content.',
                 'created_by' => $author->id,
+                'policy_version' => $number === 13 ? '2.4' : null,
+                'policy_effective_on' => $number === 13 ? '2026-11-18' : null,
             ]);
         }
 
@@ -109,6 +111,8 @@ class EditorialDirectPublicationTest extends TestCase
 
         $this->get('/policies?lang=en&page=2')->assertOk()
             ->assertSee('start="13"', false)
+            ->assertSee('Version 2.4')->assertSee('Version —')
+            ->assertSee('datetime="2026-11-18"', false)
             ->assertSeeInOrder(['>13</span>', 'Policy 13</h2>', '>14</span>', 'Policy 14</h2>'], false)
             ->assertDontSee('A private draft')
             ->assertDontSee('Policy 01');
