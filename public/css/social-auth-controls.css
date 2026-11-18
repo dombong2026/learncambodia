@@ -1,0 +1,112 @@
+.social-auth-provider-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0;
+}
+
+.social-auth-provider-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.social-auth-switch,
+.social-auth-gear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    text-decoration: none;
+}
+
+.social-auth-switch {
+    justify-content: space-between;
+    width: 4.625rem;
+    padding: 0.25rem 0.5rem;
+    gap: 0.25rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.social-auth-switch-thumb {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex: none;
+    border-radius: 50%;
+    background: #64748b;
+}
+
+.social-auth-switch[data-enabled="true"] {
+    flex-direction: row-reverse;
+    border-color: #047857;
+    background: #047857;
+    color: #fff;
+}
+
+.social-auth-switch[data-enabled="true"] .social-auth-switch-thumb {
+    background: #fff;
+}
+
+.social-auth-switch:disabled {
+    cursor: not-allowed;
+}
+
+.social-auth-switch:not(:disabled):hover,
+.social-auth-gear:hover {
+    border-color: #3b82f6;
+}
+
+.social-auth-gear {
+    width: 2.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    color: #334155;
+}
+
+.social-auth-gear:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.dark .social-auth-switch {
+    border-color: #64748b;
+    background: #243a55;
+    color: #e2e8f0;
+}
+
+.dark .social-auth-switch-thumb {
+    background: #94a3b8;
+}
+
+.dark .social-auth-switch[data-enabled="true"] {
+    border-color: #34d399;
+    background: #064e3b;
+    color: #d1fae5;
+}
+
+.dark .social-auth-gear {
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+.dark .social-auth-gear:hover {
+    border-color: #60a5fa;
+    background: #1e3a5f;
+}
+
+.social-auth-switch:focus-visible,
+.social-auth-gear:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 3px;
+}
+
+#social-auth-settings {
+    scroll-margin-top: 6rem;
+}

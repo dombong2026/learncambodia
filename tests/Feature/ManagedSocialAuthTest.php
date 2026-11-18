@@ -25,7 +25,7 @@ final class ManagedSocialAuthTest extends TestCase
         $this->actingAs($admin)->get(route('admin.system-settings.social-auth.configure', 'github'))
             ->assertRedirect(route('password.confirm'));
         $this->withSession(['auth.password_confirmed_at' => time()])->put($save, [
-            'client_id' => 'github-public-id', 'client_secret' => 'fixture-private-secret', 'enabled' => '0',
+            'client_id' => 'github-public-id', 'client_secret' => 'fixture-private-secret',
         ])->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']));
 
         $this->get(route('admin.system-settings.social-auth', ['configure' => 'github']))
@@ -42,6 +42,66 @@ final class ManagedSocialAuthTest extends TestCase
             ->assertSessionHas('status', 'GitHub authorization and profile lookup passed.');
         $this->assertAuthenticatedAs($admin);
         $this->assertDatabaseCount('social_identities', 0);
+    }
+
+    public function test_provider_controls_require_confirmation_and_keep_dashboard_credentials(): void
+    {
+        $page = route('admin.system-settings.social-auth');
+        $status = route('admin.system-settings.social-auth.status', 'github');
+        $configure = route('admin.system-settings.social-auth.configure', 'github');
+
+        $this->actingAs(User::factory()->create())->patch($status, ['enabled' => '1'])->assertForbidden();
+
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_SUPERADMIN]));
+        $this->get($page)->assertOk()->assertSee('Configure GitHub')->assertSee('Setup required')
+            ->assertSee('role="switch" aria-checked="false"', false);
+        $this->patchJson($status, ['enabled' => '1'])->assertStatus(423);
+        $this->get(route('admin.system-settings.social-auth.confirm'))->assertRedirect(route('password.confirm'));
+
+        $this->withSession(['auth.password_confirmed_at' => time()])
+            ->patch($status, ['enabled' => '1'])->assertRedirect($page)->assertSessionHas('social_auth_error');
+        $this->assertDatabaseCount('managed_social_auth', 0);
+        $this->get($configure)->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']).'#social-auth-settings');
+
+        $this->put(route('admin.system-settings.social-auth.save', 'github'), [
+            'client_id' => 'github-client', 'client_secret' => 'fixture-secret',
+        ])->assertRedirect();
+        $payload = DB::table('managed_social_auth')->where('provider', 'github')->value('credentials');
+        $this->patch($status, ['enabled' => '1'])->assertRedirect($page)->assertSessionHas('status', 'GitHub sign-in enabled.');
+        $this->get($page)->assertOk()->assertSee('role="switch" aria-checked="true" aria-label="GitHub sign-in"', false);
+        $this->assertSame($payload, DB::table('managed_social_auth')->where('provider', 'github')->value('credentials'));
+
+        $this->put(route('admin.system-settings.social-auth.save', 'github'), [
+            'client_id' => 'github-client', 'client_secret' => 'rotated-secret',
+        ])->assertRedirect();
+        $this->assertTrue(ManagedSocialAuth::enabled(ManagedSocialAuth::settings('github')));
+
+        $this->patch($status, ['enabled' => '0'])->assertRedirect($page)->assertSessionHas('status', 'GitHub sign-in disabled.');
+        $this->assertFalse(ManagedSocialAuth::enabled(ManagedSocialAuth::settings('github')));
+        $this->assertSame('rotated-secret', ManagedSocialAuth::settings('github')['client_secret']);
+    }
+
+    public function test_provider_switch_can_override_the_server_status_without_copying_credentials(): void
+    {
+        config([
+            'services.google.enabled' => true,
+            'services.google.client_id' => 'server-client',
+            'services.google.client_secret' => 'server-secret',
+        ]);
+
+        $this->actingAs(User::factory()->create(['role' => User::ROLE_SUPERADMIN]))
+            ->withSession(['auth.password_confirmed_at' => time()]);
+        $status = route('admin.system-settings.social-auth.status', 'google');
+        $this->patch($status, ['enabled' => '0'])->assertRedirect();
+        $this->assertFalse(ManagedSocialAuth::enabled(ManagedSocialAuth::settings('google')));
+        $this->assertSame('', DB::table('managed_social_auth')->where('provider', 'google')->value('credentials'));
+
+        config(['services.google.client_secret' => 'rotated-server-secret']);
+        $this->patch($status, ['enabled' => '1'])->assertRedirect();
+        $settings = ManagedSocialAuth::settings('google');
+        $this->assertTrue(ManagedSocialAuth::enabled($settings));
+        $this->assertSame('rotated-server-secret', $settings['client_secret']);
+        $this->assertSame('Server configuration', $settings['source']);
     }
 
     public function test_saved_google_credentials_drive_legacy_sign_in_route(): void

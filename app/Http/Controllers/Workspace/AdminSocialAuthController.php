@@ -32,21 +32,41 @@ final class AdminSocialAuthController extends Controller
 
         return view('workspace.admin.social-auth', [
             'providers' => $providers,
+            'confirmed' => $confirmed,
             'selected' => $confirmed && is_string($selected) && isset($providers[$selected]) ? $selected : null,
         ]);
     }
 
     public function configure(string $provider): RedirectResponse
     {
-        return to_route('admin.system-settings.social-auth', ['configure' => $provider]);
+        return redirect()->to(route('admin.system-settings.social-auth', ['configure' => $provider]).'#social-auth-settings');
+    }
+
+    public function confirmStatus(): RedirectResponse
+    {
+        return to_route('admin.system-settings.social-auth');
+    }
+
+    public function status(Request $request, string $provider): RedirectResponse
+    {
+        $request->validate(['enabled' => ['required', 'boolean']]);
+        $enabled = $request->boolean('enabled');
+        $label = ManagedSocialAuth::PROVIDERS[$provider];
+
+        if (! ManagedSocialAuth::setEnabled($provider, $enabled)) {
+            return to_route('admin.system-settings.social-auth')
+                ->with('social_auth_error', "Save $label OAuth credentials before enabling sign-in.");
+        }
+
+        return to_route('admin.system-settings.social-auth')
+            ->with('status', $label.' sign-in '.($enabled ? 'enabled.' : 'disabled.'));
     }
 
     public function save(Request $request, string $provider): RedirectResponse
     {
-        $validator = Validator::make($request->only('client_id', 'client_secret', 'enabled'), [
+        $validator = Validator::make($request->only('client_id', 'client_secret'), [
             'client_id' => ['required', 'string', 'max:512', 'regex:/\A[\x21-\x7E]+\z/'],
             'client_secret' => ['nullable', 'string', 'max:2048', 'regex:/\A[\x21-\x7E]+\z/'],
-            'enabled' => ['required', 'boolean'],
         ]);
         $redirect = to_route('admin.system-settings.social-auth', ['configure' => $provider]);
         if ($validator->fails()) {

@@ -237,10 +237,13 @@ Route::middleware('auth')->group(function (): void {
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', [AdminSocialAuthController::class, 'index'])->name('social-auth');
+            Route::get('/social-auth/confirm', [AdminSocialAuthController::class, 'confirmStatus'])
+                ->middleware('password.confirm')->name('social-auth.confirm');
             Route::prefix('/social-auth/{provider}')->where(['provider' => 'google|facebook|github|linkedin'])
                 ->middleware(['password.confirm', 'throttle:10,1'])->group(function (): void {
                     Route::get('/configure', [AdminSocialAuthController::class, 'configure'])->name('social-auth.configure');
                     Route::put('/', [AdminSocialAuthController::class, 'save'])->name('social-auth.save');
+                    Route::patch('/status', [AdminSocialAuthController::class, 'status'])->name('social-auth.status');
                     Route::post('/test', [SocialAuthController::class, 'test'])->name('social-auth.test');
                 });
             Route::get('/smtp', [AdminSmtpController::class, 'edit'])->name('smtp');

@@ -5,6 +5,7 @@ namespace App\Support;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use stdClass;
 
 final class ManagedSocialAuth
 {
@@ -17,8 +18,12 @@ final class ManagedSocialAuth
 
     public static function settings(string $provider): array
     {
-        $row = DB::table('managed_social_auth')->where('provider', $provider)->first();
-        if ($row !== null) {
+        return self::resolveSettings($provider, DB::table('managed_social_auth')->where('provider', $provider)->first());
+    }
+
+    private static function resolveSettings(string $provider, ?stdClass $row): array
+    {
+        if ($row !== null && $row->credentials !== '') {
             try {
                 return json_decode(Crypt::decryptString($row->credentials), true, 512, JSON_THROW_ON_ERROR)
                     + ['enabled' => (bool) $row->enabled, 'source' => 'Dashboard'];
@@ -30,7 +35,7 @@ final class ManagedSocialAuth
         return [
             'client_id' => (string) config("services.$provider.client_id"),
             'client_secret' => (string) config("services.$provider.client_secret"),
-            'enabled' => (bool) config("services.$provider.enabled"),
+            'enabled' => (bool) ($row?->enabled ?? config("services.$provider.enabled")),
             'source' => 'Server configuration',
         ];
     }
@@ -47,14 +52,34 @@ final class ManagedSocialAuth
 
     public static function save(string $provider, array $settings): void
     {
+        $updates = array_key_exists('enabled', $settings) ? ['enabled', 'credentials'] : ['credentials'];
         DB::table('managed_social_auth')->upsert([
             'provider' => $provider,
-            'enabled' => $settings['enabled'],
+            'enabled' => $settings['enabled'] ?? (bool) config("services.$provider.enabled"),
             'credentials' => Crypt::encryptString(json_encode([
                 'client_id' => $settings['client_id'],
                 'client_secret' => $settings['client_secret'],
             ], JSON_THROW_ON_ERROR)),
-        ], ['provider'], ['enabled', 'credentials']);
+        ], ['provider'], $updates);
+    }
+
+    public static function setEnabled(string $provider, bool $enabled): bool
+    {
+        return DB::transaction(function () use ($provider, $enabled): bool {
+            $row = DB::table('managed_social_auth')->where('provider', $provider)->lockForUpdate()->first();
+            if ($enabled && ! self::configured(self::resolveSettings($provider, $row))) {
+                return false;
+            }
+
+            // An empty credential payload keeps the environment as the credential source.
+            DB::table('managed_social_auth')->upsert([
+                'provider' => $provider,
+                'enabled' => $enabled,
+                'credentials' => '',
+            ], ['provider'], ['enabled']);
+
+            return true;
+        }, 3);
     }
 
     public static function callback(string $provider): string
