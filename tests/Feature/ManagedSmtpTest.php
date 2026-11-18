@@ -117,9 +117,7 @@ final class ManagedSmtpTest extends TestCase
 
         $this->actingAs($admin)->confirmPassword()->post(route('admin.system-settings.smtp.test'), [
             'recipient' => 'recipient@example.test',
-        ])->assertRedirect()->assertSessionHasErrors([
-            'recipient' => 'SMTP authentication was rejected. Check the username and provider app password.',
-        ]);
+        ])->assertRedirect()->assertSessionHas('smtp_test_error', 'SMTP authentication was rejected. Check the username and provider app password.');
         $this->get(route('admin.system-settings.smtp'))->assertOk()
             ->assertSee('data-smtp-test-feedback', false)
             ->assertSee('Test email failed')

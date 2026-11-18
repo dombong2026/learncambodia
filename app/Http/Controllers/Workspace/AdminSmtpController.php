@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -102,19 +103,25 @@ final class AdminSmtpController extends Controller
 
     public function test(Request $request): RedirectResponse
     {
-        $data = $request->validate(['recipient' => ['required', 'email:rfc', 'max:255']]);
-        $redirect = to_route('admin.system-settings.smtp')->withInput($data);
+        $validator = Validator::make($request->only('recipient'), ['recipient' => ['required', 'email:rfc', 'max:255']]);
+        $redirect = to_route('admin.system-settings.smtp');
+        if ($validator->fails()) {
+            return $redirect->with('smtp_test_error', $validator->errors()->first('recipient'));
+        }
+
+        $data = $validator->validated();
+        $redirect->withInput($data);
 
         try {
             if (! OutboundMail::deliveryEnabled()) {
-                return $redirect->withErrors(['recipient' => 'Save an outbound mail configuration before sending a test email.']);
+                return $redirect->with('smtp_test_error', 'Save an outbound mail configuration before sending a test email.');
             }
 
             $sent = Mail::raw('This is a test email from LearnCambodia System Settings.', function ($message) use ($data): void {
                 $message->to($data['recipient'])->subject('LearnCambodia SMTP test');
             });
             if ($sent === null) {
-                return $redirect->withErrors(['recipient' => 'The mailer cancelled the test. Check the active transport and try again.']);
+                return $redirect->with('smtp_test_error', 'The mailer cancelled the test. Check the active transport and try again.');
             }
         } catch (\Exception $error) {
             Log::warning('Dashboard SMTP test failed.', [
@@ -123,7 +130,7 @@ final class AdminSmtpController extends Controller
                 'error_code' => (int) $error->getCode(),
             ]);
 
-            return $redirect->withErrors(['recipient' => $this->deliveryError($error)]);
+            return $redirect->with('smtp_test_error', $this->deliveryError($error));
         }
 
         $this->audit($request, 'test accepted');

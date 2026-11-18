@@ -5,7 +5,7 @@
 @section('workspace_feedback')
     @php
         $testRecipient = session('smtp_test_recipient');
-        $testError = $errors->first('recipient');
+        $testError = session('smtp_test_error');
     @endphp
     @if($testRecipient || $testError)
         <aside id="smtp-test-feedback" data-smtp-test-feedback class="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border bg-white px-5 py-3 text-sm shadow-xl dark:bg-slate-900 {{ $testError ? 'border-red-500/40 text-red-700 dark:text-red-300' : 'border-emerald-200 text-emerald-800 dark:border-emerald-900 dark:text-emerald-300' }}">
@@ -52,7 +52,7 @@
             <h2 id="smtp-heading" class="text-lg font-bold">SMTP connection</h2>
             <span class="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{ $source }}</span>
         </div>
-        @if($errors->any() && !$errors->has('recipient'))
+        @if($errors->any())
             <ul role="alert" class="mb-5 list-inside list-disc rounded-xl border border-red-500/40 p-4 text-sm text-red-700 dark:text-red-300">
                 @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
             </ul>
