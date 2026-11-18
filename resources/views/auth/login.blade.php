@@ -18,7 +18,14 @@
 </form>
 @error('google')<p role="alert" class="mt-3 text-sm">{{ $message }}</p>@enderror
 <form data-passkey-login data-options="{{ route('passkey.login-options') }}" data-submit="{{ route('passkey.login') }}" hidden class="mt-3">
-    <button type="submit" class="w-full rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold dark:border-slate-600">Sign in with a passkey</button>
+    <button type="submit" class="inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold dark:border-slate-600">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="7.5" cy="7" r="3"/>
+            <path d="M2 20v-2a4 4 0 0 1 4-4h3a4 4 0 0 1 3 1.4M18 12v9h-2m2-3h2"/>
+            <circle cx="18" cy="9" r="3"/>
+        </svg>
+        <span>Sign in with a passkey</span>
+    </button>
     <p data-passkey-message role="status" class="mt-2 text-sm"></p>
 </form>
 @include('auth.social-buttons')

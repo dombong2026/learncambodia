@@ -19,3 +19,4 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="msapplication-TileImage" content="{{ asset('brand/mstile-144x144.png') }}?v=20261114">
 <meta name="msapplication-TileColor" content="#0c2d5b">
+<link rel="stylesheet" href="{{ asset('css/platform-focus.css') }}?v=1">
