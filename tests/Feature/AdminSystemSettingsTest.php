@@ -22,11 +22,11 @@ final class AdminSystemSettingsTest extends TestCase
 
         $this->assertSame(['reporting', 'system-settings'], $groups->pluck('key')->slice(-2)->values()->all());
         $this->assertSame(
-            ['Branding', 'Security', 'Social Auth', 'Cloud Storage'],
+            ['Branding', 'Security', 'Social Auth', 'SMTP', 'Cloud Storage'],
             array_column($groups->last()['items'], 'label')
         );
 
-        foreach (['branding', 'security', 'social-auth', 'cloud-storage'] as $section) {
+        foreach (['branding', 'security', 'social-auth', 'smtp', 'cloud-storage'] as $section) {
             $url = route('admin.system-settings.'.$section);
             $response = $this->get($url)->assertOk();
             $this->assertMatchesRegularExpression(
@@ -43,7 +43,7 @@ final class AdminSystemSettingsTest extends TestCase
         $this->post($probe)->assertRedirect(route('login'));
 
         $this->actingAs(User::factory()->create(['role' => 'student']));
-        foreach (['branding', 'security', 'social-auth', 'cloud-storage'] as $section) {
+        foreach (['branding', 'security', 'social-auth', 'smtp', 'cloud-storage'] as $section) {
             $this->get(route('admin.system-settings.'.$section))->assertForbidden();
         }
         $this->post($probe)->assertForbidden();

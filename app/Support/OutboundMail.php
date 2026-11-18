@@ -6,7 +6,10 @@ final class OutboundMail
 {
     public static function deliveryEnabled(?string $mailer = null, array $visited = []): bool
     {
-        $mailer ??= config('mail.default');
+        if ($mailer === null) {
+            ManagedSmtpSettings::refresh();
+            $mailer = config('mail.default');
+        }
         if (! is_string($mailer) || in_array($mailer, $visited, true)) {
             return false;
         }

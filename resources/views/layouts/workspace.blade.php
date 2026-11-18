@@ -141,5 +141,6 @@
             @endforeach
         </nav>
     </div>
+    @yield('workspace_feedback')
 </body>
 </html>
