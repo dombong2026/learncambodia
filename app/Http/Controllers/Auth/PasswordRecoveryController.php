@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\OutboundMail;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
@@ -26,12 +28,19 @@ final class PasswordRecoveryController extends Controller
 
         // The initial installation uses MAIL_MAILER=log; links must never be
         // represented as delivered while outgoing mail is disabled.
-        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+        if (! OutboundMail::deliveryEnabled()) {
             return back()->with('status', __('auth.email_delivery_disabled'));
         }
 
         if (User::query()->where('email', $request->input('email'))->where('account_status', 'active')->exists()) {
-            Password::sendResetLink($request->only('email'));
+            try {
+                Password::sendResetLink($request->only('email'));
+            } catch (\Exception $error) {
+                Log::warning('Password reset mail failed.', [
+                    'error_type' => get_class($error),
+                    'error_code' => (int) $error->getCode(),
+                ]);
+            }
         }
 
         // Generic response prevents account enumeration.

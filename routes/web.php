@@ -43,6 +43,7 @@ use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminBrandingController;
 use App\Http\Controllers\Workspace\AdminSystemSettingsController;
+use App\Http\Controllers\Workspace\AdminSmtpController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
@@ -216,6 +217,14 @@ Route::middleware('auth')->group(function (): void {
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
+            Route::get('/smtp', [AdminSmtpController::class, 'edit'])
+                ->middleware('password.confirm')->name('smtp');
+            Route::put('/smtp', [AdminSmtpController::class, 'update'])
+                ->middleware(['password.confirm', 'throttle:6,1'])->name('smtp.update');
+            Route::delete('/smtp', [AdminSmtpController::class, 'reset'])
+                ->middleware(['password.confirm', 'throttle:6,1'])->name('smtp.reset');
+            Route::post('/smtp/test', [AdminSmtpController::class, 'test'])
+                ->middleware(['password.confirm', 'throttle:3,1'])->name('smtp.test');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
             Route::get('/cloud-storage/configure', 'configureCloudStorage')
                 ->middleware('password.confirm')->name('cloud-storage.configure');
