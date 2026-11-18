@@ -44,10 +44,12 @@ final class SocialOAuth
             'client_id' => $settings['client_id'],
             'client_secret' => $settings['client_secret'],
             'redirect_uri' => $callback,
-            'grant_type' => 'authorization_code',
             'code' => $code,
         ];
 
+        if (in_array($provider, ['google', 'linkedin'], true)) {
+            $parameters['grant_type'] = 'authorization_code';
+        }
         if (in_array($provider, ['google', 'github'], true)) {
             $parameters['code_verifier'] = $verifier;
         }

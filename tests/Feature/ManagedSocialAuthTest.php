@@ -107,7 +107,7 @@ final class ManagedSocialAuthTest extends TestCase
             ->post(route('social.provider.connect', 'linkedin'))->assertRedirect();
         $this->get($this->providerCallback('linkedin', $this->state($start->headers->get('Location'))))
             ->assertRedirect(route('security.methods'));
-        $this->get(route('security.methods'))->assertSee('Disconnect LinkedIn');
+        $this->get(route('security.methods'))->assertOk()->assertSee('Disconnect LinkedIn');
         $this->post(route('logout'));
 
         $this->get($this->start('linkedin'))->assertRedirect(route('security.challenge'));

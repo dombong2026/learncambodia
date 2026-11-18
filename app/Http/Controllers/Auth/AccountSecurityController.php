@@ -27,6 +27,8 @@ final class AccountSecurityController extends Controller
             'account' => $request->user(),
             'passkeys' => $request->user()->passkeys()->latest()->get(),
             'socialAccounts' => DB::table('social_identities')->where('user_id', $request->user()->getKey())->pluck('client', 'provider'),
+            'passwordConfirmed' => time() - (int) $request->session()->get('auth.password_confirmed_at', 0)
+                < config('auth.password_timeout', 10800),
         ]);
     }
 
