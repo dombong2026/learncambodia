@@ -11,6 +11,8 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\AccountPasskeyController;
 use App\Http\Controllers\Auth\AccountSecurityController;
 use App\Http\Controllers\Auth\GoogleSignInController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Workspace\AdminSocialAuthController;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
@@ -122,13 +124,26 @@ Route::post('/contact', [PublicContactController::class, 'store'])
     ->middleware('throttle:5,1')->name('contact.store');
 Route::post('/language', [LocaleController::class, 'update'])->name('language.update');
 
+Route::view('/social-sign-in/data-deletion', 'auth.social-data-deletion')->name('social.data-deletion');
+
 Route::get('/sign-in/google/callback', [GoogleSignInController::class, 'callback'])
-    ->middleware('throttle:20,1')->name('social.google.callback');
+    ->middleware('throttle:20,1')->block(35, 10)->name('social.google.callback');
+Route::get('/sign-in/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->whereIn('provider', ['facebook', 'github', 'linkedin'])->middleware('throttle:20,1')
+    ->block(35, 10)->name('social.provider.callback');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/sign-in/google', [GoogleSignInController::class, 'start'])->middleware('throttle:10,1')->name('social.google.start');
     Route::get('/sign-in/google/register', [GoogleSignInController::class, 'registration'])->name('social.google.registration');
     Route::post('/sign-in/google/register', [GoogleSignInController::class, 'finishRegistration'])->middleware('throttle:5,1')->name('social.google.register');
+    Route::prefix('/sign-in/{provider}')->where(['provider' => 'facebook|github|linkedin'])->group(function (): void {
+        Route::get('/', [SocialAuthController::class, 'start'])->middleware('throttle:10,1')->name('social.provider.start');
+        Route::get('/register', [SocialAuthController::class, 'registration'])->name('social.provider.registration');
+        Route::post('/register', [SocialAuthController::class, 'finishRegistration'])
+            ->middleware('throttle:5,1')->block(15, 10)->name('social.provider.register');
+        Route::get('/confirm-email', [SocialAuthController::class, 'confirmRegistrationEmail'])
+            ->middleware(['signed:relative', 'throttle:10,1'])->block(10, 10)->name('social.provider.confirm-email');
+    });
     Route::get('/security/challenge', [AccountSecurityController::class, 'challenge'])->name('security.challenge');
     Route::post('/security/challenge', [AccountSecurityController::class, 'finishChallenge'])
         ->middleware('throttle:10,1')->block(10, 10)->name('security.challenge.finish');
@@ -175,6 +190,11 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/user/passkeys/{passkey}', [PasskeyRegistrationController::class, 'destroy'])->name('passkey.destroy');
         Route::post('/security/google', [GoogleSignInController::class, 'connect'])->name('social.google.connect');
         Route::delete('/security/google', [GoogleSignInController::class, 'disconnect'])->name('social.google.disconnect');
+        Route::get('/security/social-accounts/confirm', fn () => to_route('security.methods'))->name('social.accounts.confirm');
+        Route::post('/security/social-accounts/{provider}', [SocialAuthController::class, 'connect'])
+            ->whereIn('provider', ['facebook', 'github', 'linkedin'])->name('social.provider.connect');
+        Route::delete('/security/social-accounts/{provider}', [SocialAuthController::class, 'disconnect'])
+            ->whereIn('provider', ['facebook', 'github', 'linkedin'])->name('social.provider.disconnect');
     });
 
     Route::get('/account-avatar', [ProfileController::class, 'avatar'])->name('workspace.avatar');
@@ -216,7 +236,16 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/branding', [AdminBrandingController::class, 'edit'])->name('branding');
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
-            Route::get('/social-auth', 'socialAuth')->name('social-auth');
+            Route::get('/social-auth', [AdminSocialAuthController::class, 'index'])->name('social-auth');
+            Route::get('/social-auth/confirm', [AdminSocialAuthController::class, 'confirmStatus'])
+                ->middleware('password.confirm')->name('social-auth.confirm');
+            Route::prefix('/social-auth/{provider}')->where(['provider' => 'google|facebook|github|linkedin'])
+                ->middleware(['password.confirm', 'throttle:10,1'])->group(function (): void {
+                    Route::get('/configure', [AdminSocialAuthController::class, 'configure'])->name('social-auth.configure');
+                    Route::put('/', [AdminSocialAuthController::class, 'save'])->name('social-auth.save');
+                    Route::patch('/status', [AdminSocialAuthController::class, 'status'])->name('social-auth.status');
+                    Route::post('/test', [SocialAuthController::class, 'test'])->name('social-auth.test');
+                });
             Route::get('/smtp', [AdminSmtpController::class, 'edit'])->name('smtp');
             Route::get('/smtp/configure', [AdminSmtpController::class, 'configure'])
                 ->middleware('password.confirm')->name('smtp.configure');

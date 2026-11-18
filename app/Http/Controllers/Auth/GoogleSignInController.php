@@ -9,6 +9,7 @@ use App\Models\ContentEntry;
 use App\Models\User;
 use App\Support\AccountSignIn;
 use App\Support\GoogleSignIn;
+use App\Support\ManagedSocialAuth;
 use App\Support\ReadingReturn;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Client\ConnectionException;
@@ -37,16 +38,18 @@ final class GoogleSignInController extends Controller
 
     private function authorizeWithGoogle(Request $request, string $intent): RedirectResponse
     {
-        abort_unless(GoogleSignIn::enabled(), 404);
+        $settings = ManagedSocialAuth::settings('google');
+        abort_unless(ManagedSocialAuth::enabled($settings), 404);
         $state = Str::random(64);
         $verifier = Str::random(64);
         $request->session()->put('auth.google', [
             'intent' => $intent, 'user_id' => $request->user()?->getKey(), 'state' => $state,
             'verifier' => $verifier, 'expires' => now()->addMinutes(5)->timestamp,
+            'configuration' => ManagedSocialAuth::flowKey($settings),
         ]);
 
         return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
-            'client_id' => config('services.google.client_id'),
+            'client_id' => $settings['client_id'],
             'redirect_uri' => GoogleSignIn::callback(),
             'scope' => 'openid email profile',
             'response_type' => 'code',
@@ -59,13 +62,22 @@ final class GoogleSignInController extends Controller
 
     public function callback(Request $request): RedirectResponse
     {
-        abort_unless(GoogleSignIn::enabled(), 404);
-        $flow = $request->session()->pull('auth.google');
         $state = $request->query('state');
+        $testState = $request->session()->get('auth.social.google.state');
+        if (is_string($state) && is_string($testState) && hash_equals($testState, $state)) {
+            return app(SocialAuthController::class)->callback($request, 'google');
+        }
+
+        $settings = ManagedSocialAuth::settings('google');
+        abort_unless(ManagedSocialAuth::enabled($settings), 404);
+        $flow = $request->session()->pull('auth.google');
         abort_unless($flow && $flow['expires'] > now()->timestamp && is_string($state)
             && hash_equals($flow['state'], $state) && $flow['user_id'] === $request->user()?->getKey(), 400, 'This sign-in request has expired.');
 
         $landing = $flow['intent'] === 'link' ? $this->settingsRoute($request) : 'login';
+        if (isset($flow['configuration']) && ! hash_equals($flow['configuration'], ManagedSocialAuth::flowKey($settings))) {
+            return redirect()->route($landing)->withErrors(['google' => 'Google sign-in settings changed. Start again.']);
+        }
         $code = $request->query('code');
         if (!is_string($code) || $code === '' || strlen($code) > 2048) {
             return redirect()->route($landing)->withErrors(['google' => 'Google sign-in was cancelled.']);
@@ -73,8 +85,8 @@ final class GoogleSignInController extends Controller
 
         try {
             $token = Http::asForm()->connectTimeout(4)->timeout(10)->post('https://oauth2.googleapis.com/token', [
-                'client_id' => config('services.google.client_id'),
-                'client_secret' => config('services.google.client_secret'),
+                'client_id' => $settings['client_id'],
+                'client_secret' => $settings['client_secret'],
                 'redirect_uri' => GoogleSignIn::callback(),
                 'grant_type' => 'authorization_code',
                 'code' => $code,

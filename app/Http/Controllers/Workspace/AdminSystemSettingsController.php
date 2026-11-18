@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\RunManagedStorageTransfer;
-use App\Support\GoogleSignIn;
 use App\Support\ManagedStorageSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -25,14 +24,6 @@ final class AdminSystemSettingsController extends Controller
             ['HTTP-only session cookie', 'Prevents browser scripts from reading the session cookie.', config('session.http_only') ? 'Enabled' : 'Disabled'],
             ['HTTPS-only session cookie', 'Controls whether the session cookie is sent only over HTTPS.', config('session.secure') ? 'Enforced' : 'Not forced by configuration'],
         ], ['account' => $request->user(), 'passkeys' => $request->user()->passkeys()->latest()->get()]);
-    }
-
-    public function socialAuth(): View
-    {
-        return $this->page('Social Auth', 'Review the sign-in methods available on LearnCambodia.', 'social-auth', [
-            ['Google', 'Use Google to sign in or register a student account.', GoogleSignIn::enabled() ? 'Enabled' : 'Server configuration required'],
-            ['Sign-in and registration appearance', 'Edit the copy used on the sign-in and registration screens.', 'Edit appearance', route('admin.appearance.edit', 'auth')],
-        ], ['account' => request()->user()]);
     }
 
     public function cloudStorage(Request $request): View

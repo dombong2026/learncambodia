@@ -8,5 +8,6 @@
     <div class="max-w-5xl">
         @include('workspace.security-methods')
         @include('workspace.google-method')
+        @include('workspace.social-accounts')
     </div>
 @endsection
