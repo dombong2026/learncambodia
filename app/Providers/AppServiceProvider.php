@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         Fortify::ignoreRoutes();
-        $this->app->resolving(MailManager::class, [ManagedSmtpSettings::class, 'apply']);
+        $this->app->resolving(MailManager::class, ManagedSmtpSettings::apply(...));
     }
 
     public function boot(): void
