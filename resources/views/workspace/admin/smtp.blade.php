@@ -1,7 +1,39 @@
 @extends('layouts.workspace')
 @section('title', 'SMTP')
 @section('heading', 'SMTP')
-@section('description', 'Configure outgoing account email and send a test message.')
+
+@section('workspace_feedback')
+    @php
+        $testRecipient = session('smtp_test_recipient');
+        $testError = $errors->first('recipient');
+    @endphp
+    @if($testRecipient || $testError)
+        <aside id="smtp-test-feedback" data-smtp-test-feedback class="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border bg-white px-5 py-3 text-sm shadow-xl dark:bg-slate-900 {{ $testError ? 'border-red-500/40 text-red-700 dark:text-red-300' : 'border-emerald-200 text-emerald-800 dark:border-emerald-900 dark:text-emerald-300' }}">
+            <div class="flex items-start gap-3">
+                <div class="min-w-0 flex-1 break-words" role="{{ $testError ? 'alert' : 'status' }}">
+                    <p class="font-bold">{{ $testError ? 'Test email failed' : 'Mail server accepted the test email' }}</p>
+                    @if($testError)
+                        <p id="smtp-test-error" class="mt-1">{{ $testError }}</p>
+                    @else
+                        <p class="mt-1">Check {{ $testRecipient }} for “LearnCambodia SMTP test”, including the spam folder.</p>
+                    @endif
+                </div>
+                <button id="smtp-test-feedback-close" type="button" aria-label="Dismiss test email result" class="rounded-lg p-1.5 focus-visible:outline-2">
+                    <x-workspace-icon name="close" class="h-4 w-4" />
+                </button>
+            </div>
+        </aside>
+        <script>
+            document.getElementById('smtp-test-feedback-close').addEventListener('click', () => {
+                const previousControl = document.activeElement;
+                document.getElementById('smtp-test-feedback').remove();
+                if (previousControl?.id === 'smtp-test-feedback-close') {
+                    document.getElementById('smtp-test-recipient')?.focus();
+                }
+            });
+        </script>
+    @endif
+@endsection
 
 @section('content')
 @if(!$canManage)
@@ -58,7 +90,10 @@
                 </label>
                 <label class="space-y-2 text-sm font-semibold">
                     <span class="block">From email address</span>
-                    <input name="from_address" type="email" required maxlength="255" value="{{ old('from_address', $settings['from_address']) }}" class="{{ $fieldClass }}">
+                    <input name="from_address" type="email" required maxlength="255" value="{{ old('from_address', $settings['from_address']) }}" class="{{ $fieldClass }}" @if($gmailSenderMismatch) aria-describedby="smtp-gmail-sender-note" @endif>
+                    @if($gmailSenderMismatch)
+                        <span id="smtp-gmail-sender-note" class="block text-xs font-normal text-slate-600 dark:text-slate-400">For a Gmail test, use the SMTP username as the From address or use an address verified in Gmail’s Send mail as settings.</span>
+                    @endif
                 </label>
             </div>
             <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">Save SMTP settings</button>
@@ -74,15 +109,12 @@
     <section class="workspace-panel p-5 sm:p-6" aria-labelledby="smtp-test-heading">
         <h2 id="smtp-test-heading" class="text-lg font-bold">Send a test email</h2>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">The test uses the active mail settings. Send it to an inbox you can check.</p>
-        @error('recipient')
-            <p role="alert" class="mt-4 rounded-xl border border-red-500/40 p-4 text-sm text-red-700 dark:text-red-300">{{ $message }}</p>
-        @enderror
         @if($canSend)
             <form method="POST" action="{{ route('admin.system-settings.smtp.test') }}" class="mt-5 space-y-4">
                 @csrf
                 <label class="block space-y-2 text-sm font-semibold">
                     <span class="block">Recipient email address</span>
-                    <input name="recipient" type="email" required maxlength="255" value="{{ old('recipient', $email) }}" class="{{ $fieldClass }}">
+                    <input id="smtp-test-recipient" name="recipient" type="email" required maxlength="255" value="{{ old('recipient', $email) }}" class="{{ $fieldClass }}">
                 </label>
                 <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white hover:bg-blue-800">Send test email</button>
             </form>

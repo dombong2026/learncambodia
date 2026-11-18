@@ -37,7 +37,8 @@ final class ManagedSmtpTest extends TestCase
         $this->get(route('admin.system-settings.smtp.configure'))->assertRedirect(route('password.confirm'));
         $this->post(route('admin.system-settings.smtp.test'), ['recipient' => 'recipient@example.test'])
             ->assertRedirect(route('password.confirm'));
-        $this->confirmPassword()->get($page)->assertOk()->assertSee('SMTP connection')->assertSee('Send a test email');
+        $this->confirmPassword()->get($page)->assertOk()->assertSee('SMTP connection')->assertSee('Send a test email')
+            ->assertDontSee('data-smtp-test-feedback', false);
     }
 
     public function test_dashboard_settings_are_encrypted_and_drive_verification_until_reset(): void
@@ -100,7 +101,12 @@ final class ManagedSmtpTest extends TestCase
         $this->actingAs($admin)->confirmPassword()->post(route('admin.system-settings.smtp.test'), [
             'recipient' => 'recipient@example.test',
         ])->assertRedirect(route('admin.system-settings.smtp'))
-            ->assertSessionHas('status', 'The mail server accepted the test email. Check the recipient inbox and spam folder.');
+            ->assertSessionHas('smtp_test_recipient', 'recipient@example.test');
+
+        $this->get(route('admin.system-settings.smtp'))->assertOk()
+            ->assertSee('data-smtp-test-feedback', false)
+            ->assertSee('Mail server accepted the test email')
+            ->assertSee('Check recipient@example.test for');
     }
 
     public function test_smtp_test_shows_a_safe_authentication_error(): void
@@ -114,7 +120,12 @@ final class ManagedSmtpTest extends TestCase
         ])->assertRedirect()->assertSessionHasErrors([
             'recipient' => 'SMTP authentication was rejected. Check the username and provider app password.',
         ]);
-        $this->get(route('admin.system-settings.smtp'))->assertOk()->assertDontSee('Private server response.');
+        $this->get(route('admin.system-settings.smtp'))->assertOk()
+            ->assertSee('data-smtp-test-feedback', false)
+            ->assertSee('Test email failed')
+            ->assertSee('SMTP authentication was rejected.')
+            ->assertSee('value="recipient@example.test"', false)
+            ->assertDontSee('Private server response.');
     }
 
     private function confirmPassword(): static

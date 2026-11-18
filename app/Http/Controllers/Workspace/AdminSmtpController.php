@@ -41,6 +41,9 @@ final class AdminSmtpController extends Controller
             'source' => $unreadable ? 'Unreadable dashboard settings' : ($saved ? 'Dashboard SMTP' : 'Server configuration'),
             'dashboardSaved' => $saved !== null || $unreadable,
             'canSend' => OutboundMail::deliveryEnabled(),
+            'gmailSenderMismatch' => $settings['host'] === 'smtp.gmail.com'
+                && filled($settings['username'])
+                && strcasecmp((string) $settings['from_address'], $settings['username']) !== 0,
             'email' => $request->user()->email,
         ]);
     }
@@ -100,7 +103,7 @@ final class AdminSmtpController extends Controller
     public function test(Request $request): RedirectResponse
     {
         $data = $request->validate(['recipient' => ['required', 'email:rfc', 'max:255']]);
-        $redirect = to_route('admin.system-settings.smtp');
+        $redirect = to_route('admin.system-settings.smtp')->withInput($data);
 
         try {
             if (! OutboundMail::deliveryEnabled()) {
@@ -125,7 +128,7 @@ final class AdminSmtpController extends Controller
 
         $this->audit($request, 'test accepted');
 
-        return $redirect->with('status', 'The mail server accepted the test email. Check the recipient inbox and spam folder.');
+        return $redirect->with('smtp_test_recipient', $data['recipient']);
     }
 
     private function serverSettings(): array
