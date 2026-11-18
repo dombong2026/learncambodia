@@ -48,6 +48,7 @@ final class ManagedSocialAuthTest extends TestCase
     {
         $this->configure('google');
         $this->get(route('login'))->assertSee('Continue with Google')->assertDontSee('Continue with Facebook');
+        $this->get(route('social.data-deletion'))->assertOk()->assertSee('Contact LearnCambodia');
         $response = $this->get(route('social.google.start'))->assertRedirect();
         $this->assertStringStartsWith('https://accounts.google.com/', $response->headers->get('Location'));
         parse_str(parse_url($response->headers->get('Location'), PHP_URL_QUERY), $parameters);
@@ -97,6 +98,7 @@ final class ManagedSocialAuthTest extends TestCase
         ]);
         $user = User::factory()->create([
             'two_factor_secret' => encrypt('test-totp-secret'),
+            'two_factor_recovery_codes' => encrypt(json_encode(['fixture-recovery-code'], JSON_THROW_ON_ERROR)),
             'two_factor_confirmed_at' => now(),
         ]);
         $this->actingAs($user);
