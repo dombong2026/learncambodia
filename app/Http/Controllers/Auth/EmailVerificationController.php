@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\OutboundMail;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 final class EmailVerificationController extends Controller
@@ -25,15 +27,26 @@ final class EmailVerificationController extends Controller
 
     public function send(Request $request): RedirectResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->route($request->user()->homeRouteName());
+        $user = $request->user();
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route($user->homeRouteName());
         }
 
-        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+        if (! OutboundMail::deliveryEnabled()) {
             return back()->with('status', __('auth.email_delivery_disabled'));
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Exception $error) {
+            Log::warning('Email verification notification failed.', [
+                'user_id' => $user->getKey(),
+                'error_type' => get_class($error),
+                'error_code' => (int) $error->getCode(),
+            ]);
+
+            return back()->with('verification_delivery_error', __('auth.verification_delivery_failed'));
+        }
 
         return back()->with('status', __('auth.verification_link_sent'));
     }
