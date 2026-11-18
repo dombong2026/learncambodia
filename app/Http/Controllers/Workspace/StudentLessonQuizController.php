@@ -26,7 +26,7 @@ final class StudentLessonQuizController extends Controller
             $rules["answers.{$index}"] = ['required', Rule::in(array_keys($question['choices']))];
         }
         $return = $request->input('view') === 'curriculum'
-            ? route('account.enrollments.show', $enrollment)
+            ? route('account.enrollments.show', [$enrollment, 'view' => 'curriculum'])
             : route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz']);
         $return .= "#lesson-quiz-{$lesson->id}";
 

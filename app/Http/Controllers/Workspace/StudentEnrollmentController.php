@@ -7,8 +7,10 @@ use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseBookmark;
 use App\Models\User;
+use App\Support\AccountPreview;
 use App\Support\ApprovalAudit;
 use App\Support\CoursePricing;
+use App\Support\LearningAccess;
 use App\Support\LearningTable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,15 +52,26 @@ class StudentEnrollmentController extends Controller
         ]);
     }
 
-    public function show(Request $request, CourseEnrollment $enrollment): View
+    public function show(Request $request, CourseEnrollment $enrollment): View|RedirectResponse
     {
-        abort_unless($enrollment->student_id === $request->user()->id, 404);
-        abort_unless($enrollment->status === 'approved', 403);
+        $course = LearningAccess::course($request->user(), $enrollment)->load('modules.lessons');
+        $lessons = $course->modules->flatMap(fn ($module) => $module->lessons);
+        $completedLessonIds = $enrollment->lessonProgress()->whereNotNull('completed_at')
+            ->whereIn('lesson_id', $lessons->pluck('id'))->pluck('lesson_id')->all();
+        $resumeLesson = $lessons->first(fn ($lesson) => !in_array($lesson->id, $completedLessonIds, true))
+            ?? $lessons->first();
+        $preview = $request->session()->has(AccountPreview::KEY);
+        $locale = $request->query('lang') === app()->getLocale() ? ['lang' => app()->getLocale()] : [];
 
-        $course = Course::published()->whereKey($enrollment->course_id)
-            ->with('modules.lessons', 'exams.type', 'quizzes')->firstOrFail();
+        if ($resumeLesson && !$preview && $request->query('view') !== 'curriculum') {
+            return to_route('account.lessons.watch', [$enrollment, $resumeLesson] + $locale);
+        }
 
-        if ($request->isMethod('GET')) $enrollment->markStarted();
+        if (!$resumeLesson && !$preview && $request->isMethod('GET')) {
+            $enrollment->markStarted();
+        }
+
+        $course->load('exams.type', 'quizzes');
 
         return view('workspace.student.study', [
             'role' => 'student',
@@ -66,8 +79,9 @@ class StudentEnrollmentController extends Controller
             'course' => $course,
             'certificates' => \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->whereNull('revoked_at')->get(),
             'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
-            'completedLessonIds' => $enrollment->lessonProgress()
-                ->whereNotNull('completed_at')->pluck('lesson_id')->all(),
+            'completedLessonIds' => $completedLessonIds,
+            'resumeLesson' => $resumeLesson,
+            'preview' => $preview,
         ]);
     }
 

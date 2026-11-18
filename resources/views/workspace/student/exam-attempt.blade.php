@@ -10,7 +10,7 @@
         $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];
         $back = isset($lesson)
             ? route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'exam-'.$attempt->course_exam_id])
-            : ($enrollment ? route('account.enrollments.show', $enrollment) : $attempt->exam->publicUrl());
+            : ($enrollment ? route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']) : $attempt->exam->publicUrl());
     @endphp
     @isset($lesson)
         <div class="fl-grid"><div class="fl-main fl-assessment">

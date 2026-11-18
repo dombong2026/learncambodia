@@ -45,6 +45,30 @@ class FocusedLessonWorkspaceTest extends TestCase
         $this->enrollment = $this->enroll($this->student);
     }
 
+    public function test_enrollment_url_opens_the_next_incomplete_lesson_and_has_a_curriculum_link(): void
+    {
+        $next = $this->lesson->module->lessons()->create([
+            'title' => 'Practice the action words', 'content' => 'Practice without prompts.',
+            'position' => 2, 'duration_minutes' => 12,
+        ]);
+        $entry = route('account.enrollments.show', [$this->enrollment, 'lang' => 'en']);
+        $curriculum = route('account.enrollments.show', [$this->enrollment, 'view' => 'curriculum']);
+
+        $this->actingAs($this->student)->get($entry)->assertRedirect($this->watch(['lang' => 'en']));
+        $this->followingRedirects()->get($entry)->assertOk()
+            ->assertSee('Course outline')->assertSee('Lesson instructions')->assertDontSee('workspace-sidebar')
+            ->assertSee('href="'.e($curriculum).'"', false);
+
+        $this->get($curriculum)->assertOk()->assertSee('Module 1: Movement activities')
+            ->assertSee('Open lesson');
+
+        $this->enrollment->lessonProgress()->create(['lesson_id' => $this->lesson->id, 'completed_at' => now()]);
+        $this->get($entry)->assertRedirect(route('account.lessons.watch', [$this->enrollment, $next, 'lang' => 'en']));
+
+        $this->enrollment->lessonProgress()->create(['lesson_id' => $next->id, 'completed_at' => now()]);
+        $this->get($entry)->assertRedirect($this->watch(['lang' => 'en']));
+    }
+
     public function test_viewers_and_resources_use_protected_assets_and_remove_site_navigation(): void
     {
         Storage::fake('local');

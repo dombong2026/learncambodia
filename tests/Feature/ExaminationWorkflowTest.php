@@ -82,7 +82,7 @@ final class ExaminationWorkflowTest extends TestCase
         $this->post($issue, ['template_id'=>$template->id])->assertUnprocessable();
 
         $this->actingAs($learner)->get(route('learning.exam.show', $course->slug))->assertOk()->assertSee($exam->title);
-        $this->get(route('account.enrollments.show', $enrollment))->assertOk()->assertSee('Start exam');
+        $this->get(route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']))->assertOk()->assertSee('Start exam');
         $this->get($resource)->assertForbidden();
         $this->post(route('account.exam-attempts.start', [$enrollment,$exam]))->assertRedirect();
         $attempt = ExamAttempt::sole();

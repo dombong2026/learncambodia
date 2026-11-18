@@ -81,7 +81,7 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
         $enrollment = CourseEnrollment::create(['course_id' => $course->id, 'student_id' => $student->id, 'status' => 'approved']);
         $attempt = route('account.lessons.quiz', [$enrollment, $lesson]);
         $watch = route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz']);
-        $study = route('account.enrollments.show', $enrollment);
+        $study = route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']);
         $this->actingAs(User::factory()->create(['role' => 'student']))->post($attempt, ['answers' => ['b']])->assertNotFound();
         $this->actingAs($student);
         $this->get($watch)->assertOk()->assertSeeInOrder(['Lesson quiz', $question['prompt'], 'Read this before answering.'])

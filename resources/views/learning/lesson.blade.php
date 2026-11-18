@@ -16,7 +16,7 @@
 
 <div class="fl-grid">
     <div class="fl-main">
-        <a class="fl-back" href="{{ route('account.enrollments.show', $enrollment) }}">
+        <a class="fl-back" href="{{ route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']) }}">
             <x-workspace-icon name="chevron-right" /> <span>{{ $course->title }}</span>
         </a>
         <div class="fl-lesson-heading">

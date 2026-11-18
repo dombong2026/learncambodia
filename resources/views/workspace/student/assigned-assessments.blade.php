@@ -7,7 +7,7 @@
         @php
             $enrollment = $enrollments->get($exam->course_id);
             $standalone = $exam->published && $exam->course_id === null;
-            $href = $standalone ? $exam->publicUrl() : ($exam->published && $enrollment ? route('account.enrollments.show', $enrollment).'#course-exams' : null);
+            $href = $standalone ? $exam->publicUrl() : ($exam->published && $enrollment ? route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']).'#course-exams' : null);
             $status = match (true) {
                 !$exam->published => 'Awaiting activation',
                 $href !== null => 'Available',
