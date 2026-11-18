@@ -6,6 +6,7 @@
     --policy-accent: #144ca2;
     --policy-accent-surface: #eaf2ff;
     --policy-number: #b6c6db;
+    --policy-icon: #456fa8;
     --policy-hover-border: #8eb4eb;
     box-sizing: border-box;
     max-width: 88rem;
@@ -21,6 +22,7 @@
     --policy-accent: #9bc9ff;
     --policy-accent-surface: #193354;
     --policy-number: #3e5473;
+    --policy-icon: #81addd;
     --policy-hover-border: #567fae;
 }
 
@@ -79,15 +81,14 @@
 }
 
 .policy-card-icon {
-    display: grid;
-    place-items: center;
     flex: none;
-    width: clamp(1.875rem, 3vw, 2.5rem);
-    aspect-ratio: 1;
-    border: 1px solid var(--policy-border);
-    border-radius: 0.65rem;
-    background: var(--policy-surface);
-    color: var(--policy-accent);
+    color: var(--policy-icon);
+}
+
+.policy-card-icon svg {
+    display: block;
+    width: clamp(2rem, 4vw, 2.875rem);
+    height: auto;
 }
 
 .policy-card-number {
@@ -111,7 +112,8 @@
 }
 
 .policy-card-summary,
-.policy-card-date {
+.policy-card-date,
+.policy-card-version {
     margin: 0;
     color: var(--policy-muted);
 }
@@ -121,11 +123,22 @@
     line-height: 1.55;
 }
 
-.policy-card-date {
+.policy-card-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) fit-content(48%);
+    align-items: end;
+    gap: 0.5rem;
     margin-block-start: auto;
     padding-block-start: 0.375rem;
     font-size: 0.75rem;
     line-height: 1.45;
+}
+
+.policy-card-version {
+    grid-column: 2;
+    text-align: end;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
 }
 
 .policy-document-layout {
