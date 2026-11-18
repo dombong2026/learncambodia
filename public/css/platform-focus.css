@@ -1,0 +1,25 @@
+/* Apply the same focus width to component rules and the existing compiled stylesheets. */
+:root :focus-visible {
+    outline-width: 1px !important;
+}
+
+/* Place the field indicator over its border so the two read as one line. */
+:root :is(input:where(:not([type]), [type="text"], [type="email"], [type="password"], [type="search"], [type="url"], [type="tel"], [type="number"], [type="date"], [type="datetime-local"], [type="time"], [type="week"], [type="month"]), select, textarea):focus {
+    outline: 1px solid var(--platform-focus, #986310);
+    outline-offset: -1px;
+    box-shadow: none !important;
+}
+
+/* The table search field wrapper already indicates focus with its border. */
+:root .learning-manager-search-field input:focus {
+    outline-style: none;
+}
+
+.auth-google-mark {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    padding: 2px;
+    border-radius: 50%;
+    background: #fff;
+}
