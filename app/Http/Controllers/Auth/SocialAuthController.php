@@ -84,6 +84,7 @@ final class SocialAuthController extends Controller
             'link' => 'security.methods',
             default => 'login',
         };
+        $parameters = $intent === 'test' ? ['configure' => $provider] : [];
         if ($intent !== 'sign-in') {
             abort_unless($request->user() && time() - (int) $request->session()->get('auth.password_confirmed_at', 0)
                 < config('auth.password_timeout', 10800), 403);
@@ -95,27 +96,27 @@ final class SocialAuthController extends Controller
         $settings = ManagedSocialAuth::settings($provider);
         if (! ManagedSocialAuth::configured($settings) || ($intent !== 'test' && ! ManagedSocialAuth::enabled($settings))
             || ! hash_equals($flow['configuration'], ManagedSocialAuth::flowKey($settings))) {
-            return $this->problem($landing, 'Social sign-in settings changed. Start again.');
+            return $this->problem($landing, 'Social sign-in settings changed. Start again.', $parameters);
         }
 
         $label = ManagedSocialAuth::PROVIDERS[$provider];
         $code = $request->query('code');
         if ($request->has('error') || ! is_string($code) || $code === '' || strlen($code) > 4096) {
-            return $this->problem($landing, "$label authorization was cancelled or denied.");
+            return $this->problem($landing, "$label authorization was cancelled or denied.", $parameters);
         }
 
         try {
             $profile = SocialOAuth::profile($provider, $settings, ManagedSocialAuth::callback($provider), $code, $flow['verifier']);
         } catch (ConnectionException|RequestException|RuntimeException) {
-            return $this->problem($landing, "$label sign-in could not be completed. Check the app credentials, callback URL, and requested permissions.");
+            return $this->problem($landing, "$label sign-in could not be completed. Check the app credentials, callback URL, and requested permissions.", $parameters);
         }
 
         if ($intent === 'test') {
             if ($provider === 'google' && ! $profile['verified']) {
-                return $this->problem($landing, 'The Google test needs a verified Google email address.');
+                return $this->problem($landing, 'The Google test needs a verified Google email address.', $parameters);
             }
 
-            return to_route($landing)->with('status', "$label authorization and profile lookup passed.");
+            return to_route($landing, $parameters)->with('status', "$label authorization and profile lookup passed.");
         }
 
         $identity = [
@@ -287,8 +288,8 @@ final class SocialAuthController extends Controller
         return User::query()->whereRaw('LOWER(email) = ?', [$email])->exists();
     }
 
-    private function problem(string $route, string $message): RedirectResponse
+    private function problem(string $route, string $message, array $parameters = []): RedirectResponse
     {
-        return to_route($route)->with('social_auth_error', $message);
+        return to_route($route, $parameters)->with('social_auth_error', $message);
     }
 }

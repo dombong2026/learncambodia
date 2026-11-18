@@ -39,7 +39,7 @@ final class AdminSocialAuthController extends Controller
 
     public function configure(string $provider): RedirectResponse
     {
-        return redirect()->to(route('admin.system-settings.social-auth', ['configure' => $provider]).'#social-auth-settings');
+        return to_route('admin.system-settings.social-auth', ['configure' => $provider]);
     }
 
     public function confirmStatus(): RedirectResponse

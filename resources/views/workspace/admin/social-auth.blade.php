@@ -3,12 +3,15 @@
 @section('heading', 'Social Auth')
 
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/social-auth-controls.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/social-auth-controls.css') }}?v=2">
+    @if($selected)
+        <script src="{{ asset('js/social-auth-dialog.js') }}?v=1" defer></script>
+    @endif
 @endpush
 
 @section('content')
     <div class="max-w-5xl space-y-5">
-        @if(session('social_auth_error'))
+        @if(!$selected && session('social_auth_error'))
             <p role="alert" class="rounded-xl border border-red-300 px-4 py-3 text-sm">{{ session('social_auth_error') }}</p>
         @endif
         @error('google')<p role="alert" class="rounded-xl border border-red-300 px-4 py-3 text-sm">{{ $message }}</p>@enderror
@@ -41,7 +44,7 @@
                                     </button>
                                 @endif
                             </form>
-                            <a href="{{ route('admin.system-settings.social-auth.configure', $provider) }}" class="social-auth-gear" aria-label="Configure {{ $settings['label'] }}" title="Configure {{ $settings['label'] }}">
+                            <a id="social-auth-gear-{{ $provider }}" href="{{ route('admin.system-settings.social-auth.configure', $provider) }}" class="social-auth-gear" aria-haspopup="dialog" aria-label="Configure {{ $settings['label'] }}" title="Configure {{ $settings['label'] }}">
                                 <x-workspace-icon name="gear" class="h-5 w-5" />
                             </a>
                         </div>
@@ -53,43 +56,69 @@
         @if($selected)
             @php
                 $settings = $providers[$selected];
-                $fieldClass = 'mt-1 block w-full rounded-xl border border-slate-300 px-4 py-3 dark:border-slate-700 dark:bg-slate-950';
+                $closeUrl = route('admin.system-settings.social-auth').'#social-auth-gear-'.$selected;
             @endphp
-            <section id="social-auth-settings" class="workspace-panel space-y-5 p-5 sm:p-6" aria-labelledby="social-config-heading">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h2 id="social-config-heading" class="text-lg font-bold">{{ $settings['label'] }} OAuth settings</h2>
-                    <a href="{{ route('admin.system-settings.social-auth') }}" class="text-sm font-semibold underline">Close settings</a>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold">Callback URL</p>
-                    <div class="mt-2 flex flex-wrap items-center gap-3">
-                        <code id="social-callback-url" class="break-all text-sm">{{ $settings['callback'] }}</code>
-                        <button type="button" data-copy-secret="social-callback-url" class="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">Copy callback URL</button>
+            <dialog id="social-auth-settings" data-social-auth-dialog open class="social-auth-dialog"
+                aria-labelledby="social-config-heading" aria-describedby="social-config-status">
+                <header class="social-auth-dialog-header">
+                    <span class="social-auth-dialog-icon" aria-hidden="true"><x-workspace-icon name="gear" class="h-5 w-5" /></span>
+                    <div class="min-w-0">
+                        <h2 id="social-config-heading">{{ $settings['label'] }} OAuth settings</h2>
+                        <p id="social-config-status" class="social-auth-dialog-meta">
+                            {{ !$settings['configured'] ? 'Setup required' : ($settings['enabled'] ? 'Sign-in enabled' : 'Sign-in disabled') }}
+                        </p>
                     </div>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Register this URL in your {{ $settings['label'] }} app.</p>
-                    @if($selected === 'facebook')
-                        <p class="mt-2 break-all text-sm">Data deletion instructions <a class="underline" href="{{ route('social.data-deletion') }}">{{ route('social.data-deletion') }}</a></p>
+                    <a data-social-auth-close href="{{ $closeUrl }}" class="social-auth-dialog-close" aria-label="Close settings" autofocus>
+                        <x-workspace-icon name="close" class="h-5 w-5" />
+                    </a>
+                </header>
+
+                <div class="social-auth-dialog-body">
+                    @if(session('social_auth_error'))
+                        <p role="alert" class="social-auth-dialog-message social-auth-dialog-error">{{ session('social_auth_error') }}</p>
+                    @elseif(session('status'))
+                        <p role="status" class="social-auth-dialog-message social-auth-dialog-success">{{ session('status') }}</p>
+                    @endif
+
+                    <div class="social-auth-callback">
+                        <p class="social-auth-field-label">Callback URL</p>
+                        <div class="social-auth-callback-value">
+                            <code id="social-callback-url">{{ $settings['callback'] }}</code>
+                            <button type="button" data-copy-secret="social-callback-url" class="social-auth-dialog-button" aria-label="Copy callback URL">Copy</button>
+                        </div>
+                        <p class="social-auth-dialog-meta">Register this URL in your {{ $settings['label'] }} app.</p>
+                        @if($selected === 'facebook')
+                            <a class="social-auth-data-deletion" href="{{ route('social.data-deletion') }}">Data deletion instructions</a>
+                        @endif
+                    </div>
+
+                    <form id="social-auth-credentials" method="POST" action="{{ route('admin.system-settings.social-auth.save', $selected) }}" class="social-auth-credentials">
+                        @csrf @method('PUT')
+                        <label class="social-auth-field-label">Client ID
+                            <input name="client_id" type="text" maxlength="512" value="{{ $settings['client_id'] }}" required autocomplete="off">
+                        </label>
+                        <label class="social-auth-field-label">Client secret
+                            <input name="client_secret" type="password" maxlength="2048" autocomplete="new-password"
+                                @required(!$settings['configured']) @if($settings['configured']) aria-describedby="social-auth-secret-help" @endif>
+                        </label>
+                        @if($settings['configured'])
+                            <p id="social-auth-secret-help" class="social-auth-dialog-meta">Leave blank to keep the saved secret for this client ID.</p>
+                        @endif
+                    </form>
+                    @if($settings['configured'])
+                        <form id="social-auth-test" method="POST" action="{{ route('admin.system-settings.social-auth.test', $selected) }}">
+                            @csrf
+                        </form>
                     @endif
                 </div>
-                <form method="POST" action="{{ route('admin.system-settings.social-auth.save', $selected) }}" class="space-y-4">
-                    @csrf @method('PUT')
-                    <label class="block text-sm font-semibold">Client ID
-                        <input name="client_id" type="text" maxlength="512" value="{{ $settings['client_id'] }}" required autocomplete="off" class="{{ $fieldClass }}">
-                    </label>
-                    <label class="block text-sm font-semibold">Client secret
-                        <input name="client_secret" type="password" maxlength="2048" autocomplete="new-password" @required(!$settings['configured']) class="{{ $fieldClass }}">
-                        @if($settings['configured'])<span class="mt-1 block text-sm font-normal">Leave blank to keep the saved secret for this client ID.</span>@endif
-                    </label>
-                    <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Save settings</button>
-                </form>
-                @if($settings['configured'])
-                    <form method="POST" action="{{ route('admin.system-settings.social-auth.test', $selected) }}" class="border-t border-slate-200 pt-4 dark:border-slate-700">
-                        @csrf
-                        <button type="submit" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold dark:border-slate-700">Test {{ $settings['label'] }} sign-in</button>
-                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">The test uses saved settings and works while public sign-in is disabled.</p>
-                    </form>
-                @endif
-            </section>
+
+                <footer class="social-auth-dialog-footer">
+                    @if($settings['configured'])
+                        <button type="submit" form="social-auth-test" class="social-auth-dialog-button" aria-label="Test {{ $settings['label'] }} sign-in">Test sign-in</button>
+                    @endif
+                    <button type="submit" form="social-auth-credentials" class="social-auth-dialog-button social-auth-dialog-primary">Save settings</button>
+                </footer>
+            </dialog>
         @endif
 
         <div class="flex flex-wrap gap-4">

@@ -29,7 +29,9 @@ final class ManagedSocialAuthTest extends TestCase
         ])->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']));
 
         $this->get(route('admin.system-settings.social-auth', ['configure' => 'github']))
-            ->assertOk()->assertSee('Test GitHub sign-in')->assertDontSee('fixture-private-secret');
+            ->assertOk()->assertSee('<dialog id="social-auth-settings"', false)
+            ->assertSee('GitHub OAuth settings')->assertSee('Test GitHub sign-in')
+            ->assertSee('form="social-auth-credentials"', false)->assertDontSee('fixture-private-secret');
         $this->assertStringNotContainsString('fixture-private-secret', DB::table('managed_social_auth')->value('credentials'));
         $this->assertFalse(ManagedSocialAuth::enabled(ManagedSocialAuth::settings('github')));
 
@@ -38,8 +40,10 @@ final class ManagedSocialAuthTest extends TestCase
         $state = $this->state($start->headers->get('Location'));
 
         $this->get(route('social.provider.callback', ['provider' => 'github', 'state' => $state, 'code' => 'test-code']))
-            ->assertRedirect(route('admin.system-settings.social-auth'))
+            ->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']))
             ->assertSessionHas('status', 'GitHub authorization and profile lookup passed.');
+        $this->get(route('admin.system-settings.social-auth', ['configure' => 'github']))
+            ->assertOk()->assertSee('social-auth-dialog-success')->assertSee('GitHub authorization and profile lookup passed.');
         $this->assertAuthenticatedAs($admin);
         $this->assertDatabaseCount('social_identities', 0);
     }
@@ -54,6 +58,7 @@ final class ManagedSocialAuthTest extends TestCase
 
         $this->actingAs(User::factory()->create(['role' => User::ROLE_SUPERADMIN]));
         $this->get($page)->assertOk()->assertSee('Configure GitHub')->assertSee('Setup required')
+            ->assertDontSee('<dialog id="social-auth-settings"', false)
             ->assertSee('role="switch" aria-checked="false"', false);
         $this->patchJson($status, ['enabled' => '1'])->assertStatus(423);
         $this->get(route('admin.system-settings.social-auth.confirm'))->assertRedirect(route('password.confirm'));
@@ -61,7 +66,7 @@ final class ManagedSocialAuthTest extends TestCase
         $this->withSession(['auth.password_confirmed_at' => time()])
             ->patch($status, ['enabled' => '1'])->assertRedirect($page)->assertSessionHas('social_auth_error');
         $this->assertDatabaseCount('managed_social_auth', 0);
-        $this->get($configure)->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']).'#social-auth-settings');
+        $this->get($configure)->assertRedirect(route('admin.system-settings.social-auth', ['configure' => 'github']));
 
         $this->put(route('admin.system-settings.social-auth.save', 'github'), [
             'client_id' => 'github-client', 'client_secret' => 'fixture-secret',
