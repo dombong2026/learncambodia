@@ -88,12 +88,27 @@
 .fl-video { display: flex; flex-direction: column; justify-content: center; height: 100%; background: #070c15; }
 .fl-video video, .fl-video iframe, .fl-pdf { display: block; flex: none; width: 100%; height: 100%; border: 0; }
 .fl-video video { object-fit: contain; }
-.fl-video > lesson-media-player { margin: 0; }
-.fl-audio { display: grid; min-height: 100%; align-content: center; justify-items: center; gap: 1rem; text-align: center; padding: clamp(1.3rem, 4vw, 3rem); background: radial-gradient(ellipse at 50% 0, var(--fl-active), transparent 80%); }
+.fl-video-player, .fl-video-player video-skin {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.fl-video-player video-skin {
+    color-scheme: dark;
+    --media-controls-before-start: visible;
+    --media-object-fit: contain;
+    --media-video-border-radius: 0;
+    --media-accent-color: #93b7ff;
+    --media-accent-text-color: #0a1425;
+}
+.fl-audio { display: grid; min-height: 100%; align-content: center; justify-items: center; gap: clamp(.4rem, 2vw, 1rem); text-align: center; padding: clamp(.65rem, 3vw, 2.5rem); background: radial-gradient(ellipse at 50% 0, var(--fl-active), transparent 80%); }
 .fl-audio-icon, .fl-section-icon { display: grid; place-items: center; color: var(--fl-accent); background: var(--fl-active); border-radius: 12px; }
-.fl-audio-icon { width: 65px; height: 65px; }
-.fl-audio-icon svg { width: 31px; height: 31px; }
-.fl-audio audio { width: min(100%, 34rem); }
+.fl-audio h2 { max-width: 100%; overflow-wrap: anywhere; }
+.fl-audio-icon { width: clamp(40px, 12vw, 65px); aspect-ratio: 1; }
+.fl-audio-icon svg { width: clamp(23px, 6vw, 31px); aspect-ratio: 1; }
+.fl-audio-player { display: block; width: min(100%, 38rem); min-width: 0; }
+.fl-audio-player audio { display: block; width: 100%; }
+.fl-audio-player audio:not([controls]) { display: none; }
 .fl-tabs { margin-top: 1rem; }
 .fl-tabs > nav { display: flex; overflow-x: auto; gap: clamp(.35rem, 2vw, 1.45rem); border-bottom: 1px solid var(--fl-line); padding-inline: clamp(.7rem, 2vw, 1.6rem); }
 .fl-tabs > nav a { flex: none; display: flex; align-items: center; min-height: 53px; padding-inline: .45rem; gap: .43rem; border-bottom: 2px solid transparent; font-size: .875rem; font-weight: 690; color: var(--fl-muted); white-space: nowrap; }

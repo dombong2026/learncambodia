@@ -90,14 +90,16 @@ class FocusedLessonWorkspaceTest extends TestCase
             ->assertDontSee('<footer', false)->assertDontSee('workspace-sidebar')
             ->assertDontSee('unsafeScript()');
         $this->get($this->watch(['viewer' => 'file-'.$video->id]))
-            ->assertOk()->assertSee('<video controls playsinline', false)->assertSee('Lesson instructions');
+            ->assertOk()->assertSee('<video-skin>', false)->assertSee('<video controls playsinline', false)
+            ->assertSee('Lesson instructions');
         $this->get($this->watch(['viewer' => 'file-'.$audio->id]))
-            ->assertOk()->assertSee('<audio controls', false);
+            ->assertOk()->assertSee('<audio-skin>', false)->assertSee('<audio controls', false);
         $this->get($this->watch(['viewer' => 'file-'.$pdf->id, 'tab' => 'resources']))
             ->assertOk()->assertSee('Worksheet.pdf')->assertSee('Course reference')->assertSee('Download PDF')
             ->assertSee(route('editor-media.show', [$pdf, 'preview' => 1]));
         $this->get($this->watch(['viewer' => 'video-dQw4w9WgXcQ']))
-            ->assertOk()->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false);
+            ->assertOk()->assertSee('youtube-nocookie.com/embed/dQw4w9WgXcQ', false)
+            ->assertDontSee('<video-skin>', false);
         $preview = route('editor-media.show', [$pdf, 'preview' => 1]);
         $this->get($preview)->assertOk()->assertHeader('X-Frame-Options', 'SAMEORIGIN')
             ->assertHeader('Content-Type', 'application/pdf')->assertHeader('Content-Disposition', 'inline');

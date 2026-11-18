@@ -5,10 +5,14 @@
         </article>
         @break
     @case('video')
-        <div class="fl-video lesson-rich-content">
-            <video controls playsinline preload="metadata" src="{{ $viewer['url'] }}" aria-label="{{ $viewer['label'] }}">
-                <a href="{{ $viewer['url'] }}">Open video</a>
-            </video>
+        <div class="fl-video">
+            <video-player class="fl-video-player" data-focused-media>
+                <video-skin>
+                    <video controls playsinline preload="metadata" src="{{ $viewer['url'] }}" aria-label="{{ $viewer['label'] }}">
+                        <a href="{{ $viewer['url'] }}">Open video</a>
+                    </video>
+                </video-skin>
+            </video-player>
         </div>
         @break
     @case('youtube')
@@ -19,12 +23,16 @@
         </div>
         @break
     @case('audio')
-        <div class="fl-audio lesson-rich-content">
+        <div class="fl-audio">
             <span class="fl-audio-icon"><x-workspace-icon name="headphones" /></span>
             <h2>{{ $viewer['label'] }}</h2>
-            <audio controls preload="metadata" src="{{ $viewer['url'] }}" aria-label="{{ $viewer['label'] }}">
-                <a href="{{ $viewer['url'] }}">Open audio</a>
-            </audio>
+            <audio-player class="fl-audio-player" data-focused-media>
+                <audio-skin>
+                    <audio controls preload="metadata" src="{{ $viewer['url'] }}" aria-label="{{ $viewer['label'] }}">
+                        <a href="{{ $viewer['url'] }}">Open audio</a>
+                    </audio>
+                </audio-skin>
+            </audio-player>
         </div>
         @break
     @case('pdf')

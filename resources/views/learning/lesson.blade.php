@@ -2,6 +2,12 @@
 @section('title', $lesson->title.' · '.$course->title)
 @section('focused-layout-class', 'fl-shell-watch')
 
+@if(in_array($viewer['type'], ['video', 'audio'], true))
+    @push('focused-scripts')
+        @vite('resources/js/focused-media.ts', is_file(public_path('build-focused-media/manifest.json')) ? 'build-focused-media' : 'build')
+    @endpush
+@endif
+
 @section('content')
 @php
     $done = in_array($lesson->id, $completedIds, true);

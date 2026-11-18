@@ -10,7 +10,7 @@
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
     @stack('focused-scripts')
-    <link rel="stylesheet" href="{{ asset('css/focused-learning.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('css/focused-learning.css') }}?v=4">
     <script defer src="{{ asset('js/focused-learning.js') }}?v=1"></script>
 </head>
 <body class="focused-learning antialiased">
