@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'quiz_questions' => ':count questions',
+    'questions' => ':count questions',
     'quiz_intro' => 'Choose an answer and select Check answer for immediate feedback. Checking locks that answer for this attempt.',
     'quiz_start' => 'Start quiz',
     'quiz_resume' => 'Continue quiz',

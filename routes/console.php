@@ -36,3 +36,11 @@ Artisan::command('quizzes:publish-practice', function () {
     $count = app(\Database\Seeders\StarterQuizSeeder::class)->publishPractice();
     $this->info("Public practice quizzes: $count");
 })->purpose('Publish the ten selected free English practice quizzes with two attempts each');
+
+Artisan::command('exams:publish-specialized-practice', function () {
+    $exams = app(\Database\Seeders\SpecializedPracticeExamSeeder::class)->run();
+    $this->info("Specialized practice exams: {$exams->count()}");
+    foreach ($exams as $exam) {
+        $this->line($exam->title.' | '.$exam->publicUrl());
+    }
+})->purpose('Publish ten standalone English practice exams with 50 questions and a 120-minute timer');

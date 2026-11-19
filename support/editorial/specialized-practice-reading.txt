@@ -1,0 +1,139 @@
+@a1-school
+> The school library opens at eight on Monday. Dara has a red library card. He wants to borrow a book about animals. He can keep the book for one week. He must return it to the blue box near the door.
+When does the library open on Monday?|At eight|At nine|At ten
+What colour is Dara's library card?|Red|Blue|Green
+What does Dara want to read about?|Animals|Music|Sports
+How long can he keep the book?|One week|Two weeks|One day
+Where must he return the book?|In the blue box by the door|On his desk|At the school office
+> Lina's English class is on Saturday morning. It starts at nine and finishes at ten. The students meet in Room 4. Lina needs a notebook and a pencil. Her brother waits for her at the school gate after class.
+On which day is the class?|Saturday|Friday|Sunday
+When does the class finish?|At ten|At nine|At eleven
+Which room do the students use?|Room 4|Room 2|Room 6
+What does Lina need?|A notebook and a pencil|A ruler and a bag|A book and a phone
+Who waits for Lina?|Her brother|Her teacher|Her friend
+
+@a1-town
+> The market is on River Street. It is next to the bus stop. The post office is opposite the market. There is a small café behind the post office. The café sells tea and bread.
+Which street is the market on?|River Street|Station Street|School Street
+What is next to the market?|The bus stop|The café|The post office
+Where is the post office?|Opposite the market|Inside the café|Behind the market
+Where is the café?|Behind the post office|Next to the market entrance|On the bus
+What can people buy at the café?|Tea and bread|Books and pens|Fruit and rice
+> There is a free music class at the community centre on Tuesday. It starts at six in the evening. Enter through the side door. Ask for Mr Lim at the front desk. Bring a bottle of water.
+What kind of class is it?|Music|English|Cooking
+How much does it cost?|It is free|Three dollars|Six dollars
+What time does it start?|At six in the evening|At six in the morning|At seven in the evening
+Which door should you use?|The side door|The main door|The back door
+What should you bring?|A bottle of water|A chair|A musical instrument
+
+@a2-plans
+> A shop lets customers return unused items within fourteen days. Bring your receipt and the original box. Staff can exchange an item at the service desk. If you bought it online, print the order email instead of a receipt. The desk closes half an hour before the shop.
+Which items can customers return?|Unused items|Any item without a box|Items used for a month
+What should a customer bring with the box after an in-store purchase?|The receipt|A bank card|An identity card
+Where can staff exchange an item?|At the service desk|At the entrance|At the security desk
+What can online customers print?|The order email|The price label|The shop's opening hours
+If the shop closes at eight, when does the service desk close?|At seven thirty|At eight thirty|At seven
+> Soriya is travelling on Thursday. Her train leaves at 7:40. She plans to reach the station at 7:15 and meet her cousin there. They will share a taxi from the final station to their hotel. Soriya has already booked the room, but her cousin will buy breakfast at the station.
+Who will Soriya meet before departure?|Her cousin|The hotel manager|The taxi driver
+How early does Soriya plan to arrive?|Twenty-five minutes before departure|Fifteen minutes before departure|Forty minutes before departure
+What will they share after the train journey?|A taxi|A breakfast order|A train ticket
+What has Soriya already done?|Booked a hotel room|Bought breakfast|Paid the taxi driver
+Who will buy breakfast?|Her cousin|Soriya|The hotel manager
+
+@a2-digital
+> The community centre lends tablets for two hours at a time. A laptop can be borrowed for three hours, but it must be booked online. Tablets cannot leave the building. Laptops can be used in the garden when the weather is dry. Return either device to the front desk before you leave.
+Which device can be borrowed longer?|A laptop|A tablet|Both have the same limit
+How do you book a laptop?|Online|By text message|At the café
+Can you take a tablet into the garden?|No, it must stay in the building|Yes, when the weather is dry|Yes, for up to three hours
+Where can a laptop be used on a dry day?|In the garden|Only at the front desk|Only in the office
+Where do you return either device?|To the front desk|To the garden|To a classroom
+> Nita compares two phone plans. Plan A costs $8 a month and includes 10 GB of data. Plan B costs $10 and includes 20 GB. Both plans offer unlimited calls. Nita used 16 GB last month, so she chooses Plan B. Her brother uses very little data and chooses Plan A.
+Which plan costs less per month?|Plan A|Plan B|Both cost the same
+How much data does Plan B include?|20 GB|10 GB|16 GB
+What do both plans offer?|Unlimited calls|Free phones|The same amount of data
+Why did Nita choose Plan B?|Her recent use was above Plan A's data allowance|She wanted fewer calls|She wanted the lower price
+Who chose Plan A?|Nita's brother|Nita|Neither person
+
+@b1-travel
+> A coach to the coast was cancelled after a bridge closed. The company offered a refund or a seat on a later coach that took a longer route. Mai chose the later coach because her guesthouse would charge for a missed night. She called ahead, and the host agreed to leave a key at reception.
+Why was the original coach cancelled?|A bridge closed|The driver got lost|The guesthouse was full
+Which option did Mai choose?|A seat on a later coach|A full refund|A guesthouse nearer the station
+Why did she avoid cancelling her trip?|She would still be charged for the room|She already had a free taxi|The company refused a refund
+What made the later journey longer?|It took a different route|It stopped overnight|Mai changed buses twice
+How did the host help?|By leaving a key at reception|By refunding the room|By collecting Mai from the coach
+> The town wants more visitors to use bicycles. At present, bikes can be rented only near the railway station. Shop owners have suggested another rental point by the river. A survey found that many weekend visitors arrive by bus. The council will try a small rental point at the bus station first and compare the number of rentals at both sites.
+Where can visitors currently rent a bike?|Near the railway station|By the river|At the bus station
+Who suggested the river location?|Shop owners|Railway staff|Weekend cyclists
+What did the survey show?|Many weekend visitors arrive by bus|Most visitors already bring a bicycle|Rentals are cheaper by the river
+What is the council's first step?|Try a rental point at the bus station|Close the railway rental point|Build a permanent shop by the river
+What will the council compare?|The number of rentals at the two sites|The size of the railway and river sites|The price of bus and rail tickets
+
+@b1-learning
+> A study group used to spend a whole meeting reading the same chapter. After a trial, members now read at home and use meetings to discuss difficult examples. Attendance improved, but two members said they needed extra time to prepare. The group began sending three short questions a day before each meeting.
+What did members do at meetings before the trial?|Read the same chapter|Take a formal exam|Write separate reports
+What do meetings focus on now?|Difficult examples|Checking attendance|Choosing a new textbook
+What improved after the trial?|Attendance|The length of the textbook|The speed of every reader
+What problem did two members report?|They needed more preparation time|They could not find the room|They disagreed about the teacher
+How did the group respond?|It sent questions in advance|It stopped the meetings|It assigned everyone a longer reading
+> The neighbourhood garden needs volunteers on Sunday. People who have never planted vegetables can learn from an experienced gardener. Volunteers who can bring small tools should tell the organiser when they sign up. Work begins at eight, but people who cannot arrive early can help sort the harvest at eleven.
+Who can help beginners learn to plant?|An experienced gardener|The local mayor|Someone making lunch
+What should people with tools do when signing up?|Tell the organiser|Sell the tools|Leave the tools at home
+What time does the first work start?|At eight|At nine|At eleven
+What can people who arrive later do?|Sort the harvest|Give a planting lesson|Open the garden gate
+What is the main purpose of the notice?|To recruit volunteers for garden work|To advertise vegetables for sale|To announce a new garden address
+
+@b2-work
+> A small delivery company tested a new route-planning app for a month. Drivers completed more stops per shift, but customers still complained about unreliable arrival estimates. The manager noted that the pilot coincided with lighter traffic than usual. She proposed another trial during a busier period before buying licences for all staff.
+What improved during the pilot?|The number of stops completed per shift|The reliability of arrival estimates|Traffic levels on every route
+Which complaint remained after the pilot?|Arrival estimates were unreliable|Drivers made too few stops each day|Customers could not install the app
+Why did the manager mention the traffic?|It might partly explain the improvement|It showed the app had increased congestion|It proved the app would work during rush hour
+What will the company probably do next?|Run another trial under busier conditions|Buy licences for all staff immediately|Stop collecting customer feedback
+What is the best summary of the manager's position?|The findings are promising but need further testing|The pilot proved the app solves every problem|There is no reason to use an app on any route
+> A support team replaced monthly reviews with short weekly discussions. Staff could raise problems sooner, but some felt the frequent meetings encouraged managers to focus on small mistakes. The team kept the weekly schedule and asked managers to discuss one useful improvement along with the broader pattern of work.
+What changed about the meetings?|Their frequency and length|Their location and membership|The size of the department
+What benefit did the new schedule provide?|Staff could raise problems sooner|Staff no longer had to raise problems|Every meeting followed a stricter agenda
+What concern did some staff express?|Small mistakes might receive too much attention|Managers might stop discussing mistakes entirely|Monthly sessions had been too short
+How did the team respond?|By changing the focus of the weekly discussions|By returning to monthly reviews|By removing managers from the meetings
+Which aim best describes the final arrangement?|Timely feedback with attention to the bigger picture|Fewer discussions about performance|A detailed record of every small mistake
+
+@b2-academic
+> Researchers compared two evening classes after one adopted a new revision app. The app users scored higher, but they had volunteered for the app-based class before the study began. The researchers recommended randomly assigning students in a follow-up study and collecting baseline scores before either group used the app.
+What was the initial finding?|App users had higher scores|Both groups received identical scores|The traditional class scored higher
+Why was the initial comparison limited?|Students had chosen their class in advance|The researchers collected too many baseline scores|The app was used equally in both classes
+What method did the researchers recommend next?|Random assignment to groups|Letting students choose again|Removing the comparison group
+When should baseline scores be collected?|Before either group uses the app|Only after the follow-up classes finish|After the researchers announce the final results
+Which claim is best supported by the passage?|The first study shows a difference but does not establish its cause|The app was certainly the only cause of the higher scores|Baseline scores are unnecessary in a follow-up study
+> An editor returned an article because its introduction promised a comparison of two policies, while most of the text described just one. The author proposed adding more background on the second policy. The editor replied that the revision should compare both policies using the same criteria and explain any gaps in the evidence.
+Why was the article returned?|It did not deliver the comparison it promised|Its introduction compared too many policies|Its evidence was clearly false
+What did the author initially propose?|Adding more background on the second policy|Removing the introduction entirely|Comparing the first policy with a third one
+What did the editor want instead?|Both policies assessed using the same criteria|A longer history of the first policy only|Separate standards for each policy
+What should the revision do about missing evidence?|Explain the gaps|Replace the gaps with assumptions|Avoid mentioning gaps
+Which revision best addresses the editor's request?|Compare the policies measure by measure and note unavailable data|Write two separate summaries with no shared measures|Shorten the paragraph about the second policy without changing the analysis
+
+@c1-research
+> A city evaluates a heat-warning campaign using emergency admissions. Admissions fell after the campaign, but a neighbouring city without warnings saw a decline of similar magnitude during the same unusually mild summer. The local report treats the decline as encouraging and recommends tracking responses across several summers before making a causal claim.
+Which comparison challenges a simple causal interpretation?|The neighbouring city saw a similar decline without warnings|The city tracked admissions after issuing its warnings|The campaign addressed the risk of summer heat
+What feature of both cities' summer could explain some of the pattern?|Unusually mild weather|A rise in emergency admissions|Widespread adoption of identical warnings
+How does the local report treat the decline?|As encouraging without establishing causation|As conclusive evidence of campaign failure|As proof that the warnings alone caused the decline
+Why track results over several summers?|To examine whether the pattern holds under varied conditions|To avoid comparing with a neighbouring city|To ensure every summer has the same temperatures
+Which conclusion stays within the evidence?|Admissions fell, and the contribution of the campaign remains uncertain|The campaign had no possible effect on any resident|The decline shows neighbouring residents received the local warnings
+> An institute reported that workers who attended an optional workshop submitted higher-quality reports. Attendance was more common among people with supportive supervisors, who also gave feedback on drafts. To separate the workshop effect from this difference, the authors propose assigning invitations by lottery and documenting supervisory feedback independently.
+What makes the observed result hard to interpret?|Participants often had a separate source of support|All workers attended the workshop at the same time|The institute judged only reports from non-attendees
+What is the purpose of using a lottery?|To reduce systematic differences in who receives invitations|To guarantee everybody attends the workshop|To remove the need to measure report quality
+Why record supervisory feedback separately?|It may contribute to the observed improvement|It proves supervisors had no role in the result|It makes workshop attendance unnecessary to record
+What is the role of supportive supervision in the initial result?|A possible alternative explanation for the difference|A demonstrated consequence of attending|A factor the institute has already experimentally ruled out
+Which claim would overstate the findings?|The workshop alone produced the higher-quality reports|Attendance was associated with higher-quality reports|Supervisory support differed between groups
+
+@c1-argument
+> An editorial argues that opening library branches later will widen access for shift workers. It acknowledges that extending hours may require cutting some daytime services, but claims the change is justified because afternoon attendance is low. Critics point out that afternoon visitors include carers who cannot visit later, and that counts alone do not capture the importance of a service.
+What does the editorial propose?|Extending opening hours later in the day|Closing all branches in the afternoon immediately|Providing services only to shift workers
+How does the editorial justify the possible reduction in daytime service?|By citing low afternoon attendance|By showing that afternoon users have no other responsibilities|By claiming later hours will cost nothing
+What assumption do the critics challenge?|That low use is enough to judge a service's value|That public libraries exist in the area|That work schedules vary among users
+Why do critics mention carers?|To show an affected group may be unable to switch times|To argue carers never use libraries|To suggest carers already receive special evening access
+What trade-off is central to the disagreement?|Serving more people in the evening while protecting access for daytime users|Improving the bus timetable at no cost to libraries|Replacing printed books with digital services
+> A recommendation report rates online sources by their willingness to publish corrections. It warns that frequent corrections could reflect transparent editorial practices or an unusually high rate of errors. The report recommends considering the severity of mistakes and how quickly they are acknowledged, alongside a source's broader reporting record.
+What does the report say frequent corrections may indicate?|Transparency, a high error rate, or both|A source always has reliable reporting|A source never checks facts before publication
+Which additional factor does the report suggest examining?|How promptly mistakes are acknowledged|The number of colours used on a website|The age of readers who submit comments
+Why is the correction count insufficient on its own?|Different underlying practices can produce the same pattern|It always underestimates the number of published articles|It proves every corrected claim was deliberate
+How does the report suggest judging sources?|By interpreting corrections alongside other evidence|By ranking sites only by correction frequency|By disregarding the severity of errors
+Which inference is consistent with the report?|A low correction count could reflect a lack of disclosure|Correcting an error always proves future accuracy|Sources with no reported errors never make mistakes
