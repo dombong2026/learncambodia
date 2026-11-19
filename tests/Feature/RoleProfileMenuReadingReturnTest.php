@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Support\ReadingReturn;
 use App\Support\WorkspaceMenu;
 use Database\Seeders\CategorySeeder;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -81,6 +83,34 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
         $this->assertSame(0, substr_count($html, 'data-profile-role-link'));
         $this->assertStringContainsString('href="'.route('login').'"', $html);
         $this->assertStringContainsString('href="'.route('register').'"', $html);
+    }
+
+    public function test_homepage_educator_card_links_guests_to_sign_in_and_members_to_their_workspace(): void
+    {
+        $cases = [
+            [null, 'login', 'Sign in to your workspace'],
+            [User::ROLE_STUDENT, 'account.overview', 'Open my workspace'],
+            [User::ROLE_INSTRUCTOR, 'instructor.overview', 'Open my workspace'],
+            [User::ROLE_ADMIN, 'admin.overview', 'Open my workspace'],
+            [User::ROLE_SUPERADMIN, 'admin.overview', 'Open my workspace'],
+            [User::ROLE_DEVELOPER, 'developer.overview', 'Open my workspace'],
+        ];
+
+        foreach ($cases as [$role, $route, $label]) {
+            if ($role !== null) {
+                $this->actingAs($this->userWithRole($role));
+            }
+
+            $html = $this->get('/?lang=en')->assertOk()->getContent();
+            $document = new DOMDocument;
+            $document->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+            $links = (new DOMXPath($document))->query('//*[@data-home-feature="educator"]//a');
+
+            $this->assertCount(1, $links);
+            $link = $links->item(0);
+            $this->assertSame(route($route), $link->getAttribute('href'));
+            $this->assertSame($label, trim($link->textContent));
+        }
     }
 
     public function test_every_role_gets_its_real_workspace_links_with_icons_on_public_and_account_header(): void
