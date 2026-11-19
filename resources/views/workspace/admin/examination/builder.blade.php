@@ -38,6 +38,14 @@
                 <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
             </label>
             <div class="grid gap-4 sm:col-span-2 sm:grid-cols-3">
+                <label class="builder-field">Certificate template
+                    <select name="certificate_template_id">
+                        <option value="">Use the default {{ $quiz ? 'Quiz' : 'Exam' }} template</option>
+                        @foreach($certificateTemplates as $template)
+                            <option value="{{ $template->id }}" @selected((int) old('certificate_template_id', $exam->certificate_template_id) === $template->id)>{{ $template->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 @foreach(['time_limit'=>['Time limit (minutes)',$quiz ? 5 : 60,$quiz ? 30 : 240], 'passing_percent'=>['Pass score (%)',70,100], 'attempt_limit'=>['Attempts allowed',2,10]] as $field=>[$label,$default,$maximum])
                     <label class="builder-field">{{ $label }}
                         <input name="{{ $field }}" type="number" min="1" max="{{ $maximum }}" value="{{ old($field, $exam->$field ?? $default) }}" required>

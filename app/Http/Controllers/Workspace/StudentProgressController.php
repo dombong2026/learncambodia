@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\LessonProgress;
+use App\Support\CertificateAwards;
 use App\Support\LearningAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,9 @@ class StudentProgressController extends Controller
                 'completed_at' => (bool) $data['complete']
                     ? ($record->completed_at ?? now()) : null,
             ]);
+            if ($data['complete']) {
+                CertificateAwards::course($course, $locked);
+            }
         });
 
         return back()->with('status', (bool) $data['complete']

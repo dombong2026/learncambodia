@@ -10,8 +10,11 @@
             <div><p class="text-4xl font-extrabold tabular-nums">{{ $attempt->score_percent }}%</p><p class="mt-2 text-sm text-slate-500">{{ $attempt->correct_count }} of {{ $attempt->question_count }} correct · Attempt {{ $attempt->id }}</p></div>
             <span class="rounded-full px-4 py-2 text-sm font-bold {{ $attempt->passed ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">{{ $attempt->passed ? 'Practice threshold met' : 'Keep practising' }}</span>
         </div>
-        <p class="mt-4 text-xs leading-6 text-slate-500">Submitted {{ $attempt->submitted_at?->format('Y-m-d H:i') }} · Passing threshold {{ $quiz->passing_percent }}% · No official certificate issued.</p>
+        <p class="mt-4 text-xs leading-6 text-slate-500">Submitted {{ $attempt->submitted_at?->format('Y-m-d H:i') }} · Passing threshold {{ $quiz->passing_percent }}%</p>
         <div class="mt-6 flex flex-wrap gap-3">
+            @if($attempt->passed)
+                <x-certificate-award :certificate="$certificate" :claim="route('account.certificates.claim-practice', [$attempt, 'lang' => app()->getLocale()])" />
+            @endif
             <a href="{{ route('account.practice.show',[$enrollment,$quiz]) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white">Practice again</a>
             <a href="{{ route('account.practice.history') }}" class="rounded-full border border-slate-300 px-5 py-3 text-sm font-bold dark:border-slate-700">My results</a>
         </div>

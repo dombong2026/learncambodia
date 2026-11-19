@@ -1,7 +1,7 @@
 @extends('layouts.workspace')
 @section('title', 'My Learning Progress')
 @section('heading', 'My Learning Progress')
-@section('description', 'Your own lesson-completion records for approved, currently published courses. Progress is self-reported and does not award a certificate.')
+@section('description', 'Your own lesson-completion records for approved, currently published courses. Complete every lesson and pass any required course exams to earn a Course certificate.')
 @section('content')
 <div class="mb-6 flex justify-end"><a href="{{ route('account.enrollments.index') }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white">Open my enrollments</a></div>
 <div class="space-y-4">

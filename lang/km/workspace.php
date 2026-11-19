@@ -48,6 +48,7 @@ return [
         'All Policies' => 'គោលការណ៍ទាំងអស់',
         'All Users' => 'គណនីទាំងអស់',
         'Learning Progress' => 'វឌ្ឍនភាពសិក្សា',
+        'My Certificates' => 'វិញ្ញាបនបត្ររបស់ខ្ញុំ',
         'My Enrollments' => 'ការចុះឈ្មោះរបស់ខ្ញុំ',
         'Available Courses' => 'វគ្គសិក្សាដែលមាន',
         'My Assignments' => 'កិច្ចការរបស់ខ្ញុំ',

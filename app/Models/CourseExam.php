@@ -12,7 +12,7 @@ final class CourseExam extends Model
 {
     use HasPublicId, SoftDeletes;
 
-    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'featured_kind', 'featured_media_id', 'featured_alt', 'featured_value', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
+    protected $fillable = ['course_id', 'certificate_template_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'featured_kind', 'featured_media_id', 'featured_alt', 'featured_value', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published'];
 
     protected function casts(): array
     {

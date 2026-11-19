@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\AssessmentAccess;
 use App\Models\CourseExam;
 use App\Models\ExamAttempt;
+use App\Models\CertificateTemplate;
+use App\Models\IssuedCertificate;
 use App\Models\ExamType;
 use App\Models\User;
 use App\Support\CoursePricing;
@@ -45,7 +47,15 @@ final class StandaloneAssessmentTest extends TestCase
             'passing_percent' => 70, 'attempt_limit' => 1, 'gamified' => 1, 'live_feedback' => 1, 'published' => 1,
             'public_requirement' => 'Have headphones ready.', 'content_language' => 'English and Mandarin',
             'questions_payload' => json_encode(array_map(fn ($question) => $question + ['points' => 1], $questions))];
-        $this->post(route('admin.quizzes-manager.store'), $data)->assertSessionHasNoErrors();
+        $examTemplate = CertificateTemplate::where('default_kind', 'exam')->sole();
+        $default = CertificateTemplate::where('default_kind', 'quiz')->sole();
+        $quizTemplate = CertificateTemplate::create($default->only('certificate_type_id', 'heading', 'body', 'issuer', 'accent', 'orientation') + [
+            'name' => 'Language Quiz Award',
+        ]);
+        $this->post(route('admin.quizzes-manager.store'), $data + ['certificate_template_id' => $examTemplate->id])
+            ->assertSessionHasErrors('certificate_template_id');
+        $this->post(route('admin.quizzes-manager.store'), $data + ['certificate_template_id' => $quizTemplate->id])
+            ->assertSessionHasNoErrors();
         $quiz = CourseExam::sole();
         $this->assertNull($quiz->course_id);
         $this->assertSame('quiz', $quiz->kind);
@@ -84,8 +94,24 @@ final class StandaloneAssessmentTest extends TestCase
         $this->patch($grade, ['grades' => [2 => ['points' => 2]]])->assertSessionHasErrors('grades.2.points');
         $this->patch($grade, ['grades' => [2 => ['points' => 1, 'feedback' => 'Clear writing.']]])->assertSessionHasNoErrors();
         $this->assertNull($attempt->fresh()->score);
+        $this->assertDatabaseCount('issued_certificates', 0);
         $this->patch($grade, ['grades' => [7 => ['points' => 1]]])->assertSessionHasNoErrors();
-        $this->actingAs($student)->get($show)->assertSee('87% scored')->assertSee('Clear writing.')->assertSee('Milestone earned: Quiz passed');
+        $this->patch($grade, ['grades' => [7 => ['points' => 1]]])->assertSessionHasNoErrors();
+        $certificate = IssuedCertificate::sole();
+        $this->assertEquals($quizTemplate->id, $certificate->certificate_template_id);
+        $this->assertSame($quiz->title, $certificate->snapshot['assessment']);
+        $this->assertSame('quiz', $certificate->snapshot['kind']);
+        $this->assertNull($certificate->course_enrollment_id);
+        $this->actingAs($student)->get($show)->assertSee('87% scored')->assertSee('Clear writing.')
+            ->assertSee('Milestone earned: Quiz passed')->assertSee('View certificate');
+        $this->get(route('certificates.show', $certificate->code))->assertOk()
+            ->assertSee('For successfully passing Independent language quiz.');
+        $this->get(route('certificates.verify', ['code' => $certificate->code]))->assertOk()
+            ->assertSee('Certificate verified')->assertSee('Certificate type')->assertSee($quiz->title);
+        $this->actingAs($admin)->patch(route('admin.certificates.revoke', $certificate))->assertRedirect();
+        $this->actingAs($student)->post(route('account.certificates.claim-assessment', $attempt))->assertNotFound();
+        $this->get(route('certificates.verify', ['code' => $certificate->code]))->assertSee('revoked');
+        $this->assertDatabaseCount('issued_certificates', 1);
     }
 
     public function test_standalone_exam_pricing_and_access_require_verification(): void
