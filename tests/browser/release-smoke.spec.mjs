@@ -483,6 +483,19 @@ test('homepage displays the hero image, exam discovery and one row of CEFR level
     await expect(links).toHaveText(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
     const positions = await links.evaluateAll(items => items.map(item => item.getBoundingClientRect().top));
     expect(new Set(positions).size).toBe(1);
+
+    const sections = await main.locator('.lc-home-section').evaluateAll(items => items.map(item => {
+      const media = item.querySelector('.lc-home-section-media').getBoundingClientRect();
+      const body = item.querySelector('.lc-home-section-body').getBoundingClientRect();
+      return { width: media.width, height: media.height, onLeft: media.left < body.left, stacked: media.bottom <= body.top + 1 };
+    }));
+    expect(sections.length).toBeGreaterThanOrEqual(2);
+    for (const [index, section] of sections.entries()) {
+      expect(section.width).toBeCloseTo(sections[0].width);
+      expect(section.height).toBeCloseTo(sections[0].height);
+      if (width === 1440) expect(section.onLeft).toBe(index % 2 === 0);
+      else expect(section.stacked).toBe(true);
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
   }
 });

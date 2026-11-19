@@ -18,17 +18,18 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
-        $featuredExams = CourseExam::query()
-            ->whereNull('course_id')->where('kind', 'exam')->where('published', true)
-            ->with('featuredMedia')->orderByDesc('id')->limit(3)
-            ->get(['id', 'public_id', 'kind', 'title', 'time_limit', 'featured_kind', 'featured_media_id', 'featured_alt']);
+        $assessments = CourseExam::query()
+            ->whereNull('course_id')->where('published', true)->orderByDesc('id')->limit(4);
+        $assessmentColumns = ['id', 'public_id', 'kind', 'title'];
+        $featuredExams = (clone $assessments)->where('kind', 'exam')->get($assessmentColumns);
+        $featuredQuizzes = $assessments->where('kind', 'quiz')->get($assessmentColumns);
 
-        $featuredCourses = Course::discoverable()->with('featuredMedia')
-            ->orderByDesc('published_at')->orderByDesc('id')->limit(3)->get();
+        $featuredCourses = Course::discoverable()->orderByDesc('published_at')->orderByDesc('id')
+            ->limit(4)->get(['id', 'public_id', 'slug', 'title']);
         $latestArticles = ContentEntry::query()->publishedArticles()
-            ->orderByDesc('id')->limit(3)->get();
+            ->orderByDesc('id')->limit(4)->get(['id', 'public_id', 'title']);
 
-        return view('home', compact('featuredExams', 'featuredCourses', 'latestArticles'));
+        return view('home', compact('featuredExams', 'featuredQuizzes', 'featuredCourses', 'latestArticles'));
     }
 
     public function navigationCategories(): Response

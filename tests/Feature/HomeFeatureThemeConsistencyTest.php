@@ -14,7 +14,7 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_homepage_shows_only_public_standalone_exams(): void
+    public function test_homepage_lists_public_standalone_exams_and_quizzes_by_kind(): void
     {
         $this->seed(CategorySeeder::class);
         $course = Course::create([
@@ -35,19 +35,23 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
 
         $exam = CourseExam::create(['title' => 'Public reading practice'] + $defaults);
         CourseExam::create(['title' => 'Draft practice assessment', 'published' => false] + $defaults);
-        CourseExam::create(['title' => 'Published quiz fixture', 'kind' => 'quiz'] + $defaults);
+        $quiz = CourseExam::create(['title' => 'Published quiz fixture', 'kind' => 'quiz'] + $defaults);
+        CourseExam::create(['title' => 'Draft quiz fixture', 'kind' => 'quiz', 'published' => false] + $defaults);
         CourseExam::create(['title' => 'Course assessment fixture', 'course_id' => $course->id] + $defaults);
         CourseExam::create(['title' => 'Removed assessment fixture'] + $defaults)->delete();
 
         $this->get('/?lang=en')->assertOk()
-            ->assertSee('id="practice-exams"', false)
-            ->assertSee('href="'.route('public.exams.show', $exam).'"', false)
+            ->assertSeeInOrder([
+                'id="practice-exams"', 'href="'.route('public.exams.show', $exam).'"',
+                'id="practice-quizzes"', 'href="'.route('public.quizzes.show', $quiz).'"',
+            ], false)
             ->assertSee('Public reading practice')
-            ->assertSee('45 minutes')
             ->assertSee('images/home/exams.webp')
+            ->assertSee('images/home/quizzes.webp')
+            ->assertSee('Published quiz fixture')
             ->assertDontSee('Private test prompt')
             ->assertDontSee('Draft practice assessment')
-            ->assertDontSee('Published quiz fixture')
+            ->assertDontSee('Draft quiz fixture')
             ->assertDontSee('Course assessment fixture')
             ->assertDontSee('Removed assessment fixture');
     }
@@ -64,6 +68,7 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
                 ->assertSee('href="'.route('assessments.exams').'"', false)
                 ->assertSee('href="'.route('login').'"', false)
                 ->assertDontSee('id="practice-exams"', false)
+                ->assertDontSee('id="practice-quizzes"', false)
                 ->getContent();
 
             $this->assertSame(1, substr_count($html, 'data-home-levels'));
