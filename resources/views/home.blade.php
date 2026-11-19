@@ -80,7 +80,10 @@
                     <div class="rounded-xl border border-slate-200 bg-slate-50 px-2 py-4 text-center dark:border-white/10 dark:bg-white/10"><x-workspace-icon :name="$icon" class="mx-auto h-6 w-6 text-[#ac7720] dark:text-[#edbf68]" /><p class="mt-2 text-[11px] font-bold">{{ $label }}</p></div>
                 @endforeach
             </div>
-            <a href="{{ route('login') }}" class="premium-card-content mt-6 block rounded-xl bg-[#eebd64] px-4 py-3 text-center text-xs font-black text-[#123461] transition hover:bg-[#ffd78e]">{{ __('pages.sign_in_to_workspace') }}</a>
+            @php($workspaceUser = auth()->user())
+            <a href="{{ route($workspaceUser?->homeRouteName() ?? 'login') }}" class="premium-card-content mt-6 block rounded-xl bg-[#eebd64] px-4 py-3 text-center text-xs font-black text-[#123461] transition hover:bg-[#ffd78e]">
+                {{ $workspaceUser ? __('frontend.open_my_workspace') : __('pages.sign_in_to_workspace') }}
+            </a>
         </section>
     </div>
 </section>
