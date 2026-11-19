@@ -6,7 +6,7 @@
     <nav class="quiz-catalog-pagination" aria-label="Quiz pages">
         @if($first)
             <p class="quiz-catalog-pagination__summary">
-                Showing {{ $first === $last ? $first : "$first–$last" }} of {{ $paginator->total() }} quizzes
+                Showing {{ $first === $last ? $first : "{$first}–{$last}" }} of {{ $paginator->total() }} quizzes
             </p>
         @endif
         <div class="quiz-catalog-pagination__controls">
