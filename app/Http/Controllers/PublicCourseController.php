@@ -44,7 +44,8 @@ class PublicCourseController extends Controller
             ->when($group, fn($query)=>$query->whereHas('category',fn($categories)=>
                 $categories->where('group',$group)->where('is_published',true)))
             ->when($mode, fn($query)=>$query->where('delivery_mode',$mode))
-            ->orderBy('title')->paginate(10)->withQueryString();
+            ->orderBy('title')->orderBy('id')->paginate(12)->withQueryString()
+            ->appends(['lang' => app()->getLocale()])->fragment('course-results');
 
         $featuredInstructors = PublicProfile::visible()
             ->where('kind','instructor')->orderBy('display_name')->limit(4)->get();

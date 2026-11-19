@@ -12,6 +12,8 @@ return [
     'any_level' => 'គ្រប់កម្រិត',
     'apply' => 'អនុវត្ត',
     'available_courses' => 'វគ្គសិក្សាដែលមាន',
+    'catalog_count' => 'វគ្គសិក្សា :count',
+    'course_pages' => 'ទំព័រវគ្គសិក្សា',
     'result_count' => 'វគ្គសិក្សា',
     'no_courses' => 'មិនទាន់មានវគ្គដែលបានអនុម័តស្របតាមការស្វែងរកទេ។',
     'explore_categories' => 'មើលប្រភេទវគ្គសិក្សា',
