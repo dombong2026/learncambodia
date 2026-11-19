@@ -2,7 +2,6 @@
 
 return [
     'title' => 'Verify a certificate',
-    'intro' => 'Enter a certificate ID, scan the QR code with your camera, or upload an image of the QR code.',
     'input' => 'Certificate ID or verification link',
     'submit' => 'Verify certificate',
     'upload' => 'Upload QR image',
@@ -34,4 +33,17 @@ return [
     'checking' => 'QR code read. Checking the certificate…',
     'camera_preview' => 'Camera preview',
     'camera_unavailable' => 'Camera scanning is unavailable in this browser. Upload a QR image or enter the certificate ID.',
+    'intro' => 'Check a LearnCambodia certificate against its official record.',
+    'id_location' => 'The certificate ID and verification QR code are printed near the bottom of the certificate.',
+    'methods' => 'Verification method',
+    'id_placeholder' => 'Paste a certificate ID or link',
+    'drop_image' => 'Drop an image of the QR code here',
+    'choose_image' => 'Choose image',
+    'camera_tab' => 'Camera',
+    'reading_image' => 'Reading the QR image…',
+    'one_image' => 'Choose or drop one image at a time.',
+    'copy_id' => 'Copy ID',
+    'copied' => 'Certificate ID copied.',
+    'copy_failed' => 'Could not copy automatically. Select the certificate ID to copy it.',
+    'check_another' => 'Verify another certificate',
 ];

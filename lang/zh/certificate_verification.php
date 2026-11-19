@@ -2,7 +2,6 @@
 
 return [
     'title' => '验证证书',
-    'intro' => '输入证书编号、用摄像头扫描二维码，或上传二维码图片。',
     'input' => '证书编号或验证链接',
     'submit' => '验证证书',
     'upload' => '上传二维码图片',
@@ -34,4 +33,17 @@ return [
     'checking' => '已读取二维码，正在验证证书…',
     'camera_preview' => '摄像头预览',
     'camera_unavailable' => '此浏览器无法使用摄像头扫描。请上传二维码图片或输入证书编号。',
+    'intro' => '根据官方记录核验 LearnCambodia 证书。',
+    'id_location' => '证书编号和验证二维码印在证书底部附近。',
+    'methods' => '验证方式',
+    'id_placeholder' => '粘贴证书编号或链接',
+    'drop_image' => '将二维码图片拖到此处',
+    'choose_image' => '选择图片',
+    'camera_tab' => '摄像头',
+    'reading_image' => '正在读取二维码图片…',
+    'one_image' => '每次请选择或拖放一张图片。',
+    'copy_id' => '复制编号',
+    'copied' => '证书编号已复制。',
+    'copy_failed' => '无法自动复制，请选中证书编号手动复制。',
+    'check_another' => '验证另一张证书',
 ];
