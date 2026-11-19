@@ -290,20 +290,3 @@ if (attempt && timer) {
     };
     tick();
 }
-
-const certificate = document.querySelector<HTMLFormElement>('[data-certificate-builder]');
-const preview = document.querySelector<HTMLElement>('[data-certificate-preview]');
-if (certificate && preview) {
-    const update = (): void => {
-        const fields = new FormData(certificate);
-        preview.querySelector('[data-certificate-heading]')!.textContent = String(fields.get('heading') ?? '');
-        preview.querySelector('[data-certificate-body]')!.textContent = String(fields.get('body') ?? '')
-            .replaceAll('{learner}', 'Sample Learner').replaceAll('{course}', 'Sample Course');
-        preview.querySelector('[data-certificate-issuer]')!.textContent = String(fields.get('issuer') ?? '');
-        preview.style.setProperty('--certificate-accent', String(fields.get('accent')));
-        preview.dataset.orientation = String(fields.get('orientation'));
-    };
-    certificate.addEventListener('input', update);
-    certificate.addEventListener('change', update);
-    update();
-}

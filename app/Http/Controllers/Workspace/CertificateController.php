@@ -11,12 +11,15 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseExam;
 use App\Models\ExamAttempt;
 use App\Models\IssuedCertificate;
+use App\Support\CertificateDesign;
 use App\Support\LearningAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class CertificateController extends Controller
 {
@@ -40,6 +43,12 @@ final class CertificateController extends Controller
 
     public function save(Request $request, ?CertificateTemplate $template = null): RedirectResponse
     {
+        $fields = [];
+        foreach (array_keys(CertificateDesign::FIELDS) as $field) {
+            foreach (CertificateDesign::limits($field) as $axis => [$min, $max]) {
+                $fields["design.fields.$field.$axis"] = ["required_with:design.fields.$field", 'numeric', "between:$min,$max"];
+            }
+        }
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'certificate_type_id' => ['required', 'integer', 'exists:certificate_types,id'],
@@ -48,17 +57,40 @@ final class CertificateController extends Controller
             'issuer' => ['required', 'string', 'max:140'],
             'accent' => ['required', 'regex:/^#[0-9a-f]{6}$/iD'],
             'orientation' => ['required', 'in:landscape,portrait'],
+            'design' => ['sometimes', 'array:font,ink,frame,fields'],
+            'design.font' => ['sometimes', 'in:serif,sans'],
+            'design.ink' => ['sometimes', 'regex:/^#[0-9a-f]{6}$/iD'],
+            'design.frame' => ['sometimes', 'boolean'],
+            'design.fields' => ['sometimes', 'array:'.implode(',', array_keys(CertificateDesign::FIELDS))],
+            'design.fields.*' => ['array:x,y,size'],
+            'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=6000,max_height=6000'],
+            'remove_background' => ['sometimes', 'boolean'],
             'courses' => ['sometimes', 'array', 'max:300'],
             'courses.*' => ['required', 'integer', 'distinct', 'exists:courses,id'],
-        ]);
+        ] + $fields);
 
-        $saved = DB::transaction(function () use ($template, $data): CertificateTemplate {
-            $saved = $template ? CertificateTemplate::lockForUpdate()->findOrFail($template->id) : new CertificateTemplate();
-            $saved->fill(collect($data)->except('courses')->all())->save();
-            $saved->courses()->sync($data['courses'] ?? []);
+        $background = $request->file('background')?->store('certificate-backgrounds', 'local');
+        abort_if($background === false, 503, 'The certificate background could not be stored.');
 
-            return $saved;
-        });
+        try {
+            $saved = DB::transaction(function () use ($template, $data, $background): CertificateTemplate {
+                $saved = $template ? CertificateTemplate::lockForUpdate()->findOrFail($template->id) : new CertificateTemplate();
+                $design = CertificateDesign::options($data['design'] ?? $saved->design);
+                $design['background'] = $background ?? (empty($data['remove_background'])
+                    ? ($saved->design['background'] ?? null) : null);
+                $saved->fill(collect($data)->only('name', 'certificate_type_id', 'heading', 'body', 'issuer', 'accent', 'orientation')->all());
+                $saved->design = $design;
+                $saved->save();
+                $saved->courses()->sync($data['courses'] ?? []);
+
+                return $saved;
+            });
+        } catch (\Throwable $exception) {
+            if ($background !== null) {
+                Storage::disk('local')->delete($background);
+            }
+            throw $exception;
+        }
 
         return redirect()->route('admin.certificate-templates.edit', $saved)->with('status', 'Certificate template saved.');
     }
@@ -101,7 +133,7 @@ final class CertificateController extends Controller
                 'course_enrollment_id' => $enrollment->id, 'certificate_template_id' => $template->id,
             ], [
                 'issued_by' => $request->user()->id, 'code' => (string) Str::uuid(),
-                'snapshot' => $template->only('heading', 'body', 'issuer', 'accent', 'orientation') + [
+                'snapshot' => $template->only('heading', 'body', 'issuer', 'accent', 'orientation', 'design') + [
                     'type' => $template->type->name, 'learner' => $enrollment->student->name, 'course' => $course->title,
                 ],
             ]);
@@ -124,12 +156,38 @@ final class CertificateController extends Controller
 
     public function show(Request $request, IssuedCertificate $certificate): View
     {
+        $this->authorizeCertificate($request, $certificate);
+
+        return view('learning.certificate', compact('certificate'));
+    }
+
+    public function templateBackground(CertificateTemplate $template): StreamedResponse
+    {
+        return $this->background($template->design['background'] ?? null);
+    }
+
+    public function issuedBackground(Request $request, IssuedCertificate $certificate): StreamedResponse
+    {
+        $this->authorizeCertificate($request, $certificate);
+
+        return $this->background($certificate->snapshot['design']['background'] ?? null);
+    }
+
+    private function authorizeCertificate(Request $request, IssuedCertificate $certificate): void
+    {
         $viewer = $request->user();
         if (!$viewer->isAdministrator()) {
             abort_if($certificate->revoked_at !== null, 404);
             LearningAccess::course($viewer, $certificate->enrollment);
         }
+    }
 
-        return view('learning.certificate', compact('certificate'));
+    private function background(?string $path): StreamedResponse
+    {
+        abort_unless($path && preg_match('~^certificate-backgrounds/[a-z0-9]{40}\.(jpe?g|png|webp)$~iD', $path), 404);
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($path), 404);
+
+        return $disk->response($path);
     }
 }
