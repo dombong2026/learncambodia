@@ -26,9 +26,7 @@
     @if(!isset($attempt))
         <section class="specialized-exam-card">
             <p>
-                @if($isQuiz)
-                    {{ __('specialized_exam.quiz_questions', ['count' => count($exam->questions ?? [])]) }} ·
-                @endif
+                {{ __('specialized_exam.questions', ['count' => count($exam->questions ?? [])]) }} ·
                 {{ trans_choice('detail.minutes', $exam->time_limit) }} ·
                 @if($isQuiz){{ trans_choice('detail.attempts', $exam->attempt_limit) }} · @endif
                 {{ __('detail.passing_score', ['score' => $exam->passing_percent]) }}

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'quiz_questions' => ':count 道题',
+    'questions' => ':count 道题',
     'quiz_intro' => '选择答案后，点击检查答案即可获得反馈。检查后，本次作答中的该答案将被锁定。',
     'quiz_start' => '开始测验',
     'quiz_resume' => '继续测验',
