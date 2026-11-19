@@ -69,6 +69,37 @@ class FocusedLessonWorkspaceTest extends TestCase
         $this->get($entry)->assertRedirect($this->watch(['lang' => 'en']));
     }
 
+    public function test_resume_uses_the_last_unfinished_lesson_across_sessions(): void
+    {
+        $later = $this->lesson->module->lessons()->create([
+            'title' => 'Mixed-ability movement', 'content' => 'Choose two adaptations.',
+            'position' => 2, 'duration_minutes' => 12,
+        ]);
+        $laterUrl = route('account.lessons.watch', [$this->enrollment, $later, 'lang' => 'en']);
+        $entry = route('account.enrollments.show', [$this->enrollment, 'lang' => 'en']);
+        $curriculum = route('account.enrollments.show', [$this->enrollment, 'view' => 'curriculum', 'lang' => 'en']);
+
+        $this->actingAs($this->student)->get($curriculum)->assertOk()->assertSee('Start learning')
+            ->assertSee('0%')->assertSee('About this course')->assertSee('Practical movement activities.');
+        $this->get($laterUrl)->assertOk()->assertSee('Pause and exit')
+            ->assertSee('href="'.e($curriculum).'"', false);
+
+        $this->flushSession();
+        $this->actingAs($this->student)->get($curriculum)->assertOk()->assertSee('Resume learning')
+            ->assertSeeInOrder(['Last opened lesson', 'Mixed-ability movement']);
+        $this->get($entry)->assertRedirect($laterUrl);
+
+        $this->get($this->watch(['viewer' => 'missing-material']))->assertNotFound();
+        $otherStudent = User::factory()->create(['role' => 'student']);
+        $this->actingAs($otherStudent)->get($this->watch())->assertNotFound();
+        $this->assertSame($later->id, $this->enrollment->fresh()->last_opened_lesson_id);
+
+        // Removing a bookmarked lesson lets the learner continue in curriculum order.
+        $later->delete();
+        $this->assertNull($this->enrollment->fresh()->last_opened_lesson_id);
+        $this->actingAs($this->student)->get($entry)->assertRedirect($this->watch(['lang' => 'en']));
+    }
+
     public function test_viewers_and_resources_use_protected_assets_and_remove_site_navigation(): void
     {
         Storage::fake('local');

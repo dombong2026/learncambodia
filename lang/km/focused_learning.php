@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'pause_exit' => 'ផ្អាក និងចាកចេញ',
+    'start_learning' => 'ចាប់ផ្តើមរៀន',
+    'resume_learning' => 'បន្តការសិក្សា',
+    'continue_learning' => 'បន្តការសិក្សា',
+    'last_opened' => 'មេរៀនដែលបានបើកចុងក្រោយ',
+    'learning_progress' => 'វឌ្ឍនភាពសិក្សា',
+    'lessons_completed' => 'បានបញ្ចប់ :completed ក្នុងចំណោម :total មេរៀន',
+    'course_completion' => 'ការបញ្ចប់មេរៀនក្នុងវគ្គសិក្សា',
+    'self_reported_progress' => 'វឌ្ឍនភាពដែលអ្នកបានកត់ត្រា',
+    'view_progress' => 'មើលវឌ្ឍនភាព',
+    'about_course' => 'អំពីវគ្គសិក្សានេះ',
+    'no_description' => 'មិនទាន់មានការពិពណ៌នាអំពីវគ្គសិក្សានេះទេ។',
+    'course_modules' => ':count ម៉ូឌុល',
+    'course_minutes' => 'រយៈពេលមេរៀន :count នាទី',
     'viewer' => 'កម្មវិធីមើលមេរៀន',
     'curriculum' => 'មាតិកាវគ្គសិក្សាទាំងមូល',
     'download_pdf' => 'ទាញយក PDF',

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'pause_exit' => '暂停并退出',
+    'start_learning' => '开始学习',
+    'resume_learning' => '恢复学习',
+    'continue_learning' => '继续学习',
+    'last_opened' => '上次打开的课时',
+    'learning_progress' => '学习进度',
+    'lessons_completed' => '已完成 :completed / :total 课时',
+    'course_completion' => '课程课时完成进度',
+    'self_reported_progress' => '自行标记的进度',
+    'view_progress' => '查看进度',
+    'about_course' => '关于本课程',
+    'no_description' => '暂无课程简介。',
+    'course_modules' => ':count 个模块',
+    'course_minutes' => '课时总计 :count 分钟',
     'viewer' => '课程查看器',
     'curriculum' => '完整课程目录',
     'download_pdf' => '下载 PDF',

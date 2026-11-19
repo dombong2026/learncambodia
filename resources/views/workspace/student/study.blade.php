@@ -13,17 +13,24 @@
 .lc-curriculum .cc-button:hover,.lc-curriculum .cc-button:focus-visible{background:var(--cc-hover);border-color:var(--cc-accent)}
 .lc-curriculum .cc-button-primary{background:#1655e7;color:white;border-color:#1655e7}
 .lc-curriculum .cc-button-primary:hover,.lc-curriculum .cc-button-primary:focus-visible{background:#1144c2;color:white;border-color:#1144c2}
-.lc-curriculum .cc-summary{padding:17px 20px;margin-bottom:16px;display:flex;gap:22px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.lc-curriculum .cc-summary-title{font-size:15px;font-weight:800}
+.lc-curriculum .cc-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.lc-curriculum .cc-overview-card{display:flex;flex-direction:column;min-width:0;gap:14px;padding:clamp(16px,2vw,26px)}
+.lc-curriculum .cc-learning-progress{background:linear-gradient(145deg,var(--cc-hover),var(--cc-surface) 70%)}
+.lc-curriculum .cc-card-heading{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:800}
+.lc-curriculum .cc-card-icon{display:grid;flex:none;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--cc-soft);color:var(--cc-accent)}
+.lc-curriculum .cc-progress-value{color:var(--cc-accent);font-size:clamp(2.65rem,5vw,4.25rem);font-weight:820;letter-spacing:-.055em;line-height:1;font-variant-numeric:tabular-nums}
+.lc-curriculum .cc-summary-title{margin-top:4px;font-size:14px;font-weight:750}
 .lc-curriculum .cc-muted{color:var(--cc-muted);font-size:12px}
-.lc-curriculum .cc-progress{display:flex;align-items:center;gap:12px;min-width:230px;flex:1;max-width:440px}
-.lc-curriculum progress{height:8px;flex:1;appearance:none;border:0;border-radius:99px;background:var(--cc-border);overflow:hidden}
-.lc-curriculum progress::-webkit-progress-bar{background:var(--cc-border);border-radius:99px}
-.lc-curriculum progress::-webkit-progress-value{background:#1e64e8;border-radius:99px}
-.lc-curriculum progress::-moz-progress-bar{background:#1e64e8;border-radius:99px}
-.lc-curriculum .cc-description{margin-bottom:16px;padding:0 20px}
-.lc-curriculum .cc-description summary{cursor:pointer;padding:14px 0;font-weight:700;font-size:13px}
-.lc-curriculum .cc-description .cc-description-body{padding-bottom:18px}
+.lc-curriculum .cc-overview-card progress{display:block;width:100%;height:8px;appearance:none;border:0;border-radius:99px;background:var(--cc-border);overflow:hidden}
+.lc-curriculum .cc-overview-card progress::-webkit-progress-bar{background:var(--cc-border);border-radius:99px}
+.lc-curriculum .cc-overview-card progress::-webkit-progress-value{background:#3a77f0;border-radius:99px}
+.lc-curriculum .cc-overview-card progress::-moz-progress-bar{background:#3a77f0;border-radius:99px}
+.lc-curriculum .cc-saved-lesson{min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:700}
+.lc-curriculum .cc-card-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.lc-curriculum .cc-about-body{max-height:9rem;overflow:auto;scrollbar-color:var(--cc-border) transparent;line-height:1.65;color:var(--cc-muted);font-size:13px;overflow-wrap:anywhere}
+.lc-curriculum .cc-about-body:focus-visible{outline:2px solid var(--cc-accent);outline-offset:2px}
+.lc-curriculum .cc-about-body img,.lc-curriculum .cc-about-body iframe{max-width:100%}
+.lc-curriculum .cc-about-facts{margin-top:auto;display:flex;flex-wrap:wrap;gap:8px 18px;border-top:1px solid var(--cc-border);padding-top:13px;font-weight:700}
 .lc-curriculum .cc-table-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid var(--cc-border)}
 .lc-curriculum .cc-table-head h2{font-size:18px;font-weight:800}
 .lc-curriculum .cc-search{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
@@ -36,7 +43,7 @@
 .lc-curriculum .cc-table .cc-module th{padding:14px 16px;background:var(--cc-hover);border-top:1px solid var(--cc-border);font-size:13px;font-weight:800}
 .lc-curriculum .cc-module-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .lc-curriculum .cc-module-name{display:flex;align-items:center;gap:10px;min-width:0}
-.lc-curriculum .cc-module-badge{display:inline-flex;justify-content:center;min-width:32px;padding:5px 7px;border-radius:8px;background:var(--cc-surface);color:var(--cc-accent);font-size:11px}
+.lc-curriculum .cc-module-badge{min-width:44px;color:var(--cc-accent);font-size:clamp(1.55rem,2.4vw,2rem);font-weight:800;line-height:1;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
 .lc-curriculum .cc-module-summary{display:block;color:var(--cc-muted);font-size:12px;font-weight:500;margin-top:3px}
 .lc-curriculum .cc-index{width:68px;color:var(--cc-muted);font-size:12px;font-variant-numeric:tabular-nums}
 .lc-curriculum .cc-lesson-name{font-weight:700;color:var(--cc-text);text-decoration:none}
@@ -53,6 +60,9 @@
 .lc-curriculum .cc-practice h2{font-weight:800;font-size:16px;margin-bottom:4px}
 .lc-curriculum .cc-practice-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}
 .lc-curriculum .cc-empty{padding:30px 20px;text-align:center;color:var(--cc-muted)}
+@media(max-width:640px){
+  .lc-curriculum .cc-overview{grid-template-columns:1fr}
+}
 @media(max-width:800px){
   .lc-curriculum .cc-table thead{display:none}
   .lc-curriculum .cc-table,.lc-curriculum .cc-table tbody,.lc-curriculum .cc-table tr,.lc-curriculum .cc-table td{display:block;width:100%}
@@ -94,27 +104,55 @@
         <div class="cc-links">
             <span class="cc-status cc-status-complete">Enrollment approved</span>
             @if($resumeLesson && !$preview)
-                <a class="cc-button cc-button-primary" href="{{ route('account.enrollments.show', $enrollment) }}"><x-workspace-icon name="play" class="h-4 w-4" /> {{ $finished ? 'Continue learning' : 'Start learning' }}</a>
+                <a class="cc-button cc-button-primary" href="{{ route('account.enrollments.show', [$enrollment] + request()->only('lang')) }}">
+                    <x-workspace-icon name="play" class="h-4 w-4" />
+                    {{ __('focused_learning.'.($savedLesson ? 'resume_learning' : ($finished ? 'continue_learning' : 'start_learning'))) }}
+                </a>
             @endif
         </div>
     </div>
 
-    <section class="cc-panel cc-summary" aria-label="Learning progress">
-        <div>
-            <p class="cc-summary-title">{{ $finished }} / {{ $totalLessons }} lessons completed</p>
-            <p class="cc-muted">{{ $course->modules->count() }} modules · {{ $courseMinutes }} min of lessons · Self-reported progress</p>
-        </div>
-        <div class="cc-progress">
-            <progress value="{{ $finished }}" max="{{ max(1, $totalLessons) }}" aria-label="Course lesson completion"></progress>
-            <strong>{{ $percentage }}%</strong>
-            <a href="{{ route('account.progress.index') }}" class="cc-button">Progress <x-workspace-icon name="chevron-right" class="h-4 w-4" /></a>
-        </div>
-    </section>
+    <div class="cc-overview">
+        <section class="cc-panel cc-overview-card cc-learning-progress" aria-labelledby="course-progress-title">
+            <h2 id="course-progress-title" class="cc-card-heading">
+                <span class="cc-card-icon"><x-workspace-icon name="target" class="h-4 w-4" /></span>
+                {{ __('focused_learning.learning_progress') }}
+            </h2>
+            <div>
+                <p class="cc-progress-value">{{ $percentage }}%</p>
+                <p class="cc-summary-title">{{ __('focused_learning.lessons_completed', ['completed' => $finished, 'total' => $totalLessons]) }}</p>
+            </div>
+            <progress value="{{ $finished }}" max="{{ max(1, $totalLessons) }}" aria-label="{{ __('focused_learning.course_completion') }}"></progress>
+            @if($savedLesson && !$preview)
+                <div class="cc-saved-lesson">
+                    <p class="cc-muted">{{ __('focused_learning.last_opened') }}</p>
+                    <p>{{ $savedLesson->title }}</p>
+                </div>
+            @endif
+            <div class="cc-card-footer">
+                <p class="cc-muted">{{ __('focused_learning.self_reported_progress') }}</p>
+                <a href="{{ route('account.progress.index') }}" class="cc-button">{{ __('focused_learning.view_progress') }} <x-workspace-icon name="chevron-right" class="h-4 w-4" /></a>
+            </div>
+        </section>
 
-    <details class="cc-panel cc-description">
-        <summary>About this course</summary>
-        <div class="cc-description-body"><x-course-description :course="$course" class="max-w-4xl text-sm leading-7" /></div>
-    </details>
+        <section class="cc-panel cc-overview-card" aria-labelledby="about-course-title">
+            <h2 id="about-course-title" class="cc-card-heading">
+                <span class="cc-card-icon"><x-workspace-icon name="info" class="h-4 w-4" /></span>
+                {{ __('focused_learning.about_course') }}
+            </h2>
+            @if(filled($course->description_html) || filled($course->description))
+                <div class="cc-about-body" tabindex="0" role="region" aria-labelledby="about-course-title">
+                    <x-course-description :course="$course" />
+                </div>
+            @else
+                <p class="cc-about-body">{{ $course->summary ?: __('focused_learning.no_description') }}</p>
+            @endif
+            <div class="cc-about-facts cc-muted">
+                <span>{{ trans_choice('focused_learning.course_modules', $course->modules->count()) }}</span>
+                <span>{{ __('focused_learning.course_minutes', ['count' => $courseMinutes]) }}</span>
+            </div>
+        </section>
+    </div>
 
     <section class="cc-panel" aria-labelledby="course-curriculum-title">
         <div class="cc-table-head">
@@ -194,7 +232,7 @@
         @endif
         <div class="cc-foot">
             <span class="cc-muted">Showing {{ $visibleCount }} of {{ $totalLessons }} lessons</span>
-            @if($resumeLesson && !$preview)<a class="cc-button" href="{{ route('account.lessons.watch', [$enrollment, $resumeLesson]) }}">Go to next lesson <x-workspace-icon name="chevron-right" class="h-4 w-4" /></a>@endif
+            @if($nextLesson && !$preview)<a class="cc-button" href="{{ route('account.lessons.watch', [$enrollment, $nextLesson]) }}">Go to next lesson <x-workspace-icon name="chevron-right" class="h-4 w-4" /></a>@endif
         </div>
     </section>
 

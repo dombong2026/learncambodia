@@ -16,6 +16,7 @@ use App\Models\LessonSupportMessage;
 use App\Models\PracticeAttempt;
 use App\Models\PublicProfile;
 use App\Models\User;
+use App\Support\AccountPreview;
 use App\Support\LearningAccess;
 use App\Support\LessonMaterials;
 use Illuminate\Http\Request;
@@ -213,6 +214,10 @@ final class LearningHubController extends Controller
         $viewerKey = $request->query('viewer', $materials['defaultViewer']);
         abort_unless(is_string($viewerKey) && isset($materials['viewers'][$viewerKey]), 404);
         $viewer = $materials['viewers'][$viewerKey];
+        $canSavePlace = ! $request->session()->has(AccountPreview::KEY);
+        if ($canSavePlace && $request->isMethod('GET') && ! $request->boolean('fragment')) {
+            $enrollment->rememberLesson($lesson);
+        }
         $document = $viewer['type'] === 'document' ? LessonMaterials::document($viewer['file']) : [];
         $attempts = $viewer['type'] === 'exam' ? $enrollment->examAttempts()
             ->where('course_exam_id', $viewer['exam']->id)->latest('id')->get(['id', 'score', 'submitted_at', 'expires_at']) : collect();
@@ -225,7 +230,7 @@ final class LearningHubController extends Controller
         return view('learning.lesson', compact(
             'course', 'lesson', 'enrollment', 'completedIds', 'previous', 'next', 'position',
             'materials', 'viewerKey', 'viewer', 'tab', 'document', 'attempts', 'quizzes', 'assignments',
-            'studyNote', 'comments', 'instructors', 'instructor', 'messages'
+            'studyNote', 'comments', 'instructors', 'instructor', 'messages', 'canSavePlace'
         ));
     }
 

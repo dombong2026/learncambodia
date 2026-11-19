@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'pause_exit' => 'Pause and exit',
+    'start_learning' => 'Start learning',
+    'resume_learning' => 'Resume learning',
+    'continue_learning' => 'Continue learning',
+    'last_opened' => 'Last opened lesson',
+    'learning_progress' => 'Learning progress',
+    'lessons_completed' => ':completed of :total lessons completed',
+    'course_completion' => 'Course lesson completion',
+    'self_reported_progress' => 'Self-reported progress',
+    'view_progress' => 'View progress',
+    'about_course' => 'About this course',
+    'no_description' => 'No course description is available.',
+    'course_modules' => '{1} :count module|[0,*] :count modules',
+    'course_minutes' => ':count min of lessons',
     'viewer' => 'Lesson viewer',
     'curriculum' => 'Full curriculum',
     'download_pdf' => 'Download PDF',

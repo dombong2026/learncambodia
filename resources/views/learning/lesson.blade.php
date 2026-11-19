@@ -39,6 +39,11 @@
                     @if($viewer['type'] === 'pdf')
                         <a class="fl-link" href="{{ route('editor-media.show', $viewer['file']) }}">{{ __('focused_learning.download_pdf') }}</a>
                     @endif
+                    @if($canSavePlace)
+                        <a class="fl-button" href="{{ route('account.enrollments.show', [$enrollment, 'view' => 'curriculum'] + request()->only('lang')) }}">
+                            {{ __('focused_learning.pause_exit') }}
+                        </a>
+                    @endif
                     <a class="fl-mobile-outline fl-button" href="#course-outline"><x-workspace-icon name="layers" /> {{ __('focused_learning.outline') }}</a>
                     @if(count($materials['viewers']) > 1)
                         <details class="fl-choose">

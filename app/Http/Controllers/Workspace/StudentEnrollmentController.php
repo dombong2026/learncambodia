@@ -58,8 +58,13 @@ class StudentEnrollmentController extends Controller
         $lessons = $course->modules->flatMap(fn ($module) => $module->lessons);
         $completedLessonIds = $enrollment->lessonProgress()->whereNotNull('completed_at')
             ->whereIn('lesson_id', $lessons->pluck('id'))->pluck('lesson_id')->all();
-        $resumeLesson = $lessons->first(fn ($lesson) => !in_array($lesson->id, $completedLessonIds, true))
+        $nextLesson = $lessons->first(fn ($lesson) => !in_array($lesson->id, $completedLessonIds, true))
             ?? $lessons->first();
+        $savedLesson = $lessons->firstWhere('id', $enrollment->last_opened_lesson_id);
+        if ($savedLesson && in_array($savedLesson->id, $completedLessonIds, true)) {
+            $savedLesson = null;
+        }
+        $resumeLesson = $savedLesson ?? $nextLesson;
         $preview = $request->session()->has(AccountPreview::KEY);
         $locale = $request->query('lang') === app()->getLocale() ? ['lang' => app()->getLocale()] : [];
 
@@ -81,6 +86,8 @@ class StudentEnrollmentController extends Controller
             'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $completedLessonIds,
             'resumeLesson' => $resumeLesson,
+            'savedLesson' => $savedLesson,
+            'nextLesson' => $nextLesson,
             'preview' => $preview,
         ]);
     }
