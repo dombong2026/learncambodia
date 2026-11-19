@@ -1,4 +1,4 @@
-@props(['certificate', 'background' => null, 'editable' => false, 'revoked' => false])
+@props(['certificate', 'background' => null, 'editable' => false, 'revoked' => false, 'verificationUrl' => null])
 
 @php
     $design = \App\Support\CertificateDesign::options($certificate['design'] ?? null);
@@ -31,6 +31,14 @@
             style="--cert-x:{{ $field['x'] }}%;--cert-y:{{ $field['y'] }}%;--cert-size:{{ $field['size'] }}"
             >{{ $value }}</{{ $tag }}>
     @endforeach
+    @if($editable || $verificationUrl)
+        @php($qr = $design['fields']['qr'])
+        <div class="cert-element cert-element-qr" data-cert-field="qr"
+            data-certificate-qr="{{ $verificationUrl ?? route('certificates.verify') }}"
+            style="--cert-x:{{ $qr['x'] }}%;--cert-y:{{ $qr['y'] }}%;--cert-size:{{ $qr['size'] }};">
+            <svg role="img" aria-label="{{ __('certificate_verification.qr_label') }}" shape-rendering="crispEdges"></svg>
+        </div>
+    @endif
     @if($revoked)
         <p class="cert-revoked">Revoked certificate</p>
     @endif

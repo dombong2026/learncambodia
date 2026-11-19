@@ -45,6 +45,12 @@ final class CertificateController extends Controller
 
     public function save(Request $request, ?CertificateTemplate $template = null): RedirectResponse
     {
+        $fields = [];
+        foreach (array_keys(CertificateDesign::FIELDS) as $field) {
+            foreach (CertificateDesign::limits($field) as $axis => [$min, $max]) {
+                $fields["design.fields.$field.$axis"] = ["required_with:design.fields.$field", 'numeric', "between:$min,$max"];
+            }
+        }
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'certificate_type_id' => ['required', 'integer', 'exists:certificate_types,id'],
@@ -59,14 +65,11 @@ final class CertificateController extends Controller
             'design.frame' => ['sometimes', 'boolean'],
             'design.fields' => ['sometimes', 'array:'.implode(',', array_keys(CertificateDesign::FIELDS))],
             'design.fields.*' => ['array:x,y,size'],
-            'design.fields.*.x' => ['required', 'numeric', 'between:8,92'],
-            'design.fields.*.y' => ['required', 'numeric', 'between:8,92'],
-            'design.fields.*.size' => ['required', 'numeric', 'between:0.8,8'],
             'background' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=6000,max_height=6000'],
             'remove_background' => ['sometimes', 'boolean'],
             'courses' => ['sometimes', 'array', 'max:300'],
             'courses.*' => ['required', 'integer', 'distinct', 'exists:courses,id'],
-        ]);
+        ] + $fields);
 
         $background = $request->file('background')?->store('certificate-backgrounds', 'local');
         abort_if($background === false, 503, 'The certificate background could not be stored.');

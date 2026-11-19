@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\UserInvitationController;
 use App\Http\Controllers\BrandAssetController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\PublicContactController;
@@ -112,6 +113,8 @@ Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name(
 Route::get('/editor-media/{media}', [EditorMediaController::class,'show'])->name('editor-media.show');
 Route::get('/help-center', [PublicHelpController::class,'index'])->name('help.index');
 Route::get('/help-center/{kind}/{entry}', [PublicHelpController::class,'show'])->name('help.show');
+Route::get('/verify-certificate', CertificateVerificationController::class)
+    ->middleware('throttle:30,1,certificate-verification')->name('certificates.verify');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');

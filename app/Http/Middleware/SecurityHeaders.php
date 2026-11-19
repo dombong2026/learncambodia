@@ -23,7 +23,9 @@ final class SecurityHeaders
         $response->headers->set('X-Frame-Options', $request->attributes->getBoolean('lessonPdfPreview') ? 'SAMEORIGIN' : 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
-        $response->headers->set('Permissions-Policy', "camera=(), microphone=$microphone, geolocation=(), payment=()");
+        $certificateVerification = $request->routeIs('certificates.verify');
+        $camera = $certificateVerification ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "camera=$camera, microphone=$microphone, geolocation=(), payment=()");
 
         // Enable HSTS only on actual HTTPS responses from the production app.
         // A short initial age prevents premature subdomain-wide commitment.
@@ -31,7 +33,7 @@ final class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=86400');
         }
 
-        if ($request->is('invite/*')) {
+        if ($certificateVerification || $request->is('invite/*')) {
             $response->headers->set('Referrer-Policy', 'no-referrer');
         }
 

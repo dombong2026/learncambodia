@@ -12,6 +12,7 @@ final class CertificateDesign
         'issuer' => ['label' => 'Issuer', 'x' => 50, 'y' => 76, 'size' => 2.6],
         'date' => ['label' => 'Issue date', 'x' => 30, 'y' => 87, 'size' => 1.5],
         'code' => ['label' => 'Certificate ID', 'x' => 70, 'y' => 87, 'size' => 1.2],
+        'qr' => ['label' => 'Verification QR code', 'x' => 84, 'y' => 75, 'size' => 11],
     ];
 
     public static function options(mixed $design): array
@@ -23,14 +24,19 @@ final class CertificateDesign
         ];
 
         foreach (self::FIELDS as $key => $field) {
-            $options['fields'][$key] = [
-                'x' => self::within(data_get($design, "fields.$key.x"), 8, 92, $field['x']),
-                'y' => self::within(data_get($design, "fields.$key.y"), 8, 92, $field['y']),
-                'size' => self::within(data_get($design, "fields.$key.size"), 0.8, 8, $field['size']),
-            ];
+            foreach (self::limits($key) as $axis => [$min, $max]) {
+                $options['fields'][$key][$axis] = self::within(data_get($design, "fields.$key.$axis"), $min, $max, $field[$axis]);
+            }
         }
 
         return $options;
+    }
+
+    public static function limits(string $field): array
+    {
+        return $field === 'qr'
+            ? ['x' => [12, 88], 'y' => [14, 86], 'size' => [10, 16]]
+            : ['x' => [8, 92], 'y' => [8, 92], 'size' => [0.8, 8]];
     }
 
     public static function color(mixed $value, string $fallback): string
