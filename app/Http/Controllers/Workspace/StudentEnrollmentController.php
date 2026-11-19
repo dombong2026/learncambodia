@@ -77,12 +77,15 @@ class StudentEnrollmentController extends Controller
         }
 
         $course->load('exams.type', 'quizzes');
+        $certificates = \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->get();
 
         return view('workspace.student.study', [
             'role' => 'student',
             'enrollment' => $enrollment,
             'course' => $course,
-            'certificates' => \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->whereNull('revoked_at')->get(),
+            'certificates' => $certificates->whereNull('revoked_at'),
+            'canClaimCertificate' => !$preview && $certificates->isEmpty() && $lessons->count() === count($completedLessonIds)
+                && \App\Support\CertificateAwards::courseEligible($course, $enrollment),
             'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $completedLessonIds,
             'resumeLesson' => $resumeLesson,

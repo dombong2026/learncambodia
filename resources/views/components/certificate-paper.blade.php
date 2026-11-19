@@ -7,7 +7,10 @@
         'type' => $certificate['type'],
         'heading' => $certificate['heading'],
         'learner' => $certificate['learner'],
-        'body' => strtr($certificate['body'], ['{learner}' => $certificate['learner'], '{course}' => $certificate['course']]),
+        'body' => strtr($certificate['body'], [
+            '{learner}' => $certificate['learner'], '{course}' => $certificate['course'],
+            '{assessment}' => $certificate['assessment'] ?? '',
+        ]),
         'issuer' => $certificate['issuer'],
         'date' => $certificate['date'],
         'code' => $certificate['code'],

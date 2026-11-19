@@ -1,7 +1,7 @@
 @extends(isset($lesson) ? 'layouts.focused-learning' : 'layouts.workspace')
 @section('title', $quiz->title)
 @section('heading', $quiz->title)
-@section('description', 'Private, graded learning exercise. Your responses are checked on the server; this is not an official exam or certificate.')
+@section('description', 'Pass this graded practice quiz to earn a LearnCambodia Quiz certificate.')
 @section('content')
 @php
     $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];

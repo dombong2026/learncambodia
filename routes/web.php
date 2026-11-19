@@ -498,6 +498,13 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/planner/sessions', [StudentPlannerController::class, 'storeSession'])->middleware('throttle:20,1')->name('planner.sessions.store');
         Route::delete('/planner/sessions/{session}', [StudentPlannerController::class, 'destroySession'])->name('planner.sessions.destroy');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
+        Route::get('/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'mine'])->name('certificates.index');
+        Route::post('/enrollments/{enrollment}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimCourse'])
+            ->middleware('throttle:12,1')->name('certificates.claim-course');
+        Route::post('/assessment-attempts/{attempt}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimAssessment'])
+            ->middleware('throttle:12,1')->name('certificates.claim-assessment');
+        Route::post('/practice-attempts/{practiceAttempt}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimPractice'])
+            ->middleware('throttle:12,1')->name('certificates.claim-practice');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
         Route::post('/enrollments/{enrollment}/watch/{lesson}/comments', [LessonConversationController::class, 'comment'])

@@ -602,6 +602,11 @@ return json_decode(<<<'JSON'
           "route": "account.progress.index"
         },
         {
+          "key": "certificates",
+          "label": "My Certificates",
+          "route": "account.certificates.index"
+        },
+        {
           "key": "cefr",
           "label": "CEFR Guide",
           "route": "account.cefr"

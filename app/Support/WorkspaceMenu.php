@@ -156,6 +156,7 @@ final class WorkspaceMenu
             'learning/categories' => 'compass',
             'learning/courses' => 'library-big',
             'learning/progress' => 'chart-pie',
+            'learning/certificates' => 'certificate-issued',
             'learning/cefr' => 'award',
             'learning/course-catalog' => 'book-marked',
             'learning/saved-courses' => 'bookmark-check',

@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
+use App\Support\CertificateAwards;
+use App\Models\CourseEnrollment;
+use App\Models\CertificateTemplate;
 use App\Models\CertificateType;
 use App\Models\Course;
 use App\Models\CourseExam;
@@ -64,6 +67,8 @@ final class AdminExaminationController extends Controller
                 ? AssessmentAccess::where('course_exam_id', $exam->id)->with('student')->latest('id')->paginate(15, ['*'], 'access_page')
                 : collect(), 'attempts' => $attempts, 'courses' => Course::orderBy('title')->get(['id', 'title']),
             'types' => ExamType::where('kind', $exam->kind)->orderBy('name')->get(),
+            'certificateTemplates' => CertificateTemplate::whereHas('type', fn ($query) => $query->where('kind', $exam->kind))
+                ->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -78,6 +83,8 @@ final class AdminExaminationController extends Controller
         $data = $request->validate([
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
             'exam_type_id' => ['required', 'integer', Rule::exists('exam_types', 'id')->where('kind', $kind)],
+            'certificate_template_id' => ['sometimes', 'nullable', 'integer', Rule::exists('certificate_templates', 'id')
+                ->whereIn('certificate_type_id', CertificateType::where('kind', $kind)->pluck('id'))],
             'title' => ['required', 'string', 'max:160'],
             'instructions_html' => ['nullable', 'string', 'max:120000'],
             'public_requirement' => ['sometimes', 'nullable', 'string', 'max:2000'],
@@ -159,6 +166,9 @@ final class AdminExaminationController extends Controller
             'grades.*.points' => ['required', 'integer', 'min:0'], 'grades.*.feedback' => ['nullable', 'string', 'max:1000'],
         ]);
         DB::transaction(function () use ($attempt, $data): void {
+            if ($attempt->course_enrollment_id) {
+                CourseEnrollment::lockForUpdate()->findOrFail($attempt->course_enrollment_id);
+            }
             $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
             $grades = $locked->grading ?? [];
             foreach ($data['grades'] as $index => $update) {
@@ -170,6 +180,9 @@ final class AdminExaminationController extends Controller
             }
             $locked->update(AssessmentQuestions::result($locked->snapshot, $locked->answers ?? [], $grades) + ['grading' => $grades]);
             $enrollment = $locked->enrollment;
+            if (CertificateAwards::assessment($locked) && $enrollment) {
+                CertificateAwards::course($enrollment->course, $enrollment);
+            }
             WorkspaceNotifications::send(
                 $enrollment?->student_id ?? $locked->student_id, 'New assessment feedback',
                 $enrollment ? 'account.exam-attempts.show' : 'account.assessment-attempts.show',
@@ -205,8 +218,12 @@ final class AdminExaminationController extends Controller
             $unique = Rule::unique('exam_types', 'name')->where('kind', $assessmentKind);
         }
 
+        $nameRules = ['required', 'string', 'max:100', $unique->ignore($record->id)];
+        if ($kind === 'certificate-types' && $record->kind) {
+            $nameRules[] = Rule::in([$record->name]);
+        }
         $record->fill($request->validate([
-            'name' => ['required', 'string', 'max:100', $unique->ignore($record->id)],
+            'name' => $nameRules,
             'description' => ['nullable', 'string', 'max:500'],
         ]))->save();
 

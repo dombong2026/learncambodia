@@ -33,6 +33,9 @@
             @else
                 <p>Your responses have been recorded.</p>
             @endif
+            @if($attempt->passed)
+                <x-certificate-award :certificate="$certificate" :claim="route('account.certificates.claim-assessment', [$attempt, 'lang' => app()->getLocale()])" />
+            @endif
             @if($attempt->snapshot['gamified'] && $attempt->passed)
                 <p class="font-semibold text-blue-700 dark:text-blue-300 motion-safe:animate-pulse">Milestone earned: {{ $label }} passed</p>
             @endif

@@ -71,11 +71,11 @@ final class ExaminationWorkflowTest extends TestCase
         $this->get(route('admin.exams.edit', $exam))->assertOk()->assertSee('Questions');
         $this->post(route('admin.certificate-types.store'), ['name'=>'Completion'])->assertSessionHasNoErrors();
         $this->post(route('admin.certificate-templates.store'), [
-            'name'=>'Course completion', 'certificate_type_id'=>CertificateType::sole()->id,
+            'name'=>'Course completion', 'certificate_type_id'=>CertificateType::where('name', 'Completion')->sole()->id,
             'heading'=>'Completion Certificate', 'body'=>'Awarded to {learner} for {course}.',
             'issuer'=>'LearnCambodia', 'accent'=>'#986310', 'orientation'=>'landscape', 'courses'=>[$course->id],
         ])->assertSessionHasNoErrors();
-        $template = CertificateTemplate::sole();
+        $template = CertificateTemplate::where('name', 'Course completion')->sole();
         $this->get(route('admin.certificate-templates.edit', $template))->assertOk()->assertSee('Assigned courses');
         $this->get(route('admin.certificates.index'))->assertOk()->assertSee($learner->name);
         $issue = route('admin.certificates.issue', $enrollment);
@@ -96,15 +96,54 @@ final class ExaminationWorkflowTest extends TestCase
         $this->get($resource)->assertForbidden();
         $this->post(route('account.exam-attempts.start', [$enrollment,$exam]))->assertConflict();
 
-        $enrollment->lessonProgress()->create(['lesson_id'=>$course->lessons()->sole()->id,'completed_at'=>now()]);
+        $examCertificate = IssuedCertificate::whereNotNull('award_key')->sole();
+        $this->assertSame('exam', $examCertificate->snapshot['kind']);
+        $this->assertNull($examCertificate->issued_by);
+        $this->get($screen)->assertSee('View certificate');
+        $this->actingAs($other)->post(route('account.certificates.claim-assessment', $attempt))->assertNotFound();
+        $this->actingAs($learner)->post(route('account.certificates.claim-assessment', $attempt))->assertRedirect();
+        $this->assertDatabaseCount('issued_certificates', 1);
+
+        $progress = route('account.progress.update', [$enrollment, $course->lessons()->sole()]);
+        $this->post($progress, ['complete' => true])->assertRedirect();
+        $this->post($progress, ['complete' => true])->assertRedirect();
+        $this->assertDatabaseCount('issued_certificates', 2);
+        $this->get(route('account.certificates.index'))->assertOk()
+            ->assertSee($exam->title)->assertSee($course->title);
+        $this->actingAs($other)->get(route('account.certificates.index'))->assertOk()
+            ->assertDontSee($exam->title)->assertDontSee($course->title);
+        $this->get(route('certificates.show', $examCertificate->code))->assertNotFound();
         $this->actingAs($admin)->post($issue, ['template_id'=>$template->id])->assertRedirect();
         $this->post($issue, ['template_id'=>$template->id])->assertRedirect();
-        $certificate = IssuedCertificate::sole();
+        $certificate = IssuedCertificate::where('certificate_template_id', $template->id)->sole();
+        $this->assertSame('course', $certificate->snapshot['kind']);
         $url = route('certificates.show', $certificate->code);
         $this->actingAs($learner)->get($url)->assertOk()->assertSee('Completion Certificate')->assertSee($learner->name);
         $this->actingAs($other)->get($url)->assertNotFound();
         $this->actingAs($admin)->patch(route('admin.certificates.revoke', $certificate))->assertRedirect();
         $this->actingAs($learner)->get($url)->assertNotFound();
+    }
+
+    public function test_existing_course_completion_can_be_claimed_and_incomplete_course_cannot(): void
+    {
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $learner = User::factory()->create();
+        $course = $this->course($admin, 'completed-course');
+        $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
+        $enrollment = CourseEnrollment::create([
+            'course_id' => $course->id, 'student_id' => $learner->id, 'status' => 'approved',
+        ]);
+
+        $claim = route('account.certificates.claim-course', $enrollment);
+        $this->actingAs($learner)->post($claim)->assertUnprocessable();
+        $enrollment->lessonProgress()->create(['lesson_id' => $course->lessons()->sole()->id, 'completed_at' => now()]);
+        $this->get(route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']))->assertOk()->assertSee('Claim certificate');
+        $this->assertDatabaseCount('issued_certificates', 0);
+        $this->post($claim)->assertRedirect();
+        $this->post($claim)->assertRedirect();
+        $certificate = IssuedCertificate::sole();
+        $this->assertSame('course', $certificate->snapshot['kind']);
+        $this->get(route('certificates.show', $certificate->code))->assertOk()->assertSee('Certificate of Course Completion');
     }
 
     public function test_certificate_design_upload_is_private_and_issued_design_is_frozen(): void
@@ -133,7 +172,7 @@ final class ExaminationWorkflowTest extends TestCase
         $this->post(route('admin.certificate-templates.store'), $settings + [
             'background' => UploadedFile::fake()->createWithContent('portrait.png', $artwork),
         ])->assertSessionHasNoErrors();
-        $template = CertificateTemplate::sole();
+        $template = CertificateTemplate::where('name', 'A4 course template')->sole();
         $templateBackground = route('admin.certificate-templates.background', $template);
         $savedPath = $template->design['background'];
         Storage::disk('local')->assertExists($savedPath);
