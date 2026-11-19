@@ -1,4 +1,4 @@
-.quiz-catalog-hero {
+.assessment-catalog-hero {
     overflow: hidden;
     color: #fff;
     background:
@@ -6,7 +6,7 @@
         linear-gradient(118deg, #0a2549, #12385f);
 }
 
-.quiz-catalog-hero__inner {
+.assessment-catalog-hero__inner {
     display: grid;
     align-items: center;
     justify-items: center;
@@ -16,19 +16,19 @@
     padding: 2rem 1rem 0;
 }
 
-.quiz-catalog-hero__copy {
+.assessment-catalog-hero__copy {
     justify-self: start;
     min-width: 0;
 }
 
-.quiz-catalog-hero__copy h1 {
+.assessment-catalog-hero__copy h1 {
     font-size: clamp(2.35rem, 4.4vw, 4.5rem);
     font-weight: 900;
     letter-spacing: -.045em;
     line-height: 1.06;
 }
 
-.quiz-catalog-hero__copy p {
+.assessment-catalog-hero__copy p {
     max-width: 34rem;
     margin-top: .85rem;
     color: #ddeaf8;
@@ -36,30 +36,30 @@
     line-height: 1.55;
 }
 
-.quiz-catalog-hero__image {
+.assessment-catalog-hero__image {
     display: block;
     align-self: end;
     width: min(100%, 34rem);
     height: auto;
 }
 
-.quiz-catalog-grid {
+.assessment-catalog-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 1.25rem;
 }
 
-.quiz-catalog-grid > .premium-card {
+.assessment-catalog-grid > .premium-card {
     padding: clamp(1rem, 1.7vw, 1.5rem);
 }
 
-.quiz-catalog-grid a:focus-visible,
-.quiz-catalog-pagination a:focus-visible {
+.assessment-catalog-grid a:focus-visible,
+.assessment-catalog-pagination a:focus-visible {
     outline: 2px solid #bb8637;
     outline-offset: 3px;
 }
 
-.quiz-catalog-pagination {
+.assessment-catalog-pagination {
     --pager-bg: #f8fafc;
     --pager-border: #cbd5e1;
     --pager-ink: #12365e;
@@ -71,7 +71,7 @@
     text-align: center;
 }
 
-.dark .quiz-catalog-pagination {
+.dark .assessment-catalog-pagination {
     --pager-bg: #19395b;
     --pager-border: #3c5874;
     --pager-ink: #f0f6ff;
@@ -80,14 +80,14 @@
     --pager-active-ink: #142d49;
 }
 
-.quiz-catalog-pagination__summary {
+.assessment-catalog-pagination__summary {
     margin-bottom: .75rem;
     color: var(--pager-muted);
     font-size: .875rem;
 }
 
-.quiz-catalog-pagination__controls,
-.quiz-catalog-pagination__pages {
+.assessment-catalog-pagination__controls,
+.assessment-catalog-pagination__pages {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -95,20 +95,20 @@
     gap: .375rem;
 }
 
-.quiz-catalog-pagination__pages {
+.assessment-catalog-pagination__pages {
     display: none;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.quiz-catalog-pagination__compact {
+.assessment-catalog-pagination__compact {
     padding-inline: .25rem;
     font-size: .875rem;
     white-space: nowrap;
 }
 
-.quiz-catalog-pagination__button {
+.assessment-catalog-pagination__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -124,68 +124,68 @@
     white-space: nowrap;
 }
 
-.quiz-catalog-pagination a:hover {
+.assessment-catalog-pagination a:hover {
     border-color: #bc8b41;
 }
 
-.quiz-catalog-pagination__button[aria-current="page"] {
+.assessment-catalog-pagination__button[aria-current="page"] {
     border-color: transparent;
     background: var(--pager-active-bg);
     color: var(--pager-active-ink);
 }
 
-.quiz-catalog-pagination__button[aria-disabled="true"] {
+.assessment-catalog-pagination__button[aria-disabled="true"] {
     color: var(--pager-muted);
     opacity: .62;
 }
 
 @media (min-width: 36rem) {
-    .quiz-catalog-pagination__pages {
+    .assessment-catalog-pagination__pages {
         display: flex;
     }
 
-    .quiz-catalog-pagination__compact {
+    .assessment-catalog-pagination__compact {
         display: none;
     }
 }
 
 @media (min-width: 40rem) {
-    .quiz-catalog-hero__inner {
+    .assessment-catalog-hero__inner {
         padding-inline: 2rem;
     }
 
-    .quiz-catalog-grid {
+    .assessment-catalog-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (min-width: 48rem) {
-    .quiz-catalog-hero__inner {
+    .assessment-catalog-hero__inner {
         grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
         gap: 2rem;
     }
 
-    .quiz-catalog-hero__copy {
+    .assessment-catalog-hero__copy {
         padding-block: 1.5rem 2.75rem;
     }
 
-    .quiz-catalog-hero__image {
+    .assessment-catalog-hero__image {
         justify-self: end;
     }
 }
 
 @media (min-width: 64rem) {
-    .quiz-catalog-hero__inner {
+    .assessment-catalog-hero__inner {
         padding-inline: 3rem;
     }
 
-    .quiz-catalog-grid {
+    .assessment-catalog-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (min-width: 80rem) {
-    .quiz-catalog-grid {
+    .assessment-catalog-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
