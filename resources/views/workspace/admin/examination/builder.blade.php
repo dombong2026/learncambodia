@@ -8,6 +8,9 @@
 @section('heading_action')
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
+@push('workspace_styles')
+    <script defer src="{{ asset('js/exam-viewer-mode.js') }}"></script>
+@endpush
 @section('content')
     @if($errors->any())
         <ul role="alert" class="mb-4 list-disc space-y-1 pl-5 text-red-600 dark:text-red-300">
@@ -19,6 +22,15 @@
         <fieldset class="workspace-panel grid gap-4 p-5 sm:grid-cols-2">
             <label class="builder-field sm:col-span-2">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
             @unless($quiz)
+            @php($specialized = old('viewer_mode', $exam->viewer_mode) === 'specialized')
+            <label class="builder-field">Exam viewer
+                <select name="viewer_mode" aria-describedby="exam-viewer-help">
+                    <option value="default" @selected(!$specialized)>Default</option>
+                    <option value="specialized" @selected($specialized)>Specialized</option>
+                </select>
+                <span id="exam-viewer-help" class="text-sm text-slate-500 dark:text-slate-300">Specialized is a free, standalone exam that guests can take on one page.</span>
+            </label>
+            <fieldset data-exam-course-settings @disabled($specialized) @if($specialized) hidden @endif>
             <label class="builder-field">Course (optional)
                 <select name="course_id" class="rounded-xl border px-3 py-2">
                     <option value="">Standalone (no course)</option>
@@ -27,6 +39,7 @@
                     @endforeach
                 </select>
             </label>
+            </fieldset>
             @endunless
             <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
                 <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
@@ -61,9 +74,11 @@
             @endforeach
             <p class="text-xs text-slate-600 dark:text-slate-300 sm:col-span-2">Checking an answer locks that response. Writing and speaking are graded after submission.</p>
             @unless($quiz)
-                <div data-standalone-pricing @if(old('course_id', $exam->course_id)) hidden @endif class="sm:col-span-2">
-                    @include('workspace.admin.course-builder.pricing', ['course' => $exam])
-                </div>
+                <fieldset data-exam-pricing-settings @disabled($specialized) @if($specialized) hidden @endif class="sm:col-span-2">
+                    <div data-standalone-pricing @if(old('course_id', $exam->course_id)) hidden @endif>
+                        @include('workspace.admin.course-builder.pricing', ['course' => $exam])
+                    </div>
+                </fieldset>
             @endunless
         </fieldset>
 
@@ -121,7 +136,7 @@
             <h2 class="font-extrabold">Submitted attempts</h2>
             @forelse($attempts as $result)
                 <article class="space-y-3 rounded-xl border p-4">
-                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
+                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name ?? 'Guest learner' }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
                     @foreach($result->snapshot['questions'] as $number => $question)
                         @continue(!\App\Support\AssessmentQuestions::manual($question))
                         <details class="space-y-2">

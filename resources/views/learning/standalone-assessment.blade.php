@@ -28,7 +28,7 @@
             <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}">Sign in as a learner to take this {{ $label }}</a>
         @elseif(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
             @if($active)
-                <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route('account.assessment-attempts.show', $active) }}">Continue {{ $label }}</a>
+                <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route($active->resultRoute(), $active) }}">Continue {{ $label }}</a>
             @elseif($canStart && $history->count() < $exam->attempt_limit)
                 <form method="post" action="{{ route('account.assessment-attempts.start', $exam) }}" class="mt-5">
                     @csrf
@@ -65,7 +65,7 @@
                 <h2 class="text-xl font-black text-[#12355e] dark:text-white">Your attempts</h2>
                 <ul class="mt-3 space-y-2 text-sm">
                     @foreach($history as $past)
-                        <li><a class="font-bold underline" href="{{ route('account.assessment-attempts.show', $past) }}">Attempt {{ $history->count() - $loop->index }}</a>
+                        <li><a class="font-bold underline" href="{{ route($past->resultRoute(), $past) }}">Attempt {{ $history->count() - $loop->index }}</a>
                             · {{ $past->submitted_at ? ($past->score === null ? 'Submitted' : $past->score.'%') : ($past->expires_at->isFuture() ? 'In progress' : 'Expired') }}</li>
                     @endforeach
                 </ul>

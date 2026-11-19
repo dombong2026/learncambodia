@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentAccess;
 use App\Models\CourseExam;
 use App\Models\CourseEnrollment;
+use App\Models\ExamAttempt;
 use App\Support\CoursePricing;
 use App\Support\LearningTable;
 use App\Support\WorkspaceNotifications;
@@ -36,14 +37,21 @@ final class AssessmentAccessController extends Controller
             ->whereIn('course_id', $exams->pluck('course_id')->filter())
             ->whereHas('course', fn ($course) => $course->published())->get()->keyBy('course_id');
 
+        $specializedResults = ExamAttempt::where('student_id', $student->id)->whereNull('course_enrollment_id')
+            ->where('snapshot->viewer_mode', 'specialized')->whereNotNull('submitted_at')
+            ->latest('submitted_at')->paginate(12, ['*'], 'results_page')->withQueryString();
+
         return view('workspace.student.assigned-assessments', [
-            'role' => 'student', 'exams' => $exams, 'enrollments' => $enrollments,
+            'role' => 'student', 'exams' => $exams, 'enrollments' => $enrollments, 'specializedResults' => $specializedResults,
         ]);
     }
 
-    public function show(Request $request, CourseExam $exam, ?string $kind = null): View
+    public function show(Request $request, CourseExam $exam, ?string $kind = null): View|RedirectResponse
     {
         abort_unless($exam->published && $exam->course_id === null && ($kind === null || $exam->kind === $kind), 404);
+        if ($exam->isSpecialized()) {
+            return to_route('specialized-exams.show', ['exam' => $exam, 'lang' => app()->getLocale()]);
+        }
         $exam->load('type', 'featuredMedia');
         $student = $request->user();
         $access = $history = null;
@@ -62,7 +70,7 @@ final class AssessmentAccessController extends Controller
         $data = $request->validate(['pricing_quote' => ['required', 'string', 'max:1000']]);
         DB::transaction(function () use ($request, $exam, $data): void {
             $exam = CourseExam::lockForUpdate()->findOrFail($exam->id);
-            abort_unless($exam->published && $exam->course_id === null, 404);
+            abort_unless($exam->published && $exam->course_id === null && !$exam->isSpecialized(), 404);
             $quote = CoursePricing::quote($exam->pricing);
             abort_if($quote['model'] === 'free', 422);
             abort_unless(hash_equals(json_encode($quote, JSON_THROW_ON_ERROR), $data['pricing_quote']),

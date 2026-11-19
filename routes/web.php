@@ -102,6 +102,19 @@ Route::get('/exam-catalog/{course:slug}', [LearningHubController::class,'exam'])
 Route::get('/assessments/exams', [AssessmentAccessController::class, 'catalog'])->name('assessments.exams');
 Route::get('/assessments/quizzes', [AssessmentAccessController::class, 'catalog'])->name('assessments.quizzes');
 Route::get('/assessments/{exam}', [AssessmentAccessController::class, 'show'])->name('assessments.show');
+Route::prefix('specialized-exams')->name('specialized-exams.')->controller(StudentExaminationController::class)->group(function (): void {
+    Route::get('/attempts/{attempt}', 'showSpecialized')->whereNumber('attempt')->name('attempts.show');
+    Route::post('/attempts/{attempt}', 'submitStandalone')->whereNumber('attempt')
+        ->middleware('throttle:12,1,specialized-submit')->name('attempts.submit');
+    Route::post('/attempts/{attempt}/feedback', 'feedback')->whereNumber('attempt')
+        ->middleware('throttle:90,1,specialized-feedback')->name('attempts.feedback');
+    Route::post('/attempts/{attempt}/email', 'saveSpecializedEmail')->whereNumber('attempt')
+        ->middleware('throttle:8,1,specialized-email')->name('attempts.email');
+    Route::post('/attempts/{attempt}/claim', 'claimSpecialized')->whereNumber('attempt')
+        ->middleware(['auth', 'throttle:12,1,specialized-claim'])->name('attempts.claim');
+    Route::get('/{exam}', 'specialized')->name('show');
+    Route::post('/{exam}/start', 'startSpecialized')->middleware('throttle:12,1,specialized-start')->name('start');
+});
 Route::get('/exams/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'exam')->name('public.exams.show');
 Route::get('/quizzes/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'quiz')->name('public.quizzes.show');
 Route::get('/recommendations', [LearningHubController::class,'recommendations'])->name('learning.recommendations');
