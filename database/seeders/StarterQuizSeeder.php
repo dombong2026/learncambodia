@@ -135,7 +135,12 @@ final class StarterQuizSeeder
         }
     }
 
-    private function bank(): array
+    public function questionsByStarterKey(): array
+    {
+        return array_map(fn (array $entry): array => $entry['questions'], $this->bank(includeCovers: false));
+    }
+
+    private function bank(bool $includeCovers = true): array
     {
         $directory = base_path('support/editorial/quiz-starter');
         $bank = [];
@@ -157,16 +162,20 @@ final class StarterQuizSeeder
                     throw new RuntimeException("Invalid quiz header: $key.");
                 }
 
-                $filepath = "$directory/covers/$key.webp";
-                $image = is_file($filepath) ? getimagesize($filepath) : false;
-                if (!$image || $image[2] !== IMAGETYPE_WEBP || $image[0] !== 960 || $image[1] !== 540) {
-                    throw new RuntimeException("Invalid featured image: $key.");
-                }
+                $cover = null;
+                if ($includeCovers) {
+                    $filepath = "$directory/covers/$key.webp";
+                    $image = is_file($filepath) ? getimagesize($filepath) : false;
+                    if (!$image || $image[2] !== IMAGETYPE_WEBP || $image[0] !== 960 || $image[1] !== 540) {
+                        throw new RuntimeException("Invalid featured image: $key.");
+                    }
 
-                $cover = file_get_contents($filepath);
-                $hash = hash('sha256', $cover);
-                if (isset($coverHashes[$hash])) {
-                    throw new RuntimeException("Duplicate featured image: $key.");
+                    $cover = file_get_contents($filepath);
+                    $hash = hash('sha256', $cover);
+                    if (isset($coverHashes[$hash])) {
+                        throw new RuntimeException("Duplicate featured image: $key.");
+                    }
+                    $coverHashes[$hash] = true;
                 }
 
                 $bank[$key] = [
@@ -177,7 +186,6 @@ final class StarterQuizSeeder
                     'questions' => $this->questions($key, $skill, $lines),
                 ];
                 $titles[$title] = true;
-                $coverHashes[$hash] = true;
             }
         }
 

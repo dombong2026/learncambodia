@@ -71,23 +71,18 @@ final class ExpandedSpecializedPracticeExamSeeder
     {
         $forms = [];
         $questionKeys = [];
+        $sources = app(StarterQuizSeeder::class)->questionsByStarterKey();
         foreach (self::BANKS as $level => [$grammarKeys, $vocabularyKeys, $readingKey]) {
-            $sources = CourseExam::where('kind', 'quiz')->whereIn('starter_key', [...$grammarKeys, ...$vocabularyKeys, $readingKey])
-                ->get(['starter_key', 'questions'])->keyBy('starter_key');
-
-            foreach ($sources as $source) {
-                if (count($source->questions ?? []) !== 20) {
-                    throw new RuntimeException("Expected 20 questions in the starter quiz: {$source->starter_key}.");
+            foreach ([...$grammarKeys, ...$vocabularyKeys, $readingKey] as $key) {
+                if (count($sources[$key] ?? []) !== 20) {
+                    throw new RuntimeException("Expected 20 questions in the starter bank: $key.");
                 }
             }
-            if ($sources->count() !== 6) {
-                throw new RuntimeException("Missing starter quiz source for level $level.");
-            }
 
-            $combine = fn (array $keys): array => array_merge(...array_map(fn (string $key): array => $sources[$key]->questions, $keys));
+            $combine = fn (array $keys): array => array_merge(...array_map(fn (string $key): array => $sources[$key], $keys));
             $grammar = $combine($grammarKeys);
             $vocabulary = $combine($vocabularyKeys);
-            $reading = $sources[$readingKey]->questions;
+            $reading = $sources[$readingKey];
             if (array_values(array_count_values(array_column($reading, 'passage'))) !== [5, 5, 5, 5]
                 || array_map(fn (array $items): int => count(array_unique(array_column($items, 'passage'))), array_chunk($reading, 5)) !== [1, 1, 1, 1]) {
                 throw new RuntimeException("Expected four consecutive groups of five reading questions for $level.");

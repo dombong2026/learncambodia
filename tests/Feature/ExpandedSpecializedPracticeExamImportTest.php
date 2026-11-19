@@ -26,10 +26,14 @@ final class ExpandedSpecializedPracticeExamImportTest extends TestCase
 
         $original = CourseExam::where('starter_key', 'like', SpecializedPracticeExamSeeder::KEY_PREFIX.'%')->get();
         $this->assertCount(10, $original);
+        $editedQuiz = CourseExam::where('starter_key', 'b2-tech')->sole();
+        $editedQuiz->update(['questions' => []]);
+
         $command = 'exams:publish-expanded-specialized-practice';
         $this->artisan($command)->expectsOutput('Additional Specialized practice exams: 20')->assertSuccessful();
         $this->artisan($command)->expectsOutput('Additional Specialized practice exams: 20')->assertSuccessful();
         $this->assertDatabaseCount('course_exams', 80);
+        $this->assertSame([], $editedQuiz->fresh()->questions);
 
         $exams = CourseExam::where('starter_key', 'like', ExpandedSpecializedPracticeExamSeeder::KEY_PREFIX.'%')
             ->with('type')->orderBy('title')->get();
