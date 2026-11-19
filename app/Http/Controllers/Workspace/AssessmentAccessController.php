@@ -21,7 +21,11 @@ final class AssessmentAccessController extends Controller
     {
         $kind = $request->routeIs('assessments.quizzes') ? 'quiz' : 'exam';
         $items = CourseExam::whereNull('course_id')->where('kind', $kind)->where('published', true)
-            ->with(['type', 'featuredMedia'])->orderBy('title')->paginate(12);
+            ->with(['type', 'featuredMedia'])->orderBy('title')->orderBy('id')->paginate(12);
+
+        if ($kind === 'quiz') {
+            $items->appends(['lang' => app()->getLocale()])->fragment('quiz-results');
+        }
 
         return view('learning.standalone-assessments', compact('items', 'kind'));
     }

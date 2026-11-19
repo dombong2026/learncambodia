@@ -114,6 +114,31 @@ final class StandaloneAssessmentTest extends TestCase
         $this->assertDatabaseCount('issued_certificates', 1);
     }
 
+    public function test_quiz_catalog_pagination_keeps_the_language_and_returns_to_the_cards(): void
+    {
+        $type = ExamType::create(['name' => 'Quiz collection', 'kind' => 'quiz']);
+        for ($i = 1; $i <= 13; $i++) {
+            CourseExam::create([
+                'kind' => 'quiz', 'exam_type_id' => $type->id, 'title' => sprintf('Quiz collection %02d', $i),
+                'time_limit' => 20, 'passing_percent' => 70, 'attempt_limit' => 2,
+                'published' => true, 'questions' => [],
+            ]);
+        }
+
+        $this->get(route('assessments.quizzes', ['lang' => 'km']))
+            ->assertOk()
+            ->assertSee('quick-quizzes-hero.webp')
+            ->assertSeeInOrder(['Quiz collection 01', 'Quiz collection 12', 'Showing 1–12 of 13 quizzes'])
+            ->assertDontSee('Quiz collection 13')
+            ->assertSee('lang=km&page=2#quiz-results');
+
+        $this->get(route('assessments.quizzes', ['lang' => 'km', 'page' => 2]))
+            ->assertOk()
+            ->assertSeeInOrder(['Quiz collection 13', 'Showing 13 of 13 quizzes'])
+            ->assertDontSee('Quiz collection 12')
+            ->assertSee('lang=km&page=1#quiz-results');
+    }
+
     public function test_standalone_exam_pricing_and_access_require_verification(): void
     {
         $admin = User::factory()->create(['role' => 'superadmin']);
