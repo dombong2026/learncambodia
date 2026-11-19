@@ -163,6 +163,55 @@ final class ExaminationWorkflowTest extends TestCase
         $this->actingAs($learner)->get($issuedBackground)->assertNotFound();
     }
 
+    public function test_certificate_can_be_verified_by_a_guest_but_only_the_verification_record_is_public(): void
+    {
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $learner = User::factory()->create();
+        $course = $this->course($admin, 'public-verification');
+        $enrollment = $course->enrollments()->create(['student_id' => $learner->id, 'status' => 'approved']);
+        $type = CertificateType::create(['name' => 'Completion']);
+        $template = CertificateTemplate::create([
+            'certificate_type_id' => $type->id, 'name' => 'Completion', 'heading' => 'Course certificate',
+            'issuer' => 'LearnCambodia', 'body' => 'Private certificate wording.', 'accent' => '#123456',
+            'orientation' => 'landscape',
+        ]);
+        $certificate = IssuedCertificate::create([
+            'course_enrollment_id' => $enrollment->id, 'certificate_template_id' => $template->id,
+            'issued_by' => $admin->id, 'code' => (string) \Illuminate\Support\Str::uuid(),
+            'snapshot' => $template->only('heading', 'body', 'issuer', 'accent', 'orientation')
+                + ['learner' => $learner->name, 'course' => $course->title, 'type' => 'Completion'],
+        ]);
+        $url = route('certificates.verify');
+        $lookup = route('certificates.verify', ['code' => $certificate->code]);
+
+        $this->get($url)->assertOk()->assertSee('Upload QR image')->assertSee('Scan with camera')
+            ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), payment=()');
+        $this->get($lookup)->assertOk()->assertSee('Certificate verified')
+            ->assertSee($learner->name)->assertSee($course->title)->assertSee($certificate->code)
+            ->assertDontSee($learner->email)->assertDontSee($template->body)
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow')->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertHeader('Cache-Control', 'max-age=0, no-store, private');
+        $this->get(route('certificates.verify', ['code' => $lookup]))->assertOk()->assertSee('Certificate verified');
+        $this->get(route('certificates.verify', ['code' => strtoupper($certificate->code)]))->assertSee('Certificate verified');
+        $this->get(route('certificates.verify', ['code' => 'https://example.test/verify-certificate?code='.$certificate->code]))
+            ->assertSee('Invalid certificate ID or link')->assertDontSee($learner->name);
+        $this->get($url.'?code[]=wrong')->assertOk()->assertSee('Invalid certificate ID or link');
+        $this->get(route('certificates.verify', ['code' => (string) \Illuminate\Support\Str::uuid()]))
+            ->assertOk()->assertSee('Certificate not found');
+        $this->get(route('certificates.show', $certificate->code))->assertRedirect(route('login'));
+        $this->get(route('certificates.background', $certificate->code))->assertRedirect(route('login'));
+
+        $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
+        $this->actingAs($learner)->get(route('certificates.show', $certificate->code))->assertOk()
+            ->assertSee('data-certificate-qr="'.e($lookup).'"', false);
+        $this->actingAs($admin)->get(route('admin.certificate-templates.edit', $template))->assertOk()
+            ->assertSee('Verification QR code')->assertSee('data-certificate-qr="'.e($url).'"', false);
+        $this->patch(route('admin.certificates.revoke', $certificate))->assertRedirect();
+        $this->app['auth']->guard()->logout();
+        $this->get($lookup)->assertOk()->assertSee('Certificate revoked')
+            ->assertDontSee($learner->name)->assertDontSee($course->title);
+    }
+
     private function course(User $author, string $slug): Course
     {
         $this->seed(CategorySeeder::class);

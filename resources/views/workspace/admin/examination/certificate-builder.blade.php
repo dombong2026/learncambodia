@@ -1,7 +1,9 @@
 @extends('layouts.workspace')
 @section('heading', 'Certificate Builder')
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/certificate-designer.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/certificate-designer.css') }}?v=2">
+    <script defer src="{{ asset('js/cert-qr-qrcode-generator.js') }}"></script>
+    <script defer src="{{ asset('js/certificate-qr.js') }}"></script>
     <script defer src="{{ asset('js/certificate-designer.js') }}?v=1"></script>
 @endpush
 
@@ -102,7 +104,7 @@
             <div class="cert-preview-bar">
                 <div>
                     <h2 id="certificate-preview-title">A4 certificate preview</h2>
-                    <p class="cert-hint">Drag the text on the page or enter its position below.</p>
+                    <p class="cert-hint">Drag the text or QR code, or enter its position below.</p>
                 </div>
                 <button type="button" class="cert-button" data-cert-print>Print / Save as PDF</button>
             </div>
@@ -110,17 +112,18 @@
                 <x-certificate-paper :certificate="$sample" :background="$background" editable />
             </div>
             <details class="cert-position-panel" open>
-                <summary>Text position and size</summary>
-                <div class="cert-position-grid" role="group" aria-label="Text position and size">
+                <summary>Field position and size</summary>
+                <div class="cert-position-grid" role="group" aria-label="Field position and size">
                     @foreach(\App\Support\CertificateDesign::FIELDS as $key => $field)
                         <fieldset data-cert-controls="{{ $key }}">
                             <legend>{{ $field['label'] }}</legend>
                             @foreach(['x' => 'Left (%)', 'y' => 'Top (%)', 'size' => 'Size (%)'] as $axis => $label)
+                                @php([$min, $max] = \App\Support\CertificateDesign::limits($key)[$axis])
                                 <label>
                                     {{ $label }}
                                     <input form="certificate-design-form" type="number" name="design[fields][{{ $key }}][{{ $axis }}]"
-                                        data-cert-axis="{{ $axis }}" required min="{{ $axis === 'size' ? 0.8 : 8 }}"
-                                        max="{{ $axis === 'size' ? 8 : 92 }}" step="0.1" value="{{ $design['fields'][$key][$axis] }}">
+                                        data-cert-axis="{{ $axis }}" required min="{{ $min }}"
+                                        max="{{ $max }}" step="0.1" value="{{ $design['fields'][$key][$axis] }}">
                                 </label>
                             @endforeach
                         </fieldset>

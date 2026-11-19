@@ -191,3 +191,17 @@
     }
     [data-cert-builder] .cert-element[data-selected] { outline: 0; }
 }
+
+.cert-element-qr {
+    width: calc(var(--cert-size) * 1cqw);
+    max-width: none;
+    z-index: 1;
+}
+.cert-element-qr svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #fff;
+    pointer-events: none;
+}
+.cert-revoked { z-index: 2; }
