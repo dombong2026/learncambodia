@@ -30,6 +30,7 @@
             <li><a class="hover:text-white" href="{{ route('information.show','scores') }}">Exam Score Guide</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','faq') }}">FAQs</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','contact') }}">Contact Us</a></li>
+            <li><a class="hover:text-white" href="{{ route('certificates.verify', ['lang' => app()->getLocale()]) }}">{{ __('certificate_verification.title') }}</a></li>
             <li><a class="hover:text-white" href="{{ route('policies.index') }}">Policy Center</a></li>
             <li><a class="hover:text-white" href="{{ route('information.show','privacy') }}">Privacy</a> <span aria-hidden="true">&amp;</span> <a class="hover:text-white" href="{{ route('information.show','terms') }}">Terms</a></li>
         </ul></div>

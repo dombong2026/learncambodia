@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 final class CertificateTemplate extends Model
 {
-    protected $fillable = ['certificate_type_id', 'name', 'heading', 'body', 'issuer', 'accent', 'orientation'];
+    protected $fillable = ['certificate_type_id', 'name', 'heading', 'body', 'issuer', 'accent', 'orientation', 'design'];
+
+    protected function casts(): array
+    {
+        return ['design' => 'array'];
+    }
 
     public function courses(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {

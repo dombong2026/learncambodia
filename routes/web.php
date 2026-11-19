@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\BrandAssetController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CefrController;
 use App\Http\Controllers\InformationController;
 use App\Http\Controllers\PublicContactController;
@@ -104,6 +105,8 @@ Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name(
 Route::get('/editor-media/{media}', [EditorMediaController::class,'show'])->name('editor-media.show');
 Route::get('/help-center', [PublicHelpController::class,'index'])->name('help.index');
 Route::get('/help-center/{kind}/{entry}', [PublicHelpController::class,'show'])->name('help.show');
+Route::get('/verify-certificate', CertificateVerificationController::class)
+    ->middleware('throttle:30,1,certificate-verification')->name('certificates.verify');
 Route::get('/articles', [PublicArticleController::class, 'index'])->name('articles.index');
 Route::get('/articles/{article}', [PublicArticleController::class, 'show'])->name('articles.show');
 Route::get('/categories', [CatalogController::class, 'index'])->name('categories.index');
@@ -198,6 +201,7 @@ Route::middleware('auth')->group(function (): void {
         ->whereNumber('question')->name('assessments.recording');
 
     Route::get('/certificates/{certificate:code}', [\App\Http\Controllers\Workspace\CertificateController::class, 'show'])->name('certificates.show');
+    Route::get('/certificates/{certificate:code}/background', [\App\Http\Controllers\Workspace\CertificateController::class, 'issuedBackground'])->name('certificates.background');
 
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
@@ -244,6 +248,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/certificate-templates/create', [\App\Http\Controllers\Workspace\CertificateController::class, 'builder'])->name('certificate-templates.create');
         Route::post('/certificate-templates', [\App\Http\Controllers\Workspace\CertificateController::class, 'save'])->name('certificate-templates.store');
         Route::get('/certificate-templates/{template}/edit', [\App\Http\Controllers\Workspace\CertificateController::class, 'builder'])->name('certificate-templates.edit');
+        Route::get('/certificate-templates/{template}/background', [\App\Http\Controllers\Workspace\CertificateController::class, 'templateBackground'])->name('certificate-templates.background');
         Route::patch('/certificate-templates/{template}', [\App\Http\Controllers\Workspace\CertificateController::class, 'save'])->name('certificate-templates.update');
         Route::get('/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'index'])->name('certificates.index');
         Route::post('/enrollments/{enrollment}/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'issue'])->name('certificates.issue');

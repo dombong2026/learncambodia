@@ -23,12 +23,18 @@ final class SecurityHeaders
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
-        $response->headers->set('Permissions-Policy', "camera=(), microphone=$microphone, geolocation=(), payment=()");
+        $certificateVerification = $request->routeIs('certificates.verify');
+        $camera = $certificateVerification ? '(self)' : '()';
+        $response->headers->set('Permissions-Policy', "camera=$camera, microphone=$microphone, geolocation=(), payment=()");
 
         // Enable HSTS only on actual HTTPS responses from the production app.
         // A short initial age prevents premature subdomain-wide commitment.
         if ($request->isSecure() && app()->environment('production')) {
             $response->headers->set('Strict-Transport-Security', 'max-age=86400');
+        }
+
+        if ($certificateVerification) {
+            $response->headers->set('Referrer-Policy', 'no-referrer');
         }
 
         // Protect accounts, protected learning, authentication forms, and

@@ -107,6 +107,111 @@ final class ExaminationWorkflowTest extends TestCase
         $this->actingAs($learner)->get($url)->assertNotFound();
     }
 
+    public function test_certificate_design_upload_is_private_and_issued_design_is_frozen(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $learner = User::factory()->create();
+        $other = User::factory()->create();
+        $course = $this->course($admin, 'certificate-design');
+        $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
+        $enrollment = $course->enrollments()->create(['student_id' => $learner->id, 'status' => 'approved']);
+        $enrollment->lessonProgress()->create(['lesson_id' => $course->lessons()->sole()->id, 'completed_at' => now()]);
+        $type = CertificateType::create(['name' => 'Completion']);
+        $artwork = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+rco0AAAAASUVORK5CYII=');
+        $settings = [
+            'name' => 'A4 course template', 'certificate_type_id' => $type->id,
+            'heading' => 'Certificate of Achievement', 'body' => 'Awarded to {learner} for {course}.',
+            'issuer' => 'LearnCambodia', 'orientation' => 'portrait', 'accent' => '#795622',
+            'design' => ['font' => 'sans', 'ink' => '#173253', 'frame' => '0',
+                'fields' => ['heading' => ['x' => 49, 'y' => 24.5, 'size' => 4.9]]],
+            'courses' => [$course->id],
+        ];
+        $this->actingAs($admin)->postJson(route('admin.certificate-templates.store'), $settings + [
+            'background' => UploadedFile::fake()->createWithContent('artwork.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('background');
+        $this->post(route('admin.certificate-templates.store'), $settings + [
+            'background' => UploadedFile::fake()->createWithContent('portrait.png', $artwork),
+        ])->assertSessionHasNoErrors();
+        $template = CertificateTemplate::sole();
+        $templateBackground = route('admin.certificate-templates.background', $template);
+        $savedPath = $template->design['background'];
+        Storage::disk('local')->assertExists($savedPath);
+        $this->get($templateBackground)->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->get(route('admin.certificate-templates.edit', $template))
+            ->assertOk()->assertSee('A4 certificate preview')->assertSee('Drag &amp; drop or upload', false)
+            ->assertSee('data-orientation="portrait"', false)->assertSee($templateBackground);
+        $this->post(route('admin.certificates.issue', $enrollment), ['template_id' => $template->id])->assertRedirect();
+        $certificate = IssuedCertificate::sole();
+
+        $settings['design']['fields']['heading']['y'] = 60;
+        $this->patch(route('admin.certificate-templates.update', $template), $settings + ['remove_background' => '1'])
+            ->assertSessionHasNoErrors();
+        $this->get($templateBackground)->assertNotFound();
+        $this->assertNull($template->fresh()->design['background']);
+        $this->assertEquals(24.5, $certificate->fresh()->snapshot['design']['fields']['heading']['y']);
+
+        $issuedBackground = route('certificates.background', $certificate->code);
+        $issued = route('certificates.show', $certificate->code);
+        $this->actingAs($learner)->get($issued)->assertOk()->assertSee($issuedBackground)
+            ->assertSee('data-orientation="portrait"', false)->assertSee('data-frame="off"', false)
+            ->assertSee('Certificate of Achievement')->assertSee($learner->name);
+        $this->get($issuedBackground)->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->get($templateBackground)->assertForbidden();
+        $this->actingAs($other)->get($issuedBackground)->assertNotFound();
+        $this->actingAs($admin)->patch(route('admin.certificates.revoke', $certificate))->assertRedirect();
+        $this->actingAs($learner)->get($issuedBackground)->assertNotFound();
+    }
+
+    public function test_certificate_can_be_verified_by_a_guest_but_only_the_verification_record_is_public(): void
+    {
+        $admin = User::factory()->create(['role' => 'superadmin']);
+        $learner = User::factory()->create();
+        $course = $this->course($admin, 'public-verification');
+        $enrollment = $course->enrollments()->create(['student_id' => $learner->id, 'status' => 'approved']);
+        $type = CertificateType::create(['name' => 'Completion']);
+        $template = CertificateTemplate::create([
+            'certificate_type_id' => $type->id, 'name' => 'Completion', 'heading' => 'Course certificate',
+            'issuer' => 'LearnCambodia', 'body' => 'Private certificate wording.', 'accent' => '#123456',
+            'orientation' => 'landscape',
+        ]);
+        $certificate = IssuedCertificate::create([
+            'course_enrollment_id' => $enrollment->id, 'certificate_template_id' => $template->id,
+            'issued_by' => $admin->id, 'code' => (string) \Illuminate\Support\Str::uuid(),
+            'snapshot' => $template->only('heading', 'body', 'issuer', 'accent', 'orientation')
+                + ['learner' => $learner->name, 'course' => $course->title, 'type' => 'Completion'],
+        ]);
+        $url = route('certificates.verify');
+        $lookup = route('certificates.verify', ['code' => $certificate->code]);
+
+        $this->get($url)->assertOk()->assertSee('Upload QR image')->assertSee('Scan with camera')
+            ->assertHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(), payment=()');
+        $this->get($lookup)->assertOk()->assertSee('Certificate verified')
+            ->assertSee($learner->name)->assertSee($course->title)->assertSee($certificate->code)
+            ->assertDontSee($learner->email)->assertDontSee($template->body)
+            ->assertHeader('X-Robots-Tag', 'noindex, nofollow')->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertHeader('Cache-Control', 'max-age=0, no-store, private');
+        $this->get(route('certificates.verify', ['code' => $lookup]))->assertOk()->assertSee('Certificate verified');
+        $this->get(route('certificates.verify', ['code' => strtoupper($certificate->code)]))->assertSee('Certificate verified');
+        $this->get(route('certificates.verify', ['code' => 'https://example.test/verify-certificate?code='.$certificate->code]))
+            ->assertSee('Invalid certificate ID or link')->assertDontSee($learner->name);
+        $this->get($url.'?code[]=wrong')->assertOk()->assertSee('Invalid certificate ID or link');
+        $this->get(route('certificates.verify', ['code' => (string) \Illuminate\Support\Str::uuid()]))
+            ->assertOk()->assertSee('Certificate not found');
+        $this->get(route('certificates.show', $certificate->code))->assertRedirect(route('login'));
+        $this->get(route('certificates.background', $certificate->code))->assertRedirect(route('login'));
+
+        $course->update(['status' => 'published', 'published_at' => now()->subMinute()]);
+        $this->actingAs($learner)->get(route('certificates.show', $certificate->code))->assertOk()
+            ->assertSee('data-certificate-qr="'.e($lookup).'"', false);
+        $this->actingAs($admin)->get(route('admin.certificate-templates.edit', $template))->assertOk()
+            ->assertSee('Verification QR code')->assertSee('data-certificate-qr="'.e($url).'"', false);
+        $this->patch(route('admin.certificates.revoke', $certificate))->assertRedirect();
+        $this->app['auth']->guard()->logout();
+        $this->get($lookup)->assertOk()->assertSee('Certificate revoked')
+            ->assertDontSee($learner->name)->assertDontSee($course->title);
+    }
+
     private function course(User $author, string $slug): Course
     {
         $this->seed(CategorySeeder::class);
