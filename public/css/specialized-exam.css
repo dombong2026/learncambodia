@@ -37,7 +37,8 @@
 }
 .specialized-exam-card,
 .specialized-exam-status,
-.specialized-exam-questions fieldset {
+.specialized-exam-questions > fieldset,
+.specialized-exam-question {
     background: var(--exam-surface);
     border: 1px solid var(--exam-border);
     border-radius: .85rem;
@@ -49,6 +50,28 @@
 .specialized-exam-email {
     display: grid;
     gap: 1rem;
+}
+.specialized-exam-questions {
+    grid-template-columns: minmax(0, 1fr);
+}
+.specialized-exam-question fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.specialized-exam-question legend {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 .75rem;
+    padding: 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+.specialized-exam-question input[type="radio"] {
+    flex-shrink: 0;
 }
 .specialized-exam-card,
 .specialized-exam-status { margin-block: 1rem; }
