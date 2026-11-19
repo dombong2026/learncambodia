@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'quiz_questions' => ':count 道题',
+    'quiz_intro' => '选择答案后，点击检查答案即可获得反馈。检查后，本次作答中的该答案将被锁定。',
+    'quiz_start' => '开始测验',
+    'quiz_resume' => '继续测验',
+    'quiz_submit' => '提交测验',
+    'quiz_submitted' => '测验已提交',
+    'quiz_back' => '返回测验概览',
+    'quiz_cookies' => '开始测验前，请允许此浏览器使用 Cookie。',
+    'quiz_account_saved' => '结果已保存到您的账户。',
+    'quiz_browser_saved' => '您可以在此浏览器中查看结果。',
     'intro' => '在此页面参加考试。提交后，您可以将成绩保存到学习账户。',
     'start' => '开始考试',
     'resume' => '继续考试',

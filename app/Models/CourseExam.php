@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPublicId;
+use App\Support\CoursePricing;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,7 +27,8 @@ final class CourseExam extends Model
 
     public function isSpecialized(): bool
     {
-        return $this->kind === 'exam' && $this->course_id === null && $this->viewer_mode === 'specialized';
+        return $this->course_id === null && $this->viewer_mode === 'specialized'
+            && ($this->kind === 'exam' || ($this->kind === 'quiz' && CoursePricing::quote($this->pricing)['model'] === 'free'));
     }
 
     public function publicUrl(): string

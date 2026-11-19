@@ -31,3 +31,8 @@ Artisan::command('quizzes:import-starter {author? : Administrator user ID for th
 
     return 0;
 })->purpose('Import or verify the 50 starter English quiz drafts');
+
+Artisan::command('quizzes:publish-practice', function () {
+    $count = app(\Database\Seeders\StarterQuizSeeder::class)->publishPractice();
+    $this->info("Public practice quizzes: $count");
+})->purpose('Publish the ten selected free English practice quizzes with two attempts each');

@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'quiz_questions' => ':count questions',
+    'quiz_intro' => 'Choose an answer and select Check answer for immediate feedback. Checking locks that answer for this attempt.',
+    'quiz_start' => 'Start quiz',
+    'quiz_resume' => 'Continue quiz',
+    'quiz_submit' => 'Submit quiz',
+    'quiz_submitted' => 'Quiz submitted',
+    'quiz_back' => 'Back to quiz overview',
+    'quiz_cookies' => 'Allow cookies in this browser before starting the quiz.',
+    'quiz_account_saved' => 'Your result is saved to your account.',
+    'quiz_browser_saved' => 'Your result is available in this browser.',
     'intro' => 'Take the exam on this page. You can save the result to a learner account after submitting.',
     'start' => 'Start exam',
     'resume' => 'Continue exam',
