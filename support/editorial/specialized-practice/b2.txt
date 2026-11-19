@@ -1,0 +1,95 @@
+@b2-media|B2|Evaluating Media Reports
+The editor asked where the reporter ____ the photograph the previous day.|had taken|has taken|will take
+The two outlets disagree, ____ they quote the same official statement.|although|because of|despite of
+The reporter would have missed the update if a reader ____ her to it.|hadn’t alerted|hasn’t alerted|wasn’t alerting
+The figures, ____ were published on Friday, refer to last year.|which|that|what
+The claim should be checked before it ____ in the headline.|is repeated|repeats|will be repeated
+To ____ a report is to check it against independent evidence.|corroborate|circulate|summarise
+The person or organisation that supplied a journalist with information is a ____.|source|headline|caption
+When a claim lacks reliable evidence, it is ____.|unsubstantiated|well documented|representative
+An online article’s ____ records when it was first published or updated.|timestamp|byline|footnote
+The title above a news story is its ____.|headline|byline|issue
+> A website reported that bus use had fallen by a third after the city raised fares. Its chart used ticket sales for only three routes during roadworks. On two of those routes, replacement minibuses accepted the same tickets but recorded trips separately. The transport office said it did not yet have figures for the network as a whole. The site kept the chart and revised the headline to say that recorded ticket sales had dropped on three routes.
+What was the main weakness in the original headline?|It extended limited route data to overall bus use|It quoted the transport office incorrectly|It reported journeys by train
+Why should the replacement minibus figures matter?|Some actual bus trips were counted separately|The minibuses charged the wrong fares|Their drivers refused all tickets
+What exact comparison could the chart support?|Recorded ticket sales on the three routes|All journeys before and after fares rose|Roadworks costs across the city
+What remained unknown when the headline changed?|The network-wide figures|The number of routes on the chart|Whether the roadworks took place
+How did the revision improve the story?|It matched the claim to what was measured|It added minibus journeys to the chart|It explained who decided to raise fares
+> Two outlets interviewed the same parent about plans to extend the school day. One ran the line “I can see a problem.” The other included what followed: “for families who need the early bus, unless the schedule changes.” Neither quotation used fabricated words. The school said the proposal was still under review. A local reporter then interviewed families on several bus routes and asked what timetable changes would make the plan workable.
+What did the first article leave out?|The condition that qualified the parent’s concern|The source of the original plan|A second parent’s criticism
+What impression could the short quotation create?|The parent objected to the plan in general|The parent wanted to cancel all buses|The proposal had already become policy
+What was the school’s position?|It was still reviewing the proposal|It had rejected all timetable adjustments|It had adopted the longer day
+How did the local reporter broaden the evidence?|By interviewing families on several routes|By quoting the same line a third time|By publishing an official opinion anonymously
+What is the main lesson of the example?|Accurate words can mislead when context is missing|Anonymous quotations are always fabricated|One direct quotation proves how most parents feel
+
+@b2-digital|B2|Digital Collaboration
+Please save a copy before ____ the shared file.|editing|to edit|edited
+Mina suggested that we ____ a separate channel for project updates.|create|created yesterday|creating
+The file could already have been updated ____ the status page has not refreshed.|even though|despite|because of
+If you had joined earlier, you ____ the instructions before the vote.|would have heard|will have heard|would hear yesterday
+The coordinator asked us ____ the release notes until the review was complete.|not to share|do not share|to not sharing
+If an edit can be undone, it is ____.|reversible|outdated|mandatory
+A ____ lists successive changes made to a file.|version history|mailing list|user directory
+To ____ someone access is to give them permission to enter or use a resource.|grant|revoke|restrict
+A meeting that participants join at the same time is ____.|synchronous|asynchronous|anonymous
+A ____ is a written summary used when responsibility passes to a new person or shift.|handover note|press release|product invoice
+> A design team switched its weekly update from a video call to a shared document. People in different time zones could then read it during working hours. The first few updates arrived late, and readers were unsure which changes needed decisions. The coordinator set a deadline for additions and separated decisions from background notes. Urgent issues still went to a short call, while routine notes stayed in the document.
+Why did the team change its format initially?|To make updates accessible across time zones|To require longer meetings|To hide background notes from readers
+What problem remained after the change?|Readers could not easily spot pending decisions|Team members could not open documents at work|The coordinator stopped giving updates altogether
+What helped make the document easier to use?|A deadline and a separate section for decisions|Removing all written background|A longer weekly video call
+When was a live call still used?|For urgent issues|For every routine update|Only for staff in the same city
+What does the example suggest about written coordination?|It works better when timing and decision status are clear|It automatically eliminates the need for follow-up|It is useful only if nobody works remotely
+> Five contributors were editing a customer guide. One copied it into a personal folder to work offline, and another reviewed that copy. Meanwhile, the rest of the group revised the shared original. When the reviewer found conflicting advice, the team compared both versions, moved one verified correction into the original, and set the copy to read-only. They added a link to the original on the project page.
+Why did the two versions differ?|Both copies continued to be used independently|The same person deleted every revision|The reviewer could not read either file
+How did the conflict come to light?|A reviewer noticed conflicting advice|A customer reported a broken link|The original automatically locked the old copy
+What did the team move into the original?|A verified correction|Every change in the copy|The reviewer’s personal notes alone
+What purpose did making the copy read-only serve?|It discouraged further edits to the secondary version|It erased the previous corrections|It allowed more people to edit the copy
+How did the project-page link help?|It directed contributors to the authoritative file|It replaced the guide with an older version|It prevented the original from being reviewed
+
+@b2-public-policy|B2|Local Policy and Public Services
+The proposal was revised ____ more residents could reach the service.|so that|despite|whereas of
+Had the consultation started earlier, the team ____ more feedback before the vote.|could have gathered|can gather|had gather
+The spokesperson explained that the trial ____ after the legal review.|would begin|begin to|has beginning
+The grant allows projects ____ accessibility improvements first.|to fund|funding by|funded
+The finding is relevant to the pilot, ____ its application to larger towns remains uncertain.|but|because|therefore of
+To ____ a rule means to put it into effect in practice.|implement|draft|withdraw
+A person or group affected by a decision is a ____.|stakeholder|by-law|subsidy
+The ability to trace who is responsible for a decision is an aspect of ____.|accountability|confidentiality|attendance
+A policy introduced for a limited trial is a ____.|pilot|mandate|ballot
+A service that can continue within its long-term resources is ____.|sustainable|unfunded|short-lived
+> Willow County offered transport vouchers to help older residents reach appointments. Uptake was lower than expected. Interviews suggested that many eligible people did not know they could apply and some could not fill in the online form. The county placed paper forms at clinics and directed staff to explain the scheme during check-in. Uptake rose, but the county did not yet know whether people were missing fewer appointments.
+What problem did interviews help identify?|Some eligible residents faced information or application barriers|Clinics refused to take vouchers|Most applicants received more than one voucher
+Which change specifically helped people unable to use the online form?|Making printed forms available at clinics|Adding eligibility rules to the home page|Reducing the number of clinics
+What did clinic staff begin to do?|Explain the scheme at check-in|Approve all transport requests automatically|Drive residents to appointments
+What was observed after the changes?|More people took up the vouchers|Fewer appointments were missed|The clinic interviews came to an end
+What additional evidence would test the scheme’s goal?|Records of missed appointments|The number of forms printed alone|The online form’s font size
+> The city asked residents to choose between upgrading a crowded central playground and adding a small playground in a district with none. More survey responses supported the central upgrade, but most responses came from nearby addresses. The council published that difference and gave district groups another month to comment. It had funding for only one project that year and agreed to publish its selection criteria before a final vote.
+Why might the survey total give an incomplete picture?|Responses were concentrated near one proposal|The survey let everyone vote twice|Only children completed the survey
+How did the council respond to this imbalance?|It gave district groups more time to comment|It cancelled both proposals|It immediately funded the central project
+What prevented both projects from being chosen that year?|A funding limit|A ban on building playgrounds|The central playground’s location
+What did the council promise to make public before voting?|Its selection criteria|The names of all survey respondents|The final construction schedule
+Which two priorities are in tension?|Improving a heavily used facility and expanding access|Keeping addresses private and changing school hours|Reducing survey time and building on both sites
+
+@b2-professional|B2|Professional Communication and Evidence
+The analyst recommended ____ the assumptions before distributing the forecast.|checking|check|checked
+We were asked ____ the figures by the end of the day.|to confirm|confirm|confirmed
+The proposal would be stronger if it ____ the costs of the alternative.|included|will include|including
+The figures look promising. ____, they cover only one quarter.|However|Therefore|Likewise
+By the time the reviewers meet, the team ____ the corrected figures.|will have circulated|will circulating|has circulate
+To ____ a claim is to explain the limits under which it holds.|qualify|inflate|omit
+Details given as the reason for a decision are its ____.|rationale|deadline|recipient
+An ____ summary gives senior readers the most important points of a longer report.|executive|incidental|outdated
+A figure used as the starting point for later comparisons is a ____.|baseline|timestamp|workload
+A recommendation backed by multiple independent sources is described as ____.|well supported|unverified|contradictory
+> An operations manager proposed making every customer request use an online form. Her report showed faster replies for online requests but excluded complex requests submitted by phone. A reviewer suggested comparing requests of similar difficulty and testing whether people could complete the form without help. At the next review the manager changed her proposal to an optional trial, with phone service available and the two channels measured using the same criteria.
+Why was the original response-time comparison weak?|It did not compare similarly difficult requests|Telephone requests never received replies|The online form was absent during the review
+What extra question did the reviewer raise about accessibility?|Whether people could complete the form without help|Whether phone agents could recover old tapes|Whether residents should have to install a new phone line
+How did the manager change her recommendation?|She proposed an optional trial alongside phone service|She required every request to be made by phone|She ended all comparisons of response times
+What would using the same criteria improve?|The fairness of the comparison between channels|The amount of technical language in the report|The number of staff reviewing each request
+What is the main change in the manager’s reasoning?|She treated the initial figures as grounds for a trial|She accepted the initial figures as proof that calls should end|She decided customer data should never be used
+> A team found that its new reporting tool reduced time spent filling in tables. In a presentation, the team mentioned a saving of two hours a week but left out the roughly equal time spent correcting the imported data. An audience member asked whether the claimed saving was net of cleaning. The team later compared the total time for both tasks and reported that the saving was small but that the new file was easier for others to audit.
+What extra work was missing from the first estimate?|Correcting imported data|Designing the presentation|Preparing the old tables
+What did the audience member ask about?|Whether cleaning time was included in the saving|Whether more tables could be added|Whether the result could be sent by email
+Which measure changed in the revised report?|Total time across both tasks|Only time spent opening the tool|The time spent listening to the presentation
+What benefit remained after the time estimate changed?|The file was easier to audit|The team no longer needed data|Table preparation took two fewer hours after cleaning
+Why is the revised result more credible?|It accounts for both the saving and the extra work|It uses a larger number for the saving|It removes the need to explain the comparison

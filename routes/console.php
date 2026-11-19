@@ -44,3 +44,11 @@ Artisan::command('exams:publish-specialized-practice', function () {
         $this->line($exam->title.' | '.$exam->publicUrl());
     }
 })->purpose('Publish ten standalone English practice exams with 50 questions and a 120-minute timer');
+
+Artisan::command('exams:publish-expanded-specialized-practice', function () {
+    $exams = app(\Database\Seeders\ExpandedSpecializedPracticeExamSeeder::class)->run();
+    $this->info("Additional Specialized practice exams: {$exams->count()}");
+    foreach ($exams as $exam) {
+        $this->line($exam->title.' | '.$exam->publicUrl());
+    }
+})->purpose('Publish twenty additional English practice exams with 50 questions and a 120-minute timer');
