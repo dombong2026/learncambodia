@@ -869,22 +869,24 @@ test('Courses CEFR cards share one row with homepage premium styling and respons
   }
 });
 
-test('quick quizzes has one to four columns and a responsive hero', async ({ page }) => {
-  await page.goto('/assessments/quizzes?lang=en');
-  const grid = page.locator('.quiz-catalog-grid');
-  const hero = page.locator('.quiz-catalog-hero__image');
-  await expect(page.getByRole('heading', { name: 'Quick quizzes', level: 1 })).toBeVisible();
-  await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone exams']]) {
+  test(title + ' has one to four columns and a responsive hero', async ({ page }) => {
+    await page.goto('/assessments/' + path + '?lang=en');
+    const grid = page.locator('.assessment-catalog-grid');
+    const hero = page.locator('.assessment-catalog-hero__image');
+    await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
+    await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
 
-  for (const [width, columns] of [[390, 1], [768, 2], [1024, 3], [1440, 4]]) {
-    await page.setViewportSize({ width, height: 900 });
-    await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
-    const [copy, image] = await Promise.all([page.locator('.quiz-catalog-hero__copy').boundingBox(), hero.boundingBox()]);
-    if (width < 768) {
-      expect(image.y).toBeGreaterThanOrEqual(copy.y + copy.height - 1);
-    } else {
-      expect(image.x).toBeGreaterThanOrEqual(copy.x + copy.width - 1);
+    for (const [width, columns] of [[390, 1], [768, 2], [1024, 3], [1440, 4]]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
+      const [copy, image] = await Promise.all([page.locator('.assessment-catalog-hero__copy').boundingBox(), hero.boundingBox()]);
+      if (width < 768) {
+        expect(image.y).toBeGreaterThanOrEqual(copy.y + copy.height - 1);
+      } else {
+        expect(image.x).toBeGreaterThanOrEqual(copy.x + copy.width - 1);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
     }
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
-  }
-});
+  });
+}
