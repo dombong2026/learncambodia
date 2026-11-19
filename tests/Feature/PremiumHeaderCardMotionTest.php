@@ -48,16 +48,13 @@ final class PremiumHeaderCardMotionTest extends TestCase
         }
     }
 
-    public function test_global_card_art_is_decorative_and_home_tiles_are_still_real_links(): void
+    public function test_home_hero_art_is_decorative_and_action_links_are_real(): void
     {
-        $html = $this->get('/?lang=en')->assertOk()
-            ->assertSee('premium-card', false)
-            ->assertSee('premium-corner-icon', false)
-            ->assertSee('aria-hidden="true"', false)
+        $this->get('/?lang=en')->assertOk()
+            ->assertSee('class="lc-home-hero-image"', false)
+            ->assertSee('width="1024" height="576" alt="" fetchpriority="high"', false)
             ->assertSee('href="'.route('courses.index').'"', false)
-            ->getContent();
-        $this->assertGreaterThanOrEqual(4, substr_count($html, 'premium-corner-icon'));
-        $this->assertStringNotContainsString('Browse courses →', $html);
+            ->assertSee('href="'.route('assessments.exams').'"', false);
     }
 
     public function test_course_and_profile_titles_are_real_links_without_trailing_arrow_icons(): void

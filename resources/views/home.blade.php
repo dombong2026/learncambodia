@@ -1,164 +1,133 @@
 @extends('layouts.public')
 @section('title', __('pages.home_title'))
 @section('meta_description', __('pages.home_intro'))
-@section('content')
-<section class="relative isolate overflow-hidden bg-gradient-to-br from-[#09234b] via-[#123962] to-[#0b2a53] text-white">
-    <div class="pointer-events-none absolute -right-20 top-4 h-80 w-80 rounded-full bg-[#f4c266]/10 blur-3xl" aria-hidden="true"></div>
-    <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:py-20">
-        <div class="relative">
-            <span class="inline-flex items-center rounded-lg bg-[#eebd65] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[.1em] text-[#12355e]">{{ __('pages.home_eyebrow') }}</span>
-            <h1 class="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-5xl">{{ \App\Support\Appearance::value('home','hero_title') }}</h1>
-            <p class="mt-5 max-w-2xl text-sm leading-8 text-[#d9e5f1] sm:text-base">{{ \App\Support\Appearance::value('home','hero_intro') }}</p>
-            <form action="{{ route('courses.index') }}" method="GET" role="search" class="mt-7 flex max-w-xl gap-2">
-                <label for="hero-course-search" class="sr-only">{{ __('frontend.search_courses') }}</label>
-                <input id="hero-course-search" type="search" name="q" maxlength="80" placeholder="{{ __('pages.hero_search') }}" class="min-w-0 flex-1 rounded-xl border border-white/10 bg-white px-4 py-3 text-sm text-[#122f58] outline-none focus:ring-2 focus:ring-[#f4c36e]" />
-                <button type="submit" class="rounded-xl bg-[#f0be61] px-5 py-3 text-sm font-extrabold text-[#173760] hover:bg-[#ffda93]">{{ __('pages.search') }}</button>
-            </form>
-            <div class="mt-6 flex flex-wrap gap-3">
-                <a href="{{ route('courses.index') }}" class="rounded-lg border border-white/30 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/10">{{ __('pages.browse_courses') }}</a>
-                <a href="{{ route('instructors.index') }}" class="rounded-lg border border-white/30 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/10">{{ __('pages.meet_instructors') }}</a>
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 sm:gap-4">
-            @foreach([
-                ['icon'=>'book-open','value'=>$publishedCourseCount,'label'=>__('pages.published_courses'),'url'=>route('courses.index')],
-                ['icon'=>'tags','value'=>$publishedCategoryCount,'label'=>__('pages.learning_categories'),'url'=>route('categories.index')],
-                ['icon'=>'newspaper','value'=>$publishedArticleCount,'label'=>__('pages.published_articles'),'url'=>route('articles.index')],
-                ['icon'=>'award','value'=>6,'label'=>__('pages.cefr_levels'),'url'=>route('cefr.index')],
-            ] as $tile)
-                <a href="{{ $tile['url'] }}" class="premium-card premium-card-on-navy group rounded-2xl border border-white/15 bg-[#173c68]/80 p-5 shadow-lg transition hover:border-[#f4c36e] hover:bg-[#234e80]">
-                    <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$tile['icon']" /></span>
-                    <p class="premium-card-content mt-4 text-3xl font-black tabular-nums text-white" title="{{ number_format($tile['value']) }}">{{ \App\Support\DashboardNumber::compact($tile['value']) }}</p>
-                    <p class="premium-card-content mt-1 text-xs font-semibold leading-5 text-[#c5d8ee]">{{ $tile['label'] }}</p>
-                </a>
-            @endforeach
-        </div>
-    </div>
-</section>
 
-<section data-home-featured-section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <section data-home-pathways class="premium-card min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e51]">
-            <div class="premium-card-content flex flex-wrap items-center justify-between gap-3">
-                <div class="flex min-w-0 items-center gap-3">
-                    <span data-home-pathways-icon class="grid h-11 w-11 shrink-0 place-items-center bg-transparent text-[#3475ac] dark:text-[#a6d0f1]" aria-hidden="true"><x-workspace-icon name="tags" class="h-8 w-8" /></span>
-                    <h2 class="min-w-0 text-lg font-black leading-6 text-[#0e305d] dark:text-white">{{ __('pages.popular_pathways') }}</h2>
+@push('public_styles')
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+@endpush
+
+@section('content')
+@php
+    $hero = \App\Support\Appearance::approved('home');
+    $workspaceUser = auth()->user();
+@endphp
+
+<div class="lc-home">
+    <section class="lc-home-hero" aria-labelledby="home-title">
+        <div class="lc-home-wrap lc-home-hero-grid">
+            <div class="lc-home-hero-copy">
+                <h1 id="home-title">{{ $hero['hero_title'] }}</h1>
+                @if(filled($hero['hero_intro']))
+                    <p>{{ $hero['hero_intro'] }}</p>
+                @endif
+                <div class="lc-home-actions">
+                    <a class="lc-home-button lc-home-button-primary" href="{{ route('courses.index') }}">{{ __('pages.browse_courses') }}</a>
+                    <a class="lc-home-button lc-home-button-outline" href="{{ route('assessments.exams') }}">{{ __('pages.browse_exams') }}</a>
                 </div>
-                <a href="{{ route('categories.index') }}" class="inline-flex min-h-9 shrink-0 items-center rounded-lg border border-[#e5bd76] px-3 py-2 text-xs font-bold text-[#9e6e23] transition hover:bg-[#fff4d9] hover:text-[#754b0b] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d29a3f] dark:border-[#896d3c] dark:text-[#f4ca76] dark:hover:bg-[#294663]">{{ __('pages.view_all') }}</a>
             </div>
-            <div class="premium-card-content mt-5 space-y-3">
-                @forelse($featuredCategories->take(5) as $category)
-                    <a href="{{ route('categories.show',$category) }}" class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 p-3 transition hover:border-[#ecc775] hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-[#214265]">
-                        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f8ebce] text-xs font-black text-[#795018] dark:bg-[#4c4026] dark:text-[#ffe5aa]">{{ $category->code }}</span>
-                        <span class="min-w-0 flex-1"><strong class="block truncate text-sm text-[#133761] dark:text-white">{{ $category->name }}</strong><small class="mt-1 block text-[11px] text-slate-500 dark:text-slate-400">{{ \App\Models\Category::GROUPS[$category->group] ?? __('pages.study_pathway') }}</small></span>
+            <img class="lc-home-hero-image" src="{{ asset('images/home/hero.webp') }}" width="1024" height="576" alt="" fetchpriority="high" decoding="async">
+        </div>
+    </section>
+
+    @if($featuredExams->isNotEmpty())
+        <section id="practice-exams" class="lc-home-wrap lc-home-section" aria-labelledby="home-exams-title">
+            <div class="lc-home-section-heading">
+                <h2 id="home-exams-title">{{ __('pages.practice_exams') }}</h2>
+                <a class="lc-home-text-link" href="{{ route('assessments.exams') }}">{{ __('pages.view_all_exams') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+            </div>
+            <div @class(['lc-home-cards', 'lc-home-cards-single' => $featuredExams->count() === 1])>
+                @foreach($featuredExams as $exam)
+                    @php($hasCover = $exam->featured_kind === 'image' && $exam->featuredMedia)
+                    <a class="lc-home-card lc-home-exam" href="{{ $exam->publicUrl() }}">
+                        <img src="{{ $hasCover ? route('editor-media.show', $exam->featuredMedia) : asset('images/home/exams.webp') }}"
+                            width="1024" height="576" alt="{{ $hasCover ? ($exam->featured_alt ?? '') : '' }}" loading="lazy" decoding="async">
+                        <div class="lc-home-card-body">
+                            <h3>{{ $exam->title }}</h3>
+                            <p>{{ trans_choice('detail.minutes', $exam->time_limit) }}</p>
+                            <span class="lc-home-text-link">{{ __('pages.view_exam') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></span>
+                        </div>
                     </a>
-                @empty
-                    <p class="text-sm leading-7 text-slate-500 dark:text-slate-300">{{ __('pages.empty_pathways') }}</p>
-                @endforelse
-            </div>
-        </section>
-        <section class="flex min-w-0 flex-col gap-4">
-            <a data-home-feature="flexible" href="{{ route('courses.index') }}" class="premium-card flex-1 rounded-3xl border border-[#d3e0ef] bg-gradient-to-br from-[#f8fbff] to-[#e5effb] p-6 text-[#12355f] shadow-sm transition hover:border-[#e2b76d] dark:border-[#416187] dark:from-[#123b6b] dark:to-[#0a2854] dark:text-white dark:shadow-lg">
-                <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
-                <h2 class="premium-card-content mt-4 text-xl font-black">{{ __('pages.flexible_learning') }}</h2>
-                <p class="premium-card-content mt-3 text-sm leading-7 text-slate-600 dark:text-[#cbdcf1]">{{ __('pages.flexible_learning_desc') }}</p>
-                <span class="premium-card-content mt-4 inline-block text-xs font-black text-[#9a681e] dark:text-[#ffd480]">{{ __('pages.browse_courses') }}</span>
-            </a>
-            <a data-home-level-guidance data-home-feature="level" href="{{ route('cefr.index') }}" class="premium-card flex min-h-56 flex-1 flex-col justify-center rounded-3xl border border-slate-200 bg-white px-6 pb-6 pt-16 shadow-sm transition hover:border-amber-400 dark:border-slate-700 dark:bg-[#152e51]">
-                <span data-home-level-icon class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="award" class="h-9 w-9" /></span>
-                <h2 class="premium-card-content text-lg font-black leading-6 text-[#0c2d5b] dark:text-white">{{ __('pages.level_guidance') }}</h2>
-                <p class="premium-card-content mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">{{ __('pages.level_guidance_desc') }}</p>
-            </a>
-        </section>
-        <section data-home-feature="educator" class="premium-card min-w-0 rounded-3xl border border-[#d5b26b] bg-white p-6 text-[#12355f] shadow-sm dark:border-[#cda95d] dark:bg-[#10345f] dark:text-white">
-            <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="presentation" /></span>
-            <p class="premium-card-content text-xs font-bold uppercase tracking-[.12em] text-[#97651b] dark:text-[#f3c56d]">{{ __('pages.educator_workspace') }}</p>
-            <h2 class="premium-card-content mt-20 text-xl font-black">{{ __('pages.instructor_support') }}</h2>
-            <p class="premium-card-content mt-4 text-sm leading-8 text-slate-600 dark:text-[#d4e2f3]">{{ __('pages.instructor_support_desc') }}</p>
-            <div class="premium-card-content mt-6 grid grid-cols-3 gap-2">
-                @foreach([['school',__('pages.courses')],['clipboard-check',__('pages.assignments')],['chart-line',__('pages.progress')]] as [$icon,$label])
-                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-2 py-4 text-center dark:border-white/10 dark:bg-white/10"><x-workspace-icon :name="$icon" class="mx-auto h-6 w-6 text-[#ac7720] dark:text-[#edbf68]" /><p class="mt-2 text-[11px] font-bold">{{ $label }}</p></div>
                 @endforeach
             </div>
-            <a href="{{ route('login') }}" class="premium-card-content mt-6 block rounded-xl bg-[#eebd64] px-4 py-3 text-center text-xs font-black text-[#123461] transition hover:bg-[#ffd78e]">{{ __('pages.sign_in_to_workspace') }}</a>
         </section>
-    </div>
-</section>
+    @endif
 
-<section data-home-study-corner class="border-y border-slate-200 bg-[#eaf2fb] py-12 text-[#12355f] dark:border-slate-800 dark:bg-[#0d2c57] dark:text-white">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#98691f] dark:text-[#e7b456]">{{ __('pages.find_your_level') }}</p><h2 class="mt-2 text-2xl font-black">{{ __('pages.study_corner') }}</h2></div><a href="{{ route('cefr.index') }}" class="text-xs font-bold text-[#95651d] hover:underline dark:text-[#f9ce7b]">{{ __('pages.read_cefr') }}</a></div>
-        <div class="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
-            @foreach(['A1','A2','B1','B2','C1','C2'] as $level)
-                <a href="{{ route('cefr.index') }}#{{ $level }}" class="premium-card rounded-xl border border-[#c7d8ed] bg-white/90 py-5 text-center text-xl font-black text-[#173b67] transition hover:border-[#d8a74d] hover:bg-[#fff7e7] dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:border-[#f3c064] dark:hover:bg-[#24518a]">{{ $level }}</a>
-            @endforeach
+    @if($featuredCourses->isNotEmpty())
+        <section class="lc-home-wrap lc-home-section" aria-labelledby="home-courses-title">
+            <div class="lc-home-section-heading">
+                <h2 id="home-courses-title">{{ __('pages.start_a_course') }}</h2>
+                <a class="lc-home-text-link" href="{{ route('courses.index') }}">{{ __('pages.view_all') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+            </div>
+            <div class="lc-home-cards">
+                @foreach($featuredCourses as $course)
+                    @php($hasCover = $course->featured_kind === 'image' && $course->featuredMedia)
+                    <a class="lc-home-card" href="{{ route('courses.show', $course->getRouteKey()) }}">
+                        <img src="{{ $hasCover ? route('editor-media.show', $course->featuredMedia) : asset('images/home/courses.webp') }}"
+                            width="1024" height="576" alt="{{ $hasCover ? ($course->featured_alt ?? '') : '' }}" loading="lazy" decoding="async">
+                        <div class="lc-home-card-body">
+                            <h3>{{ $course->title }}</h3>
+                            <div class="lc-home-course-meta">
+                                <x-course-price :course="$course" />
+                                @if($course->cefr_level)<span>CEFR {{ $course->cefr_level }}</span>@endif
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    <div class="lc-home-wrap lc-home-section lc-home-resources">
+        <section class="lc-home-panel" aria-labelledby="home-cefr-title">
+            <img src="{{ asset('images/home/levels.webp') }}" width="1024" height="576" alt="" loading="lazy" decoding="async">
+            <div class="lc-home-panel-body">
+                <div class="lc-home-section-heading">
+                    <h2 id="home-cefr-title">{{ __('pages.cefr_guide') }}</h2>
+                    <a class="lc-home-text-link" href="{{ route('cefr.index') }}">{{ __('pages.read_cefr') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+                </div>
+                <div class="lc-home-levels" data-home-levels>
+                    @foreach(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as $level)
+                        <a href="{{ route('cefr.index') }}#{{ $level }}">{{ $level }}</a>
+                    @endforeach
+                </div>
+                <a class="lc-home-text-link" href="{{ route('categories.index') }}">{{ __('pages.explore_subjects') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+            </div>
+        </section>
+
+        @if($latestArticles->isNotEmpty())
+            @php($leadArticle = $latestArticles->first())
+            @php($hasCover = $leadArticle->featured_kind === 'image' && $leadArticle->featuredMedia)
+            <section class="lc-home-panel" aria-labelledby="home-articles-title">
+                <img src="{{ $hasCover ? route('editor-media.show', $leadArticle->featuredMedia) : asset('images/home/articles.webp') }}"
+                    width="1024" height="576" alt="{{ $hasCover ? ($leadArticle->featured_alt ?? '') : '' }}" loading="lazy" decoding="async">
+                <div class="lc-home-panel-body">
+                    <div class="lc-home-section-heading">
+                        <h2 id="home-articles-title">{{ __('pages.study_resources') }}</h2>
+                        <a class="lc-home-text-link" href="{{ route('articles.index') }}">{{ __('pages.view_all') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+                    </div>
+                    <ul class="lc-home-articles">
+                        @foreach($latestArticles as $article)
+                            <li><a href="{{ route('articles.show', $article->getRouteKey()) }}">{{ $article->title }} <x-workspace-icon name="chevron-right" aria-hidden="true" /></a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+        @endif
+    </div>
+
+    <section class="lc-home-wrap lc-home-educators" aria-labelledby="home-educators-title">
+        <div class="lc-home-panel lc-home-educator-grid">
+            <img src="{{ asset('images/home/educators.webp') }}" width="1024" height="576" alt="" loading="lazy" decoding="async">
+            <div class="lc-home-panel-body">
+                <h2 id="home-educators-title">{{ __('pages.educator_workspace') }}</h2>
+                <div class="lc-home-actions">
+                    <a class="lc-home-text-link" href="{{ route($workspaceUser?->homeRouteName() ?? 'login') }}">
+                        {{ $workspaceUser ? __('frontend.open_my_workspace') : __('pages.sign_in_to_workspace') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" />
+                    </a>
+                    <a class="lc-home-text-link" href="{{ route('instructors.index') }}">{{ __('pages.meet_instructors') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+                </div>
+            </div>
         </div>
-    </div>
-</section>
-
-@if($featuredCourses->isNotEmpty())
-<section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <div class="flex flex-wrap items-end justify-between gap-3">
-        <div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.approved_courses') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.start_a_course') }}</h2></div>
-        <a href="{{ route('courses.index') }}" class="rounded-xl border border-[#e0b764] px-5 py-2.5 text-xs font-bold text-[#153b64] dark:text-[#f5ce82]">{{ __('pages.view_all') }}</a>
-    </div>
-    <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        @forelse($featuredCourses as $course)
-            <x-public-course-card :course="$course" />
-        @empty
-            <p class="col-span-full rounded-3xl border border-dashed border-slate-300 p-8 text-sm leading-8 text-slate-500 dark:border-slate-700">{{ __('frontend.no_courses') }}</p>
-        @endforelse
-    </div>
-</section>
-@endif
-
-@if($featuredInstructors->isNotEmpty())
-<section class="border-y border-slate-200 bg-white py-14 dark:border-slate-800 dark:bg-[#10294a]">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-[#b98027]">{{ __('pages.verified_profiles') }}</p><h2 class="mt-2 text-2xl font-black text-[#0c2e5c] dark:text-white">{{ __('pages.featured_instructors') }}</h2></div><a href="{{ route('instructors.index') }}" class="text-xs font-bold text-[#b98027] hover:underline">{{ __('pages.meet_instructors') }}</a></div>
-        <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            @forelse($featuredInstructors as $profile)
-                <x-public-person-card :profile="$profile" kind="instructor" />
-            @empty
-                <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-7 text-sm text-slate-500 dark:border-slate-700">{{ __('people.no_instructors') }}</p>
-            @endforelse
-        </div>
-    </div>
-</section>
-@endif
-
-<section class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-    <h2 class="text-2xl font-black text-[#102f5d] dark:text-white">{{ __('pages.how_it_works') }}</h2>
-    <div data-home-learning-steps class="mt-6 grid grid-cols-2 items-stretch gap-3 sm:gap-4 xl:grid-cols-4">
-        @foreach([
-            ['compass',__('pages.step_discover'),__('pages.step_discover_desc'),route('courses.index')],
-            ['user-round',__('pages.step_account'),__('pages.step_account_desc'),route('register')],
-            ['user-check',__('pages.step_approval'),__('pages.step_approval_desc'),auth()->check() ? route(auth()->user()->homeRouteName()) : route('login')],
-            ['book-open-check',__('pages.step_study'),__('pages.step_study_desc'),route('cefr.index')],
-        ] as $step)
-            <a data-home-step-card href="{{ $step[3] }}" class="premium-card group flex h-full min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-[#e2b76d] dark:border-slate-700 dark:bg-[#153052] sm:rounded-3xl sm:p-5 xl:p-6">
-                <span data-home-step-icon class="premium-card-content mb-4 grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#eaf3ff] text-[#316fa7] transition group-hover:bg-[#d9eaff] dark:bg-[#26466a] dark:text-[#c6e2fb] dark:group-hover:bg-[#31567e] sm:h-14 sm:w-14" aria-hidden="true">
-                    <x-workspace-icon :name="$step[0]" class="h-7 w-7 sm:h-8 sm:w-8" />
-                </span>
-                <h3 class="premium-card-content break-words text-sm font-black leading-6 text-[#12355f] dark:text-white sm:text-base">{{ $step[1] }}</h3>
-                <p class="premium-card-content mt-2 break-words text-xs leading-6 text-slate-600 dark:text-slate-300 sm:text-sm">{{ $step[2] }}</p>
-            </a>
-        @endforeach
-    </div>
-</section>
-
-@if($latestArticles->isNotEmpty())
-<section class="border-t border-slate-200 bg-[#f3f5fa] py-14 dark:border-slate-800 dark:bg-[#0d2444]">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-end justify-between gap-3"><h2 class="text-2xl font-black text-[#0b2e58] dark:text-white">{{ __('pages.study_resources') }}</h2><a href="{{ route('articles.index') }}" class="text-xs font-extrabold text-[#b17c23]">{{ __('pages.view_all') }}</a></div>
-        <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            @forelse($latestArticles as $article)
-                <a href="{{ route('articles.show',$article->getRouteKey()) }}" class="premium-card flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-[#d8ad5b] dark:border-slate-700 dark:bg-[#153052]"><span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="newspaper" /></span><span class="premium-card-content text-[11px] font-black uppercase tracking-widest text-[#b17c23]">{{ __('frontend.study_resources') }}</span><h3 class="mt-3 text-lg font-black text-[#11325e] dark:text-white">{{ $article->title }}</h3><p class="mt-3 flex-1 text-sm leading-7 text-slate-500">{{ $article->summary }}</p><span class="mt-5 text-xs font-bold text-[#b17c23]">{{ __('frontend.read_article') }}</span></a>
-            @empty
-                <p class="col-span-full rounded-2xl border border-dashed border-slate-300 p-7 text-sm text-slate-500">{{ __('frontend.no_articles') }}</p>
-            @endforelse
-        </div>
-    </div>
-</section>
-@endif
+    </section>
+</div>
 @endsection

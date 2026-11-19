@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'practice_exams' => '模拟考试',
+    'browse_exams' => '浏览考试',
+    'view_all_exams' => '查看全部考试',
+    'view_exam' => '查看考试',
+    'cefr_guide' => 'CEFR 等级指南',
     'home_title' => '探索学习 | Learn Cambodia',
     'home_intro' => '探索已发布的课程、学习路径与独立审核的教师资料。',
     'home_eyebrow' => 'Learn Cambodia · 让学习触手可及',

@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'practice_exams' => 'ការប្រឡងសាកល្បង',
+    'browse_exams' => 'រកមើលការប្រឡង',
+    'view_all_exams' => 'មើលការប្រឡងទាំងអស់',
+    'view_exam' => 'មើលការប្រឡង',
+    'cefr_guide' => 'មគ្គុទ្ទេសក៍កម្រិត CEFR',
     'home_title' => 'ស្វែងយល់ការសិក្សា | Learn Cambodia',
     'home_intro' => 'ស្វែងរកវគ្គសិក្សា និងប្រវត្តិគ្រូដែលបានអនុម័តផ្សព្វផ្សាយ។',
     'home_eyebrow' => 'Learn Cambodia · ការសិក្សាសម្រាប់គ្រប់គ្នា',

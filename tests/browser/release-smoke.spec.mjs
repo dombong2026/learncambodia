@@ -467,54 +467,23 @@ test('public guidance and featured metric cards share the premium motion class',
   await expect(linked).toHaveCSS('cursor', 'pointer');
 });
 
-test('homepage learning steps display compact 2–4 responsive cards with visible icons', async ({ page }) => {
-  for (const [width, columns] of [[390, 2], [820, 2], [1440, 4]]) {
+test('homepage displays the hero image, exam discovery and one row of CEFR levels', async ({ page }) => {
+  for (const width of [390, 820, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/?lang=en');
 
-    const grid = page.locator('[data-home-learning-steps]');
-    const cards = grid.locator('[data-home-step-card]');
-    await expect(cards).toHaveCount(4);
+    const main = page.locator('#main-content');
+    const hero = main.locator('.lc-home-hero');
+    const image = hero.locator('img');
+    await expect(image).toBeVisible();
+    await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    await expect(hero.getByRole('link', { name: 'Browse exams' })).toHaveAttribute('href', /\/assessments\/exams/);
 
-    const count = await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
-    expect(count, `homepage grid at ${width}px`).toBe(columns);
-
-    for (const card of await cards.all()) {
-      const icon = card.locator('[data-home-step-icon] svg');
-      const title = card.locator('h3');
-      await expect(icon).toBeVisible();
-      await expect(title).toBeVisible();
-      const [cardBox, iconBox, titleBox] = await Promise.all(
-        [card, icon, title].map(el => el.boundingBox())
-      );
-      expect(cardBox && iconBox && titleBox).toBeTruthy();
-      expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(titleBox.y + 2);
-      expect(iconBox.x).toBeGreaterThanOrEqual(cardBox.x);
-      expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
-    }
-
-    const level = page.locator('[data-home-level-guidance]');
-    const icon = level.locator('svg');
-    const heading = level.locator('h2');
-    await expect(level).toBeVisible();
-    await expect(icon).toBeVisible();
-    const [svg, h2, cardBox] = await Promise.all([icon.boundingBox(), heading.boundingBox(), level.boundingBox()]);
-    expect(svg && h2 && cardBox).toBeTruthy();
-    expect(svg.x).toBeGreaterThan(cardBox.x + cardBox.width * 0.55);
-    expect(svg.y).toBeLessThan(cardBox.y + 70);
-    expect(h2.y).toBeGreaterThan(cardBox.y + 25);
-
-    const pathways = page.locator('[data-home-pathways]');
-    const header = pathways.locator('h2').first();
-    const action = pathways.getByRole('link', { name: /view all/i });
-    await expect(action).toBeVisible();
-    const [headingBox, actionBox] = await Promise.all([header.boundingBox(), action.boundingBox()]);
-    expect(headingBox && actionBox).toBeTruthy();
-    const overlaps = headingBox.x < actionBox.x + actionBox.width &&
-      headingBox.x + headingBox.width > actionBox.x &&
-      headingBox.y < actionBox.y + actionBox.height &&
-      headingBox.y + headingBox.height > actionBox.y;
-    expect(overlaps, 'pathways title and View all must not overlap').toBe(false);
+    const links = main.locator('[data-home-levels] a');
+    await expect(links).toHaveText(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+    const positions = await links.evaluateAll(items => items.map(item => item.getBoundingClientRect().top));
+    expect(new Set(positions).size).toBe(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
   }
 });
 
@@ -727,61 +696,16 @@ test('short category navigation does not shorten catalog cards or full search te
   await expect(page.locator('#main-content')).toContainText('English as a Second Language');
 });
 
-test('homepage feature icons stay unboxed and cards follow light/dark appearance', async ({ page }) => {
-  const rgb = (s) => [...s.matchAll(/[0-9.]+/g)].slice(0, 3).map(m => Number(m[0]));
-  const brightness = (s) => {
-    const [r, g, b] = rgb(s);
-    return (r * 299 + g * 587 + b * 114) / 1000;
-  };
+test('homepage image panels use the active light and dark surfaces', async ({ page }) => {
+  for (const scheme of ['light', 'dark']) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/?lang=en');
 
-  for (const width of [390, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    for (const scheme of ['light', 'dark']) {
-      await page.goto('/?lang=en');
-      await page.evaluate(scheme => document.documentElement.classList.toggle('dark', scheme === 'dark'), scheme);
-
-      const pathways = page.locator('[data-home-pathways-icon]');
-      const level = page.locator('[data-home-level-guidance]');
-      const levelArt = level.locator('[data-home-level-icon]');
-      await expect(pathways.locator('svg')).toBeVisible();
-      await expect(levelArt.locator('svg')).toBeVisible();
-      await expect(pathways).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-      await expect(levelArt).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-
-      const [card, art] = await Promise.all([level.boundingBox(), levelArt.boundingBox()]);
-      expect(card && art).toBeTruthy();
-      expect(art.x).toBeGreaterThan(card.x + card.width * 0.6);
-      expect(art.y).toBeLessThan(card.y + 30);
-
-      for (const selector of [
-        '[data-home-pathways]',
-        '[data-home-feature="flexible"]',
-        '[data-home-feature="level"]',
-        '[data-home-feature="educator"]',
-        '[data-home-study-corner]',
-      ]) {
-        const surface = page.locator(selector);
-        await expect(surface).toBeVisible();
-        const background = await surface.evaluate(el => getComputedStyle(el).backgroundColor);
-        if (selector !== '[data-home-feature="flexible"]') {
-          if (scheme === 'light') expect(brightness(background)).toBeGreaterThan(180);
-          else expect(brightness(background)).toBeLessThan(110);
-        } else {
-          const cardText = await surface.evaluate(el => getComputedStyle(el).color);
-          if (scheme === 'light') expect(brightness(cardText)).toBeLessThan(120);
-          else expect(brightness(cardText)).toBeGreaterThan(200);
-        }
-      }
-
-      const paragraph = level.locator('p');
-      await expect(paragraph).toContainText('CEFR');
-      await expect(paragraph).toContainText('current ability');
-      const lines = await paragraph.evaluate(el => {
-        const style = getComputedStyle(el);
-        return el.getBoundingClientRect().height / parseFloat(style.lineHeight);
-      });
-      expect(lines).toBeGreaterThanOrEqual(3);
-    }
+    const panel = page.locator('section[aria-labelledby="home-cefr-title"]');
+    await expect(panel).toHaveCSS('background-color', scheme === 'light' ? 'rgb(255, 255, 255)' : 'rgb(20, 39, 62)');
+    const cover = panel.locator('img');
+    await cover.scrollIntoViewIfNeeded();
+    await expect.poll(() => cover.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   }
 });
 
