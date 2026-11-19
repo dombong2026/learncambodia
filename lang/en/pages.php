@@ -2,6 +2,8 @@
 
 return [
     'home_title' => 'Explore learning | Learn Cambodia',
+    'home_hero_title' => 'English courses and exam practice',
+    'home_hero_intro' => 'Find your level and build your English skills at your own pace.',
     'home_intro' => 'Explore published courses, learning pathways and independently reviewed teacher profiles.',
     'home_eyebrow' => 'Learn Cambodia · Learning made accessible',
     'hero_search' => 'Search courses and subjects',

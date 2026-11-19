@@ -2,6 +2,8 @@
 
 return [
     'practice_exams' => '模拟考试',
+    'home_hero_title' => '英语课程与考试练习',
+    'home_hero_intro' => '找到适合自己的英语水平，按自己的节奏提升英语能力。',
     'browse_exams' => '浏览考试',
     'view_all_exams' => '查看全部考试',
     'view_exam' => '查看考试',

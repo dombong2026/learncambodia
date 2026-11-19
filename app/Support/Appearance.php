@@ -121,7 +121,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'All categories', 'show_cefr' => true],
         'footer' => ['footer_note' => 'Independent preparation information. Third-party exams and qualifications belong to their respective organizations.'],
         'typography' => ['font_style' => 'system', 'text_scale' => 'normal'],
-        'home' => ['hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.'],
+        'home' => ['hero_title' => 'pages.home_hero_title', 'hero_intro' => 'pages.home_hero_intro'],
         'about' => [
             'heading'=>'About Learn Cambodia',
             'intro'=>'Learning pathways built for clarity, accessibility and responsible academic review.',
@@ -275,7 +275,12 @@ final class Appearance
         $approved = AppearanceRevision::query()->approved()
             ->where('section', $section)->orderByDesc('id')->first();
 
-        return array_replace(self::DEFAULTS[$section], $approved?->settings ?? []);
+        $defaults = self::DEFAULTS[$section];
+        if ($section === 'home') {
+            $defaults = array_map(fn (string $key) => __($key), $defaults);
+        }
+
+        return array_replace($defaults, $approved?->settings ?? []);
     }
 
     public static function value(string $section, string $field): mixed

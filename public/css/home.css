@@ -39,7 +39,7 @@
     display: grid;
     align-items: center;
     gap: clamp(1.5rem, 4vw, 4rem);
-    padding-block: clamp(2rem, 5vw, 4.5rem);
+    padding-block: clamp(2rem, 4.5vw, 3.75rem);
 }
 
 .lc-home-hero h1 {
@@ -47,6 +47,7 @@
     font-weight: 850;
     line-height: 1.12;
     letter-spacing: -.035em;
+    text-wrap: balance;
 }
 
 .lc-home-hero p {
@@ -58,7 +59,7 @@
 
 .lc-home-hero-image {
     display: block;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     width: 100%;
     height: auto;
     border-radius: 1.5rem;
@@ -165,18 +166,28 @@
     object-fit: cover;
 }
 
-.lc-home-panel img { aspect-ratio: 3 / 1; }
+.lc-home-panel img {
+    aspect-ratio: 12 / 5;
+    object-position: center 35%;
+}
 
 .lc-home-card-body,
 .lc-home-panel-body { padding: clamp(1rem, 2.5vw, 1.6rem); }
 
-.lc-home-exam .lc-home-card-body {
+.lc-home-card {
     display: flex;
     flex-direction: column;
+}
+
+.lc-home-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: center;
     gap: .6rem;
 }
+
+.lc-home-card-body .lc-home-text-link { margin-top: auto; }
 
 .lc-home-exam p,
 .lc-home-course-meta {
@@ -188,7 +199,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: .35rem 1rem;
-    margin-top: .55rem;
 }
 
 .lc-home-levels {
@@ -231,27 +241,54 @@
     align-items: center;
 }
 
-.lc-home-educators .lc-home-actions { margin-top: .65rem; }
+.lc-home-educator-body .lc-home-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0 .9rem;
+    margin-top: .45rem;
+}
+
+.lc-home-educator-body .lc-home-text-link { min-height: 2.75rem; }
 
 @media (min-width: 40rem) {
     .lc-home-wrap { width: min(100% - 3rem, 74rem); }
-    .lc-home-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lc-home-cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
     .lc-home-cards-single { grid-template-columns: minmax(0, 1fr); }
 
-    .lc-home-cards-single .lc-home-exam {
+    .lc-home-cards-single .lc-home-card {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.18fr);
     }
 
+    .lc-home-cards-single .lc-home-course {
+        grid-template-columns: minmax(0, min(42%, 27rem)) minmax(0, 1fr);
+    }
+
+    .lc-home-cards-single .lc-home-card-body { justify-content: center; }
+    .lc-home-cards-single .lc-home-text-link { margin-top: .2rem; }
     .lc-home-cards-single .lc-home-exam img { aspect-ratio: 2 / 1; }
+    .lc-home-cards-single .lc-home-card img { min-height: 100%; }
     .lc-home-cards-single h3 { font-size: clamp(1.25rem, 2.7vw, 2rem); }
     .lc-home-educator-grid { grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); }
-    .lc-home-educator-grid img { aspect-ratio: 2 / 1; }
+    .lc-home-educator-grid img {
+        min-height: 100%;
+        aspect-ratio: 2 / 1;
+    }
 }
 
 @media (min-width: 54rem) {
     .lc-home-hero-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1fr); }
-    .lc-home-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .lc-home-cards-single { grid-template-columns: minmax(0, 1fr); }
     .lc-home-resources:has(> :nth-child(2)) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lc-home-educator-body {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: .5rem 1rem;
+    }
+
+    .lc-home-educator-body .lc-home-actions {
+        flex-direction: row;
+        margin-top: 0;
+    }
 }

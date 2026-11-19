@@ -26,7 +26,7 @@ class CatalogController extends Controller
         $featuredCourses = Course::discoverable()->with('featuredMedia')
             ->orderByDesc('published_at')->orderByDesc('id')->limit(3)->get();
         $latestArticles = ContentEntry::query()->publishedArticles()
-            ->with('featuredMedia')->orderByDesc('id')->limit(3)->get();
+            ->orderByDesc('id')->limit(3)->get();
 
         return view('home', compact('featuredExams', 'featuredCourses', 'latestArticles'));
     }

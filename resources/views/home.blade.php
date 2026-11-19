@@ -3,7 +3,7 @@
 @section('meta_description', __('pages.home_intro'))
 
 @push('public_styles')
-    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}?v=2">
 @endpush
 
 @section('content')
@@ -58,10 +58,10 @@
                 <h2 id="home-courses-title">{{ __('pages.start_a_course') }}</h2>
                 <a class="lc-home-text-link" href="{{ route('courses.index') }}">{{ __('pages.view_all') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
             </div>
-            <div class="lc-home-cards">
+            <div @class(['lc-home-cards', 'lc-home-cards-single' => $featuredCourses->count() === 1])>
                 @foreach($featuredCourses as $course)
                     @php($hasCover = $course->featured_kind === 'image' && $course->featuredMedia)
-                    <a class="lc-home-card" href="{{ route('courses.show', $course->getRouteKey()) }}">
+                    <a class="lc-home-card lc-home-course" href="{{ route('courses.show', $course->getRouteKey()) }}">
                         <img src="{{ $hasCover ? route('editor-media.show', $course->featuredMedia) : asset('images/home/courses.webp') }}"
                             width="1024" height="576" alt="{{ $hasCover ? ($course->featured_alt ?? '') : '' }}" loading="lazy" decoding="async">
                         <div class="lc-home-card-body">
@@ -70,6 +70,7 @@
                                 <x-course-price :course="$course" />
                                 @if($course->cefr_level)<span>CEFR {{ $course->cefr_level }}</span>@endif
                             </div>
+                            <span class="lc-home-text-link">{{ __('frontend.view_course') }} <x-workspace-icon name="chevron-right" aria-hidden="true" /></span>
                         </div>
                     </a>
                 @endforeach
@@ -95,11 +96,8 @@
         </section>
 
         @if($latestArticles->isNotEmpty())
-            @php($leadArticle = $latestArticles->first())
-            @php($hasCover = $leadArticle->featured_kind === 'image' && $leadArticle->featuredMedia)
             <section class="lc-home-panel" aria-labelledby="home-articles-title">
-                <img src="{{ $hasCover ? route('editor-media.show', $leadArticle->featuredMedia) : asset('images/home/articles.webp') }}"
-                    width="1024" height="576" alt="{{ $hasCover ? ($leadArticle->featured_alt ?? '') : '' }}" loading="lazy" decoding="async">
+                <img src="{{ asset('images/home/articles.webp') }}" width="1024" height="576" alt="" loading="lazy" decoding="async">
                 <div class="lc-home-panel-body">
                     <div class="lc-home-section-heading">
                         <h2 id="home-articles-title">{{ __('pages.study_resources') }}</h2>
@@ -118,13 +116,13 @@
     <section class="lc-home-wrap lc-home-educators" aria-labelledby="home-educators-title">
         <div class="lc-home-panel lc-home-educator-grid">
             <img src="{{ asset('images/home/educators.webp') }}" width="1024" height="576" alt="" loading="lazy" decoding="async">
-            <div class="lc-home-panel-body">
+            <div class="lc-home-panel-body lc-home-educator-body">
                 <h2 id="home-educators-title">{{ __('pages.educator_workspace') }}</h2>
                 <div class="lc-home-actions">
                     <a class="lc-home-text-link" href="{{ route($workspaceUser?->homeRouteName() ?? 'login') }}">
-                        {{ $workspaceUser ? __('frontend.open_my_workspace') : __('pages.sign_in_to_workspace') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" />
+                        {{ $workspaceUser ? __('frontend.open_my_workspace') : __('pages.sign_in_to_workspace') }} <x-workspace-icon name="chevron-right" aria-hidden="true" />
                     </a>
-                    <a class="lc-home-text-link" href="{{ route('instructors.index') }}">{{ __('pages.meet_instructors') }} <x-workspace-icon name="arrow-up-right" aria-hidden="true" /></a>
+                    <a class="lc-home-text-link" href="{{ route('instructors.index') }}">{{ __('pages.meet_instructors') }} <x-workspace-icon name="chevron-right" aria-hidden="true" /></a>
                 </div>
             </div>
         </div>

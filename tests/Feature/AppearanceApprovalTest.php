@@ -30,7 +30,7 @@ class AppearanceApprovalTest extends TestCase
 
         $revision = AppearanceRevision::query()->firstOrFail();
         $this->assertSame('draft', $revision->status);
-        $this->get('/')->assertSee('Explore English learning for every ambition.')
+        $this->get('/')->assertSee('English courses and exam practice')
             ->assertDontSee('Reviewed educational hero');
 
         $this->post('/dashboard/appearance/revisions/'.$revision->id.'/submit')
@@ -46,7 +46,7 @@ class AppearanceApprovalTest extends TestCase
 
         $this->assertSame('approved', $revision->fresh()->status);
         $this->get('/')->assertSee('Reviewed educational hero')
-            ->assertDontSee('Explore English learning for every ambition.');
+            ->assertDontSee('English courses and exam practice');
 
         $this->assertDatabaseHas('approval_events', [
             'subject_type' => 'appearance',
