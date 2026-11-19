@@ -56,9 +56,11 @@ class LearningProgressTest extends TestCase
 
         $this->assertNotNull(LessonProgress::firstOrFail()->completed_at);
         $this->get('/account/progress')->assertOk()->assertSee('1 of 2 lessons');
-        $this->get('/account/enrollments/'.$enrollment->id)
-            ->assertOk()->assertSee('Completed · Mark for review');
+        $this->get(route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']))
+            ->assertOk()->assertSee('Course curriculum')->assertSee('Completed')->assertSee('Mark for review')->assertDontSee('Read this lesson.');
 
+        $this->get(route('account.enrollments.show', [$enrollment, 'view' => 'curriculum', 'q' => 'Second']))
+            ->assertOk()->assertSee('Second lesson')->assertDontSee('First lesson');
         $this->post('/account/enrollments/'.$enrollment->id.'/lessons/'.$first->id.'/progress', [
             'complete' => '1',
         ])->assertRedirect();

@@ -60,11 +60,14 @@ class StudentPracticeController extends Controller
 
         $used = $enrollment->attempts()->where('course_quiz_id', $quiz->id)->count();
 
+        $lesson = LearningAccess::sourceLesson($request, $course);
+        $focus = $lesson ? ['lesson' => $lesson, 'completedIds' => LearningAccess::curriculumProgress($course, $enrollment)] : [];
+
         return view('workspace.student.practice-show', [
             'role' => 'student', 'enrollment' => $enrollment, 'course' => $course,
             'quiz' => $quiz, 'questions' => $questions,
             'attemptsRemaining' => max(0, self::MAX_ATTEMPTS - $used),
-        ]);
+        ] + $focus);
     }
 
     public function store(Request $request, CourseEnrollment $enrollment, CourseQuiz $quiz): RedirectResponse
@@ -74,6 +77,8 @@ class StudentPracticeController extends Controller
             'answers.*' => ['required', Rule::in(['A', 'B', 'C', 'D'])],
         ]);
 
+        $lesson = $request->has('from_lesson')
+            ? LearningAccess::sourceLesson($request, LearningAccess::course($request->user(), $enrollment)) : null;
         $attempt = DB::transaction(function () use ($request, $enrollment, $quiz, $validated) {
             $locked = CourseEnrollment::whereKey($enrollment->id)
                 ->lockForUpdate()->firstOrFail();
@@ -120,7 +125,7 @@ class StudentPracticeController extends Controller
             return $attempt;
         });
 
-        return redirect()->route('account.practice.result', [$enrollment, $quiz, $attempt])
+        return redirect()->route('account.practice.result', [$enrollment, $quiz, $attempt] + ($lesson ? ['from_lesson' => $lesson->id] : []))
             ->with('status', 'Practice answers scored. This is not an official exam.');
     }
 
@@ -135,9 +140,17 @@ class StudentPracticeController extends Controller
             && $attempt->course_quiz_id === $quiz->id
             && $quiz->course_id === $enrollment->course_id, 404);
 
+        $focus = [];
+        if ($request->has('from_lesson')) {
+            $course = LearningAccess::course($request->user(), $enrollment);
+            $lesson = LearningAccess::sourceLesson($request, $course);
+            $completedIds = LearningAccess::curriculumProgress($course, $enrollment);
+            $focus = compact('course', 'lesson', 'completedIds');
+        }
+
         return view('workspace.student.practice-result', [
             'role' => 'student', 'enrollment' => $enrollment,
             'quiz' => $quiz, 'attempt' => $attempt->load('answers.question'),
-        ]);
+        ] + $focus);
     }
 }

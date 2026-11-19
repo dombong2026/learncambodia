@@ -25,9 +25,9 @@ final class StudentLessonQuizController extends Controller
         foreach ($questions as $index => $question) {
             $rules["answers.{$index}"] = ['required', Rule::in(array_keys($question['choices']))];
         }
-        $return = $request->input('view') === 'curriculum'
-            ? route('account.enrollments.show', $enrollment)
-            : route('account.lessons.watch', [$enrollment, $lesson]);
+        // The curriculum is an index; quiz feedback always belongs in the focused lesson viewer.
+        // Legacy forms posting view=curriculum still receive their graded result.
+        $return = route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz']);
         $return .= "#lesson-quiz-{$lesson->id}";
 
         $validator = Validator::make($request->all(), $rules);

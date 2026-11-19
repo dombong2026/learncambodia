@@ -127,7 +127,7 @@ class CourseRevisionWorkflowTest extends TestCase
         $this->assertSame('published', $original->fresh()->status);
         $this->assertSame(1, $originalEnrollment->fresh()->course_id === $original->id ? 1 : 0);
 
-        $this->actingAs($student)
+        $this->actingAs($student)->followingRedirects()
             ->get('/account/enrollments/'.$originalEnrollment->id)
             ->assertOk()->assertSee('Learn greetings');
 

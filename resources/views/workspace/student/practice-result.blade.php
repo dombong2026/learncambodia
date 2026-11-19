@@ -1,8 +1,16 @@
-@extends('layouts.workspace')
+@extends(isset($lesson) ? 'layouts.focused-learning' : 'layouts.workspace')
 @section('title', 'Practice Results')
 @section('heading', 'Practice Results')
 @section('description', 'Your private attempt outcome. Practice scores do not represent official TOEFL, IELTS, CEFR, teaching certifications or other examination results.')
 @section('content')
+@php
+    $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];
+@endphp
+@isset($lesson)
+    <div class="fl-grid"><div class="fl-main fl-assessment">
+    <a class="fl-back" href="{{ route('account.lessons.watch', [$enrollment, $lesson, 'tab' => 'resources']) }}"><x-workspace-icon name="chevron-right" /> Back to lesson</a>
+    <h1>{{ $quiz->title }}</h1>
+@endisset
 <div class="max-w-5xl space-y-6">
     <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">{{ $quiz->title }}</p>
@@ -12,7 +20,7 @@
         </div>
         <p class="mt-4 text-xs leading-6 text-slate-500">Submitted {{ $attempt->submitted_at?->format('Y-m-d H:i') }} · Passing threshold {{ $quiz->passing_percent }}% · No official certificate issued.</p>
         <div class="mt-6 flex flex-wrap gap-3">
-            <a href="{{ route('account.practice.show',[$enrollment,$quiz]) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white">Practice again</a>
+            <a href="{{ route('account.practice.show', [$enrollment, $quiz] + $fromLesson) }}" class="rounded-full bg-blue-700 px-5 py-3 text-sm font-bold text-white">Practice again</a>
             <a href="{{ route('account.practice.history') }}" class="rounded-full border border-slate-300 px-5 py-3 text-sm font-bold dark:border-slate-700">My results</a>
         </div>
     </div>
@@ -26,4 +34,7 @@
         </article>
     @endforeach
 </div>
+@isset($lesson)
+    </div>@include('learning.partials.outline')</div>
+@endisset
 @endsection

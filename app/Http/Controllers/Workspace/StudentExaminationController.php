@@ -34,9 +34,10 @@ final class StudentExaminationController extends Controller
     {
         $course = LearningAccess::course($request->user(), $enrollment);
         abort_unless($exam->course_id === $course->id, 404);
+        $lesson = LearningAccess::sourceLesson($request, $course);
         $attempt = $this->begin($request, $exam, $enrollment);
 
-        return redirect()->route('account.exam-attempts.show', [$enrollment, $attempt]);
+        return redirect()->route('account.exam-attempts.show', [$enrollment, $attempt] + ($lesson ? ['from_lesson' => $lesson->id] : []));
     }
 
     public function startStandalone(Request $request, CourseExam $exam): RedirectResponse
@@ -106,15 +107,24 @@ final class StudentExaminationController extends Controller
             $request->attributes->set('assessmentMicrophone', true);
         }
 
-        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt'));
+        $focus = [];
+        if ($enrollment && $request->has('from_lesson')) {
+            $course = LearningAccess::course($request->user(), $enrollment);
+            $lesson = LearningAccess::sourceLesson($request, $course);
+            $completedIds = LearningAccess::curriculumProgress($course, $enrollment);
+            $focus = compact('course', 'lesson', 'completedIds');
+        }
+
+        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt') + $focus);
     }
 
     public function submit(Request $request, CourseEnrollment $enrollment, ExamAttempt $attempt): RedirectResponse
     {
         $this->authorizeAttempt($request, $attempt, $enrollment);
+        $lesson = $request->has('from_lesson') ? LearningAccess::sourceLesson($request, $enrollment->course) : null;
         $this->finish($request, $attempt, $enrollment);
 
-        return redirect()->route('account.exam-attempts.show', [$enrollment, $attempt]);
+        return redirect()->route('account.exam-attempts.show', [$enrollment, $attempt] + ($lesson ? ['from_lesson' => $lesson->id] : []));
     }
 
     public function submitStandalone(Request $request, ExamAttempt $attempt): RedirectResponse

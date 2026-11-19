@@ -63,7 +63,7 @@ class EnrollmentWorkflowTest extends TestCase
         $this->actingAs($other)->get('/account/enrollments/'.$enrollment->id)->assertNotFound();
         $this->delete('/account/enrollments/'.$enrollment->id)->assertNotFound();
 
-        $this->actingAs($student)->get('/account/enrollments/'.$enrollment->id)
+        $this->actingAs($student)->followingRedirects()->get('/account/enrollments/'.$enrollment->id)
             ->assertOk()->assertSee('Private lesson one')
             ->assertSee('Only approved students may read these sentences.');
         $this->assertDatabaseHas('approval_events', [

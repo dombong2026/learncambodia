@@ -80,11 +80,11 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
         $student = User::factory()->create(['role' => 'student']);
         $enrollment = CourseEnrollment::create(['course_id' => $course->id, 'student_id' => $student->id, 'status' => 'approved']);
         $attempt = route('account.lessons.quiz', [$enrollment, $lesson]);
-        $watch = route('account.lessons.watch', [$enrollment, $lesson]);
-        $study = route('account.enrollments.show', $enrollment);
+        $watch = route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz']);
+        $study = route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']);
         $this->actingAs(User::factory()->create(['role' => 'student']))->post($attempt, ['answers' => ['b']])->assertNotFound();
         $this->actingAs($student);
-        $this->get($watch)->assertOk()->assertSeeInOrder(['Read this before answering.', 'Lesson quiz', $question['prompt']])
+        $this->get($watch)->assertOk()->assertSeeInOrder(['Lesson quiz', $question['prompt'], 'Read this before answering.'])
             ->assertDontSee('Correct answer')->assertDontSee($question['feedback']);
         $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()->assertDontSee('Lesson quiz');
         $this->post($attempt, ['answers' => ['c']])->assertRedirect($watch.'#lesson-quiz-'.$lesson->id);
@@ -92,10 +92,11 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
         $this->followingRedirects()->post($attempt, ['answers' => ['b'], 'view' => 'curriculum'])
             ->assertOk()->assertSee('1 of 1 correct.')->assertSee($question['feedback']);
         $this->post($attempt, ['answers' => ['a'], 'view' => 'curriculum'])
-            ->assertRedirect($study.'#lesson-quiz-'.$lesson->id);
+            ->assertRedirect($watch.'#lesson-quiz-'.$lesson->id);
         $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()
             ->assertDontSee('0 of 1 correct.');
-        $this->get($study)->assertSee('0 of 1 correct.');
+        $this->get($study)->assertSee('Course curriculum')->assertDontSee('Lesson quiz');
+        $this->get($watch)->assertSee('0 of 1 correct.');
         $otherLearner = User::factory()->create(['role' => 'student']);
         $otherEnrollment = CourseEnrollment::create(['course_id' => $course->id,
             'student_id' => $otherLearner->id, 'status' => 'approved']);

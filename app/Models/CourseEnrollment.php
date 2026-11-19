@@ -43,6 +43,14 @@ class CourseEnrollment extends Model
             ->update(['started_at' => now()]);
     }
 
+    public function rememberLesson(CourseLesson $lesson): void
+    {
+        self::whereKey($this->id)->where('status', 'approved')
+            ->where(fn ($query) => $query->whereNull('last_opened_lesson_id')
+                ->orWhere('last_opened_lesson_id', '!=', $lesson->id))
+            ->update(['last_opened_lesson_id' => $lesson->id]);
+    }
+
     public function homeworkSubmissions(): HasMany
     {
         return $this->hasMany(HomeworkSubmission::class, 'enrollment_id');
