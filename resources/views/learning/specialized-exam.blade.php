@@ -8,7 +8,7 @@
     <title>{{ $attempt->snapshot['title'] ?? $exam->title }} · {{ config('app.name') }}</title>
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/workspace.ts'])
-    <link rel="stylesheet" href="{{ asset('css/specialized-exam.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/specialized-exam.css') }}?v=2">
 </head>
 <body class="specialized-exam">
 <main class="specialized-exam-shell">
@@ -124,7 +124,9 @@
                 </label>
             @endif
             @foreach($attempt->snapshot['questions'] as $index => $question)
-                @include('workspace.student.assessment-question')
+                <div class="specialized-exam-question">
+                    @include('workspace.student.assessment-question')
+                </div>
             @endforeach
             <button type="submit" class="specialized-exam-action">{{ __('specialized_exam.submit') }}</button>
         </form>
