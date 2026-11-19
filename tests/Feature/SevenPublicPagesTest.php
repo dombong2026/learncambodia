@@ -65,7 +65,7 @@ final class SevenPublicPagesTest extends TestCase
         config()->set('public_profiles.students_enabled',true);
 
         foreach([
-            ['/', 'Study corner'],
+            ['/', 'CEFR level guide'],
             ['/courses','Explore courses and study subjects'],
             ['/courses/'.$course->slug,'Learning Seven Pages'],
             ['/instructors','Meet our instructors'],
@@ -81,13 +81,13 @@ final class SevenPublicPagesTest extends TestCase
         }
     }
 
-    public function test_home_public_numbers_are_actual_record_counts_not_reference_placeholders(): void
+    public function test_home_links_to_published_course_and_article_without_statistic_tiles(): void
     {
         $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);
         $course=$this->course('actual-count-course','Approved Real Course');
 
         $owner=User::factory()->create();
-        ContentEntry::create([
+        $article = ContentEntry::create([
             'type'=>'post','slug'=>'actual-study-article','title'=>'Actual Published Article',
             'summary'=>'Approved study advice','body'=>'Study frequently.',
             'status'=>'published','created_by'=>$owner->id,
@@ -96,7 +96,14 @@ final class SevenPublicPagesTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('Approved Real Course')
             ->assertSee('Actual Published Article')
-            ->assertSee('Published courses')
+            ->assertSee('id="home-courses" class="lc-home-section"', false)
+            ->assertSee('View all courses')
+            ->assertSee('images/home/courses.webp')
+            ->assertSee('images/home/levels.webp')
+            ->assertSee('images/home/articles.webp')
+            ->assertSee('href="'.route('courses.show', $course->getRouteKey()).'"', false)
+            ->assertSee('href="'.route('articles.show', $article->getRouteKey()).'"', false)
+            ->assertDontSee('Published courses')
             ->assertDontSee('100K+')
             ->assertDontSee('500+ Educators')
             ->assertDontSee('50K+');
@@ -179,13 +186,13 @@ final class SevenPublicPagesTest extends TestCase
     {
         $this->seed(CategorySeeder::class);
         $this->post('/language',['locale'=>'zh'])->assertRedirect('/?lang=zh');
-        $this->get('/')->assertOk()->assertSee('学习角与 CEFR 等级');
+        $this->get('/')->assertOk()->assertSee('CEFR 等级指南');
         $this->get('/courses')->assertOk()->assertSee('探索课程和学习科目');
         $this->get('/instructors')->assertOk()->assertSee('认识我们的教师');
         $this->get('/students')->assertOk()->assertSee('学生生活与学习历程');
 
         $this->post('/language',['locale'=>'km'])->assertRedirect('/?lang=km');
-        $this->get('/')->assertOk()->assertSee('មគ្គុទ្ទេសក៍សិក្សា');
+        $this->get('/')->assertOk()->assertSee('មគ្គុទ្ទេសក៍កម្រិត CEFR');
         $this->get('/courses')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា និងមុខវិជ្ជា');
         $this->get('/instructors')->assertOk()->assertSee('ស្គាល់គ្រូបង្រៀនរបស់យើង');
         $this->get('/students')->assertOk()->assertSee('ជីវិតសិស្ស និងដំណើរសិក្សា');

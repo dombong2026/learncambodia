@@ -2,6 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Course;
+use App\Models\CourseExam;
+use App\Models\ExamType;
+use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -9,56 +14,64 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_home_feature_artwork_uses_unboxed_icons_and_consistent_theme_surfaces(): void
+    public function test_homepage_lists_public_standalone_exams_and_quizzes_by_kind(): void
+    {
+        $this->seed(CategorySeeder::class);
+        $course = Course::create([
+            'category_id' => Category::where('code', 'GE')->firstOrFail()->id,
+            'slug' => 'exam-course',
+            'title' => 'Assessment course',
+            'summary' => 'Example course.',
+        ]);
+        $defaults = [
+            'exam_type_id' => ExamType::create(['name' => 'Practice'])->id,
+            'kind' => 'exam',
+            'published' => true,
+            'questions' => [['prompt' => 'Private test prompt']],
+            'time_limit' => 45,
+            'passing_percent' => 70,
+            'attempt_limit' => 1,
+        ];
+
+        $exam = CourseExam::create(['title' => 'Public reading practice'] + $defaults);
+        CourseExam::create(['title' => 'Draft practice assessment', 'published' => false] + $defaults);
+        $quiz = CourseExam::create(['title' => 'Published quiz fixture', 'kind' => 'quiz'] + $defaults);
+        CourseExam::create(['title' => 'Draft quiz fixture', 'kind' => 'quiz', 'published' => false] + $defaults);
+        CourseExam::create(['title' => 'Course assessment fixture', 'course_id' => $course->id] + $defaults);
+        CourseExam::create(['title' => 'Removed assessment fixture'] + $defaults)->delete();
+
+        $this->get('/?lang=en')->assertOk()
+            ->assertSeeInOrder([
+                'id="practice-exams"', 'href="'.route('public.exams.show', $exam).'"',
+                'id="practice-quizzes"', 'href="'.route('public.quizzes.show', $quiz).'"',
+            ], false)
+            ->assertSee('Public reading practice')
+            ->assertSee('images/home/exams.webp')
+            ->assertSee('images/home/quizzes.webp')
+            ->assertSee('Published quiz fixture')
+            ->assertDontSee('Private test prompt')
+            ->assertDontSee('Draft practice assessment')
+            ->assertDontSee('Draft quiz fixture')
+            ->assertDontSee('Course assessment fixture')
+            ->assertDontSee('Removed assessment fixture');
+    }
+
+    public function test_visual_home_keeps_discovery_links_and_skips_empty_exam_section(): void
     {
         foreach (['en', 'km', 'zh'] as $lang) {
             $html = $this->get('/?lang='.$lang)->assertOk()
-                ->assertSee('data-home-pathways-icon', false)
-                ->assertSee('data-home-level-icon', false)
-                ->assertSee('data-home-feature="flexible"', false)
-                ->assertSee('data-home-feature="educator"', false)
-                ->assertSee('data-home-study-corner', false)
-                ->assertSee('dark:bg-[#0d2c57]', false)
+                ->assertSee('images/home/hero-cutout.webp')
+                ->assertSee('href="'.route('categories.index').'"', false)
+                ->assertSee('href="'.route('cefr.index').'#A1"', false)
+                ->assertSee('href="'.route('cefr.index').'#C2"', false)
+                ->assertSee('href="'.route('courses.index').'"', false)
+                ->assertSee('href="'.route('assessments.exams').'"', false)
+                ->assertSee('href="'.route('login').'"', false)
+                ->assertDontSee('id="practice-exams"', false)
+                ->assertDontSee('id="practice-quizzes"', false)
                 ->getContent();
 
-            $this->assertSame(1, substr_count($html, 'data-home-pathways-icon'));
-            $this->assertSame(1, substr_count($html, 'data-home-level-icon'));
-            $this->assertStringContainsString('bg-transparent', $html);
+            $this->assertSame(1, substr_count($html, 'data-home-levels'));
         }
-
-        $template = file_get_contents(resource_path('views/home.blade.php'));
-        $this->assertIsString($template);
-        $this->assertStringContainsString('data-home-pathways-icon', $template);
-        $this->assertStringContainsString('data-home-level-icon', $template);
-        $this->assertStringNotContainsString('group-hover:bg-[#dceeff]', $template);
-        $this->assertStringNotContainsString('bg-[#eaf3ff] text-[#316ea8]', $template);
-        $this->assertStringContainsString('dark:from-[#123b6b]', $template);
-        $this->assertStringContainsString('dark:bg-[#10345f]', $template);
-    }
-
-    public function test_cefr_guide_description_is_accurate_and_expanded_in_all_languages(): void
-    {
-        $original = [
-            'en' => 'Explore CEFR descriptors from A1 to C2 and choose a pathway appropriate to your goals.',
-            'km' => 'ស្វែងយល់កម្រិត CEFR ចាប់ពី A1 ដល់ C2 សម្រាប់កំណត់គោលដៅសិក្សា។',
-            'zh' => '了解 CEFR A1 至 C2 等级描述，选择合适的学习路径。',
-        ];
-        foreach ($original as $lang => $previous) {
-            $description = trans('pages.level_guidance_desc', [], $lang);
-            $this->assertGreaterThan(mb_strlen($previous), mb_strlen($description));
-            $this->assertStringContainsString('CEFR', $description);
-            $this->assertStringContainsString('A1', $description);
-            $this->assertStringContainsString('C2', $description);
-            $this->get('/?lang='.$lang)->assertOk()->assertSee($description);
-        }
-    }
-
-    public function test_featured_card_links_remain_functional(): void
-    {
-        $this->get('/?lang=en')->assertOk()
-            ->assertSee('href="'.route('categories.index').'"', false)
-            ->assertSee('href="'.route('courses.index').'"', false)
-            ->assertSee('href="'.route('cefr.index').'"', false)
-            ->assertSee('href="'.route('login').'"', false);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\ContentEntry;
+use App\Models\CourseExam;
 use App\Models\PublicProfile;
 use App\Models\CourseInstructorAssignment;
 use Illuminate\Http\Request;
@@ -17,25 +18,18 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
-        $featuredCategories = Category::query()->visibleInCatalog()
-            ->whereIn('code', ['GE', 'IELTS', 'TOEFL', 'TEFL', 'TESOL', 'CEFR'])
-            ->orderBy('sort_order')->get();
+        $assessments = CourseExam::query()
+            ->whereNull('course_id')->where('published', true)->orderByDesc('id')->limit(4);
+        $assessmentColumns = ['id', 'public_id', 'kind', 'title'];
+        $featuredExams = (clone $assessments)->where('kind', 'exam')->get($assessmentColumns);
+        $featuredQuizzes = $assessments->where('kind', 'quiz')->get($assessmentColumns);
 
-        $featuredCourses = Course::discoverable()->with(['category', 'featuredMedia'])
-            ->withCount('lessons')->orderByDesc('published_at')->limit(6)->get();
-        $latestArticles = ContentEntry::query()->publishedArticles()->orderByDesc('id')->limit(3)->get();
+        $featuredCourses = Course::discoverable()->orderByDesc('published_at')->orderByDesc('id')
+            ->limit(4)->get(['id', 'public_id', 'slug', 'title']);
+        $latestArticles = ContentEntry::query()->publishedArticles()
+            ->orderByDesc('id')->limit(4)->get(['id', 'public_id', 'title']);
 
-        $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
-            ->orderByDesc('published_at')->limit(4)->get();
-        $publishedCourseCount = Course::discoverable()->count();
-        $publishedCategoryCount = Category::visibleInCatalog()->count();
-        $publishedArticleCount = ContentEntry::query()->publishedArticles()->count();
-
-        return view('home', compact(
-            'featuredCategories','featuredCourses','latestArticles',
-            'featuredInstructors','publishedCourseCount',
-            'publishedCategoryCount','publishedArticleCount'
-        ));
+        return view('home', compact('featuredExams', 'featuredQuizzes', 'featuredCourses', 'latestArticles'));
     }
 
     public function navigationCategories(): Response

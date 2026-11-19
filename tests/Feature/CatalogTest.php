@@ -20,7 +20,7 @@ class CatalogTest extends TestCase
         $this->publishLearningCategoryFixtures();
 
         $this->get('/')->assertOk()
-            ->assertSee('Explore English learning for every ambition.')
+            ->assertSee('English courses and exam practice')
             ->assertSee('IELTS');
     }
 
