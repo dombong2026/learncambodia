@@ -32,7 +32,7 @@ final class PublicPracticeQuizTest extends TestCase
         $this->assertSame(1200, $first->expires_at->timestamp - now()->timestamp);
         $this->post($start)->assertRedirect($result);
         $this->get($result)->assertOk()->assertSee('Check answer')->assertDontSee($quiz->questions[0]['feedback']);
-        $this->postJson(route('specialized-exams.attempts.feedback', $first), [
+        $this->withCredentials()->postJson(route('specialized-exams.attempts.feedback', $first), [
             'question' => 0, 'answer' => $quiz->questions[0]['correct'],
         ])->assertOk()->assertJson(['correct' => true, 'feedback' => $quiz->questions[0]['feedback']]);
         $this->post(route('specialized-exams.attempts.submit', $first), [
