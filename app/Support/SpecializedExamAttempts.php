@@ -34,6 +34,11 @@ final class SpecializedExamAttempts
         return $user?->role === User::ROLE_STUDENT && $user->isActiveAccount() ? $user : null;
     }
 
+    public static function participant(?User $user, string $kind): ?User
+    {
+        return $kind === 'quiz' && $user?->isActiveAccount() ? $user : self::student($user);
+    }
+
     public static function visible(Builder $query, ?User $student, ?string $browser): Builder
     {
         return $query->whereNull('course_enrollment_id')->where(function (Builder $owner) use ($student, $browser): void {
@@ -51,11 +56,11 @@ final class SpecializedExamAttempts
 
     public static function owns(Request $request, ExamAttempt $attempt): bool
     {
-        $student = self::student($request->user());
+        $participant = self::participant($request->user(), $attempt->snapshot['kind'] ?? 'exam');
 
         return $attempt->isSpecialized()
             && ($attempt->student_id !== null
-                ? $attempt->student_id === $student?->id
+                ? $attempt->student_id === $participant?->id
                 : self::ownsBrowser($request, $attempt));
     }
 

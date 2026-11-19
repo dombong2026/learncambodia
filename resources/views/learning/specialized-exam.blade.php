@@ -12,6 +12,7 @@
 </head>
 <body class="specialized-exam">
 <main class="specialized-exam-shell">
+    @php($isQuiz = ($attempt->snapshot['kind'] ?? $exam->kind) === 'quiz')
     <h1>{{ $attempt->snapshot['title'] ?? $exam->title }}</h1>
     @if(session('status'))
         <p class="specialized-exam-status" role="status">{{ session('status') }}</p>
@@ -24,14 +25,21 @@
 
     @if(!isset($attempt))
         <section class="specialized-exam-card">
-            <p>{{ trans_choice('detail.minutes', $exam->time_limit) }} · {{ __('detail.passing_score', ['score' => $exam->passing_percent]) }}</p>
-            <p>{{ __('specialized_exam.intro') }}</p>
+            <p>
+                @if($isQuiz)
+                    {{ __('specialized_exam.quiz_questions', ['count' => count($exam->questions ?? [])]) }} ·
+                @endif
+                {{ trans_choice('detail.minutes', $exam->time_limit) }} ·
+                @if($isQuiz){{ trans_choice('detail.attempts', $exam->attempt_limit) }} · @endif
+                {{ __('detail.passing_score', ['score' => $exam->passing_percent]) }}
+            </p>
+            <p>{{ __($isQuiz ? 'specialized_exam.quiz_intro' : 'specialized_exam.intro') }}</p>
             @if($active)
-                <a class="specialized-exam-action" href="{{ route($active->resultRoute(), $active) }}">{{ __('specialized_exam.resume') }}</a>
+                <a class="specialized-exam-action" href="{{ route($active->resultRoute(), $active) }}">{{ __($isQuiz ? 'specialized_exam.quiz_resume' : 'specialized_exam.resume') }}</a>
             @elseif($history->count() < $exam->attempt_limit)
                 <form method="post" action="{{ route('specialized-exams.start', $exam) }}">
                     @csrf
-                    <button class="specialized-exam-action">{{ __('specialized_exam.start') }}</button>
+                    <button class="specialized-exam-action">{{ __($isQuiz ? 'specialized_exam.quiz_start' : 'specialized_exam.start') }}</button>
                 </form>
             @else
                 <p>{{ __('specialized_exam.limit') }}</p>
@@ -43,14 +51,14 @@
                 <ul>
                     @foreach($history as $previous)
                         <li><a href="{{ route($previous->resultRoute(), $previous) }}">{{ __('specialized_exam.attempt', ['number' => $history->count() - $loop->index]) }}</a>
-                            · {{ $previous->submitted_at ? __('specialized_exam.submitted') : ($previous->expires_at->isFuture() ? __('specialized_exam.in_progress') : __('specialized_exam.expired')) }}</li>
+                            · {{ $previous->submitted_at ? __($isQuiz ? 'specialized_exam.quiz_submitted' : 'specialized_exam.submitted') : ($previous->expires_at->isFuture() ? __('specialized_exam.in_progress') : __('specialized_exam.expired')) }}</li>
                     @endforeach
                 </ul>
             </section>
         @endif
     @elseif($attempt->submitted_at)
         <section class="specialized-exam-card">
-            <h2>{{ __('specialized_exam.submitted') }}</h2>
+            <h2>{{ __($isQuiz ? 'specialized_exam.quiz_submitted' : 'specialized_exam.submitted') }}</h2>
             @if($attempt->score !== null)
                 <p><strong>{{ $attempt->score }}%</strong> · {{ __($attempt->passed ? 'specialized_exam.passed' : 'specialized_exam.below_pass') }}</p>
                 <p>{{ __('detail.passing_score', ['score' => $attempt->snapshot['passing_percent']]) }}</p>
@@ -58,7 +66,7 @@
                 <p>{{ __(collect($attempt->snapshot['questions'])->contains(\App\Support\AssessmentQuestions::manual(...))
                     ? 'specialized_exam.awaiting_grade' : 'specialized_exam.recorded') }}</p>
             @endif
-            @if($owned && $attempt->passed)
+            @if($owned && $student && $attempt->passed)
                 <x-certificate-award :certificate="$certificate" :claim="route('account.certificates.claim-assessment', $attempt)" />
             @endif
             @foreach($attempt->snapshot['questions'] as $index => $question)
@@ -68,7 +76,9 @@
                 @endif
             @endforeach
         </section>
-        @if($owned)
+        @if($isQuiz)
+            <p class="specialized-exam-status">{{ __($owned ? 'specialized_exam.quiz_account_saved' : 'specialized_exam.quiz_browser_saved') }}</p>
+        @elseif($owned)
             <p class="specialized-exam-status">{{ __('specialized_exam.account_saved') }}</p>
         @else
             @php($next = route($attempt->resultRoute(), ['attempt' => $attempt, 'lang' => app()->getLocale()], absolute: false))
@@ -128,11 +138,11 @@
                     @include('workspace.student.assessment-question')
                 </div>
             @endforeach
-            <button type="submit" class="specialized-exam-action">{{ __('specialized_exam.submit') }}</button>
+            <button type="submit" class="specialized-exam-action">{{ __($isQuiz ? 'specialized_exam.quiz_submit' : 'specialized_exam.submit') }}</button>
         </form>
     @endif
     @if(isset($attempt) && $exam->published && ($attempt->submitted_at || !$attempt->expires_at->isFuture()))
-        <a class="specialized-exam-back" href="{{ $exam->publicUrl() }}">{{ __('specialized_exam.back') }}</a>
+        <a class="specialized-exam-back" href="{{ $exam->publicUrl() }}">{{ __($isQuiz ? 'specialized_exam.quiz_back' : 'specialized_exam.back') }}</a>
     @endif
 </main>
 </body>

@@ -56,9 +56,9 @@ final class StudentExaminationController extends Controller
     public function specialized(Request $request, CourseExam $exam): View
     {
         abort_unless($exam->published && $exam->isSpecialized(), 404);
-        $student = SpecializedExamAttempts::student($request->user());
-        $browser = SpecializedExamAttempts::browser($request, !$student);
-        $history = SpecializedExamAttempts::visible(ExamAttempt::where('course_exam_id', $exam->id), $student, $browser)
+        $participant = SpecializedExamAttempts::participant($request->user(), $exam->kind);
+        $browser = SpecializedExamAttempts::browser($request, !$participant);
+        $history = SpecializedExamAttempts::visible(ExamAttempt::where('course_exam_id', $exam->id), $participant, $browser)
             ->latest('id')->get();
         $active = $history->first(fn (ExamAttempt $item) => !$item->submitted_at && $item->expires_at->isFuture());
 
@@ -68,11 +68,11 @@ final class StudentExaminationController extends Controller
     public function startSpecialized(Request $request, CourseExam $exam): RedirectResponse
     {
         abort_unless($exam->published && $exam->isSpecialized(), 404);
-        $student = SpecializedExamAttempts::student($request->user());
+        $participant = SpecializedExamAttempts::participant($request->user(), $exam->kind);
         $browser = SpecializedExamAttempts::browser($request);
-        if (!$student && $browser === null) {
+        if (!$participant && $browser === null) {
             return to_route('specialized-exams.show', $exam)
-                ->with('status', __('specialized_exam.cookies'));
+                ->with('status', __($exam->kind === 'quiz' ? 'specialized_exam.quiz_cookies' : 'specialized_exam.cookies'));
         }
         $attempt = $this->begin($request, $exam, specialized: true, browser: $browser);
 
@@ -82,18 +82,18 @@ final class StudentExaminationController extends Controller
     private function begin(Request $request, CourseExam $exam, ?CourseEnrollment $enrollment = null,
         bool $specialized = false, ?string $browser = null): ExamAttempt
     {
-        $student = SpecializedExamAttempts::student($request->user());
-        $studentId = $student?->id;
-
-        return DB::transaction(function () use ($exam, $enrollment, $student, $studentId, $specialized, $browser): ExamAttempt {
+        return DB::transaction(function () use ($request, $exam, $enrollment, $specialized, $browser): ExamAttempt {
             $exam = CourseExam::lockForUpdate()->findOrFail($exam->id);
             abort_unless($exam->published && $exam->course_id === $enrollment?->course_id
                 && $exam->isSpecialized() === $specialized, 404);
+            $participant = SpecializedExamAttempts::participant($request->user(), $specialized ? $exam->kind : 'exam');
+            $studentId = $participant?->id;
             $history = ExamAttempt::where('course_exam_id', $exam->id)->where('course_enrollment_id', $enrollment?->id);
             if ($enrollment) {
                 abort_unless(CourseEnrollment::whereKey($enrollment->id)->where('status', 'approved')->lockForUpdate()->first(), 403);
             } elseif ($specialized) {
-                SpecializedExamAttempts::visible($history, $student, $browser);
+                abort_unless($participant || $browser !== null, 403);
+                SpecializedExamAttempts::visible($history, $participant, $browser);
             } else {
                 $history->where('student_id', $studentId);
                 $quote = CoursePricing::quote($exam->pricing);
@@ -115,7 +115,7 @@ final class StudentExaminationController extends Controller
             return ExamAttempt::create([
                 'course_exam_id' => $exam->id, 'course_enrollment_id' => $enrollment?->id,
                 'student_id' => $enrollment ? null : $studentId,
-                'guest_browser' => $specialized && !$student ? $browser : null,
+                'guest_browser' => $specialized && !$participant ? $browser : null,
                 'snapshot' => [
                     'title' => $exam->title, 'instructions_html' => $exam->instructions_html, 'questions' => $questions,
                     'passing_percent' => $exam->passing_percent, 'gamified' => $exam->gamified,
@@ -147,8 +147,9 @@ final class StudentExaminationController extends Controller
 
         $exam = $attempt->exam()->withTrashed()->firstOrFail();
         $student = SpecializedExamAttempts::student($request->user());
-        $owned = $student && $attempt->student_id === $student->id;
-        $certificate = $owned && $attempt->passed
+        $participant = SpecializedExamAttempts::participant($request->user(), $attempt->snapshot['kind'] ?? 'exam');
+        $owned = $participant && $attempt->student_id === $participant->id;
+        $certificate = $owned && $student && $attempt->passed
             ? IssuedCertificate::where('award_key', CertificateAwards::assessmentKey($attempt, $student->id))->first()
             : null;
         $this->enableMicrophone($request, $attempt);
@@ -270,7 +271,9 @@ final class StudentExaminationController extends Controller
                 }
                 $result = AssessmentQuestions::result($locked->snapshot, $answers);
                 $locked->update($result + ['answers' => $answers, 'submitted_at' => now()]);
-                if (CertificateAwards::assessment($locked) && $enrollment) {
+                $eligibleForCertificate = !$locked->isSpecialized() || ($locked->snapshot['kind'] ?? 'exam') !== 'quiz'
+                    || SpecializedExamAttempts::student($request->user());
+                if ($eligibleForCertificate && CertificateAwards::assessment($locked) && $enrollment) {
                     CertificateAwards::course($enrollment->course, $enrollment);
                 }
                 if (array_filter($locked->snapshot['questions'], AssessmentQuestions::manual(...)) !== []) {
