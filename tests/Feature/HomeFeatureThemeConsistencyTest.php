@@ -60,7 +60,7 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
     {
         foreach (['en', 'km', 'zh'] as $lang) {
             $html = $this->get('/?lang='.$lang)->assertOk()
-                ->assertSee('images/home/hero.webp')
+                ->assertSee('images/home/hero-cutout.webp')
                 ->assertSee('href="'.route('categories.index').'"', false)
                 ->assertSee('href="'.route('cefr.index').'#A1"', false)
                 ->assertSee('href="'.route('cefr.index').'#C2"', false)

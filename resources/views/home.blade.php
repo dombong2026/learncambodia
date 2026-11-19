@@ -3,7 +3,7 @@
 @section('meta_description', __('pages.home_intro'))
 
 @push('public_styles')
-    <link rel="stylesheet" href="{{ asset('css/home.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}?v=4">
 @endpush
 
 @section('content')
@@ -25,7 +25,9 @@
                     <a class="lc-home-button lc-home-button-outline" href="{{ route('assessments.exams') }}">{{ __('pages.browse_exams') }}</a>
                 </div>
             </div>
-            <img class="lc-home-hero-image" src="{{ asset('images/home/hero.webp') }}" width="1024" height="576" alt="" fetchpriority="high" decoding="async">
+            <div class="lc-home-hero-art">
+                <img class="lc-home-hero-image" src="{{ asset('images/home/hero-cutout.webp') }}" width="1320" height="743" alt="" fetchpriority="high" decoding="async">
+            </div>
         </div>
     </section>
 

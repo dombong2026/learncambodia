@@ -52,7 +52,7 @@ final class PremiumHeaderCardMotionTest extends TestCase
     {
         $this->get('/?lang=en')->assertOk()
             ->assertSee('class="lc-home-hero-image"', false)
-            ->assertSee('width="1024" height="576" alt="" fetchpriority="high"', false)
+            ->assertSee('width="1320" height="743" alt="" fetchpriority="high"', false)
             ->assertSee('href="'.route('courses.index').'"', false)
             ->assertSee('href="'.route('assessments.exams').'"', false);
     }

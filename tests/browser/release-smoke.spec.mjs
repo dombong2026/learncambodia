@@ -477,6 +477,8 @@ test('homepage displays the hero image, exam discovery and one row of CEFR level
     const image = hero.locator('img');
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    await expect(image).toHaveCSS('object-fit', 'contain');
+    await expect(image).toHaveCSS('border-radius', '0px');
     await expect(hero.getByRole('link', { name: 'Browse exams' })).toHaveAttribute('href', /\/assessments\/exams/);
 
     const links = main.locator('[data-home-levels] a');

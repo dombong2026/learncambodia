@@ -31,19 +31,26 @@
 }
 
 .lc-home-hero {
-    background: linear-gradient(116deg, #0a2347, #13375b 70%, #194367);
+    overflow: hidden;
+    background: linear-gradient(116deg, #0a2347, #103254 66%, #164164);
     color: #fff;
 }
 
 .lc-home-hero-grid {
     display: grid;
     align-items: center;
-    gap: clamp(1.5rem, 4vw, 4rem);
-    padding-block: clamp(2rem, 4.5vw, 3.75rem);
+    gap: clamp(1.5rem, 3.5vw, 3rem);
+    padding-block: clamp(2.25rem, 5vw, 4.25rem);
+}
+
+.lc-home-hero-copy {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
 }
 
 .lc-home-hero h1 {
-    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    font-size: clamp(2.1rem, 4.2vw, 3.5rem);
     font-weight: 850;
     line-height: 1.12;
     letter-spacing: -.035em;
@@ -57,13 +64,31 @@
     line-height: 1.65;
 }
 
-.lc-home-hero-image {
-    display: block;
+.lc-home-hero-art {
+    position: relative;
+    isolation: isolate;
     aspect-ratio: 16 / 9;
+    min-width: 0;
+}
+
+.lc-home-hero-art::before {
+    position: absolute;
+    z-index: -1;
+    inset: -25% -12% -20%;
+    background: radial-gradient(ellipse at 50% 55%, #5e9bc455, transparent 67%);
+    content: "";
+    pointer-events: none;
+}
+
+.lc-home-hero-image {
+    position: absolute;
+    inset: 0;
+    display: block;
     width: 100%;
-    height: auto;
-    border-radius: 1.5rem;
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 .75rem 1.25rem #05152f66);
 }
 
 .lc-home-actions {
@@ -218,7 +243,7 @@
 }
 
 @media (min-width: 54rem) {
-    .lc-home-hero-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1fr); }
+    .lc-home-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); }
 
     .lc-home-section {
         grid-template-areas: "media body";
