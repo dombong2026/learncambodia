@@ -9,6 +9,8 @@
 
 .exam-type-table tbody tr:last-child > :is(td, th) { border-bottom: 0; }
 .exam-type-table tbody tr:hover { background: var(--manager-hover); }
+.exam-type-table table th { text-align: start; }
+.exam-type-table table thead th:last-child { text-align: end; }
 .exam-type-table tbody th { font-weight: 700; }
 
 .exam-type-name,
