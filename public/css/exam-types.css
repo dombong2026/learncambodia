@@ -1,0 +1,89 @@
+.exam-type-table table {
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.exam-type-number-column { width: 3.75rem; }
+.exam-type-name-column { width: 30%; }
+.exam-type-actions-column { width: 5.75rem; }
+
+.exam-type-table tbody tr:last-child > :is(td, th) { border-bottom: 0; }
+.exam-type-table tbody tr:hover { background: var(--manager-hover); }
+.exam-type-table table th { text-align: start; }
+.exam-type-table table thead th:last-child { text-align: end; }
+.exam-type-table tbody th { font-weight: 700; }
+
+.exam-type-name,
+.exam-type-description {
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.exam-type-description {
+    color: var(--manager-muted);
+    line-height: 1.55;
+}
+
+.exam-type-dialog {
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0;
+    width: min(31rem, 100% - 2rem);
+    max-height: calc(100% - 2rem);
+    margin: auto;
+    overflow: auto;
+    padding: clamp(1rem, 4vw, 1.6rem);
+    border: 1px solid var(--manager-border);
+    border-radius: 1.1rem;
+    background: var(--manager-panel);
+    color: var(--manager-text);
+    box-shadow: 0 22px 80px #07172f66;
+}
+
+.exam-type-dialog::backdrop { background: #071325a8; }
+.exam-type-dialog-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.exam-type-dialog-heading h2 { font-size: 1.2rem; font-weight: 800; }
+.exam-type-form { display: grid; gap: .95rem; }
+.exam-type-dialog-copy { color: var(--manager-muted); overflow-wrap: anywhere; }
+.exam-type-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .6rem;
+    margin-top: 1.15rem;
+}
+.exam-type-form .exam-type-dialog-actions { margin-top: .2rem; }
+.exam-type-confirm { background: #a5223a; border-color: #a5223a; color: #fff; }
+.exam-type-confirm:hover { background: #8b1930; border-color: #8b1930; }
+.exam-type-table :is(a, button, input, textarea):focus-visible {
+    outline: 2px solid var(--manager-blue);
+    outline-offset: 2px;
+}
+
+@media (max-width: 650px) {
+    .exam-type-number-column { width: 2.3rem; }
+    .exam-type-name-column { width: 29%; }
+    .exam-type-actions-column { width: 3.65rem; }
+
+    .exam-type-table table :is(th, td) {
+        padding-inline: .42rem;
+        font-size: .8rem;
+    }
+    .exam-type-table table thead th {
+        font-size: .65rem;
+        letter-spacing: 0;
+    }
+    .exam-type-table .learning-manager-scroll th:last-child:not([scope="row"]),
+    .exam-type-table .learning-manager-actions {
+        position: static;
+        box-shadow: none;
+        background: transparent;
+    }
+}
