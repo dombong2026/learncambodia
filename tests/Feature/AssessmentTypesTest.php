@@ -46,6 +46,52 @@ final class AssessmentTypesTest extends TestCase
         $this->actingAs(User::factory()->create())->get(route('admin.quiz-types.index'))->assertForbidden();
     }
 
+    public function test_exam_type_table_can_edit_and_delete_unused_types(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $table = route('admin.exam-types.index', ['lang' => 'en']);
+        $this->post(route('admin.exam-types.store'), ['name' => 'Placement', 'description' => 'Places learners by level.'])
+            ->assertRedirect($table);
+        $type = ExamType::where('kind', 'exam')->sole();
+        $action = ['id' => $type->id, 'lang' => 'en'];
+
+        $this->get($table)->assertOk()
+            ->assertSeeInOrder(['>No</th>', '>Type</th>', '>Description</th>', '>Action</th>'], false)
+            ->assertSee('Places learners by level.')->assertSee('Actions for Placement');
+        $this->get($table.'&manage=edit&type='.$type->id)
+            ->assertOk()->assertSee('Save changes')->assertSee('value="Placement"', false);
+        $this->patch(route('admin.exam-types.update', $action), ['name' => 'Placement Test', 'description' => 'Revised description.'])
+            ->assertRedirect($table)->assertSessionHas('status', 'Exam type updated.');
+
+        $this->get($table.'&manage=delete&type='.$type->id)
+            ->assertOk()->assertSee('Delete the “Placement Test” exam type?')->assertSee('Cancel');
+        $this->delete(route('admin.exam-types.destroy', $action))
+            ->assertRedirect($table)->assertSessionHas('status', 'Exam type deleted.');
+        $this->assertModelMissing($type);
+    }
+
+    public function test_exam_type_deletion_preserves_linked_exams_and_rejects_quiz_types(): void
+    {
+        $type = ExamType::create(['name' => 'Final Exam', 'kind' => 'exam']);
+        $quizType = ExamType::create(['name' => 'Practice', 'kind' => 'quiz']);
+        $exam = CourseExam::create([
+            'exam_type_id' => $type->id, 'title' => 'End of course exam', 'questions' => [],
+            'time_limit' => 5, 'passing_percent' => 70, 'attempt_limit' => 1, 'kind' => 'exam',
+        ]);
+
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $this->get(route('admin.exam-types.index', ['manage' => 'delete', 'type' => $type->id]))
+            ->assertOk()->assertSee('This exam type is assigned to an exam.')->assertDontSee(route('admin.exam-types.destroy', $type));
+        $this->delete(route('admin.exam-types.destroy', $type))->assertSessionHasErrors('type');
+        $exam->delete();
+        $this->delete(route('admin.exam-types.destroy', $type))->assertSessionHasErrors('type');
+        $this->delete(route('admin.exam-types.destroy', $quizType))->assertNotFound();
+        $this->assertModelExists($type);
+        $this->assertModelExists($quizType);
+
+        $this->actingAs(User::factory()->create())->delete(route('admin.exam-types.destroy', $type))->assertForbidden();
+    }
+
     public function test_migration_preserves_existing_exam_and_quiz_assignments(): void
     {
         if (DB::getDriverName() !== 'sqlite') {

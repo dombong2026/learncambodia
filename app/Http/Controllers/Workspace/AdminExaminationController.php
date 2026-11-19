@@ -132,6 +132,9 @@ final class AdminExaminationController extends Controller
         $data += ['shuffle' => false, 'gamified' => false, 'published' => false, 'live_feedback' => false];
 
         $saved = DB::transaction(function () use ($request, $exam, $data): CourseExam {
+            if ($data['kind'] === 'exam' && !ExamType::where('kind', 'exam')->whereKey($data['exam_type_id'])->sharedLock()->first()) {
+                throw ValidationException::withMessages(['exam_type_id' => __('exam_types.unavailable')]);
+            }
             $record = $exam ? CourseExam::lockForUpdate()->findOrFail($exam->id) : new CourseExam();
             if ($record->exists && (int) $record->course_id !== (int) $data['course_id']) {
                 abort_if(ExamAttempt::where('course_exam_id', $record->id)->exists() || AssessmentAccess::where('course_exam_id', $record->id)->exists(), 409, 'An exam with attempts stays linked to its original course.');
@@ -198,13 +201,66 @@ final class AdminExaminationController extends Controller
         return back()->with('status', 'Grades saved.');
     }
 
-    public function types(Request $request, string $kind): View
+    public function types(Request $request, string $kind): View|RedirectResponse
     {
+        if ($kind === 'exam-types') {
+            return $this->examTypes($request);
+        }
+
         $query = $kind === 'certificate-types' ? CertificateType::query() : ExamType::where('kind', $this->assessmentKind($kind));
 
         return view('workspace.admin.examination.types', [
             'kind' => $kind, 'types' => $query->orderBy('name')->paginate(15),
         ]);
+    }
+
+    private function examTypes(Request $request): View|RedirectResponse
+    {
+        $data = $request->validate([
+            'manage' => ['nullable', Rule::in(['add', 'edit', 'delete'])],
+            'type' => ['required_if:manage,edit,delete', 'integer', 'min:1'],
+        ]);
+        $manage = $data['manage'] ?? null;
+        $examTypes = ExamType::where('kind', 'exam');
+        $selectedType = in_array($manage, ['edit', 'delete'], true) ? (clone $examTypes)->findOrFail($data['type']) : null;
+        $types = $examTypes->orderBy('name')->orderBy('id')->paginate(15)->appends('lang', app()->getLocale());
+
+        if ($types->currentPage() > $types->lastPage()) {
+            return to_route('admin.exam-types.index', ['lang' => app()->getLocale(), 'page' => $types->lastPage()]);
+        }
+
+        $listParameters = ['lang' => app()->getLocale()];
+        if (!$types->onFirstPage()) {
+            $listParameters['page'] = $types->currentPage();
+        }
+        $inUse = $manage === 'delete' && $this->examTypeInUse($selectedType->id);
+
+        return view('workspace.admin.examination.exam-types', compact('types', 'manage', 'selectedType', 'listParameters', 'inUse'));
+    }
+
+    public function deleteExamType(Request $request, int $id): RedirectResponse
+    {
+        $deleted = DB::transaction(function () use ($id): bool {
+            $type = ExamType::where('kind', 'exam')->lockForUpdate()->findOrFail($id);
+
+            return !$this->examTypeInUse($type->id) && $type->delete();
+        });
+
+        $redirect = to_route('admin.exam-types.index', $this->examTypeRedirectParameters($request));
+
+        return $deleted ? $redirect->with('status', __('exam_types.deleted')) : $redirect->withErrors(['type' => __('exam_types.in_use')]);
+    }
+
+    private function examTypeInUse(int $id): bool
+    {
+        return CourseExam::withTrashed()->where('exam_type_id', $id)->exists();
+    }
+
+    private function examTypeRedirectParameters(Request $request): array
+    {
+        $page = $request->integer('page');
+
+        return ['lang' => app()->getLocale()] + ($page > 1 ? ['page' => $page] : []);
     }
 
     public function updateType(Request $request, int $id, string $kind): RedirectResponse
@@ -231,6 +287,11 @@ final class AdminExaminationController extends Controller
             'name' => $nameRules,
             'description' => ['nullable', 'string', 'max:500'],
         ]))->save();
+
+        if ($kind === 'exam-types') {
+            return to_route('admin.exam-types.index', $this->examTypeRedirectParameters($request))
+                ->with('status', __($id ? 'exam_types.updated' : 'exam_types.created'));
+        }
 
         return back()->with('status', 'Type saved.');
     }

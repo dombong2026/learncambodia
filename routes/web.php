@@ -301,6 +301,8 @@ Route::middleware('auth')->group(function (): void {
         }
         Route::patch('/assessment-access/{access}', [AssessmentAccessController::class, 'review'])->name('assessment-access.review');
         Route::patch('/assessment-attempts/{attempt}/grade', [AdminExaminationController::class, 'grade'])->name('assessment-attempts.grade');
+        Route::delete('/exam-types/{id}', [AdminExaminationController::class, 'deleteExamType'])
+            ->whereNumber('id')->name('exam-types.destroy');
         foreach (['exam-types', 'quiz-types', 'certificate-types'] as $type) {
             Route::get("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'types'])->defaults('kind', $type)->name("$type.index");
             Route::post("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'saveType'])->defaults('kind', $type)->name("$type.store");

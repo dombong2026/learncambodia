@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Exam Types',
+    'table' => 'Exam types table',
+    'number' => 'No',
+    'type' => 'Type',
+    'name' => 'Name',
+    'description' => 'Description',
+    'action' => 'Action',
+    'actions_for' => 'Actions for :name',
+    'empty' => 'No exam types yet.',
+    'add' => 'Add type',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
+    'save' => 'Save changes',
+    'close' => 'Close',
+    'cancel' => 'Cancel',
+    'confirm_delete' => 'Delete the “:name” exam type?',
+    'in_use' => 'This exam type is assigned to an exam. Reassign the exam before deleting this type.',
+    'unavailable' => 'The selected exam type is no longer available. Choose another type.',
+    'created' => 'Exam type added.',
+    'updated' => 'Exam type updated.',
+    'deleted' => 'Exam type deleted.',
+];
