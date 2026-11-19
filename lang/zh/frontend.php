@@ -12,6 +12,8 @@ return [
     'any_level' => '全部等级',
     'apply' => '筛选',
     'available_courses' => '可选课程',
+    'catalog_count' => ':count 门课程',
+    'course_pages' => '课程分页',
     'result_count' => '门课程',
     'no_courses' => '目前没有符合条件的已批准课程。',
     'explore_categories' => '浏览课程类别',

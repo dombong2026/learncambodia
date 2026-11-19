@@ -132,6 +132,33 @@ final class SevenPublicPagesTest extends TestCase
         $this->get('/courses?mode=unknown')->assertSessionHasErrors('mode');
     }
 
+    public function test_course_catalog_pages_keep_filters_and_return_to_results(): void
+    {
+        $this->seed([CategorySeeder::class, CefrLevelSeeder::class]);
+        for ($i = 1; $i <= 13; $i++) {
+            $this->course("catalog-lesson-$i", sprintf('Catalog Course %02d', $i));
+        }
+        $this->course('offsite-catalog-lesson', 'Catalog On-site Course', 'GE', 'onsite');
+
+        $filters = '/courses?lang=en&q=Catalog&mode=online';
+        $this->get($filters)->assertOk()
+            ->assertSeeInOrder([
+                'course-catalog-hero.webp',
+                'Catalog Course 01',
+                'Catalog Course 12',
+                'Learning process',
+                'Showing 1–12 of 13 courses',
+            ])
+            ->assertDontSee('Catalog Course 13')
+            ->assertDontSee('Catalog On-site Course')
+            ->assertSee('lang=en&q=Catalog&mode=online&page=2#course-results');
+
+        $this->get($filters.'&page=2')->assertOk()
+            ->assertSeeInOrder(['Catalog Course 13', 'Showing 13 of 13 courses'])
+            ->assertDontSee('Catalog Course 12')
+            ->assertSee('lang=en&q=Catalog&mode=online&page=1#course-results');
+    }
+
     public function test_single_course_shows_lesson_outline_but_keeps_lesson_content_private(): void
     {
         $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);

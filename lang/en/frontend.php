@@ -12,6 +12,8 @@ return [
     'any_level' => 'All levels',
     'apply' => 'Apply',
     'available_courses' => 'Available courses',
+    'catalog_count' => ':count course|:count courses',
+    'course_pages' => 'Course pages',
     'result_count' => 'courses',
     'no_courses' => 'No approved courses match these filters yet.',
     'explore_categories' => 'Browse study categories',

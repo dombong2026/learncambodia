@@ -890,3 +890,22 @@ for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone
     }
   });
 }
+
+test('course catalog shows one to three columns and a responsive hero', async ({ page }) => {
+  await page.goto('/courses?lang=en');
+  const grid = page.locator('.course-catalog-grid');
+  const hero = page.locator('.course-catalog-hero img');
+  await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
+
+  for (const [width, columns] of [[390, 1], [768, 2], [1024, 2], [1440, 3]]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
+    const [copy, image] = await Promise.all([page.locator('.course-catalog-hero .assessment-catalog-hero__copy').boundingBox(), hero.boundingBox()]);
+    if (width < 768) {
+      expect(image.y).toBeGreaterThanOrEqual(copy.y + copy.height - 1);
+    } else {
+      expect(image.x).toBeGreaterThanOrEqual(copy.x + copy.width - 1);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
+  }
+});
