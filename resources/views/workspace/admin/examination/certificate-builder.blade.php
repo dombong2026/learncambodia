@@ -40,12 +40,13 @@
             <fieldset>
                 <legend>Template details</legend>
                 <label class="builder-field">Template name<input name="name" required maxlength="100" value="{{ $text('name', $template->name ?? '') }}"></label>
-                <label class="builder-field">Certificate type
-                    <select name="certificate_type_id" required>
+                <div class="builder-field">
+                    <label for="certificate-type">Certificate type</label>
+                    <select id="certificate-type" name="certificate_type_id" required>
                         <option value="">Choose a certificate type</option>
                         @foreach($types as $type)<option value="{{ $type->id }}" @selected((int) old('certificate_type_id', $template->certificate_type_id) === $type->id)>{{ $type->name }}</option>@endforeach
                     </select>
-                </label>
+                </div>
                 <a class="cert-hint text-blue-700 dark:text-blue-300" href="{{ route('admin.certificate-types.index') }}">Manage certificate types</a>
             </fieldset>
             <fieldset>
