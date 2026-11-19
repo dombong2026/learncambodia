@@ -28,7 +28,7 @@ final class SpecializedPracticeExamImportTest extends TestCase
             ->with('type')->orderBy('title')->get();
         $this->assertCount(10, $exams);
         $this->assertDatabaseCount('course_exams', 60);
-        $this->assertSame(['A1' => 2, 'A2' => 2, 'B1' => 2, 'B2' => 2, 'C1' => 2], $exams->countBy->managerLevel()->all());
+        $this->assertSame(['A1' => 2, 'A2' => 2, 'B1' => 2, 'B2' => 2, 'C1' => 2], $exams->countBy(fn (CourseExam $exam): ?string => $exam->managerLevel())->all());
         foreach ($exams as $exam) {
             $this->assertTrue($exam->isSpecialized());
             $this->assertTrue($exam->published);
