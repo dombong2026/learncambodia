@@ -16,6 +16,7 @@ use App\Support\CoursePricing;
 use App\Support\LearningAccess;
 use App\Support\WorkspaceNotifications;
 use App\Support\ManagedFiles;
+use App\Support\SpecializedExamAttempts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,19 +45,55 @@ final class StudentExaminationController extends Controller
 
     public function startStandalone(Request $request, CourseExam $exam): RedirectResponse
     {
-        return redirect()->route('account.assessment-attempts.show', $this->begin($request, $exam));
+        if ($exam->isSpecialized()) {
+            return $this->startSpecialized($request, $exam);
+        }
+        $attempt = $this->begin($request, $exam);
+
+        return to_route($attempt->resultRoute(), $attempt);
     }
 
-    private function begin(Request $request, CourseExam $exam, ?CourseEnrollment $enrollment = null): ExamAttempt
+    public function specialized(Request $request, CourseExam $exam): View
     {
-        $studentId = $request->user()->id;
+        abort_unless($exam->published && $exam->isSpecialized(), 404);
+        $student = SpecializedExamAttempts::student($request->user());
+        $browser = SpecializedExamAttempts::browser($request, !$student);
+        $history = SpecializedExamAttempts::visible(ExamAttempt::where('course_exam_id', $exam->id), $student, $browser)
+            ->latest('id')->get();
+        $active = $history->first(fn (ExamAttempt $item) => !$item->submitted_at && $item->expires_at->isFuture());
 
-        return DB::transaction(function () use ($exam, $enrollment, $studentId): ExamAttempt {
+        return view('learning.specialized-exam', compact('exam', 'history', 'active'));
+    }
+
+    public function startSpecialized(Request $request, CourseExam $exam): RedirectResponse
+    {
+        abort_unless($exam->published && $exam->isSpecialized(), 404);
+        $student = SpecializedExamAttempts::student($request->user());
+        $browser = SpecializedExamAttempts::browser($request);
+        if (!$student && $browser === null) {
+            return to_route('specialized-exams.show', $exam)
+                ->with('status', __('specialized_exam.cookies'));
+        }
+        $attempt = $this->begin($request, $exam, specialized: true, browser: $browser);
+
+        return to_route($attempt->resultRoute(), $attempt);
+    }
+
+    private function begin(Request $request, CourseExam $exam, ?CourseEnrollment $enrollment = null,
+        bool $specialized = false, ?string $browser = null): ExamAttempt
+    {
+        $student = SpecializedExamAttempts::student($request->user());
+        $studentId = $student?->id;
+
+        return DB::transaction(function () use ($exam, $enrollment, $student, $studentId, $specialized, $browser): ExamAttempt {
             $exam = CourseExam::lockForUpdate()->findOrFail($exam->id);
-            abort_unless($exam->published && $exam->course_id === $enrollment?->course_id, 404);
+            abort_unless($exam->published && $exam->course_id === $enrollment?->course_id
+                && $exam->isSpecialized() === $specialized, 404);
             $history = ExamAttempt::where('course_exam_id', $exam->id)->where('course_enrollment_id', $enrollment?->id);
             if ($enrollment) {
                 abort_unless(CourseEnrollment::whereKey($enrollment->id)->where('status', 'approved')->lockForUpdate()->first(), 403);
+            } elseif ($specialized) {
+                SpecializedExamAttempts::visible($history, $student, $browser);
             } else {
                 $history->where('student_id', $studentId);
                 $quote = CoursePricing::quote($exam->pricing);
@@ -78,10 +115,12 @@ final class StudentExaminationController extends Controller
             return ExamAttempt::create([
                 'course_exam_id' => $exam->id, 'course_enrollment_id' => $enrollment?->id,
                 'student_id' => $enrollment ? null : $studentId,
+                'guest_browser' => $specialized && !$student ? $browser : null,
                 'snapshot' => [
                     'title' => $exam->title, 'instructions_html' => $exam->instructions_html, 'questions' => $questions,
                     'passing_percent' => $exam->passing_percent, 'gamified' => $exam->gamified,
                     'kind' => $exam->kind, 'live_feedback' => $exam->live_feedback,
+                    'viewer_mode' => $specialized ? 'specialized' : 'default',
                 ],
                 'expires_at' => now()->addMinutes($exam->time_limit),
             ]);
@@ -95,19 +134,63 @@ final class StudentExaminationController extends Controller
         return $this->attemptView($request, $attempt, $enrollment);
     }
 
-    public function showStandalone(Request $request, ExamAttempt $attempt): View
+    public function showStandalone(Request $request, ExamAttempt $attempt): View|RedirectResponse
     {
         $this->authorizeAttempt($request, $attempt);
 
-        return $this->attemptView($request, $attempt);
+        return $attempt->isSpecialized() ? to_route($attempt->resultRoute(), $attempt) : $this->attemptView($request, $attempt);
+    }
+
+    public function showSpecialized(Request $request, ExamAttempt $attempt): View
+    {
+        $this->authorizeAttempt($request, $attempt);
+
+        $exam = $attempt->exam()->withTrashed()->firstOrFail();
+        $student = SpecializedExamAttempts::student($request->user());
+        $owned = $student && $attempt->student_id === $student->id;
+        $certificate = $owned && $attempt->passed
+            ? IssuedCertificate::where('award_key', CertificateAwards::assessmentKey($attempt, $student->id))->first()
+            : null;
+        $this->enableMicrophone($request, $attempt);
+
+        return view('learning.specialized-exam', compact('exam', 'attempt', 'student', 'owned', 'certificate'));
+    }
+
+    public function saveSpecializedEmail(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        $this->authorizeAttempt($request, $attempt);
+        $data = $request->validate(['email' => ['required', 'email', 'max:255']]);
+        DB::transaction(function () use ($request, $attempt, $data): void {
+            $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
+            abort_unless($locked->submitted_at && SpecializedExamAttempts::ownsBrowser($request, $locked), 404);
+            $locked->forceFill(['guest_email' => SpecializedExamAttempts::emailKey($data['email'])])->save();
+        });
+
+        return to_route($attempt->resultRoute(), $attempt)->with('status', __('specialized_exam.email_saved'));
+    }
+
+    public function claimSpecialized(Request $request, ExamAttempt $attempt): RedirectResponse
+    {
+        $student = SpecializedExamAttempts::student($request->user());
+        abort_unless($student, 403);
+        DB::transaction(function () use ($request, $attempt, $student): void {
+            $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
+            abort_unless($locked->submitted_at && SpecializedExamAttempts::owns($request, $locked), 404);
+            if ($locked->student_id === $student->id) {
+                return;
+            }
+            if ($locked->guest_email !== null && $locked->guest_email !== SpecializedExamAttempts::emailKey($student->email)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['email' => __('specialized_exam.email_mismatch')]);
+            }
+            SpecializedExamAttempts::claim($locked, $student);
+        });
+
+        return to_route($attempt->resultRoute(), $attempt)->with('status', __('specialized_exam.account_saved'));
     }
 
     private function attemptView(Request $request, ExamAttempt $attempt, ?CourseEnrollment $enrollment = null): View
     {
-        if (!$attempt->submitted_at && $attempt->expires_at->isFuture()
-            && in_array('speaking', array_column($attempt->snapshot['questions'], 'format'), true)) {
-            $request->attributes->set('assessmentMicrophone', true);
-        }
+        $this->enableMicrophone($request, $attempt);
 
         $focus = [];
         if ($enrollment && $request->has('from_lesson')) {
@@ -138,7 +221,15 @@ final class StudentExaminationController extends Controller
         $this->authorizeAttempt($request, $attempt);
         $this->finish($request, $attempt);
 
-        return redirect()->route('account.assessment-attempts.show', $attempt);
+        return to_route($attempt->resultRoute(), $attempt);
+    }
+
+    private function enableMicrophone(Request $request, ExamAttempt $attempt): void
+    {
+        if (!$attempt->submitted_at && $attempt->expires_at->isFuture()
+            && in_array('speaking', array_column($attempt->snapshot['questions'], 'format'), true)) {
+            $request->attributes->set('assessmentMicrophone', true);
+        }
     }
 
     private function finish(Request $request, ExamAttempt $attempt, ?CourseEnrollment $enrollment = null): void
@@ -149,11 +240,12 @@ final class StudentExaminationController extends Controller
         ]);
         $files = [];
         try {
-            DB::transaction(function () use ($attempt, $enrollment, $data, &$files): void {
+            DB::transaction(function () use ($request, $attempt, $enrollment, $data, &$files): void {
                 if ($enrollment) {
                     $enrollment = CourseEnrollment::lockForUpdate()->findOrFail($enrollment->id);
                 }
                 $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
+                $this->authorizeAttempt($request, $locked, $enrollment);
                 $this->ensureOpen($locked, $enrollment);
                 $answers = $locked->answers ?? [];
                 foreach ($locked->snapshot['questions'] as $index => $question) {
@@ -199,8 +291,9 @@ final class StudentExaminationController extends Controller
         $this->authorizeAttempt($request, $attempt, $enrollment);
         $data = $request->validate(['question' => ['required', 'integer', 'min:0', 'max:199'], 'answer' => ['required', 'string', 'max:300']]);
 
-        return DB::transaction(function () use ($attempt, $enrollment, $data): JsonResponse {
+        return DB::transaction(function () use ($request, $attempt, $enrollment, $data): JsonResponse {
             $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
+            $this->authorizeAttempt($request, $locked, $enrollment);
             $this->ensureOpen($locked, $enrollment);
             $question = $locked->snapshot['questions'][$data['question']] ?? null;
             abort_unless(($locked->snapshot['live_feedback'] ?? false) && $question
@@ -248,7 +341,9 @@ final class StudentExaminationController extends Controller
 
     private function authorizeAttempt(Request $request, ExamAttempt $attempt, ?CourseEnrollment $enrollment = null): void
     {
-        if ($enrollment) {
+        if ($request->routeIs('specialized-exams.*')) {
+            abort_unless(SpecializedExamAttempts::owns($request, $attempt), 404);
+        } elseif ($enrollment) {
             LearningAccess::course($request->user(), $enrollment);
             abort_unless($attempt->course_enrollment_id === $enrollment->id, 404);
         } else {

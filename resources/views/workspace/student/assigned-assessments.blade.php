@@ -21,4 +21,18 @@
         </x-learning-manager-row>
     @endforeach
 </x-learning-manager-table>
+@if($specializedResults->isNotEmpty())
+    <section class="workspace-panel mt-6 space-y-4 p-5">
+        <h2 class="text-xl font-extrabold">{{ __('specialized_exam.results') }}</h2>
+        <ul class="divide-y divide-slate-200 dark:divide-slate-700">
+            @foreach($specializedResults as $result)
+                <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <a class="font-semibold underline" href="{{ route($result->resultRoute(), $result) }}">{{ $result->snapshot['title'] }}</a>
+                    <span class="text-sm">{{ $result->score === null ? __('specialized_exam.submitted') : $result->score.'%' }} · {{ $result->submitted_at->toDateString() }}</span>
+                </li>
+            @endforeach
+        </ul>
+        {{ $specializedResults->links() }}
+    </section>
+@endif
 @endsection

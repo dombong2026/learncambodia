@@ -17,7 +17,7 @@ final class ReadingReturn
         }
 
         return preg_match(
-            '~\A/(?:(?:articles|courses|assessments|exams|quizzes)/[a-z0-9][a-z0-9-]*|exam-catalog(?:/[a-z0-9][a-z0-9-]*)?)(?:\?lang=(?:en|km|zh))?\z~iD',
+            '~\A/(?:(?:articles|courses|assessments|exams|quizzes)/[a-z0-9][a-z0-9-]*|specialized-exams/attempts/[1-9][0-9]*|exam-catalog(?:/[a-z0-9][a-z0-9-]*)?)(?:\?lang=(?:en|km|zh))?\z~iD',
             $value
         ) === 1 ? $value : null;
     }

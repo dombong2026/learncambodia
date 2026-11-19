@@ -81,6 +81,7 @@ final class AdminExaminationController extends Controller
             $request->merge(['questions' => json_decode($payload, true, flags: JSON_THROW_ON_ERROR)]);
         }
         $data = $request->validate([
+            'viewer_mode' => $kind === 'exam' ? ['sometimes', Rule::in(['default', 'specialized'])] : ['prohibited'],
             'course_id' => ['nullable', 'integer', 'exists:courses,id'],
             'exam_type_id' => ['required', 'integer', Rule::exists('exam_types', 'id')->where('kind', $kind)],
             'certificate_template_id' => ['sometimes', 'nullable', 'integer', Rule::exists('certificate_templates', 'id')
@@ -117,8 +118,12 @@ final class AdminExaminationController extends Controller
             $data += FeaturedMedia::validate($request);
         }
         $data['kind'] = $kind;
+        $data['viewer_mode'] = $data['viewer_mode'] ?? $exam?->viewer_mode ?? 'default';
         $data['course_id'] = $kind === 'quiz' ? null : ($data['course_id'] ?? null);
-        $data['pricing'] = $data['course_id'] === null && $kind === 'exam'
+        if ($data['viewer_mode'] === 'specialized' && $data['course_id'] !== null) {
+            throw ValidationException::withMessages(['course_id' => 'Specialized exams must be standalone.']);
+        }
+        $data['pricing'] = $data['course_id'] === null && $kind === 'exam' && $data['viewer_mode'] === 'default'
             ? (CoursePricing::validate($request) + ['pricing' => $exam?->pricing])['pricing']
             : null;
         $data['instructions_html'] = EditorHtml::clean($data['instructions_html']
@@ -185,7 +190,7 @@ final class AdminExaminationController extends Controller
             }
             WorkspaceNotifications::send(
                 $enrollment?->student_id ?? $locked->student_id, 'New assessment feedback',
-                $enrollment ? 'account.exam-attempts.show' : 'account.assessment-attempts.show',
+                $enrollment ? 'account.exam-attempts.show' : $locked->resultRoute(),
                 $enrollment ? ['enrollment' => $enrollment->id, 'attempt' => $locked->id] : ['attempt' => $locked->id],
             );
         });

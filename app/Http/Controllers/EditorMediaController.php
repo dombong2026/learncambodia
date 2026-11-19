@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\EditorMedia;
 use App\Models\ExamAttempt;
 use App\Support\AssessmentQuestions;
+use App\Support\SpecializedExamAttempts;
 use App\Models\PolicyRevision;
 use App\Support\FeaturedMedia;
 use App\Support\AdminAccess;
@@ -241,7 +242,14 @@ final class EditorMediaController extends Controller
                             ->where('status', 'approved')->whereHas('course', fn ($courses) => $courses->published())))
                     ->cursor()->contains(fn ($attempt) => in_array($media->id,
                         AssessmentQuestions::mediaIds($attempt->snapshot), true));
-            abort_unless(AdminAccess::can($viewer, 'learning') || $enrolled, 403);
+            $browser = SpecializedExamAttempts::browser($request);
+            $guest = !$enrolled && $browser !== null
+                && ExamAttempt::where('guest_browser', $browser)->whereNull('student_id')
+                    ->whereIn('course_exam_id', $media->exams()->select('course_exams.id'))
+                    ->whereNull('submitted_at')->where('expires_at', '>', now())
+                    ->cursor()->contains(fn (ExamAttempt $attempt) => $attempt->isSpecialized()
+                        && in_array($media->id, AssessmentQuestions::mediaIds($attempt->snapshot), true));
+            abort_unless(AdminAccess::can($viewer, 'learning') || $enrolled || $guest, 403);
         } elseif ($media->context === 'course') {
             $published = $media->descriptionCourses()->published()->exists();
             abort_unless($published || AdminAccess::can($viewer, 'learning'), 403);
