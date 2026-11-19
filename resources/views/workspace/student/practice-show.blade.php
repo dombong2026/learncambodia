@@ -1,7 +1,7 @@
 @extends('layouts.workspace')
 @section('title', $quiz->title)
 @section('heading', $quiz->title)
-@section('description', 'Private, graded learning exercise. Your responses are checked on the server; this is not an official exam or certificate.')
+@section('description', 'Pass this graded practice quiz to earn a LearnCambodia Quiz certificate.')
 @section('content')
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <a href="{{ route('account.practice.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-bold dark:border-slate-700">← Back to practice quizzes</a>

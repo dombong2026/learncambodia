@@ -29,7 +29,7 @@
         <h2 class="font-extrabold">Issuance history</h2>
         @forelse($certificates as $certificate)
             <div class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-300 p-4 dark:border-slate-700">
-                <div class="min-w-0 flex-1"><p class="font-semibold">{{ $certificate->snapshot['learner'] }} · {{ $certificate->snapshot['course'] }}</p><p class="text-sm">{{ $certificate->revoked_at ? 'Revoked' : 'Issued' }} · {{ $certificate->created_at->toDateString() }}</p></div>
+                <div class="min-w-0 flex-1"><p class="font-semibold">{{ $certificate->snapshot['learner'] }} · {{ $certificate->snapshot['assessment'] ?? $certificate->snapshot['course'] }}</p><p class="text-sm">{{ $certificate->snapshot['type'] }} · {{ $certificate->revoked_at ? 'Revoked' : 'Issued' }} · {{ $certificate->created_at->toDateString() }}</p></div>
                 <a class="rounded-lg border px-3 py-2 text-sm font-semibold" href="{{ route('certificates.show',$certificate->code) }}">View certificate</a>
                 @unless($certificate->revoked_at)<form method="post" action="{{ route('admin.certificates.revoke',$certificate) }}">@csrf @method('PATCH')<button class="rounded-lg border px-3 py-2 text-sm font-semibold">Revoke</button></form>@endunless
             </div>

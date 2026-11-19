@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
 use App\Models\CourseQuiz;
 use App\Models\PracticeAttempt;
+use App\Models\IssuedCertificate;
+use App\Support\CertificateAwards;
 use App\Support\LearningAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -116,12 +118,13 @@ class StudentPracticeController extends Controller
             ]);
 
             $attempt->answers()->createMany($rows);
+            CertificateAwards::practice($attempt);
 
             return $attempt;
         });
 
         return redirect()->route('account.practice.result', [$enrollment, $quiz, $attempt])
-            ->with('status', 'Practice answers scored. This is not an official exam.');
+            ->with('status', 'Practice answers scored.');
     }
 
     public function result(
@@ -135,9 +138,13 @@ class StudentPracticeController extends Controller
             && $attempt->course_quiz_id === $quiz->id
             && $quiz->course_id === $enrollment->course_id, 404);
 
+        $certificate = $attempt->passed === true
+            ? IssuedCertificate::where('award_key', CertificateAwards::practiceKey($attempt, $request->user()->id))->first()
+            : null;
+
         return view('workspace.student.practice-result', [
             'role' => 'student', 'enrollment' => $enrollment,
-            'quiz' => $quiz, 'attempt' => $attempt->load('answers.question'),
+            'quiz' => $quiz, 'attempt' => $attempt->load('answers.question'), 'certificate' => $certificate,
         ]);
     }
 }

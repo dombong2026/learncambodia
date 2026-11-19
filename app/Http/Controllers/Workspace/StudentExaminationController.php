@@ -7,7 +7,9 @@ use App\Models\AssessmentAccess;
 use App\Models\CourseEnrollment;
 use App\Models\CourseExam;
 use App\Models\ExamAttempt;
+use App\Models\IssuedCertificate;
 use App\Support\AssessmentQuestions;
+use App\Support\CertificateAwards;
 use App\Support\CoursePricing;
 use App\Support\LearningAccess;
 use App\Support\WorkspaceNotifications;
@@ -104,7 +106,11 @@ final class StudentExaminationController extends Controller
             $request->attributes->set('assessmentMicrophone', true);
         }
 
-        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt'));
+        $certificate = $attempt->passed === true
+            ? IssuedCertificate::where('award_key', CertificateAwards::assessmentKey($attempt, $request->user()->id))->first()
+            : null;
+
+        return view('workspace.student.exam-attempt', compact('enrollment', 'attempt', 'certificate'));
     }
 
     public function submit(Request $request, CourseEnrollment $enrollment, ExamAttempt $attempt): RedirectResponse
@@ -132,6 +138,9 @@ final class StudentExaminationController extends Controller
         $files = [];
         try {
             DB::transaction(function () use ($attempt, $enrollment, $data, &$files): void {
+                if ($enrollment) {
+                    $enrollment = CourseEnrollment::lockForUpdate()->findOrFail($enrollment->id);
+                }
                 $locked = ExamAttempt::lockForUpdate()->findOrFail($attempt->id);
                 $this->ensureOpen($locked, $enrollment);
                 $answers = $locked->answers ?? [];
@@ -157,6 +166,9 @@ final class StudentExaminationController extends Controller
                 }
                 $result = AssessmentQuestions::result($locked->snapshot, $answers);
                 $locked->update($result + ['answers' => $answers, 'submitted_at' => now()]);
+                if (CertificateAwards::assessment($locked) && $enrollment) {
+                    CertificateAwards::course($enrollment->course, $enrollment);
+                }
                 if (array_filter($locked->snapshot['questions'], AssessmentQuestions::manual(...)) !== []) {
                     $route = ($locked->snapshot['kind'] ?? 'exam') === 'quiz' ? 'admin.quizzes-manager.edit' : 'admin.exams.edit';
                     WorkspaceNotifications::administrators('Assessment response ready to grade', $route, ['exam' => $locked->exam]);

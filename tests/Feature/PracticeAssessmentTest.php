@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\PracticeAttempt;
+use App\Models\IssuedCertificate;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -155,9 +156,14 @@ class PracticeAssessmentTest extends TestCase
         $this->assertSame(1, $attempt->correct_count);
         $this->assertTrue($attempt->passed);
 
+        $certificate = IssuedCertificate::sole();
+        $this->assertSame('quiz', $certificate->snapshot['kind']);
+        $this->assertSame($quiz->title, $certificate->snapshot['assessment']);
+        $this->post($uri.'/attempts', ['answers' => [(string) $question->id => 'B']])->assertRedirect();
+        $this->assertDatabaseCount('issued_certificates', 1);
         $result = $uri.'/attempts/'.$attempt->id;
         $this->get($result)->assertOk()
-            ->assertSee('100%')->assertSee('Hello is a greeting.');
+            ->assertSee('100%')->assertSee('Hello is a greeting.')->assertSee('View certificate');
         $this->get('/account/practice/history')->assertSee('Reading check');
 
         $this->actingAs($other)->get($result)->assertNotFound();

@@ -59,12 +59,15 @@ class StudentEnrollmentController extends Controller
             ->with('modules.lessons', 'exams.type', 'quizzes')->firstOrFail();
 
         if ($request->isMethod('GET')) $enrollment->markStarted();
+        $certificates = \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->get();
 
         return view('workspace.student.study', [
             'role' => 'student',
             'enrollment' => $enrollment,
             'course' => $course,
-            'certificates' => \App\Models\IssuedCertificate::where('course_enrollment_id', $enrollment->id)->whereNull('revoked_at')->get(),
+            'certificates' => $certificates->whereNull('revoked_at'),
+            'canClaimCertificate' => $certificates->isEmpty()
+                && \App\Support\CertificateAwards::courseEligible($course, $enrollment),
             'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $enrollment->lessonProgress()
                 ->whereNotNull('completed_at')->pluck('lesson_id')->all(),

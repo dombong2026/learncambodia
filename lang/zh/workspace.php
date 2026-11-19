@@ -49,6 +49,7 @@ return [
         'All Policies' => '全部政策',
         'All Users' => '所有账户',
         'Learning Progress' => '学习进度',
+        'My Certificates' => '我的证书',
         'My Enrollments' => '我的入学',
         'Available Courses' => '可选课程',
         'My Assignments' => '我的作业',

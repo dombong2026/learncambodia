@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="{{ asset('css/certificate-designer.css') }}?v=2">
     <script defer src="{{ asset('js/cert-qr-qrcode-generator.js') }}"></script>
     <script defer src="{{ asset('js/certificate-qr.js') }}"></script>
-    <script defer src="{{ asset('js/certificate-designer.js') }}?v=1"></script>
+    <script defer src="{{ asset('js/certificate-designer.js') }}?v=2"></script>
 @endpush
 
 @section('content')
@@ -21,6 +21,7 @@
             'heading' => $text('heading', $template->heading ?? 'Certificate of Completion'),
             'learner' => 'Sample Learner',
             'course' => 'Sample Course',
+            'assessment' => $template->type?->kind === 'quiz' ? 'Sample Quiz' : 'Sample Exam',
             'body' => $text('body', $template->body ?? 'For successfully completing {course}.'),
             'issuer' => $text('issuer', $template->issuer ?? 'LearnCambodia'),
             'date' => 'Issued '.now()->toDateString(),
@@ -46,7 +47,7 @@
                     <label for="certificate-type">Certificate type</label>
                     <select id="certificate-type" name="certificate_type_id" required>
                         <option value="">Choose a certificate type</option>
-                        @foreach($types as $type)<option value="{{ $type->id }}" @selected((int) old('certificate_type_id', $template->certificate_type_id) === $type->id)>{{ $type->name }}</option>@endforeach
+                        @foreach($types as $type)<option value="{{ $type->id }}" data-certificate-kind="{{ $type->kind }}" @selected((int) old('certificate_type_id', $template->certificate_type_id) === $type->id)>{{ $type->name }}</option>@endforeach
                     </select>
                 </div>
                 <a class="cert-hint text-blue-700 dark:text-blue-300" href="{{ route('admin.certificate-types.index') }}">Manage certificate types</a>
@@ -90,13 +91,14 @@
                 </label>
                 <label class="builder-field">Heading<input name="heading" required maxlength="140" value="{{ $sample['heading'] }}"></label>
                 <label class="builder-field">Certificate text<textarea name="body" required maxlength="700" rows="3">{{ $sample['body'] }}</textarea></label>
-                <p class="cert-hint">Use <code>{learner}</code> and <code>{course}</code> to insert the actual learner and course names at issuance.</p>
+                <p class="cert-hint">Use <code>{learner}</code> for the recipient, <code>{course}</code> for a course name, and <code>{assessment}</code> for an exam or quiz title.</p>
                 <label class="builder-field">Issuer<input name="issuer" required maxlength="140" value="{{ $sample['issuer'] }}"></label>
             </fieldset>
             <label class="builder-field">Assigned courses
-                <select name="courses[]" multiple size="5">
+                <select name="courses[]" multiple size="5" aria-describedby="cert-course-help">
                     @foreach($courses as $course)<option value="{{ $course->id }}" @selected(in_array($course->id, array_map('intval', (array) old('courses', $assigned)), true))>{{ $course->title }}</option>@endforeach
                 </select>
+                <span class="cert-hint" id="cert-course-help">Assign Course templates here. Choose Exam and Quiz templates in their assessment builders.</span>
             </label>
             <button type="submit" class="cert-button cert-primary">Save template</button>
         </form>

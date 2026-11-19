@@ -29,7 +29,7 @@
                     <summary class="font-semibold">{{ $type->name }}</summary>
                     <form action="{{ route('admin.'.$kind.'.update', $type) }}" method="post" class="mt-4 space-y-4">
                         @csrf @method('PATCH')
-                        <label class="builder-field">Name<input name="name" value="{{ $type->name }}" required maxlength="100"></label>
+                        <label class="builder-field">Name<input name="name" value="{{ $type->name }}" @readonly($kind === 'certificate-types' && $type->kind) required maxlength="100"></label>
                         <label class="builder-field">Description<textarea name="description" maxlength="500" rows="3">{{ $type->description }}</textarea></label>
                         <button class="rounded-xl border border-slate-400 px-4 py-2 text-sm font-semibold">Save type</button>
                     </form>
