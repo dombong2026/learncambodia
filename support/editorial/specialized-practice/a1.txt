@@ -1,0 +1,95 @@
+@a1-grocery|A1|Shopping for Food
+We ____ breakfast at seven every morning.|have|has|having
+My cousin ____ two apples for lunch.|takes|take|taking
+Milk is in the fridge. ____ you see it?|Can|Does|Is
+I want ____ orange and two bananas.|an|a|many
+These carrots ____ fresh.|are|is|am
+For a sandwich, start with two slices of ____.|bread|juice|rice
+Keep the milk cold in the ____.|fridge|cupboard|basket
+At the shop, we put our food in a ____ before we pay.|basket|plate|glass
+At the end, the cashier gives us a ____ showing what we paid.|receipt|recipe|menu
+A ____ is a sweet yellow fruit that you peel.|banana|carrot|potato
+> Saturday market. The market opens at eight. Buy vegetables next to the gate. The bread table is near the stairs. Today a bag of six oranges costs three dollars. You can ask for a paper bag at any table.
+When can a visitor first enter the market?|At eight|At six|At three
+Which food is sold next to the gate?|Vegetables|Bread|Oranges only
+What is the bread table near?|The stairs|The gate|The orange tree
+What does three dollars buy today?|Six oranges|Three oranges|Eight oranges
+Where can shoppers ask for a bag?|At any table|Only at the gate|Only at the bread table
+> A note from Lin. Please buy bread and eggs on your way home. We have rice and fruit. The small food shop closes at six, so go there first. Leave the bread on the kitchen table and put the eggs in the fridge.
+What two things does Lin ask for?|Bread and eggs|Rice and fruit|Bread and fruit
+Which food is already at home?|Rice|Eggs|Bread
+Why should the shopper go to the food shop first?|It closes at six|It opens after six|It has the only fridge
+Where should the shopper leave the bread?|On the kitchen table|In the fridge|At the shop
+Which item goes in the fridge?|The eggs|The rice|The bread
+
+@a1-home-family|A1|Home and Family
+My two sisters ____ in the next room.|are|is|am
+____ your father work near your home?|Does|Do|Are
+This is ____ small clock for the kitchen.|a|an|some
+One shelf is empty, but the other two ____ are full.|shelves|shelf|shelfes
+We ____ dinner together every evening.|eat|eats|eating
+A ____ is the room where people usually cook.|kitchen|bedroom|bathroom
+Put the clean dishes on the top ____.|shelf|pillow|curtain
+I put my head on a ____ when I sleep.|pillow|mirror|towel
+My mother’s brother is my ____.|uncle|cousin|son
+I turn on a ____ when the room is dark.|lamp|sofa|drawer
+> My family’s flat. At the front door there is a small shelf for shoes. The kitchen is next to the living room. My sister and I share a bedroom. Dad works at the little table in the living room. The family eats outside on the balcony on Sundays.
+Where do family members leave their shoes?|On a shelf by the front door|Under the living room table|On the balcony
+Which room is next to the kitchen?|The living room|The bathroom|The bedroom
+Who shares a bedroom with the writer?|The writer’s sister|The writer’s father|The writer’s friend
+Where does Dad work?|At a table in the living room|In the kitchen|On the balcony
+When does the family eat on the balcony?|On Sundays|Every morning|On workdays
+> Tuesday at Grandma’s. Take bus 2 and get off at River Street. Grandma lives in the white house with the green door. Get there at five. Please bring the blue photo book. We will look at the pictures before we eat.
+Which bus goes to River Street?|Bus 2|Bus 5|Bus 7
+What colour is the front door?|Green|Blue|White
+What time should the visitor arrive?|At five|At two|At seven
+Which item should the visitor take?|The blue photo book|A white bag|The bus map
+What will they do before they eat?|Look at pictures|Take the bus together|Paint the door
+
+@a1-clothing|A1|Clothes and Getting Dressed
+I ____ my school shirt every Monday.|wear|wears|wearing
+Those ____ are too small for me.|shoes|shoe|shoe’s
+This jacket ____ very warm.|is|am|are
+Sara has ____ old coat for cold days.|an|a|two
+We don’t ____ boots in the classroom.|wear|wears|wearing
+Put a ____ around your neck when it is cold.|scarf|belt|sock
+I wear ____ on my feet inside my shoes.|socks|gloves|shirts
+A ____ keeps the sun out of my eyes at the beach.|hat|coat|belt
+Rain is coming. Take your ____ to keep dry.|raincoat|slippers|shorts
+A ____ goes around the waist to hold trousers up.|belt|scarf|glove
+> Lost and found. We found a red cap in the sports hall on Monday. We also found a black jacket in Room 9 on Tuesday. Pick up your things at the main office after lunch. Tell the office worker what your item looks like.
+What did someone leave in the sports hall?|A red cap|A black jacket|A red scarf
+Where was the black jacket found?|In Room 9|In the main office|In the sports hall
+On which day was the jacket found?|Tuesday|Monday|Friday
+When can people collect their things?|After lunch|Before class|At breakfast
+What does the office worker need to know?|What the item looks like|How much the item cost|Where the person bought the item
+> Photo day. Wear your white school shirt and dark trousers for the class photo. Bring a second shirt if you play football at lunch. Our class photo is at 10:30, before lunch. Leave your bag in the classroom and meet by the school garden.
+What colour is the school shirt for the photo?|White|Dark blue|Green
+Who needs to bring a second shirt?|Students who play football at lunch|Students who walk to school|Students who carry a small bag
+When is the class photo?|At 10:30|At lunchtime|After football
+What should stay in the classroom?|The bag|The first shirt|The football team
+Where should the class meet?|By the school garden|Inside the sports hall|At the front gate
+
+@a1-community|A1|Community Activities
+Our art club ____ on Friday afternoons.|meets|meet|meeting
+There is ____ empty seat next to Ana.|an|a|many
+We ____ two games at every club meeting.|play|plays|playing
+Can you ____ me carry these chairs?|help|helps|helping
+One child is here, and three more ____ are coming.|children|childs|child
+A group of people who play together is a ____.|team|ticket|street
+Please use a ____ to write your name on the form.|pen|cup|chair
+We stop for a short ____ between the first and second game.|break|sign|stamp
+A ____ is the person who lives next door.|neighbour|visitor|cashier
+A ____ tells people where to go with words or pictures.|sign|bench|basket
+> Park clean-up. We meet at the east gate at nine on Sunday. Bring water and wear closed shoes. We have bags and gloves for you. Children can help with an adult. After the clean-up we have a picnic near the large tree.
+Where does the clean-up group meet?|At the east gate|Under the large tree|By the west gate
+When should helpers arrive?|At nine on Sunday|At nine on Saturday|At lunch on Sunday
+What should helpers bring to drink?|Water|Tea|Juice
+What will the organisers give the helpers?|Bags and gloves|Shoes and hats|Picnic food and water
+Where is the picnic after the clean-up?|Near the large tree|At the east gate|Inside the community hall
+> Free music club. Beginners meet on Wednesdays at 4:15 in Room 3. You can use a guitar from the club. Ask Pia for one before the lesson. This week only, the lesson ends at 5:00. A friend can watch from the chairs at the back.
+Which day is the beginners’ lesson?|Wednesday|Thursday|Sunday
+Which room is the club in?|Room 3|Room 4|Room 5
+What can a beginner ask Pia for?|A guitar|A ticket|A chair at the front
+What time does the lesson finish this week?|At 5:00|At 4:15|At 3:00
+Where can a friend sit?|At the back|By the door outside|At the front next to Pia

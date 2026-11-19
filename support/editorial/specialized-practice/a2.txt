@@ -1,0 +1,95 @@
+@a2-appointments|A2|Health and Appointments
+Yesterday Nita ____ the clinic to change her appointment.|called|calls|calling
+“____ I take a seat here?” the patient asked politely.|Could|Was|Were
+There ____ any available times left this morning.|aren’t|isn’t|doesn’t
+My appointment is ____ Thursday afternoon.|on|at|in
+The doctor asked me to wait ____ the nurse called my name.|until|during|from
+If a clinic changes your visit to a new time, it ____ it.|reschedules|prescribes|examines
+A ____ is a person who comes to a clinic for care.|patient|pharmacist|receptionist
+The doctor wrote a ____ for medication from the pharmacy.|prescription|receipt|timetable
+A high temperature is commonly called a ____.|fever|sprain|cough
+Put the next visit in your calendar so you get a ____.|reminder|refund|result
+> Riverside Clinic sent Mai a message: her appointment on Friday at two has moved to Monday at eleven because the nurse is away. She should call before four on Friday if Monday is difficult. She needs her clinic card. The clinic entrance on Oak Street is closed, so she should use the side door from the car park.
+Why did the clinic move Mai’s appointment?|The nurse is away|Mai lost her clinic card|The clinic is leaving Oak Street
+When is the new appointment?|Monday at eleven|Monday at two|Friday at eleven
+When should Mai call if she needs another time?|Before four on Friday|After eleven on Monday|Just after two on Friday
+What does Mai need to bring?|Her clinic card|A letter from the nurse|A car park ticket
+How should Mai enter the clinic?|Through the side door from the car park|Through the Oak Street entrance|Through the pharmacy door
+> Health Centre notice. If you have a booked visit, check in at desk A ten minutes before it begins. Desk B is for picking up copies of results. The centre can send a copy by email if you fill in a form at desk B. The desks close at 4:30, but the pharmacy next door is open until six.
+Which desk is for checking in before a visit?|Desk A|Desk B|The pharmacy counter
+How early does the centre ask patients to check in?|Ten minutes early|Half an hour early|Five minutes early
+Where can people pick up copies of results?|Desk B|Desk A|The pharmacy next door
+What must someone do to request a copy by email?|Fill in a form|Pay at the pharmacy|Book another visit
+Which place stays open after 4:30?|The pharmacy|Desk A|Desk B
+
+@a2-outdoors|A2|Weather and Outdoor Plans
+We ____ home early when the storm began.|went|go|going
+If it stays dry, we ____ have the picnic in the park.|will|did|were
+Can you bring ____ water for the walk?|some|many|a few
+There was ____ snow on the lower path, so it stayed open.|little|few|many
+We need to leave ____ eight to reach the hill before noon.|by|along|between
+A weather ____ tells us what conditions to expect.|forecast|receipt|route
+A day with many clouds is ____.|cloudy|icy|dry
+A ____ is a short period of rain.|shower|breeze|sunrise
+A ____ is a place that protects people from bad weather.|shelter|slope|trail
+Walking towards the top of a hill is going ____.|uphill|downhill|indoors
+> Sunday cycling trip. We plan to start at the station at nine. If there is heavy rain at eight, the leader will send a message to cancel. If it is only cloudy, the trip will go ahead. Wear a bright jacket and bring a snack. There is a shop halfway along the route where you can buy water.
+Where will the ride begin if it goes ahead?|At the station|At the halfway shop|At the leader’s house
+What would make the leader cancel the trip?|Heavy rain at eight|Cloud at nine|A closed shop
+How will riders find out about a cancellation?|The leader will send a message|The station will make an announcement|The shop will put up a sign
+What should riders wear?|A bright jacket|A dark jacket|A new school uniform
+Where can riders buy water?|At a shop halfway along the route|At the end of the route only|At the picnic shelter
+> The river walk normally goes across the wooden bridge. The bridge is closed until Tuesday after last night’s rain. Follow the orange arrows along the lower path instead. This adds fifteen minutes to the walk. The café near the start is open, but the water fountain at the end is out of order.
+What was closed after the rain?|The wooden bridge|The café|The lower path
+Which signs show the way around the closure?|Orange arrows|Blue circles|Green flags
+How much longer is the new route?|Fifteen minutes|Five minutes|Thirty minutes
+Where can a walker buy a drink at the start?|At the café|At the water fountain|At the bridge gate
+What is out of order?|The water fountain at the end|The lights in the café|The orange trail signs
+
+@a2-local-trips|A2|Transport and Local Trips
+We ____ a bus from the station last Saturday.|caught|catch|catching
+The next ferry leaves ____ half past two.|at|on|in
+You can buy your ticket before you ____ the bus.|board|boarded|boarding
+I missed the train ____ I left home late.|because|but|although
+This ticket is valid ____ you reach the last stop.|until|during|between
+The place where you wait next to the train tracks is the ____.|platform|reception|counter
+A ____ ticket takes you to a place and back.|return|single|local
+When a train is late, there is a ____.|delay|discount|transfer
+Get ____ the bus at the museum entrance.|off|over|through
+The price paid for a bus ride is the ____.|fare|fine|rent
+> Route 16 notice. From Monday to Thursday this week, buses cannot stop at the library because of repairs to the road. Use the temporary stop outside the bank instead. The departure times stay the same. People who need help reaching the stop can call the travel desk between seven and noon.
+Why is the library stop closed?|The road is being repaired|The library opens late|The bus route has ended
+Where is the temporary stop?|Outside the bank|Inside the library car park|At the travel desk
+On which days does the change apply?|Monday through Thursday|Friday through Sunday|All week
+What happens to the departure times?|They stay the same|They move fifteen minutes later|They change only at noon
+When can people call the travel desk for help?|Between seven and noon|Between noon and seven|All day and night
+> Message from Tom. I’ll meet you at the ferry pier at 1:15. Let’s buy the 1:40 tickets at the window. The crossing takes about twenty-five minutes. After we arrive, we can hire bikes outside the harbour office. Bring some cash for the bikes because the rental shop doesn’t take cards.
+When does Tom want to meet?|At 1:15|At 1:40|At 2:05
+Where will they buy the ferry tickets?|At the ticket window|At the harbour office|On the ferry
+How long does the crossing take?|About twenty-five minutes|About forty minutes|About fifteen minutes
+What will they do after arriving?|Hire bikes|Buy ferry tickets|Wait at the first pier
+Why does Tom suggest bringing cash?|The bike shop doesn’t accept cards|The ticket window is closed|The ferry requires an exact fare
+
+@a2-shopping|A2|Shopping and Quantities
+How ____ bottles of juice do we need?|many|much|any
+No, there isn’t ____ bread left for breakfast.|much|many|a few
+I bought a ____ of toothpaste at the corner shop.|tube|loaf|bunch
+Kiri ____ those glasses online last week.|ordered|orders|ordering
+She added ____ onions, but kept most in the bag.|a few|a little|much
+A ____ is money you get back after returning an item.|refund|deposit|tip
+A ____ lets you pay a lower price for an item.|discount|receipt|delivery
+Something you can buy right now is ____.|in stock|sold out|closed down
+The person or company taking the order to your house provides ____.|delivery|change|credit
+A ____ holds liquid and often has a cap.|bottle|packet|slice
+> Market offer. On Thursday, buy two jars of honey and get a small bag of tea free. The offer ends at five or when there is no more tea. It is only for purchases at the shop. You can order honey online, but the free tea is not included in online orders.
+What should a shopper buy to get free tea?|Two jars of honey|One jar of honey|Two bags of tea
+On which day is the offer available?|Thursday|Tuesday|Saturday
+When does the offer end at the latest?|At five|At lunch|At eight
+Where must shoppers buy the honey to get the gift?|At the shop|On the website|At the tea factory
+Can a customer order honey on the website?|Yes, without the free tea|Yes, with twice as much tea|No, the website only sells tea
+> Dara orders a large cooking pot for collection. The shop sends a note: the large pot won’t arrive until Friday, but a medium one is ready now. Dara has already paid. If she takes the medium pot, the shop will give her six dollars back. If she waits for the large one, she can collect it until Monday.
+Which size did Dara first order?|Large|Medium|Small
+When will the large pot arrive?|Friday|Thursday|Monday
+Which size can she collect now?|Medium|Large|Both sizes
+How much will she get back if she takes the medium pot?|Six dollars|The full price of both pots|No money
+What is the last day for collecting the large pot?|Monday|Friday|Thursday

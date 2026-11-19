@@ -1,0 +1,95 @@
+@c1-policy-design|C1|Policy Design and Trade-offs
+Only once the evidence had been published ____ the committee reopen the consultation.|did|had|would have to
+What the review calls into question ____ the assumption that one national threshold fits every locality.|is|are|have been
+Had the safeguards been in force, the regulator ____ on a temporary exemption last year.|would not have relied|will not rely|would not have been relied
+The policy measure, ____ to address a short-term shortage, was extended for another year.|originally introduced|having originally introduced|was originally introducing
+The audit calls for every exception ____ in a publicly accessible register.|to be recorded|for recording|being recording
+An entitlement that takes effect only if specified conditions are met is ____.|contingent|unconditional|retrospective
+A ____ provision causes a rule to expire automatically unless it is renewed.|sunset|waiver|disclosure
+To ____ a policy is to reverse it and restore the earlier arrangement.|roll back|phase in|carry forward
+A justification offered after a decision to make it appear reasonable is a ____ rationalisation.|post hoc|prospective|binding
+A requirement whose scope is narrowed to match the specific harm is described as ____.|proportionate|blanket|non-discretionary
+> Winton required newly built apartments to include a fixed number of bicycle spaces. Developers in the hill districts sought an exemption, citing steep roads and low current use. The review panel observed that the districts also had poor cycle connections, so observed use largely reflected the existing network. It recommended allowing a smaller initial number if developers reserved room to add spaces later and the city published dates for route improvements. It also proposed reviewing actual use once the routes opened.
+Why did current bicycle use provide a weak basis for a permanent exemption?|It partly reflected poor connections that could change|The panel had already found equal use in every district|The space requirement applied only to existing buildings
+What compromise did the panel propose?|Lower initial provision with capacity for expansion|A permanent exemption once a developer applied|The same number of spaces with no review
+Why did the panel ask for dates for route improvements?|To make the future conditions relevant to the decision concrete|To measure how long developers took to submit applications|To exempt the city from recording actual use
+When was actual use to be reviewed?|After the upgraded routes opened|Before any route work was announced|Immediately after the first permit request
+What is the central trade-off?|Avoiding unused provision now while keeping capacity for future demand|Choosing private travel entirely over public travel|Building cycling space before complying with safety rules
+> The city imposed a cap on short-term rentals in buildings with frequent nuisance complaints. In its first year, recorded complaints fell sharply. Property managers had also introduced a private channel for complaints, which the city’s figures did not include. The auditor recommended recording issues from both channels consistently, comparing similar buildings, and measuring the effects on long-term rental supply. She declined to recommend repeal or expansion before the results of that work.
+What does the fall in recorded complaints establish?|Fewer reports reached the city’s channel|Nuisance fell by the same amount across both channels|Long-term rental availability rose
+Which change most directly complicates interpretation of the figures?|Managers added a reporting channel outside the city count|The cap applied only to buildings with prior complaints|The city later asked the auditor to review the cap
+Why would the auditor compare similar buildings?|To reduce the influence of pre-existing differences|To combine every building into a single total|To confirm that routing a complaint privately resolved it
+Which issue beyond nuisance did the auditor identify?|The supply of long-term rentals|The design of the complaint website|The total number of building managers
+How is the auditor’s position best characterised?|She withheld an expansion or repeal recommendation pending stronger evidence|She took the recorded fall as sufficient grounds for expanding the cap|She regarded the private channel as proof the cap had failed
+
+@c1-economic-evidence|C1|Economic Evidence and Public Decisions
+Rarely ____ a change in the headline figure reveal how costs are distributed.|does|has had|is
+It was the uneven exposure to rising fuel costs ____ explained the gap between districts.|that|what|where
+If the latest figures had included temporary workers, the report ____ a different picture of last year.|might have presented|might have been presented|will present
+The projections, ____ on a constant exchange rate, should be revised if the rate shifts.|based|basing|have based
+Even were demand ____ recover, the original estimate would still be too high.|to|in|for
+The benefit of the best alternative given up when a choice is made is its ____.|opportunity cost|sunk cost|fixed cost
+A price with no adjustment for inflation is a ____ price.|nominal|real|marginal
+A small added cost caused by producing one additional unit is a ____ cost.|marginal|average|sunk
+A reduction in cost per unit as output expands is an ____ of scale.|economy|externality|shortage
+When improved efficiency lowers prices and people use the service more, that offsetting rise in use is a ____ effect.|rebound|seasonal|income
+> The council reported that an insulation rebate saved the average participating household £180 a year. Participating owners had larger homes on average than non-participants and usually improved insulation while upgrading their heating. The evaluation could neither isolate the effects of insulation from the heating work nor show what the same owners would have spent otherwise. A revised plan proposed a rebate lottery among eligible households with similar heating systems and comparing their energy use over two winters.
+What does the £180 figure describe?|An average saving reported for participants|A guaranteed saving for every eligible household|The isolated effect of insulation under identical conditions
+Why do the simultaneous heating upgrades matter?|They make it hard to isolate the insulation effect|They show the rebate was spent illegally|They imply that energy prices rose for non-participants
+What are comparable heating systems meant to improve?|The comparability of households in the evaluation|The size of the insulation grant|The likelihood of lower winter temperatures
+What does the lottery help establish?|A credible comparison between offered and non-offered households|The exact market price of home insulation|The owner’s preferred heating system
+Why might two winters be more informative than a single month?|They provide more exposure to varied weather and seasonal demand|They remove all possible variation in energy prices|They ensure every home will adopt the same heating habits
+> A city considered making downtown parking free for the first hour. A business association forecast increased spending, assuming each freed space would bring a new shopper. Traffic researchers noted that some existing shoppers would simply pay less and that lower prices might lead people to stay longer. The city proposed a six-month trial tracking parking turnover, foot traffic and overall sales, including on streets outside the trial zone.
+Which assumption underpins the association’s forecast?|Parking made cheaper will generate additional shopper visits|Every current shopper arrives by bus|The price of goods falls during the trial
+What alternative behaviour did traffic researchers identify?|Some existing shoppers may occupy spaces for longer|Prices will rise on the first day of the trial|Every space will be vacated within an hour
+Why track sales beyond the trial streets?|To see whether spending shifts rather than grows overall|To estimate the number of drivers who paid the old rate|To prevent any shopper from changing parking locations
+Which measure best tests whether spaces are freed more often?|Parking turnover|Average shop prices|Total registration of cars in the city
+What does the trial aim to distinguish?|New activity from gains that merely shift time or location|Car maintenance prices from retail prices|Drivers’ income from the council’s annual spending
+
+@c1-editorial-judgment|C1|Editing for Precision and Register
+Not until the document reached its third review ____ anyone question the headline figure.|did|had to|has
+It is the strength of the evidence, rather than the author’s confidence, ____ should determine the wording.|that|what|whom
+The statement, ____ more narrowly, would have survived scrutiny.|had it been worded|if it had worded|had it wording
+____ the source list, the reviewer then examined how each quotation was used.|Having checked|Being checked by|To have been checked
+The editor insisted that the author ____ the distinction in the revised paragraph.|retain|retains last week|retaining
+A phrase that signals uncertainty around a claim is a ____.|hedge|byline|caption
+A ____ sentence can be read in more than one plausible way.|ambiguous|tautological|literal
+An expression using gentler words for something unpleasant is a ____.|euphemism|hyperbole|quotation
+When the sentence deliberately leaves out an understood element, it uses ____.|ellipsis|antithesis|alliteration
+A statement that already expresses the same idea twice without adding meaning is ____.|redundant|tentative|idiomatic
+> A health report originally said “Remote appointments reduce missed visits.” Its sources compared patients who chose remote appointments with patients who chose face-to-face appointments at two urban clinics. The editor rewrote the line to say that remote appointments were associated with lower non-attendance at those clinics. A colleague worried that the revised wording lacked urgency. The editor kept it and instead moved the recommendation to test appointment options near the beginning.
+What unsupported claim did the original wording make?|That remote appointments caused the reduction|That some patients missed their appointments|That the report dealt with appointment formats
+What limit does the revision preserve explicitly?|The comparison covered two particular urban clinics|The study covered all remote services nationally|The patients were randomly assigned to visit types
+How did the editor respond to the concern about urgency?|She moved a proposed action earlier|She restored the causal language|She placed the findings in an appendix
+Why does patient choice matter to the interpretation?|The groups may differ for reasons related to attendance|Patients who choose remote visits cannot miss them|Individual choices make it impossible to compare any outcomes
+What does the edit demonstrate?|A recommendation can be prominent while a finding remains qualified|Credibility depends on minimising the reader’s sense of uncertainty|Cautious wording is useful only when a report has no recommendations
+> A museum asked its editor to prepare two versions of a funding update. The board version attributed the grant delay to a pending review and identified which costs remained exposed. The public draft described the same delay as “an unfortunate administrative quirk,” a phrase that sounded dismissive to partners who were waiting for payments. The editor kept the dates and amounts identical but rewrote the public explanation in plain, neutral terms and added the date of the next update.
+Why did the phrase “administrative quirk” cause concern?|It could sound as if the delay’s impact did not matter|It published an incorrect payment date|It attributed the review to the wrong person
+What remained identical in both versions after the edit?|Dates and amounts|Every description of financial exposure|The audience and place of publication
+How did the public version’s register change?|It became plain and neutral|It became more technical than the board version|It became deliberately vague about the delay
+What information did the editor add for public readers?|When a further update would appear|The names of unsuccessful applicants|A guarantee of immediate payment
+Which editorial distinction is central to the example?|Audience-sensitive wording can change presentation while keeping facts consistent|The public version should always omit figures used by a board|Precision and accessibility require identical wording in every version
+
+@c1-persuasive-discourse|C1|Persuasive Discourse and Implication
+Seldom ____ an audience persuaded by a concession that has no effect on the argument.|is|does|has to
+It was precisely because the numbers were provisional ____ the speaker stated the claim conditionally.|that|what|there
+Had he framed the invitation more openly, more critics ____ it as a chance to shape the result.|might have seen|might have been seen|will be seeing
+The author acknowledged the opposing evidence, ____ that it applied only to the earliest trial.|arguing|argued to|having been argued
+The argument depends on a premise that would be difficult ____ independently.|to verify|for verify|to verified
+An argument that attacks a weaker version of another person’s position is a ____ argument.|straw man|deductive|concessive
+A ____ is a point the speaker accepts from the opposing side.|concession|refutation|premise
+To ____ an accusation is to offer reasons or evidence showing it is false.|refute|reiterate|presuppose
+A ____ is an unstated idea on which the reasoning relies.|tacit assumption|verbatim quotation|explicit reservation
+Information suggested indirectly by what someone says is an ____.|implication|citation|instruction
+> In her pitch for a shared workshop, a councillor accepted that volunteers could not provide every service currently offered by the staffed centre. She nevertheless called the shared site “the only realistic way to keep the doors open.” A later budget note showed that paid staffing was also possible if the council deferred an unrelated upgrade. At the next meeting she described her plan as the cheapest route that met the committee’s existing spending limit.
+What did the councillor concede initially?|The volunteer model would provide fewer services|A paid model was legally forbidden|The existing site was already closed
+Which assumption was hidden in “the only realistic way”?|The existing spending limit or allocations could not be revisited|No volunteers were willing to work|The budget note had made every option equally cheap
+How did the later budget note challenge her claim?|It identified a viable alternative under a different spending choice|It proved that the shared plan exceeded every budget|It showed that a workshop could operate without people
+What did the revised formulation add?|The criterion under which the proposal was preferred|An assurance that volunteers could provide every service|A decision to abandon the spending limit
+Why is the revised formulation easier to evaluate?|Readers can check the cost ranking and its stated constraint|Readers no longer need information about alternatives|A relative cost claim is necessarily more persuasive
+> An editorial argued for a cap on late-night deliveries on residential streets. It offered business owners an exemption for urgent medical goods, saying their concerns had been heard. The owners’ main objection was that predictable early-morning slots were already full, leaving no workable time for routine deliveries. A transport committee proposed piloting bookable morning spaces and checking noise complaints as well as missed deliveries. The editorial later endorsed the pilot while maintaining that noise warranted firm safeguards.
+Why did the medical exemption fail to answer the main objection?|It applied to urgent goods while owners needed routine slots|It imposed extra delivery charges on medical suppliers|It stopped all morning deliveries
+What did the committee trial address directly?|The scarcity of workable morning delivery slots|The editorial’s lack of business quotations|Whether stores should sell urgent medical goods
+Why measure both noise and missed deliveries?|To test the effect on residents and on businesses|To prove that medical exemptions were never necessary|To determine which owner wrote the most complaints
+What remained part of the editorial’s position after it endorsed the trial?|Night-time noise still warranted safeguards|All deliveries should move to medical routes|The owners’ objection had been fully resolved in the original draft
+What weakness did the original response contain?|It addressed a narrower concern than the owners had raised|It conceded the main objection without providing any exemption|It abandoned the proposed cap before consulting anyone
