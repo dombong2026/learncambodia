@@ -12,7 +12,6 @@
     <div class="assessment-catalog-hero__inner course-catalog-container">
         <div class="assessment-catalog-hero__copy">
             <h1 id="course-catalog-title">{{ __('pages.catalog_heading') }}</h1>
-            <p>{{ __('frontend.courses_description') }}</p>
             <form method="GET" action="{{ route('courses.index') }}" role="search" class="mt-6 flex max-w-lg gap-2">
                 <input type="hidden" name="lang" value="{{ app()->getLocale() }}">
                 <label for="catalog-hero-search" class="sr-only">{{ __('frontend.search_courses') }}</label>
@@ -21,7 +20,7 @@
             </form>
             <a class="course-catalog-hero__link" href="{{ route('categories.index') }}">{{ __('pages.explore_subjects') }} <span aria-hidden="true">→</span></a>
         </div>
-        <img class="assessment-catalog-hero__image" src="{{ asset('images/courses/course-catalog-hero.webp') }}"
+        <img class="assessment-catalog-hero__image" src="{{ asset('images/courses/course-catalog-student.webp') }}"
             width="1152" height="768" alt="" fetchpriority="high" decoding="async">
     </div>
 </section>

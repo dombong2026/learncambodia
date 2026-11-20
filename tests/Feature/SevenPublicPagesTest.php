@@ -143,13 +143,14 @@ final class SevenPublicPagesTest extends TestCase
         $filters = '/courses?lang=en&q=Catalog&mode=online';
         $this->get($filters)->assertOk()
             ->assertSeeInOrder([
-                'course-catalog-hero.webp',
+                'course-catalog-student.webp',
                 'Catalog Course 01',
                 'Catalog Course 12',
                 'Learning process',
                 'Showing 1–12 of 13 courses',
             ])
             ->assertDontSee('Catalog Course 13')
+            ->assertDontSee('<p>'.e(__('frontend.courses_description')).'</p>', false)
             ->assertDontSee('Catalog On-site Course')
             ->assertSee('lang=en&q=Catalog&mode=online&page=2#course-results');
 
