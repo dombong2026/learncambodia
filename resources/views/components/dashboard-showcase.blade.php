@@ -14,7 +14,7 @@
             <p class="mb-1 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#b07918] dark:text-[#f5cd71]">{{ __('dashboard.feature_overview') }}</p>
             <h2 class="learning-hero-title text-[1.75rem] font-black text-slate-950 dark:text-slate-50 sm:text-3xl xl:text-[2.05rem]">{{ $showcase['greeting'] }}</h2>
         </div>
-        <a href="{{ $showcase['feature_url'] }}" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8e9d9] bg-[#edf8ee] px-4 py-2.5 text-xs font-extrabold text-[#227248] transition hover:border-[#8dc89d] hover:bg-[#def1df] focus-visible:outline-2 focus-visible:outline-[#227248] dark:border-[#356c55] dark:bg-[#1e4938] dark:text-[#aff0c2]">
+        <a href="{{ $showcase['status_url'] ?? $showcase['feature_url'] }}" data-dashboard-status class="platform-hover-surface platform-hover-positive inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8e9d9] bg-[#edf8ee] px-4 py-2.5 text-xs font-extrabold text-[#227248] transition dark:border-[#356c55] dark:bg-[#1e4938] dark:text-[#aff0c2]">
             <span class="h-2.5 w-2.5 rounded-full bg-[#31a064]" aria-hidden="true"></span>
             <span>{{ $showcase['status'] }}: <span class="tabular-nums">{{ \App\Support\DashboardNumber::compact($showcase['status_count']) }}</span></span>
         </a>
@@ -73,9 +73,9 @@
                 @forelse($showcase['timeline'] as $item)
                     <li class="relative border-l-2 border-[#e9ecf2] py-2 pl-5 dark:border-[#365274]">
                         <span class="absolute -left-[6px] top-4 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-[#122849] {{ $item['urgency'] === 'urgent' ? 'bg-red-500' : ($item['urgency'] === 'soon' ? 'bg-[#f4b73d]' : 'bg-[#6d92be]') }}" aria-hidden="true"></span>
-                        <a href="{{ $item['url'] }}" class="group block rounded-xl px-2 py-1 transition hover:bg-[#f5f8fc] focus-visible:outline-2 focus-visible:outline-[#265da8] dark:hover:bg-white/5">
-                            <p class="line-clamp-2 text-sm font-extrabold leading-6 text-slate-900 group-hover:text-[#1e5089] dark:text-white">{{ $item['label'] }}</p>
-                            <p class="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">{{ $item['sub'] }}</p>
+                        <a href="{{ $item['url'] }}" class="platform-hover-surface block rounded-xl px-2 py-1 transition">
+                            <p class="line-clamp-2 text-sm font-extrabold leading-6 text-slate-900 dark:text-white">{{ $item['label'] }}</p>
+                            <p class="mt-1 line-clamp-1 text-xs text-slate-600 dark:text-slate-300">{{ $item['sub'] }}</p>
                             <span class="mt-2 inline-block rounded-full bg-[#eff4fb] px-2 py-1 text-[11px] font-bold tabular-nums text-[#365987] dark:bg-[#25466b] dark:text-[#c0d6f0]">{{ $item['when'] }}</span>
                         </a>
                     </li>
@@ -95,8 +95,8 @@
             </div>
             <div class="mt-6 flex flex-1 flex-col gap-3">
                 @foreach($showcase['actions'] as $action)
-                    <a href="{{ $action['url'] }}" class="group flex items-center gap-3 rounded-2xl border border-[#e6ecf3] bg-[#f5f7fa] p-4 transition hover:border-[#f5c45c] hover:bg-[#fff7e5] focus-visible:outline-2 focus-visible:outline-[#eab147] dark:border-[#294665] dark:bg-[#193658] dark:hover:border-[#f4c45c]">
-                        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff0c9] text-[#ba8021] dark:bg-[#4d3f27] dark:text-[#ffd37b]"><x-workspace-icon :name="$action['icon']" class="h-5 w-5" /></span>
+                    <a href="{{ $action['url'] }}" class="platform-hover-surface flex items-center gap-3 rounded-2xl border border-[#e6ecf3] bg-[#f5f7fa] p-4 transition dark:border-[#294665] dark:bg-[#193658]">
+                        <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff0c9] text-[#986614] dark:bg-[#4d3f27] dark:text-[#ffd37b]"><x-workspace-icon :name="$action['icon']" class="h-5 w-5" /></span>
                         <span class="min-w-0 flex-1 text-xs font-bold leading-5 text-[#203552] dark:text-[#e7effb]">{{ $action['label'] }}</span>
                         <span class="text-xl font-black tabular-nums text-[#0d2d5b] dark:text-white" title="{{ number_format($action['count']) }}">{{ \App\Support\DashboardNumber::compact($action['count']) }}</span>
                     </a>

@@ -23,3 +23,40 @@
     border-radius: 50%;
     background: #fff;
 }
+
+/* Keep hover and focus surfaces in the same theme as their foregrounds. */
+:root {
+    --platform-hover-surface: #eaf2fc;
+    --platform-hover-border: #587aa2;
+    --platform-hover-focus: #1c558a;
+    --platform-hover-positive-surface: #def1df;
+    --platform-hover-positive-border: #4e926c;
+    --platform-hover-positive-focus: #227248;
+}
+
+:root.dark {
+    --platform-hover-surface: #254669;
+    --platform-hover-border: #6c98cc;
+    --platform-hover-focus: #a7cafa;
+    --platform-hover-positive-surface: #275946;
+    --platform-hover-positive-border: #75b596;
+    --platform-hover-positive-focus: #aff0c2;
+}
+
+.platform-hover-surface:is(:hover, :focus-visible) {
+    background-color: var(--platform-hover-surface);
+    border-color: var(--platform-hover-border);
+}
+
+.platform-hover-surface:focus-visible {
+    outline-color: var(--platform-hover-focus);
+}
+
+.platform-hover-positive:is(:hover, :focus-visible) {
+    background-color: var(--platform-hover-positive-surface);
+    border-color: var(--platform-hover-positive-border);
+}
+
+.platform-hover-positive:focus-visible {
+    outline-color: var(--platform-hover-positive-focus);
+}

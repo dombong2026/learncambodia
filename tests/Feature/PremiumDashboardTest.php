@@ -11,6 +11,8 @@ use App\Models\HomeworkSubmission;
 use App\Models\User;
 use App\Support\WorkspaceMenu;
 use Database\Seeders\CategorySeeder;
+use DOMDocument;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -202,11 +204,21 @@ class PremiumDashboardTest extends TestCase
         $course = $this->course();
         $course->update(['status'=>'pending_review','published_at'=>null]);
 
-        $this->actingAs($this->user('admin'))->get('/dashboard')
+        $response = $this->actingAs($this->user('admin'))->get('/dashboard?lang=en')
             ->assertOk()
             ->assertSee('Pending Approvals')
-            ->assertSee('Course reviews')
-            ->assertSee('href="'.route('admin.reviews.index',['focus'=>'courses']).'"',false);
+            ->assertSee('Course reviews');
+
+        $document = new DOMDocument;
+        $document->loadHTML($response->getContent(), LIBXML_NOERROR | LIBXML_NOWARNING);
+        $links = new DOMXPath($document);
+        $queueUrl = route('admin.reviews.index', ['focus' => 'courses', 'lang' => 'en']);
+
+        $this->assertSame($queueUrl, $links->evaluate('string(//a[@data-dashboard-status]/@href)'));
+        $this->assertSame($queueUrl, $links->evaluate('string((//*[@data-dashboard-showcase]//a[span[normalize-space(.)="Course reviews"]])[1]/@href)'));
+        $this->assertSame(route('admin.learning.report'), $links->evaluate('string(//*[@data-dashboard-showcase]//a[normalize-space(.)="View details"]/@href)'));
+
+        $this->get($queueUrl)->assertOk()->assertSee('Pending courses');
     }
 
     public function test_developer_dashboard_uses_actual_available_api_routes(): void
