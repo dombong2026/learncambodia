@@ -189,3 +189,92 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
+
+.assessment-catalog-filters {
+    --filter-surface: #f3f7fc;
+    --filter-ink: #143457;
+    --filter-border: #cfdeee;
+    --filter-control: #fff;
+    display: grid;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+    padding: .875rem;
+    border: 1px solid var(--filter-border);
+    border-radius: 1rem;
+    background: var(--filter-surface);
+    color: var(--filter-ink);
+}
+
+.dark .assessment-catalog-filters {
+    --filter-surface: #152f50;
+    --filter-ink: #edf5ff;
+    --filter-border: #385572;
+    --filter-control: #102842;
+}
+
+.assessment-filter-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .5rem;
+}
+
+.assessment-filter-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: .75rem;
+    padding-top: .75rem;
+}
+
+.assessment-filter-options label {
+    display: grid;
+    min-width: 0;
+    gap: .375rem;
+    font-size: .875rem;
+    font-weight: 700;
+}
+
+.assessment-catalog-filters :is(input[type="search"], select, summary, button) {
+    min-height: 2.75rem;
+    padding: .5rem .75rem;
+    border: 1px solid var(--filter-border);
+    border-radius: .625rem;
+    background: var(--filter-control);
+    color: var(--filter-ink);
+    font-size: .875rem;
+}
+
+.assessment-catalog-filters :is(input[type="search"], select) {
+    width: 100%;
+    min-width: 0;
+}
+
+.assessment-catalog-filters summary {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.assessment-catalog-filters summary::-webkit-details-marker { display: none; }
+.assessment-catalog-filters details[open] summary svg { transform: rotate(180deg); }
+
+.assessment-catalog-filters button {
+    background: #1b4c82;
+    border-color: #1b4c82;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 750;
+}
+
+.assessment-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    padding-top: .75rem;
+}
+
+.assessment-filter-actions a { text-decoration: underline; }
+.assessment-catalog-filters > p { font-size: .875rem; }
+.assessment-catalog-filters :focus-visible { outline: 2px solid #b98737; outline-offset: 2px; }

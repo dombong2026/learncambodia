@@ -84,7 +84,10 @@ final class StandaloneAssessmentTest extends TestCase
             'answers' => [0 => 'a', 1 => 'a', 2 => 'My written response', 3 => 'true', 4 => 'b,a', 5 => '4', 6 => 'a', 8 => 'PP'],
             'recordings' => [7 => UploadedFile::fake()->createWithContent('speak.wav', $wav)],
         ])->assertRedirect($show);
-        $this->get($show)->assertOk()->assertSee('Waiting for writing or speaking grades');
+        $this->get($show)->assertOk()->assertSee('Waiting for writing or speaking grades')
+            ->assertSee('data-review-status="pending"', false);
+        $this->get(route('account.assessment-attempts.show', [$attempt, 'review' => 'mistakes']))->assertOk()
+            ->assertSee('Pick one')->assertSee('Review this choice.')->assertDontSee('Read this')->assertDontSee('Write a response');
         $this->get($audio->json('url'))->assertForbidden();
         $recording = route('assessments.recording', [$attempt, 7]);
         $this->actingAs($other)->get($recording)->assertNotFound();
@@ -104,6 +107,14 @@ final class StandaloneAssessmentTest extends TestCase
         $this->assertNull($certificate->course_enrollment_id);
         $this->actingAs($student)->get($show)->assertSee('87% scored')->assertSee('Clear writing.')
             ->assertSee('Milestone earned: Quiz passed')->assertSee('View certificate');
+        $type->update(['name' => 'B1 Language skills']);
+        $recommendation = CourseExam::create([
+            'kind' => 'quiz', 'exam_type_id' => $type->id, 'title' => 'B1 Reading follow-up',
+            'time_limit' => 10, 'passing_percent' => 70, 'attempt_limit' => 2,
+            'published' => true, 'questions' => [$questions[1] + ['points' => 1]],
+        ]);
+        $this->get($show)->assertOk()
+            ->assertSeeInOrder(['Recommended next activity', $recommendation->title]);
         $this->get(route('certificates.show', $certificate->code))->assertOk()
             ->assertSee('For successfully passing Independent language quiz.');
         $this->get(route('certificates.verify', ['code' => $certificate->code]))->assertOk()
@@ -144,6 +155,35 @@ final class StandaloneAssessmentTest extends TestCase
                 ->assertDontSee("$kind collection 12")
                 ->assertSee("lang=km&page=1#{$kind}-results");
         }
+    }
+
+    public function test_catalog_filters_share_the_url_and_only_find_published_matching_assessments(): void
+    {
+        $type = ExamType::create(['name' => 'B1 independent practice', 'kind' => 'quiz']);
+        $otherType = ExamType::create(['name' => 'B2 independent practice', 'kind' => 'quiz']);
+        $base = ['kind' => 'quiz', 'exam_type_id' => $type->id, 'time_limit' => 15,
+            'passing_percent' => 70, 'attempt_limit' => 2, 'published' => true,
+            'questions' => [['format' => 'reading', 'prompt' => 'Look at the text', 'points' => 1]]];
+        for ($i = 1; $i <= 13; $i++) {
+            CourseExam::create(array_replace($base, ['title' => sprintf('Topic collection %02d', $i)]));
+        }
+        foreach ([
+            ['title' => 'Topic draft', 'published' => false],
+            ['title' => 'Topic long', 'time_limit' => 45],
+            ['title' => 'Topic other level', 'exam_type_id' => $otherType->id],
+            ['title' => 'Topic other skill', 'questions' => [['format' => 'writing', 'points' => 1]]],
+        ] as $row) {
+            CourseExam::create(array_replace($base, $row));
+        }
+
+        $params = ['lang'=>'en', 'q'=>'Topic', 'level'=>'B1', 'skill'=>'reading', 'type'=>$type->id, 'duration'=>15];
+        $this->get(route('assessments.quizzes', $params))->assertOk()
+            ->assertSee('Topic collection 01')->assertSee('Topic collection 12')
+            ->assertDontSee('Topic collection 13')->assertDontSee('Topic draft')->assertDontSee('Topic long')
+            ->assertDontSee('Topic other level')->assertDontSee('Topic other skill')
+            ->assertSee('duration=15&amp;page=2#quiz-results', false);
+        $this->get(route('assessments.quizzes', $params + ['page' => 2]))->assertOk()
+            ->assertSee('Topic collection 13')->assertDontSee('Topic collection 01');
     }
 
     public function test_standalone_exam_pricing_and_access_require_verification(): void

@@ -5,12 +5,13 @@
     $title = $isQuiz ? 'Quick quizzes' : 'Standalone exams';
     $subtitle = $isQuiz ? 'Practice with short quizzes and get feedback as you go.' : 'Take published assessments on your own schedule.';
     $heroImage = $isQuiz ? 'quick-quizzes-hero.webp' : 'standalone-exams-hero.webp';
+    $catalogUrl = route($isQuiz ? 'assessments.quizzes' : 'assessments.exams', ['lang' => app()->getLocale()]).'#'.$items->fragment();
 @endphp
 
 @section('title', $title)
 
 @push('public_styles')
-    <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=2">
     <link rel="stylesheet" href="{{ asset('css/catalog-card-grid.css') }}">
 @endpush
 
@@ -32,6 +33,7 @@
             <a href="{{ route('assessments.quizzes') }}" @if($isQuiz) aria-current="page" @endif>Quick quizzes</a>
             <a href="{{ route('learning.exams') }}">Course assessments</a>
         </nav>
+        @include('learning.partials.assessment-catalog-filters')
         <div class="assessment-catalog-grid">
             @forelse($items as $item)
                 @php($quote = \App\Support\CoursePricing::quote($item->pricing))
@@ -39,7 +41,9 @@
                     :image="$item->featured_kind === 'image' && $item->featuredMedia ? route('editor-media.show', $item->featuredMedia) : null" :image-alt="$item->featured_alt ?? ''"
                     :eyebrow="$item->type?->name" :meta="$item->time_limit.' min · '.ucfirst($quote['model'])" :action="$isQuiz ? 'View quiz' : 'View exam'" />
             @empty
-                <p class="col-span-full">There are no published {{ $isQuiz ? 'quizzes' : 'exams' }} yet.</p>
+                <p class="col-span-full">{{ __('assessment_catalog.no_matches') }}
+                    @if($filters)<a class="underline" href="{{ $catalogUrl }}">{{ __('assessment_catalog.clear') }}</a>@endif
+                </p>
             @endforelse
         </div>
         {{ $items->onEachSide(1)->links('learning.partials.assessment-catalog-pagination', [

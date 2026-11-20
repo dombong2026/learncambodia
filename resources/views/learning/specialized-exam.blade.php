@@ -9,7 +9,7 @@
     @vite('resources/js/workspace.ts')
     <link rel="stylesheet" href="{{ asset('css/specialized-exam.css') }}?v=3">
     @if(isset($attempt) && $attempt->submitted_at)
-        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}?v=2">
     @endif
 @endpush
 

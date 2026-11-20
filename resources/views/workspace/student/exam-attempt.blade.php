@@ -5,7 +5,7 @@
 @endpush
 @if($attempt->submitted_at)
     @push(isset($lesson) ? 'focused-scripts' : 'workspace_styles')
-        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}?v=2">
     @endpush
 @endif
 @section('heading', $attempt->snapshot['title'])

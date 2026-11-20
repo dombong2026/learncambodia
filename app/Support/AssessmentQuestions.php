@@ -92,6 +92,28 @@ final class AssessmentQuestions
         return ['score' => $score, 'passed' => $score !== null && $score >= $snapshot['passing_percent']];
     }
 
+    public static function reviewStatus(array $question, string $answer, ?array $award): string
+    {
+        if (blank($answer) && $award === null) {
+            return 'unanswered';
+        }
+        if (!self::scored($question)) {
+            return 'unscored';
+        }
+        if (!self::manual($question)) {
+            return self::correct($question, $answer) ? 'correct' : 'incorrect';
+        }
+        if ($award === null) {
+            return 'pending';
+        }
+
+        return match (true) {
+            $award['points'] >= $question['points'] => 'correct',
+            $award['points'] > 0 => 'partial',
+            default => 'incorrect',
+        };
+    }
+
     public static function mediaIds(array $snapshot): array
     {
         return array_values(array_unique([
