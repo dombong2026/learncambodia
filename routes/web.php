@@ -420,6 +420,7 @@ Route::middleware('auth')->group(function (): void {
         });
 
         Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/courses/approve-selected', [AdminReviewController::class, 'approveCourses'])->name('reviews.courses.approve-selected');
         Route::post('/reviews/courses/{course}', [AdminReviewController::class, 'course'])->name('reviews.course');
         Route::post('/reviews/appearance/{revision}', [AdminReviewController::class, 'appearance'])->name('reviews.appearance');
         Route::post('/reviews/enrollments/{enrollment}', [AdminReviewController::class, 'enrollment'])->name('reviews.enrollment');

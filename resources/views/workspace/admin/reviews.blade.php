@@ -1,34 +1,28 @@
 @extends('layouts.workspace')
 @section('title', 'Review & Approvals')
 @section('heading', 'Review & Approvals')
-@section('description', 'Record accountable decisions on pending curriculum, appearance revisions and student enrollment requests. All actions are audited.')
+@section('workspace_compact', 'true')
+@push('workspace_styles')
+    <link rel="stylesheet" href="{{ asset('css/admin-review-queue.css') }}?v=1">
+    @if($focus === 'courses')
+        <script defer src="{{ asset('js/admin-review-queue.js') }}?v=1"></script>
+    @endif
+@endpush
+
 @section('content')
-<nav aria-label="Review queues" class="mb-6 flex flex-wrap gap-3">
-    @foreach(['courses'=>'Courses','appearance'=>'Appearance','enrollments'=>'Enrollments'] as $key=>$label)
-        <a href="{{ route('admin.reviews.index',['focus'=>$key]) }}" @if($focus===$key)aria-current="page"@endif class="rounded-full border px-5 py-2.5 text-sm font-semibold {{ $focus===$key ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900' }}">{{ $label }}</a>
+<header class="review-header">
+    <h1>Review &amp; Approvals</h1>
+</header>
+<nav class="review-nav" aria-label="Review queues">
+    @foreach(['courses' => ['Courses', $courses], 'appearance' => ['Appearance', $appearances], 'enrollments' => ['Enrollments', $enrollments]] as $key => [$label, $queue])
+        <a href="{{ route('admin.reviews.index', ['focus' => $key, 'lang' => app()->getLocale()]) }}" @if($focus === $key) aria-current="page" @endif>
+            {{ $label }} <span>{{ $queue->total() }}</span>
+        </a>
     @endforeach
 </nav>
+
 @if($focus === 'courses')
-    <div class="space-y-5">
-        @forelse($courses as $course)
-        <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <div><p class="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Course #{{ $course->public_id }}</p><h2 class="mt-2 text-xl font-extrabold">{{ $course->title }}</h2><p class="mt-2 text-sm text-slate-500">{{ $course->category?->name }} · submitted {{ $course->submitted_at?->format('Y-m-d H:i') }}</p></div>
-                <div class="flex flex-wrap gap-2"><a href="{{ route('admin.course-builder.edit', $course) }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">Inspect curriculum</a><a href="{{ route('admin.course-builder.history.index',$course) }}" class="rounded-full border border-blue-400 px-5 py-2.5 text-sm font-semibold text-blue-700 dark:text-blue-300">Review history & evidence</a></div>
-            </div>
-            <p class="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
-            <p class="mt-3 text-xs font-semibold text-slate-500">Created by account #{{ $course->creator?->public_id ?? 'Unknown' }}</p>
-            <p class="mt-2 text-sm">Current price <x-course-price :course="$course" class="ml-1" /></p>
-                <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                    <form method="POST" action="{{ route('admin.reviews.course',$course) }}" class="flex items-end gap-2">@csrf<input type="hidden" name="decision" value="approve"><button type="submit" class="w-full rounded-full bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800">Approve & publish</button></form>
-                    <form method="POST" action="{{ route('admin.reviews.course',$course) }}" class="flex flex-col gap-2">@csrf<input type="hidden" name="decision" value="reject"><label for="course-note-{{ $course->id }}" class="text-xs font-bold">Rejection reason</label><textarea id="course-note-{{ $course->id }}" name="note" rows="2" maxlength="500" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"></textarea><button type="submit" class="self-end rounded-full border border-red-300 px-5 py-3 text-sm font-bold text-red-700">Reject</button></form>
-                </div>
-        </article>
-        @empty
-        <p class="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">No courses awaiting review.</p>
-        @endforelse
-    </div>
-    <div class="mt-6">{{ $courses->appends(['focus'=>'courses'])->links() }}</div>
+    @include('workspace.admin.partials.course-review-queue')
 @elseif($focus === 'appearance')
     <div class="space-y-5">
         @forelse($appearances as $revision)
@@ -54,7 +48,7 @@
         <p class="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">No appearance changes awaiting review.</p>
         @endforelse
     </div>
-    <div class="mt-6">{{ $appearances->appends(['focus'=>'appearance'])->links() }}</div>
+    <div class="mt-6">{{ $appearances->appends(['focus' => 'appearance', 'lang' => app()->getLocale()])->links() }}</div>
 @else
     <div class="space-y-5">
         @forelse($enrollments as $enrollment)
@@ -80,6 +74,6 @@
             <p class="rounded-3xl border border-slate-200 bg-white p-8 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">No enrollment requests awaiting review.</p>
         @endforelse
     </div>
-    <div class="mt-6">{{ $enrollments->appends(['focus'=>'enrollments'])->links() }}</div>
+    <div class="mt-6">{{ $enrollments->appends(['focus' => 'enrollments', 'lang' => app()->getLocale()])->links() }}</div>
 @endif
 @endsection

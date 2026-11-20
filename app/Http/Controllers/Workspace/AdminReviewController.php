@@ -7,17 +7,21 @@ use App\Models\AppearanceRevision;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseReviewSnapshot;
-use App\Support\CourseReadiness;
 use App\Models\User;
 use App\Support\ApprovalAudit;
+use App\Support\CourseReadiness;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class AdminReviewController extends Controller
 {
+    private const COURSE_PAGE_SIZE = 10;
+
     public function index(Request $request): View
     {
         $focus = $request->validate([
@@ -27,8 +31,8 @@ class AdminReviewController extends Controller
         return view('workspace.admin.reviews', [
             'role' => 'admin', 'focus' => $focus,
             'courses' => Course::where('status', 'pending_review')
-                ->with('category', 'creator:id,public_id')->orderBy('submitted_at')
-                ->paginate(10, ['*'], 'courses_page'),
+                ->with('category', 'creator:id,public_id')->orderBy('submitted_at')->orderBy('id')
+                ->paginate(self::COURSE_PAGE_SIZE, ['*'], 'courses_page'),
             'appearances' => AppearanceRevision::where('status', 'pending_review')
                 ->with('creator')->orderBy('submitted_at')
                 ->paginate(10, ['*'], 'appearance_page'),
@@ -49,12 +53,56 @@ class AdminReviewController extends Controller
     public function course(Request $request, Course $course): RedirectResponse
     {
         $data = $this->reviewData($request, 'reject');
+        $this->recordCourseReview($course, $request->user(), $data['decision'], $data['note'] ?? null);
 
-        DB::transaction(function () use ($request, $course, $data): void {
+        return back()->with('status', 'Course review decision recorded.');
+    }
+
+    public function approveCourses(Request $request): RedirectResponse
+    {
+        $ids = $request->validate([
+            'courses' => ['required', 'array', 'list', 'min:1', 'max:'.self::COURSE_PAGE_SIZE],
+            'courses.*' => ['required', 'integer', 'distinct', 'between:100000,999999'],
+        ])['courses'];
+
+        $courses = Course::whereIn('public_id', $ids)->get()->keyBy('public_id');
+        $published = 0;
+        $skipped = [];
+
+        foreach ($ids as $id) {
+            $course = $courses->get($id);
+            $label = $course?->title ?? 'Course #'.$id;
+
+            if ($course === null) {
+                $skipped[] = ['course' => $label, 'reason' => 'The course is unavailable.'];
+                continue;
+            }
+
+            try {
+                $this->recordCourseReview($course, $request->user(), 'approve');
+                $published++;
+            } catch (ModelNotFoundException) {
+                $skipped[] = ['course' => $label, 'reason' => 'The course or its source edition is unavailable.'];
+            } catch (HttpExceptionInterface $exception) {
+                if (!in_array($exception->getStatusCode(), [409, 422], true)) {
+                    throw $exception;
+                }
+                $skipped[] = ['course' => $label, 'reason' => $exception->getMessage()];
+            }
+        }
+
+        return redirect()->route('admin.reviews.index', [
+            'focus' => 'courses', 'lang' => app()->getLocale(),
+        ])->with('course_review_batch', ['published' => $published, 'skipped' => $skipped]);
+    }
+
+    private function recordCourseReview(Course $course, User $actor, string $decision, ?string $note = null): void
+    {
+        DB::transaction(function () use ($course, $actor, $decision, $note): void {
             $locked = Course::whereKey($course->id)->lockForUpdate()->firstOrFail();
-            abort_unless($locked->status === 'pending_review', 409);
+            abort_unless($locked->status === 'pending_review', 409, 'This course is no longer awaiting review.');
             $submission=CourseReviewSnapshot::where('course_id',$locked->id)->latest('id')->first();
-            if ($data['decision'] === 'approve') {
+            if ($decision === 'approve') {
                 abort_unless(CourseReadiness::ready($locked),422,
                     'Academic readiness checklist failed.');
                 // Legacy pending records without a snapshot retain the existing review
@@ -67,7 +115,7 @@ class AdminReviewController extends Controller
 
             // A replacement must not supersede an edition that was already withdrawn.
             $source = null;
-            if ($data['decision'] === 'approve' && $locked->source_course_id) {
+            if ($decision === 'approve' && $locked->source_course_id) {
                 $source = Course::whereKey($locked->source_course_id)
                     ->lockForUpdate()->firstOrFail();
                 abort_unless($source->status === 'published'
@@ -75,31 +123,29 @@ class AdminReviewController extends Controller
                     'The source edition is no longer current.');
             }
 
-            $status = $data['decision'] === 'approve' ? 'published' : 'rejected';
+            $status = $decision === 'approve' ? 'published' : 'rejected';
             $locked->update([
                 'status' => $status,
                 'published_at' => $status === 'published' ? now() : null,
                 'reviewed_at' => now(),
-                'reviewed_by' => $request->user()->id,
-                'review_note' => $data['note'] ?? null,
+                'reviewed_by' => $actor->id,
+                'review_note' => $note,
             ]);
             if ($submission !== null) {
                 $submission->update([
-                    'decision'=>$data['decision'],'reviewed_by'=>$request->user()->id,
+                    'decision'=>$decision,'reviewed_by'=>$actor->id,
                     'reviewed_at'=>now(),
                 ]);
             }
-            ApprovalAudit::record('course', $locked->id, $request->user(),
-                $data['decision'], 'pending_review', $status, $data['note'] ?? null);
+            ApprovalAudit::record('course', $locked->id, $actor,
+                $decision, 'pending_review', $status, $note);
             if ($source !== null) {
                 $source->update(['superseded_at' => now()]);
-                ApprovalAudit::record('course', $source->id, $request->user(),
+                ApprovalAudit::record('course', $source->id, $actor,
                     'superseded', 'published', 'published',
                     'Replaced by approved edition '.$locked->id);
             }
-        });
-
-        return back()->with('status', 'Course review decision recorded.');
+        }, 3);
     }
 
     public function appearance(Request $request, AppearanceRevision $revision): RedirectResponse
