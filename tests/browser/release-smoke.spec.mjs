@@ -659,9 +659,9 @@ test('compact public category nav retains full tooltip and accessible names on a
     for (const [code, full] of [
       ['GE', 'General English'],
       ['ESL', 'English as a Second Language'],
-      ['EFL', 'English as a Foreign Language'],
-      ['BE', 'Business English'],
       ['EAP', 'English for Academic Purposes'],
+      ['TOEIC', 'Test of English for International Communication'],
+      ['TOEFL', 'Test of English as a Foreign Language'],
       ['IELTS', 'International English Language Testing System'],
     ]) {
       const link = tray.locator('[data-category-short="' + code + '"]');
@@ -713,7 +713,7 @@ test('an open public tab refreshes category links and keeps fixed navigation int
   })));
   await expect(category).toHaveCount(0);
   await expect(directory).toBeFocused();
-  await expect(tray.locator('[data-category-short="EFL"]')).toHaveCount(1);
+  await expect(tray.locator('[data-category-short="GE"]')).toHaveCount(1);
 
   categoryIsActive = true;
   await expect(category).toHaveCount(1, { timeout: 10000 });
