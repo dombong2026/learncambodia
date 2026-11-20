@@ -139,6 +139,23 @@ class FocusedLessonWorkspaceTest extends TestCase
         $this->get($this->watch(['tab' => 'support', 'fragment' => 1]))->assertNotFound();
     }
 
+    public function test_supplemental_workbook_is_downloadable_without_replacing_the_reading(): void
+    {
+        Storage::fake('local');
+        $workbook = $this->attach('application/pdf', 'Workbook.pdf', "%PDF-1.4\n%%EOF");
+        $this->lesson->update(['content_html' => '<p>Read the lesson first.</p>']);
+
+        $this->actingAs($this->student)->get($this->watch(['tab' => 'resources']))
+            ->assertOk()->assertSee('aria-label="Lesson reading"', false)
+            ->assertSee('Read the lesson first.')->assertSee('Workbook.pdf');
+        $this->get(route('editor-media.show', $workbook))->assertDownload('Workbook.pdf');
+
+        $this->lesson->update([
+            'content_html' => '<a href="/editor-media/'.$workbook->id.'" data-resource="file">Workbook</a>',
+        ]);
+        $this->get($this->watch())->assertOk()->assertSee('Download PDF');
+    }
+
     public function test_uploaded_docx_is_rendered_as_escaped_text(): void
     {
         if (!class_exists(ZipArchive::class)) {

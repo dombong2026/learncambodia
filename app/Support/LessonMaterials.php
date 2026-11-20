@@ -71,7 +71,10 @@ final class LessonMaterials
         }
 
         $playable = array_filter($viewers, fn ($viewer) => in_array($viewer['type'], ['video', 'youtube', 'audio'], true));
-        $documents = array_filter($viewers, fn ($viewer) => in_array($viewer['type'], ['pdf', 'document'], true));
+        $inlineMedia = EditorHtml::sourceIds($clean, lesson: true);
+        // Supplemental attachments stay accessible without replacing authored reading.
+        $documents = array_filter($viewers, fn ($viewer) => in_array($viewer['type'], ['pdf', 'document'], true)
+            && ($clean === null || in_array($viewer['file']->id, $inlineMedia, true)));
         $defaultViewer = array_key_first($playable + $documents) ?? 'read';
 
         return compact('files', 'viewers', 'defaultViewer', 'links', 'reading');
