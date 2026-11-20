@@ -192,48 +192,19 @@
 .review-submitted { grid-column: 3; padding-top: .1rem; color: var(--review-muted); font-size: .8rem; }
 .review-submitted span { display: block; font-size: .74rem; }
 
-.review-details {
-    grid-column: 2 / -1;
-    min-width: 0;
-}
-
-.review-details > summary {
+.review-open-course {
     position: absolute;
     inset: .7rem 1rem auto auto;
 }
 
-.review-details summary { list-style: none; }
-.review-details summary::-webkit-details-marker { display: none; }
-.review-details[open] > summary .review-icon { transform: rotate(180deg); }
-
-.review-detail-body {
-    margin-top: .65rem;
-    padding-top: .65rem;
-    border-top: 1px solid var(--review-line);
-    color: var(--review-muted);
-    font-size: .85rem;
-    overflow-wrap: anywhere;
-}
-
-.review-detail-actions, .review-dialog-actions {
+.review-dialog-actions {
     display: flex;
     flex-wrap: wrap;
     gap: .4rem;
     margin-top: .75rem;
 }
 
-.review-detail-actions a { color: var(--review-active); }
-.review-reject { margin-top: .55rem; }
 .review-danger { color: var(--review-danger); }
-.review-reject-form { display: grid; justify-items: start; gap: .35rem; margin-top: .6rem; }
-.review-reject-form textarea {
-    width: min(100%, 28rem);
-    padding: .45rem;
-    border: 1px solid var(--review-line);
-    border-radius: .5rem;
-    background: var(--review-surface);
-    color: inherit;
-}
 
 .review-dialog {
     position: fixed;
@@ -253,6 +224,99 @@
 .review-dialog ul { list-style: disc; padding-inline-start: 1.05rem; margin-top: .65rem; font-size: .86rem; overflow-wrap: anywhere; }
 .review-dialog li + li { margin-top: .29rem; }
 .review-dialog-actions { justify-content: flex-end; }
+
+.review-course-dialog {
+    width: min(40rem, calc(100% - 1.5rem));
+    max-height: calc(100dvh - 1.5rem);
+    padding: 0;
+    border-radius: 1.15rem;
+    overscroll-behavior: contain;
+    box-shadow: 0 24px 72px #02071358;
+}
+
+.review-course-dialog-header,
+.review-course-dialog-body,
+.review-course-dialog-footer {
+    padding: 1.2rem clamp(1rem, 4vw, 1.5rem);
+}
+
+.review-course-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .85rem;
+    border-bottom: 1px solid var(--review-line);
+}
+
+.review-course-dialog-header h2 {
+    margin-top: .48rem;
+    font-size: clamp(1.15rem, 3vw, 1.5rem);
+    line-height: 1.23;
+    letter-spacing: -.022em;
+    overflow-wrap: anywhere;
+}
+
+.review-course-dialog .review-course-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin: 0;
+    border-radius: 2rem;
+    padding: .24rem .6rem;
+    background: var(--review-soft);
+    color: var(--review-muted);
+    font-size: .72rem;
+    font-weight: 680;
+}
+
+.review-course-status span {
+    width: .44rem;
+    height: .44rem;
+    border-radius: 50%;
+    background: #c16d10;
+}
+
+.dark .review-course-status span { background: #f8b755; }
+.review-close { flex: 0 0 2.25rem; width: 2.25rem; padding: 0; color: var(--review-muted); }
+
+.review-course-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem 1rem;
+    padding: .9rem 1rem;
+    border: 1px solid var(--review-line);
+    border-radius: .72rem;
+    background: var(--review-soft);
+    overflow-wrap: anywhere;
+}
+
+.review-course-facts dt { color: var(--review-muted); font-size: .72rem; font-weight: 650; }
+.review-course-facts dd { margin-top: .14rem; font-size: .82rem; font-weight: 650; }
+.review-course-dialog .review-course-summary { margin-top: .95rem; font-size: .91rem; line-height: 1.55; }
+.review-course-dialog .review-course-author { margin-top: .42rem; font-size: .74rem; }
+.review-course-links { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .95rem; }
+.review-course-links a { color: var(--review-active); }
+
+.review-course-dialog-footer {
+    position: sticky;
+    bottom: 0;
+    border-top: 1px solid var(--review-line);
+    background: var(--review-surface);
+    padding-block: .85rem;
+}
+
+.review-course-decision { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.review-reject-form { display: grid; gap: .4rem; margin-top: 1rem; }
+.review-reject-form label { font-size: .82rem; font-weight: 680; }
+.review-reject-form textarea {
+    width: 100%;
+    padding: .6rem .7rem;
+    border: 1px solid var(--review-line);
+    border-radius: .55rem;
+    background: var(--review-surface);
+    color: inherit;
+    font-size: .88rem;
+}
 
 .review-result {
     margin-bottom: .8rem;
@@ -277,8 +341,7 @@
     }
     .review-table-header { padding-inline-end: .75rem; }
     .review-submitted-heading { display: none; }
-    .review-submitted, .review-details { grid-column: 2; }
+    .review-submitted { grid-column: 2; }
     .review-submitted span { display: inline; margin-inline-start: .25rem; }
-    .review-details > summary { inset-inline-end: .55rem; }
-    .review-detail-body { margin-inline-end: -4.7rem; }
+    .review-open-course { inset-inline-end: .55rem; }
 }

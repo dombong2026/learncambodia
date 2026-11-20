@@ -79,35 +79,14 @@
                             <span>—</span>
                         @endif
                     </div>
-                    <details class="review-details">
-                        <summary class="review-button">
-                            Review <span class="sr-only">{{ $course->title }}</span>
-                            <x-workspace-icon name="chevron-down" class="review-icon" />
-                        </summary>
-                        <div class="review-detail-body">
-                            <p>{{ $course->summary }}</p>
-                            <div class="review-meta">
-                                <span>Created by account #{{ $course->creator?->public_id ?? 'Unknown' }}</span>
-                            </div>
-                            <div class="review-detail-actions">
-                                <a href="{{ $curriculum }}" class="review-button">Inspect curriculum</a>
-                                <a href="{{ $history }}" class="review-button">History &amp; evidence</a>
-                                <form method="POST" action="{{ route('admin.reviews.course', $course) }}">
-                                    @csrf
-                                    <button type="submit" name="decision" value="approve" class="review-button review-primary">Approve &amp; publish</button>
-                                </form>
-                            </div>
-                            <details class="review-reject">
-                                <summary class="review-button review-danger">Reject</summary>
-                                <form method="POST" action="{{ route('admin.reviews.course', $course) }}" class="review-reject-form">
-                                    @csrf
-                                    <label for="course-note-{{ $course->id }}">Rejection reason</label>
-                                    <textarea id="course-note-{{ $course->id }}" name="note" rows="2" maxlength="500" required></textarea>
-                                    <button type="submit" name="decision" value="reject" class="review-button review-danger">Reject course</button>
-                                </form>
-                            </details>
-                        </div>
-                    </details>
+                    @php($reviewDialog = 'course-review-'.$course->public_id)
+                    <a class="review-button review-open-course"
+                       href="{{ route('admin.course-builder.edit', ['course' => $course, 'step' => 'review', 'lang' => app()->getLocale()]) }}"
+                       data-course-review-trigger aria-haspopup="dialog" aria-controls="{{ $reviewDialog }}">
+                        Review <span class="sr-only">{{ $course->title }}</span>
+                        <x-workspace-icon name="arrow-up-right" class="review-icon" />
+                    </a>
+                    @include('workspace.admin.partials.individual-course-review')
                 </li>
             @endforeach
         </ul>
