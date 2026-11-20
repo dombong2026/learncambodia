@@ -22,7 +22,7 @@
             <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="book-open" /></span>
             <div class="premium-card-content flex flex-wrap items-start justify-between gap-3">
                 <div><h2 class="text-lg font-extrabold">{{ __('dashboard.course_progress') }}</h2><p class="mt-1 text-xs leading-6 text-slate-500">{{ __('dashboard.self_reported') }}</p></div>
-                <a href="{{ route('account.enrollments.index') }}" class="rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400">{{ __('workspace.my_learning') }}</a>
+                <a href="{{ route('account.enrollments.index') }}" class="platform-hover-surface rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 transition dark:border-blue-900 dark:text-blue-300">{{ __('workspace.my_learning') }}</a>
             </div>
             <div class="mt-5 space-y-4">
             @forelse($activeCourses as $enrollment)
@@ -81,7 +81,7 @@
         <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="chart-line" /></span>
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div><h2 class="text-lg font-extrabold">{{ __('dashboard.practice_subjects') }}</h2><p class="mt-1 text-xs leading-6 text-slate-500">{{ __('dashboard.practice_only') }} · {{ __('dashboard.activity_not_attendance') }}</p></div>
-            <a href="{{ route('account.practice.history') }}" class="rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400">{{ __('dashboard.practice_attempts') }}</a>
+            <a href="{{ route('account.practice.history') }}" class="platform-hover-surface rounded-full border border-blue-200 px-4 py-2 text-xs font-bold text-blue-700 transition dark:border-blue-900 dark:text-blue-300">{{ __('dashboard.practice_attempts') }}</a>
         </div>
         @if(count($performance) > 0)
             @php

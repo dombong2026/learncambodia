@@ -62,6 +62,7 @@ final class DashboardShowcase
             'greeting' => __('dashboard.hello_admin'),
             'status' => __('dashboard.pending_approvals'),
             'status_count' => $data['stats'][3]['value'],
+            'status_url' => $data['stats'][3]['url'],
             'feature_title' => __('dashboard.feature_admin'),
             'feature_description' => __('dashboard.feature_detail'),
             'feature_url' => route('admin.learning.report'),
@@ -83,7 +84,7 @@ final class DashboardShowcase
             'actions' => [
                 self::action(__('dashboard.course_reviews'),
                     (int) ($data['reviewQueue'][0]['value'] ?? 0),
-                    route('admin.reviews.index',['focus'=>'courses']), 'book-open'),
+                    $data['stats'][3]['url'], 'book-open'),
                 self::action(__('dashboard.homework_reviews'),
                     (int) ($data['reviewQueue'][2]['value'] ?? 0),
                     route('admin.homework.reviews'),'clipboard-check'),

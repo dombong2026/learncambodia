@@ -31,8 +31,9 @@ final class DashboardInsights
         $pendingEvidence = AcademicEvidenceReview::where('status', 'pending_review')->count();
         $pendingAppearance = AppearanceRevision::where('status', 'pending_review')->count();
 
+        $courseReviewsUrl = route('admin.reviews.index', ['focus' => 'courses', 'lang' => app()->getLocale()]);
         $queue = [
-            ['label' => __('dashboard.course_reviews'), 'value' => $pendingCourses, 'url' => route('admin.reviews.index',['focus'=>'courses'])],
+            ['label' => __('dashboard.course_reviews'), 'value' => $pendingCourses, 'url' => $courseReviewsUrl],
             ['label' => __('dashboard.enrollment_reviews'), 'value' => $pendingEnrollments, 'url' => route('admin.reviews.index',['focus'=>'enrollments'])],
             ['label' => __('dashboard.homework_reviews'), 'value' => $pendingHomework, 'url' => route('admin.homework.reviews')],
             ['label' => __('dashboard.appearance_reviews'), 'value' => $pendingAppearance, 'url' => route('admin.reviews.index',['focus'=>'appearance'])],
@@ -67,7 +68,7 @@ final class DashboardInsights
                     'graduation',route('admin.instructors.index'),__('dashboard.provisioned_accounts')),
                 self::metric(__('dashboard.pending_approvals'),
                     $pendingCourses+$pendingEnrollments+$pendingHomework+$pendingAppearance+$pendingEvidence,
-                    'shield',route('admin.reviews.index'),__('dashboard.awaiting_review')),
+                    'shield',$courseReviewsUrl,__('dashboard.awaiting_review')),
                 self::metric(__('dashboard.graded_homework'),
                     HomeworkSubmission::where('status','graded')->count(),
                     'activity',route('admin.academic.gradebook'),__('dashboard.internal_grades')),
