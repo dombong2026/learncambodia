@@ -51,19 +51,20 @@ final class SpecializedExamTest extends TestCase
         $this->get($exam->publicUrl())->assertRedirect(route('specialized-exams.show', [$exam, 'lang' => 'en']));
         $launch = route('specialized-exams.show', $exam);
         $this->get($launch)->assertOk()->assertCookie('specialized_exam_browser')
-            ->assertHeader('Referrer-Policy', 'no-referrer')->assertDontSee('<header', false);
+            ->assertHeader('Referrer-Policy', 'no-referrer')->assertSee('public-site-header', false)->assertSee('<footer', false);
         $attempt = $this->beginGuest($exam);
         $result = route('specialized-exams.attempts.show', $attempt);
         $submit = route('specialized-exams.attempts.submit', $attempt);
         $this->assertNull($attempt->student_id);
         $this->get($result)->assertOk()->assertSee('First question')->assertSee('Second question')
-            ->assertDontSee('<header', false)->assertDontSee('<footer', false)->assertDontSee('<aside', false);
+            ->assertSee('public-site-header', false)->assertSee('<footer', false)->assertDontSee('assessment-result-summary', false);
         $this->post(route('specialized-exams.start', $exam))->assertRedirect($result);
         $this->withCookie('specialized_exam_browser', str_repeat('a', 64))->get($result)->assertNotFound();
         $this->post($submit, ['answers' => ['a', 'true']])->assertNotFound();
         $this->post(route('specialized-exams.attempts.email', $attempt), ['email' => 'other@example.test'])->assertNotFound();
         $this->withCookie('specialized_exam_browser', self::BROWSER)->post($submit, ['answers' => ['a', 'true']])->assertRedirect($result);
-        $this->get($result)->assertOk()->assertSee('Exam submitted')->assertSee('100%')->assertSee('Create an account');
+        $this->get($result)->assertOk()->assertSee('Exam submitted')->assertSee('100%')->assertSee('Create an account')
+            ->assertSee('Questionnaire')->assertSee('Completed')->assertSee('Your answer')->assertDontSee('data-exam-attempt', false);
         $this->get($launch)->assertOk()->assertSee('Your attempts');
         $this->post($submit, ['answers' => ['b', 'false']])->assertConflict();
         $this->assertDatabaseCount('issued_certificates', 0);
