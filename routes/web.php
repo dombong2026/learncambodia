@@ -43,6 +43,7 @@ use App\Http\Controllers\Workspace\AdminCourseController;
 use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
+use App\Http\Controllers\Workspace\AdminCourseResourceController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminBrandingController;
 use App\Http\Controllers\Workspace\AdminSystemSettingsController;
@@ -57,6 +58,7 @@ use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
 use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentLessonQuizController;
+use App\Http\Controllers\Workspace\StudentCourseResourceController;
 use App\Http\Controllers\Workspace\LessonConversationController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
@@ -388,6 +390,11 @@ Route::middleware('auth')->group(function (): void {
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::patch('/{course}/media', [AdminCourseController::class, 'media'])->name('media');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::get('/{course}/resources', [AdminCourseResourceController::class, 'index'])->name('resources');
+            Route::post('/{course}/resources', [AdminCourseResourceController::class, 'store'])->middleware('throttle:15,1')->name('resources.store');
+            Route::patch('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'update'])->middleware('throttle:15,1')->name('resources.update');
+            Route::get('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'download'])->name('resources.download');
+            Route::delete('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'destroy'])->name('resources.destroy');
             Route::get('/{course}/history', [AdminCurriculumHistoryController::class, 'index'])->name('history.index');
             Route::post('/{course}/modules/{module}/duplicate', [AdminCurriculumController::class, 'duplicateModule'])->name('modules.duplicate');
             Route::post('/{course}/modules/{module}/lessons/{lesson}/duplicate', [AdminCurriculumController::class, 'duplicateLesson'])->name('lessons.duplicate');
@@ -495,6 +502,8 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/enrollments/{enrollment}/exam-attempts/{attempt}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'submit'])
             ->middleware('throttle:12,1')->name('exam-attempts.submit');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/enrollments/{enrollment}/resources', [StudentCourseResourceController::class, 'index'])->name('enrollments.resources');
+        Route::get('/enrollments/{enrollment}/resources/{resource}', [StudentCourseResourceController::class, 'download'])->name('enrollments.resources.download');
         Route::get('/notes', [StudentNoteController::class, 'index'])->name('notes.index');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/notes', [StudentNoteController::class, 'store'])
             ->middleware('throttle:20,1')->name('notes.store');

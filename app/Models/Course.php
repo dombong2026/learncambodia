@@ -51,6 +51,11 @@ class Course extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function resources(): HasMany
+    {
+        return $this->hasMany(CourseResource::class)->orderBy('position')->orderBy('id');
+    }
+
     public function modules(): HasMany
     {
         return $this->hasMany(CourseModule::class)->orderBy('position')->orderBy('id');

@@ -28,6 +28,7 @@
             @if($course->exists)
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="builder-status">{{ ucwords(str_replace('_', ' ', $course->status)) }} · Edition {{ $course->revision_number }}</span>
+                    <a class="builder-button" href="{{ route('admin.course-builder.resources', $course) }}">Course Resources</a>
                     <a class="builder-button" href="{{ route('admin.course-builder.history.index', $course) }}">History &amp; readiness</a>
                     @if($course->status === 'published' && $course->superseded_at === null)
                         <form method="POST" action="{{ route('admin.course-builder.revise', $course) }}">@csrf

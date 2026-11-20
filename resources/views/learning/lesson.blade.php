@@ -22,7 +22,7 @@
     $lessonUrl = fn (array $query = []) => route('account.lessons.watch', [$enrollment, $lesson] + $query);
     $hasQuiz = isset($materials['viewers']['quiz']);
     $onQuiz = $viewerKey === 'quiz';
-    $quizChecked = $onQuiz && (\App\Support\LessonQuiz::resultFor(request(), $enrollment->id, $lesson->id)['answers'] ?? null) !== null;
+    $quizChecked = $onQuiz && $quizAttempt !== null;
 @endphp
 
 <div class="fl-grid">
@@ -99,7 +99,7 @@
                     <a rel="prev" class="fl-button" href="{{ route('account.lessons.watch', [$enrollment, $previous]) }}">← {{ __('focused_learning.previous') }}</a>
                 @endif
                 @if($hasQuiz && !$onQuiz && $done)
-                    <a rel="next" class="fl-button fl-primary" href="{{ $lessonUrl(['viewer' => 'quiz']) }}">{{ __('focused_learning.start_quiz') }} →</a>
+                    <a rel="next" class="fl-button fl-primary" href="{{ $lessonUrl(['viewer' => 'quiz']) }}">{{ __(in_array($lesson->id, $quizCompletedIds, true) ? 'focused_learning.review_quiz' : 'focused_learning.start_quiz') }} →</a>
                 @elseif($next && (!$hasQuiz || $quizChecked))
                     <a rel="next" class="fl-button" href="{{ route('account.lessons.watch', [$enrollment, $next]) }}">{{ __('focused_learning.next') }} →</a>
                 @endif

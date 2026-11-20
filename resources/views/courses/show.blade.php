@@ -17,6 +17,7 @@
         <h2 class="text-xl font-black">{{ __('frontend.start_learning') }}</h2>
         @php
             $quote = \App\Support\CoursePricing::quote($course->pricing);
+            $free = $quote['model'] === 'free';
             $student = auth()->user()?->role === \App\Models\User::ROLE_STUDENT;
             $primary = 'mt-4 block w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]';
             $secondary = 'mt-3 block rounded-xl border border-white/35 px-5 py-3 text-center text-xs font-bold text-white hover:bg-white/10';
@@ -26,8 +27,8 @@
             <p class="mt-2 text-xs leading-6 text-[#d1e0ef]">The school verifies payment or membership before granting access.</p>
         @endif
         @guest
-            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.sign_in_to_enroll') }}</p>
-            <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}" class="{{ $primary }}">{{ __('detail.enroll') }}</a>
+            <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __($free ? 'detail.free_enroll_note' : 'detail.sign_in_to_enroll') }}</p>
+            <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}" class="{{ $primary }}">{{ __($free ? 'detail.enroll_free' : 'detail.enroll') }}</a>
             <a href="{{ \App\Support\ReadingReturn::authUrl(request(), 'register') }}" class="{{ $secondary }}">{{ __('frontend.create_account') }}</a>
         @elseif(!$student)
             <p class="mt-3 text-xs leading-6 text-[#d1e0ef]">{{ __('detail.student_enrollment_only') }}</p>
@@ -41,9 +42,10 @@
                 @if($quote['model'] !== 'free')
                     <input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">
                 @endif
-                <button type="submit" class="{{ $primary }}">{{ __('detail.enroll') }}</button>
+                <button type="submit" class="{{ $primary }}">{{ __($free ? 'detail.enroll_free' : 'detail.enroll') }}</button>
             </form>
         @elseif($existingEnrollment->status === 'approved')
+            <a href="{{ route('account.enrollments.resources', $existingEnrollment) }}" class="{{ $secondary }}">{{ __('focused_learning.course_resources') }}</a>
             @if($hasStarted)
                 <a href="{{ route('account.progress.index', ['enrollment' => $existingEnrollment->id]) }}" class="{{ $primary }}">{{ __('detail.learning_progress') }}</a>
                 <a href="{{ route('account.enrollments.show', $existingEnrollment) }}" class="{{ $secondary }}">{{ __('dashboard.resume_learning') }}</a>
@@ -138,7 +140,7 @@
         <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
             <h2 class="text-xl font-black text-[#12355e] dark:text-white">{{ __('pages.study_process') }}</h2>
             <div class="mt-5 space-y-4">
-                @foreach([['user-round',__('pages.step_account')],['user-check',__('pages.step_approval')],['book-open',__('pages.step_study')]] as [$icon,$title])
+                @foreach([['user-round',__('pages.step_account')],['user-check',__($free ? 'detail.enroll_free' : 'pages.step_approval')],['book-open',__('pages.step_study')]] as [$icon,$title])
                     <div class="flex items-center gap-3 text-xs"><span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#fff0d2]"><x-workspace-icon :name="$icon" class="h-5 w-5 text-[#ac7929]" /></span><strong class="leading-6">{{ $title }}</strong></div>
                 @endforeach
             </div>

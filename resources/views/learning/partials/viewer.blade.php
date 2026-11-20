@@ -51,7 +51,7 @@
         @break
     @case('quiz')
         <div class="fl-viewer-padding">
-            <x-lesson-quiz :lesson="$lesson" :enrollment="$enrollment" />
+            <x-lesson-quiz :lesson="$lesson" :enrollment="$enrollment" :attempt="$quizAttempt" :retry="$quizRetry" :history="$quizHistory" />
         </div>
         @break
     @case('exam')

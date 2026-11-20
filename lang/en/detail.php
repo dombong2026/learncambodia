@@ -46,4 +46,6 @@ return [
     'public_social_note' => 'Add the links you want to display on your public profile and assigned course pages after approval.',
     'instructor_social_links' => 'Social links for :name',
     'invalid_social_url' => 'Enter a valid HTTPS link for :platform.',
+    'enroll_free' => 'Enroll for free',
+    'free_enroll_note' => 'Sign in as a student to enroll for free and start learning immediately.',
 ];

@@ -29,7 +29,7 @@ final class LessonMaterials
                 default => null,
             };
             $key = $type === null ? null : 'file-'.$file->id;
-            $files[] = ['label' => $file->original_name, 'url' => $url, 'viewer' => $key];
+            $files[] = ['id' => $file->id, 'label' => $file->original_name, 'url' => $url, 'viewer' => $key];
             if ($key !== null) {
                 $viewers[$key] = [
                     'type' => $type, 'label' => $file->original_name,

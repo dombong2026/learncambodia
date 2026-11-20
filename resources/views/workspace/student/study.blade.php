@@ -99,6 +99,7 @@
     <div class="cc-toolbar">
         <div class="cc-links">
             <a class="cc-button" href="{{ route('account.enrollments.index') }}"><x-workspace-icon name="chevron-right" class="h-4 w-4 rotate-180" /> My Enrollments</a>
+            <a class="cc-button" href="{{ route('account.enrollments.resources', [$enrollment] + request()->only('lang')) }}"><x-workspace-icon name="paperclip" class="h-4 w-4" /> {{ __('focused_learning.course_resources') }}</a>
             <a class="cc-button" href="{{ route('account.notes.index', ['enrollment' => $enrollment->id]) }}"><x-workspace-icon name="notebook-text" class="h-4 w-4" /> My Lesson Notes</a>
         </div>
         <div class="cc-links">
@@ -205,6 +206,12 @@
                                 </td>
                                 <td class="cc-duration cc-duration-cell">{{ $lesson->duration_minutes ?: '—' }}{{ $lesson->duration_minutes ? ' min' : '' }}</td>
                                 <td class="cc-status-cell">
+                                    @if(filled($lesson->quiz_questions) && !$preview)
+                                        <a class="cc-button" href="{{ route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'quiz'] + request()->only('lang')) }}">
+                                            {{ __(in_array($lesson->id, $quizCompletedIds, true) ? 'focused_learning.quiz_completed' : 'focused_learning.quiz') }}
+                                        </a>
+                                    @endif
+
                                     <span class="cc-status {{ $done ? 'cc-status-complete' : '' }}">
                                         <x-workspace-icon :name="$done ? 'check' : 'book-open'" class="h-3.5 w-3.5" />
                                         {{ $done ? 'Completed' : 'Not completed' }}

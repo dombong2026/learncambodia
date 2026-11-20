@@ -137,7 +137,7 @@ class FrontendAuthMilestoneTest extends TestCase
 
         $this->get($path)->assertOk()
             ->assertSee('href="'.e($signIn).'"', false)
-            ->assertSee('>Enroll</a>', false)
+            ->assertSee('>Enroll for free</a>', false)
             ->assertSee('data-share-url="'.route('courses.show', $course->getRouteKey()).'"', false)
             ->assertDontSee('line-clamp-2 text-sm leading-6', false);
 
@@ -147,7 +147,7 @@ class FrontendAuthMilestoneTest extends TestCase
             'password' => 'CourseTestPassword123!',
         ])->assertRedirect($path);
         $this->get($path)->assertOk()
-            ->assertSee('>Enroll</button>', false)
+            ->assertSee('>Enroll for free</button>', false)
             ->assertSee('action="'.route('account.enrollments.store',$course).'"',false);
 
         $response = $this->post('/account/courses/'.$course->id.'/enroll');
@@ -177,7 +177,7 @@ class FrontendAuthMilestoneTest extends TestCase
 
         $other = User::factory()->create();
         $this->actingAs($other)->get($progress)->assertOk()->assertDontSee($course->title);
-        $this->get($path)->assertOk()->assertDontSee('Already enrolled')->assertSee('>Enroll</button>', false);
+        $this->get($path)->assertOk()->assertDontSee('Already enrolled')->assertSee('>Enroll for free</button>', false);
     }
 
     public function test_existing_signup_still_creates_student_only(): void

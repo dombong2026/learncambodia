@@ -214,6 +214,24 @@ final class LearningHubController extends Controller
         $viewerKey = $request->query('viewer', $materials['defaultViewer']);
         abort_unless(is_string($viewerKey) && isset($materials['viewers'][$viewerKey]), 404);
         $viewer = $materials['viewers'][$viewerKey];
+        $quizCompletedIds = $enrollment->lessonQuizAttempts()->distinct()->pluck('lesson_id')->all();
+        $quizHistory = $quizAttempt = $quizRetry = null;
+        if ($viewerKey === 'quiz') {
+            $query = $request->validate([
+                'attempt' => ['nullable', 'integer', 'min:1'],
+                'retry' => ['nullable', 'integer', 'min:1'],
+            ]);
+            $quizAttempts = $enrollment->lessonQuizAttempts()->where('lesson_id', $lesson->id)->latest('id');
+            $quizHistory = (clone $quizAttempts)->simplePaginate(8, ['*'], 'quiz_page')->withQueryString();
+            if (isset($query['retry'])) {
+                $quizRetry = $quizAttempts->findOrFail($query['retry']);
+                abort_if($quizRetry->missedQuestions() === [], 404);
+            } elseif (isset($query['attempt'])) {
+                $quizAttempt = $quizAttempts->findOrFail($query['attempt']);
+            } elseif (!$request->boolean('start')) {
+                $quizAttempt = $quizAttempts->first();
+            }
+        }
         $canSavePlace = ! $request->session()->has(AccountPreview::KEY);
         if ($canSavePlace && $request->isMethod('GET') && ! $request->boolean('fragment')) {
             $enrollment->rememberLesson($lesson);
@@ -221,6 +239,7 @@ final class LearningHubController extends Controller
         $document = $viewer['type'] === 'document' ? LessonMaterials::document($viewer['file']) : [];
         $attempts = $viewer['type'] === 'exam' ? $enrollment->examAttempts()
             ->where('course_exam_id', $viewer['exam']->id)->latest('id')->get(['id', 'score', 'submitted_at', 'expires_at']) : collect();
+        $courseResources = $tab === 'resources' ? $course->resources()->with('media')->get() : collect();
         $quizzes = $tab === 'resources' ? $course->quizzes()->has('questions')->get(['id', 'title']) : collect();
         $assignments = $tab === 'resources' ? CourseHomeworkAssignment::published()
             ->where('course_id', $course->id)->orderBy('due_at')->get(['id', 'title']) : collect();
@@ -230,7 +249,8 @@ final class LearningHubController extends Controller
         return view('learning.lesson', compact(
             'course', 'lesson', 'enrollment', 'completedIds', 'previous', 'next', 'position',
             'materials', 'viewerKey', 'viewer', 'tab', 'document', 'attempts', 'quizzes', 'assignments',
-            'studyNote', 'comments', 'instructors', 'instructor', 'messages', 'canSavePlace'
+            'studyNote', 'comments', 'instructors', 'instructor', 'messages', 'canSavePlace',
+            'quizAttempt', 'quizRetry', 'quizHistory', 'quizCompletedIds', 'courseResources'
         ));
     }
 

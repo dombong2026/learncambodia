@@ -58,10 +58,13 @@ class StudentEnrollmentController extends Controller
         $lessons = $course->modules->flatMap(fn ($module) => $module->lessons);
         $completedLessonIds = $enrollment->lessonProgress()->whereNotNull('completed_at')
             ->whereIn('lesson_id', $lessons->pluck('id'))->pluck('lesson_id')->all();
+        $quizCompletedIds = $enrollment->lessonQuizAttempts()->distinct()->pluck('lesson_id')->all();
         $nextLesson = $lessons->first(fn ($lesson) => !in_array($lesson->id, $completedLessonIds, true))
             ?? $lessons->first();
         $savedLesson = $lessons->firstWhere('id', $enrollment->last_opened_lesson_id);
-        if ($savedLesson && in_array($savedLesson->id, $completedLessonIds, true)) {
+        $resumeQuiz = $savedLesson && in_array($savedLesson->id, $completedLessonIds, true)
+            && filled($savedLesson->quiz_questions) && !in_array($savedLesson->id, $quizCompletedIds, true);
+        if ($savedLesson && !$resumeQuiz && in_array($savedLesson->id, $completedLessonIds, true)) {
             $savedLesson = null;
         }
         $resumeLesson = $savedLesson ?? $nextLesson;
@@ -69,7 +72,7 @@ class StudentEnrollmentController extends Controller
         $locale = $request->query('lang') === app()->getLocale() ? ['lang' => app()->getLocale()] : [];
 
         if ($resumeLesson && !$preview && $request->query('view') !== 'curriculum') {
-            return to_route('account.lessons.watch', [$enrollment, $resumeLesson] + $locale);
+            return to_route('account.lessons.watch', [$enrollment, $resumeLesson] + ($resumeQuiz ? ['viewer' => 'quiz'] : []) + $locale);
         }
 
         if (!$resumeLesson && !$preview && $request->isMethod('GET')) {
@@ -88,6 +91,7 @@ class StudentEnrollmentController extends Controller
                 && \App\Support\CertificateAwards::courseEligible($course, $enrollment),
             'attempts' => \App\Models\ExamAttempt::where('course_enrollment_id', $enrollment->id)->latest('id')->get()->groupBy('course_exam_id'),
             'completedLessonIds' => $completedLessonIds,
+            'quizCompletedIds' => $quizCompletedIds,
             'resumeLesson' => $resumeLesson,
             'savedLesson' => $savedLesson,
             'nextLesson' => $nextLesson,

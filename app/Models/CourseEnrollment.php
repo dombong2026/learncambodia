@@ -30,6 +30,11 @@ class CourseEnrollment extends Model
         return $this->hasMany(PracticeAttempt::class, 'enrollment_id');
     }
 
+    public function lessonQuizAttempts(): HasMany
+    {
+        return $this->hasMany(LessonQuizAttempt::class, 'enrollment_id');
+    }
+
     public function examAttempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class, 'course_enrollment_id');

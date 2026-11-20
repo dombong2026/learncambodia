@@ -40,6 +40,9 @@
                                     aria-label="{{ __('focused_learning.quiz_for_lesson', ['lesson' => $item->title]) }}">
                                     <span class="fl-lesson-dot"><x-workspace-icon name="list-check" /></span>
                                     <span>{{ __('focused_learning.quiz') }}</span>
+                                    @if(in_array($item->id, $quizCompletedIds ?? [], true))
+                                        <small>{{ __('focused_learning.quiz_completed') }}</small>
+                                    @endif
                                 </a>
                             </li>
                         @endif

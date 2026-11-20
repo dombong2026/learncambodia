@@ -97,12 +97,13 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
             ->assertSee('Back to lesson')->assertDontSee('Next lesson')
             ->assertDontSee('Correct answer')->assertDontSee($question['feedback']);
         $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()->assertDontSee('Lesson quiz');
-        $this->post($attempt, ['answers' => ['c']])->assertRedirect($watch.'#lesson-quiz-'.$lesson->id);
-        $this->get($watch)->assertSee('Choose one answer for each question.')->assertDontSee('Next lesson');
+        $this->followingRedirects()->post($attempt, ['answers' => ['c']])
+            ->assertOk()->assertSee('Choose one answer for each question.')->assertDontSee('Next lesson');
+        $this->assertSame(0, $enrollment->lessonQuizAttempts()->count());
         $this->followingRedirects()->post($attempt, ['answers' => ['b'], 'view' => 'curriculum'])
             ->assertOk()->assertSee('1 of 1 correct.')->assertSee('Next lesson')->assertSee($question['feedback']);
-        $this->post($attempt, ['answers' => ['a'], 'view' => 'curriculum'])
-            ->assertRedirect($watch.'#lesson-quiz-'.$lesson->id);
+        $this->post($attempt, ['answers' => ['a'], 'view' => 'curriculum'])->assertRedirect();
+        $this->assertSame(2, $enrollment->lessonQuizAttempts()->count());
         $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()
             ->assertDontSee('0 of 1 correct.');
         $this->get($study)->assertSee('Course curriculum')->assertDontSee('Lesson quiz');
