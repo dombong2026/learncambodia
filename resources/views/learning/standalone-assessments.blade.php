@@ -11,6 +11,7 @@
 
 @push('public_styles')
     <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/catalog-card-grid.css') }}">
 @endpush
 
 @section('content')
@@ -34,11 +35,11 @@
         <div class="assessment-catalog-grid">
             @forelse($items as $item)
                 @php($quote = \App\Support\CoursePricing::quote($item->pricing))
-                <x-learning-card :href="$item->publicUrl()" :title="$item->title" icon="clipboard-check"
+                <x-learning-card :href="$item->publicUrl()" :title="$item->title" :icon="$isQuiz ? 'study-quiz' : 'study-exam'"
                     :image="$item->featured_kind === 'image' && $item->featuredMedia ? route('editor-media.show', $item->featuredMedia) : null" :image-alt="$item->featured_alt ?? ''"
                     :eyebrow="$item->type?->name" :meta="$item->time_limit.' min · '.ucfirst($quote['model'])" :action="$isQuiz ? 'View quiz' : 'View exam'" />
             @empty
-                <p>There are no published {{ $isQuiz ? 'quizzes' : 'exams' }} yet.</p>
+                <p class="col-span-full">There are no published {{ $isQuiz ? 'quizzes' : 'exams' }} yet.</p>
             @endforelse
         </div>
         {{ $items->onEachSide(1)->links('learning.partials.assessment-catalog-pagination', [

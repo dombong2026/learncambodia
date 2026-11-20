@@ -3,6 +3,11 @@
 @push('focused-scripts')
     @vite('resources/js/workspace.ts')
 @endpush
+@if($attempt->submitted_at)
+    @push(isset($lesson) ? 'focused-scripts' : 'workspace_styles')
+        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}">
+    @endpush
+@endif
 @section('heading', $attempt->snapshot['title'])
 @section('content')
     @php
@@ -24,8 +29,8 @@
         </ul>
     @endif
     @if($attempt->submitted_at)
-        <section class="workspace-panel space-y-3 p-6">
-            <h2 class="text-xl font-extrabold">{{ $attempt->passed ? 'Passed' : 'Attempt complete' }}</h2>
+        <x-assessment-result-layout :attempt="$attempt">
+            <h3 class="assessment-result-heading">{{ $attempt->passed ? 'Passed' : 'Attempt complete' }}</h3>
             @if($attempt->score !== null)
                 <p>{{ $attempt->score }}% scored · {{ $attempt->snapshot['passing_percent'] }}% required</p>
             @elseif(collect($attempt->snapshot['questions'])->contains(fn ($question) => \App\Support\AssessmentQuestions::manual($question)))
@@ -39,13 +44,7 @@
             @if($attempt->snapshot['gamified'] && $attempt->passed)
                 <p class="font-semibold text-blue-700 dark:text-blue-300 motion-safe:animate-pulse">Milestone earned: {{ $label }} passed</p>
             @endif
-            @foreach($attempt->snapshot['questions'] as $index => $question)
-                @php($comment = \App\Support\AssessmentQuestions::manual($question) ? ($attempt->grading[$index]['feedback'] ?? null) : ($question['feedback'] ?? null))
-                @if($comment)
-                    <p class="break-words whitespace-pre-wrap"><strong>{{ $index + 1 }}.</strong> {{ $comment }}</p>
-                @endif
-            @endforeach
-        </section>
+        </x-assessment-result-layout>
     @elseif(!$attempt->expires_at->isFuture())
         <p class="workspace-panel p-6">This attempt ended when the time limit expired.</p>
     @else

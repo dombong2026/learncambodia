@@ -1,0 +1,74 @@
+.assessment-catalog-grid,
+.course-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(.625rem, 1.35vw, 1.25rem);
+}
+
+:is(.assessment-catalog-grid, .course-catalog-grid) > .premium-card {
+    padding: clamp(.625rem, 1.4vw, 1.25rem);
+    border-radius: clamp(.875rem, 1.7vw, 1.375rem);
+    overflow-wrap: anywhere;
+}
+
+:is(.assessment-catalog-grid, .course-catalog-grid) > .premium-card > img {
+    border-radius: .625rem;
+}
+
+:is(.assessment-catalog-grid, .course-catalog-grid) > .premium-card > h3 {
+    margin-top: .625rem;
+    font-size: clamp(.875rem, 1.35vw, 1.125rem);
+    line-height: 1.35;
+}
+
+.assessment-catalog-grid > .premium-card > p {
+    margin-top: .625rem;
+    letter-spacing: .055em;
+}
+
+.assessment-catalog-grid > .premium-card > .premium-corner-icon {
+    position: static;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .625rem;
+    background: #e5effb;
+    color: #194c83;
+    mix-blend-mode: normal;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+.dark .assessment-catalog-grid > .premium-card > .premium-corner-icon {
+    background: #244b73;
+    color: #c8e4fc;
+}
+
+:is(.assessment-catalog-grid, .course-catalog-grid) > .premium-card > div:last-child {
+    margin-top: .75rem;
+    padding-top: .625rem;
+    column-gap: .5rem;
+    row-gap: .375rem;
+    line-height: 1.4;
+}
+
+.course-catalog-grid > .premium-card > div:last-child a {
+    min-height: 2.25rem;
+    padding: .45rem .6rem;
+}
+
+@media (min-width: 40rem) {
+    .assessment-catalog-grid,
+    .course-catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 64rem) {
+    .assessment-catalog-grid,
+    .course-catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 90rem) {
+    .assessment-catalog-grid,
+    .course-catalog-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+    .course-catalog-container.course-catalog-body { max-width: 100rem; }
+}

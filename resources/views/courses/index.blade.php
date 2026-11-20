@@ -5,6 +5,7 @@
 @push('public_styles')
     <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=1">
     <link rel="stylesheet" href="{{ asset('css/course-catalog.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/catalog-card-grid.css') }}">
 @endpush
 
 @section('content')

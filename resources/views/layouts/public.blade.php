@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f172a">
+    @hasSection('public_robots')
+        <meta name="robots" content="@yield('public_robots')">
+    @endif
     @php
         $locale = app()->getLocale();
         $socialLocale = ['en' => 'en_US', 'km' => 'km_KH', 'zh' => 'zh_CN'][$locale] ?? 'en_US';

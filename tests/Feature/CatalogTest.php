@@ -24,11 +24,13 @@ class CatalogTest extends TestCase
             ->assertSee('IELTS');
     }
 
-    public function test_header_tray_lists_individual_published_categories(): void
+    public function test_header_tray_lists_featured_published_categories(): void
     {
         $this->seed(CategorySeeder::class);
         $this->publishLearningCategoryFixtures();
-        $this->get('/')->assertOk()->assertSee('CELPIP')->assertSee('TEYL');
+        $this->get('/')->assertOk()
+            ->assertSee('data-category-short="ESL"', false)->assertSee('data-category-short="IELTS"', false)
+            ->assertDontSee('data-category-short="CELPIP"', false)->assertDontSee('data-category-short="TEYL"', false);
     }
 
     public function test_search_returns_matching_category(): void

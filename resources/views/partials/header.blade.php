@@ -1,4 +1,4 @@
-<div class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95">
+<div class="public-site-header sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95">
     @if(filled(\App\Support\Appearance::value('header','announcement')))
         <div class="border-b border-blue-900 bg-blue-950 px-4 py-2 text-center text-xs font-semibold text-white">{{ \App\Support\Appearance::value('header','announcement') }}</div>
     @endif

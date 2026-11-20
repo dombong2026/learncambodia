@@ -907,14 +907,14 @@ test('Courses CEFR cards share one row with homepage premium styling and respons
 });
 
 for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone exams']]) {
-  test(title + ' has one to four columns and a responsive hero', async ({ page }) => {
+  test(title + ' has two to five columns and a responsive hero', async ({ page }) => {
     await page.goto('/assessments/' + path + '?lang=en');
     const grid = page.locator('.assessment-catalog-grid');
     const hero = page.locator('.assessment-catalog-hero__image');
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
     await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
 
-    for (const [width, columns] of [[390, 1], [768, 2], [1024, 3], [1440, 4]]) {
+    for (const [width, columns] of [[390, 2], [768, 3], [1024, 4], [1440, 5]]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
       const [copy, image] = await Promise.all([page.locator('.assessment-catalog-hero__copy').boundingBox(), hero.boundingBox()]);
@@ -928,13 +928,13 @@ for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone
   });
 }
 
-test('course catalog shows one to three columns and a responsive hero', async ({ page }) => {
+test('course catalog shows two to five columns and a responsive hero', async ({ page }) => {
   await page.goto('/courses?lang=en');
   const grid = page.locator('.course-catalog-grid');
   const hero = page.locator('.course-catalog-hero img');
   await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
 
-  for (const [width, columns] of [[390, 1], [768, 2], [1024, 2], [1440, 3]]) {
+  for (const [width, columns] of [[390, 2], [768, 3], [1024, 4], [1440, 5]]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
     const [copy, image] = await Promise.all([page.locator('.course-catalog-hero .assessment-catalog-hero__copy').boundingBox(), hero.boundingBox()]);

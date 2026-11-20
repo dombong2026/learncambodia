@@ -7,8 +7,6 @@
     --exam-accent: #174cb7;
     background: var(--exam-background);
     color: var(--exam-text);
-    margin: 0;
-    min-height: 100vh;
 }
 .dark .specialized-exam {
     --exam-background: #0a1628;
@@ -24,6 +22,16 @@
     margin-inline: auto;
     padding-block: clamp(1.75rem, 6vw, 4.5rem);
     overflow-wrap: anywhere;
+}
+.specialized-exam-shell--result {
+    width: min(100% - 2rem, 73rem);
+}
+.public-layout:has(.specialized-exam [data-exam-attempt]) .public-site-header {
+    position: static;
+}
+.assessment-result-summary .specialized-exam-card,
+.assessment-result-summary .specialized-exam-status {
+    margin-block: 0;
 }
 .specialized-exam-shell h1 {
     font-size: clamp(1.65rem, 5vw, 2.65rem);
