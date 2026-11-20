@@ -1,7 +1,11 @@
 <?php
 
 return [
-    'search' => '搜索考试和测验',
+    'practice_exams' => '模拟考试',
+    'browse_exams' => '浏览考试',
+    'practice_intro' => '参加适合你水平的限时练习，为英语考试做好准备。',
+    'search_exams' => '搜索考试',
+    'search_quizzes' => '搜索测验',
     'filters' => '筛选',
     'level' => 'CEFR 等级',
     'any_level' => '所有等级',

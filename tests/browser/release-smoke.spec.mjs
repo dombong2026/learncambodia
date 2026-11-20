@@ -906,17 +906,25 @@ test('Courses CEFR cards share one row with homepage premium styling and respons
   }
 });
 
-for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone exams']]) {
+for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Practice exams']]) {
   test(title + ' has two to five columns and a responsive hero', async ({ page }) => {
     await page.goto('/assessments/' + path + '?lang=en');
     const grid = page.locator('.assessment-catalog-grid');
     const hero = page.locator('.assessment-catalog-hero__image');
+    const filterForm = page.locator('.assessment-catalog-filters');
     await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
     await expect.poll(() => hero.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
 
     for (const [width, columns] of [[390, 2], [768, 3], [1024, 4], [1440, 5]]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(columns);
+      const [searchBox, filterBox] = await Promise.all([
+        filterForm.getByRole('searchbox').boundingBox(),
+        filterForm.locator('summary').boundingBox(),
+      ]);
+      expect(Math.abs(searchBox.y - filterBox.y)).toBeLessThanOrEqual(2);
+      expect(filterBox.x).toBeGreaterThan(searchBox.x + searchBox.width);
+      expect((await filterForm.boundingBox()).width).toBeLessThanOrEqual(577);
       const [copy, image] = await Promise.all([page.locator('.assessment-catalog-hero__copy').boundingBox(), hero.boundingBox()]);
       if (width < 768) {
         expect(image.y).toBeGreaterThanOrEqual(copy.y + copy.height - 1);
@@ -925,6 +933,11 @@ for (const [path, title] of [['quizzes', 'Quick quizzes'], ['exams', 'Standalone
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 2);
     }
+
+    await filterForm.locator('summary').click();
+    await expect(filterForm.getByLabel('CEFR level')).toBeVisible();
+    await filterForm.locator('summary').click();
+    await expect(filterForm.getByLabel('CEFR level')).toBeHidden();
   });
 }
 
