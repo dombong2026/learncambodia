@@ -1,4 +1,5 @@
 set -Eeuo pipefail
+trap 'printf "REVIEW_RELEASE=STOPPED at line %s\n" "$LINENO" >&2' ERR
 umask 027
 cd /www/wwwroot/learncambodia.com
 exec 9>/var/backups/learncambodia/course-review-queue.lock
@@ -34,16 +35,57 @@ printf '%s\n' "${files[@]}" tests/Feature/BulkCourseReviewTest.php | sort > "$wo
 git -C "$work/source" diff --name-only "$base" "$release" | sort > "$work/actual"
 diff -u "$work/expected" "$work/actual"
 
+merge_review_route() {
+    local live="$1" approved="$2" prior="$3" output="$4"
+    python3 - "$live" "$approved" "$prior" "$output" <<'ROUTE_PY'
+from pathlib import Path
+import sys
+
+live, approved, prior, output = map(Path, sys.argv[1:])
+anchor = b"        Route::post('/reviews/courses/{course}', [AdminReviewController::class, 'course'])->name('reviews.course');\n"
+addition = b"        Route::post('/reviews/courses/approve-selected', [AdminReviewController::class, 'approveCourses'])->name('reviews.courses.approve-selected');\n"
+original = prior.read_bytes()
+current = live.read_bytes()
+
+if original.count(anchor) != 1 or original.replace(anchor, addition + anchor, 1) != approved.read_bytes():
+    raise SystemExit("The reviewed route change is not the expected single addition.")
+if current.count(anchor) != 1:
+    raise SystemExit("The existing course review route does not match the expected declaration.")
+if b"reviews.courses.approve-selected" in current or b"/reviews/courses/approve-selected" in current:
+    if current.count(addition) != 1 or addition + anchor not in current:
+        raise SystemExit("A conflicting bulk approval route already exists.")
+    output.write_bytes(current)
+else:
+    output.write_bytes(current.replace(anchor, addition + anchor, 1))
+ROUTE_PY
+}
+
 for file in "${files[@]}"; do
+    printf 'Checking %s\n' "$file"
     test ! -L "$file"
     mkdir -p "$work/next/${file%/*}" "$backup/${file%/*}"
-    if git -C "$work/source" cat-file -e "$base:$file" 2>/dev/null; then
-        test "$(git hash-object "$file")" = "$(git -C "$work/source" rev-parse "$base:$file")"
+    git -C "$work/source" show "$release:$file" > "$work/approved"
+    if [[ "$file" == routes/web.php ]]; then
+        git -C "$work/source" show "$base:$file" > "$work/prior"
+        merge_review_route "$file" "$work/approved" "$work/prior" "$work/next/$file"
         cp -p -- "$file" "$backup/$file"
+    elif git -C "$work/source" cat-file -e "$base:$file" 2>/dev/null; then
+        if [[ "$(git hash-object "$file")" != "$(git -C "$work/source" rev-parse "$base:$file")" ]] && ! cmp -s "$file" "$work/approved"; then
+            printf 'Unexpected live changes in %s. No files installed.\n' "$file" >&2
+            exit 1
+        fi
+        cp -p -- "$file" "$backup/$file"
+        cp -- "$work/approved" "$work/next/$file"
     else
-        test ! -e "$file"
+        if [[ -e "$file" ]]; then
+            if ! cmp -s "$file" "$work/approved"; then
+                printf 'Unexpected existing file %s. No files installed.\n' "$file" >&2
+                exit 1
+            fi
+            cp -p -- "$file" "$backup/$file"
+        fi
+        cp -- "$work/approved" "$work/next/$file"
     fi
-    git -C "$work/source" show "$release:$file" > "$work/next/$file"
     if [[ "$file" == *.php && "$file" != *.blade.php ]]; then "$php" -l "$work/next/$file"; fi
 done
 
@@ -72,6 +114,7 @@ cleanup() {
 trap cleanup EXIT
 
 for file in "${files[@]}"; do
+    if cmp -s "$file" "$work/next/$file"; then continue; fi
     mkdir -p -- "${file%/*}"
     install -o root -g www -m 0644 -- "$work/next/$file" "$file.release-${release:0:8}"
     mv -fT -- "$file.release-${release:0:8}" "$file"
