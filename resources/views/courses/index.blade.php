@@ -70,7 +70,7 @@
             </div>
             <div class="course-catalog-grid">
                 @forelse($courses as $course)
-                    <x-public-course-card :course="$course" />
+                    <x-public-course-card :course="$course" :show-summary="false" />
                 @empty
                     <div class="col-span-full">
                         <x-public-empty-state icon="book-open" :title="__('frontend.no_courses')" :href="route('courses.index')" :action="__('pages.clear')" />
