@@ -1,7 +1,11 @@
 <?php
 
 return [
-    'search' => 'Search exams and quizzes',
+    'practice_exams' => 'Practice exams',
+    'browse_exams' => 'Browse exams',
+    'practice_intro' => 'Prepare for English exams with timed practice at your level.',
+    'search_exams' => 'Search exams',
+    'search_quizzes' => 'Search quizzes',
     'filters' => 'Filters',
     'level' => 'CEFR level',
     'any_level' => 'All levels',

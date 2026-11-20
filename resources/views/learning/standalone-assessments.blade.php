@@ -2,8 +2,8 @@
 
 @php
     $isQuiz = $kind === 'quiz';
-    $title = $isQuiz ? 'Quick quizzes' : 'Standalone exams';
-    $subtitle = $isQuiz ? 'Practice with short quizzes and get feedback as you go.' : 'Take published assessments on your own schedule.';
+    $title = $isQuiz ? 'Quick quizzes' : __('assessment_catalog.practice_exams');
+    $subtitle = $isQuiz ? 'Practice with short quizzes and get feedback as you go.' : __('assessment_catalog.practice_intro');
     $heroImage = $isQuiz ? 'quick-quizzes-hero.webp' : 'standalone-exams-hero.webp';
     $catalogUrl = route($isQuiz ? 'assessments.quizzes' : 'assessments.exams', ['lang' => app()->getLocale()]).'#'.$items->fragment();
 @endphp
@@ -11,7 +11,7 @@
 @section('title', $title)
 
 @push('public_styles')
-    <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/assessment-catalog.css') }}?v=3">
     <link rel="stylesheet" href="{{ asset('css/catalog-card-grid.css') }}">
 @endpush
 
@@ -27,9 +27,9 @@
         </div>
     </section>
 
-    <x-learning-section :id="$items->fragment()" :title="$isQuiz ? 'Available quizzes' : 'Available exams'" tone="white">
+    <x-learning-section :id="$items->fragment()" :title="$isQuiz ? 'Available quizzes' : __('assessment_catalog.browse_exams')" tone="white">
         <nav aria-label="Assessment catalogs" class="mb-5 flex flex-wrap gap-4 font-semibold">
-            <a href="{{ route('assessments.exams') }}" @if(!$isQuiz) aria-current="page" @endif>Standalone exams</a>
+            <a href="{{ route('assessments.exams') }}" @if(!$isQuiz) aria-current="page" @endif>{{ __('assessment_catalog.practice_exams') }}</a>
             <a href="{{ route('assessments.quizzes') }}" @if($isQuiz) aria-current="page" @endif>Quick quizzes</a>
             <a href="{{ route('learning.exams') }}">Course assessments</a>
         </nav>
