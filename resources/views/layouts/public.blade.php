@@ -31,6 +31,7 @@
     @include('partials.brand-head')
     @include('partials.theme-boot')
     @vite(['resources/css/app.css', 'resources/js/app.ts'])
+    <link rel="stylesheet" href="{{ asset('css/public-mobile-navigation.css') }}">
     @stack('public_styles')
 </head>
 @php
@@ -38,11 +39,12 @@
     $fontClass = ['system'=>'font-sans','serif'=>'font-serif','mono'=>'font-mono'][$typography['font_style']];
     $scaleClass = ['compact'=>'text-sm','normal'=>'text-base','large'=>'text-lg'][$typography['text_scale']];
 @endphp
-<body class="{{ $fontClass }} {{ $scaleClass }} min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+<body class="public-layout {{ $fontClass }} {{ $scaleClass }} min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-slate-900">{{ __('ui.skip_content') }}</a>
     @include('partials.header')
     @include('partials.account-preview')
     <main id="main-content" class="min-h-[50vh]">@yield('content')</main>
     @include('partials.footer')
+    @include('partials.mobile-study-navigation')
 </body>
 </html>

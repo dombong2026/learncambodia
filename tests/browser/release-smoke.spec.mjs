@@ -649,6 +649,43 @@ test('guest profile menu has one divider and a compact responsive tray', async (
 });
 
 
+test('small screens expose search and study catalogs from compact navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?lang=en');
+
+  const search = page.locator('button[popovertarget="mobile-search-panel"]');
+  const searchInput = page.locator('#mobile-search');
+  const nav = page.getByRole('navigation', { name: 'Study navigation' });
+  await expect(search).toBeVisible();
+  await expect(search.locator('svg')).toHaveCount(1);
+  await expect(page.locator('#global-search')).toBeHidden();
+  await expect(searchInput).toBeHidden();
+
+  await search.click();
+  await expect(searchInput).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(searchInput).toBeHidden();
+  await expect(search).toBeFocused();
+
+  await search.click();
+  await searchInput.fill('English');
+  await searchInput.press('Enter');
+  await expect(page).toHaveURL(/\/courses\?.*q=English/);
+  await expect(nav.getByRole('link', { name: 'Courses' })).toHaveAttribute('aria-current', 'page');
+  for (const [label, path] of [['Exams', 'exams'], ['Quizzes', 'quizzes']]) {
+    const link = nav.getByRole('link', { name: label });
+    await expect(link.locator('svg')).toHaveCount(1);
+    await link.click();
+    await expect(page).toHaveURL(new RegExp('/assessments/' + path));
+    await expect(link).toHaveAttribute('aria-current', 'page');
+  }
+
+  await page.setViewportSize({ width: 1024, height: 844 });
+  await expect(page.locator('#global-search')).toBeVisible();
+  await expect(search).toBeHidden();
+  await expect(nav).toBeHidden();
+});
+
 test('compact public category nav retains full tooltip and accessible names on all viewports', async ({ page }) => {
   for (const width of [390, 820, 1440]) {
     await page.setViewportSize({ width, height: 900 });
@@ -671,7 +708,7 @@ test('compact public category nav retains full tooltip and accessible names on a
       await expect(link).toHaveAttribute('aria-label', code + ' — ' + full);
       await expect(link).toHaveAttribute('href', /\/categories\/[a-z0-9-]+/);
     }
-    await expect(tray.getByRole('link', { name: /Courses/i }).first()).toBeVisible();
+    await expect(tray.locator('[data-category-directory]')).toBeVisible();
 
     const next = page.locator('[data-tray-scroll="1"]');
     await next.click();
