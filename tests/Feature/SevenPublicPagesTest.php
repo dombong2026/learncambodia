@@ -117,6 +117,7 @@ final class SevenPublicPagesTest extends TestCase
 
         $this->get('/courses?group=english-courses&mode=online')->assertOk()
             ->assertSee($course->title)
+            ->assertDontSee($course->summary)
             ->assertDontSee($other->title)
             ->assertDontSee('Confidential Course Draft');
 
