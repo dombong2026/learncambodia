@@ -1,4 +1,4 @@
-@php($retryRejection = (string) old('review_course') === (string) $course->public_id && $errors->has('note'))
+@php($retryRejection = old('review_course') === (string) $course->public_id && $errors->has('note'))
 <dialog id="{{ $reviewDialog }}" class="review-dialog review-course-dialog"
         aria-labelledby="{{ $reviewDialog }}-title" data-course-review
         @if($retryRejection) data-retry-rejection @endif>
@@ -42,7 +42,7 @@
             <input type="hidden" name="review_course" value="{{ $course->public_id }}">
             <label for="{{ $reviewDialog }}-note">Rejection reason</label>
             <textarea id="{{ $reviewDialog }}-note" name="note" rows="3" maxlength="500" required
-                      @if($retryRejection) aria-invalid="true" aria-describedby="{{ $reviewDialog }}-error" @endif>{{ $retryRejection ? old('note') : '' }}</textarea>
+                      @if($retryRejection) aria-invalid="true" aria-describedby="{{ $reviewDialog }}-error" @endif>{{ $retryRejection && is_string(old('note')) ? old('note') : '' }}</textarea>
             @if($retryRejection)
                 <p class="review-danger" id="{{ $reviewDialog }}-error" role="alert">{{ $errors->first('note') }}</p>
             @endif
