@@ -3,9 +3,9 @@
 @section('heading', 'Review & Approvals')
 @section('workspace_compact', 'true')
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/admin-review-queue.css') }}?v=1">
+    <link rel="stylesheet" href="{{ asset('css/admin-review-queue.css') }}?v=2">
     @if($focus === 'courses')
-        <script defer src="{{ asset('js/admin-review-queue.js') }}?v=1"></script>
+        <script defer src="{{ asset('js/admin-review-queue.js') }}?v=2"></script>
     @endif
 @endpush
 

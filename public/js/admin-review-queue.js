@@ -62,3 +62,43 @@ if (dialog?.showModal) {
     updateSelection();
     queue.querySelectorAll('[data-review-selection]').forEach(control => { control.hidden = false; });
 }
+
+queue?.querySelectorAll('[data-course-review-trigger]').forEach(trigger => {
+    const courseDialog = document.getElementById(trigger.getAttribute('aria-controls'));
+    if (!courseDialog?.showModal) return;
+
+    const decision = courseDialog.querySelector('[data-course-review-actions]');
+    const rejection = courseDialog.querySelector('[data-course-review-rejection]');
+    const rejectionActions = courseDialog.querySelector('[data-course-review-reject-actions]');
+    const reject = courseDialog.querySelector('[data-course-review-reject]');
+
+    function showRejection(show) {
+        decision.hidden = show;
+        rejection.hidden = !show;
+        rejectionActions.hidden = !show;
+    }
+
+    trigger.addEventListener('click', event => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        showRejection(false);
+        courseDialog.showModal();
+    });
+
+    courseDialog.querySelector('[data-course-review-close]').addEventListener('click', () => courseDialog.close());
+    reject.addEventListener('click', () => {
+        showRejection(true);
+        rejection.elements.note.focus();
+    });
+    courseDialog.querySelector('[data-course-review-back]').addEventListener('click', () => {
+        showRejection(false);
+        reject.focus();
+    });
+    courseDialog.addEventListener('close', () => trigger.focus());
+
+    if (courseDialog.hasAttribute('data-retry-rejection')) {
+        showRejection(true);
+        courseDialog.showModal();
+        rejection.elements.note.focus();
+    }
+});
