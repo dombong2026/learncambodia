@@ -113,9 +113,21 @@ cleanup() {
 }
 trap cleanup EXIT
 
+partial_dir=resources/views/workspace/admin/partials
+test ! -L "$partial_dir"
+if [[ ! -e "$partial_dir" ]]; then
+    install -d -o root -g www -m 0750 -- "$partial_dir"
+elif ! runuser -u www -- test -x "$partial_dir" || ! runuser -u www -- test -r "$partial_dir"; then
+    # An earlier rolled-back run can leave its empty root-owned directory.
+    test "$(stat -c '%u:%g:%a' "$partial_dir")" = '0:0:750'
+    test -z "$(find "$partial_dir" -mindepth 1 -maxdepth 1 -print -quit)"
+    chgrp www -- "$partial_dir"
+fi
+runuser -u www -- test -x "$partial_dir"
+runuser -u www -- test -r "$partial_dir"
+
 for file in "${files[@]}"; do
     if cmp -s "$file" "$work/next/$file"; then continue; fi
-    mkdir -p -- "${file%/*}"
     install -o root -g www -m 0644 -- "$work/next/$file" "$file.release-${release:0:8}"
     mv -fT -- "$file.release-${release:0:8}" "$file"
     installed+=("$file")
