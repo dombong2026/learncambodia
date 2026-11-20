@@ -39,6 +39,7 @@ class StudentProgressController extends Controller
     {
         $data = $request->validate([
             'complete' => ['required', 'boolean'],
+            'continue_to_quiz' => ['sometimes', 'boolean'],
         ]);
 
         DB::transaction(function () use ($request, $enrollment, $lesson, $data): void {
@@ -60,6 +61,12 @@ class StudentProgressController extends Controller
                 CertificateAwards::course($course, $locked);
             }
         });
+
+        if ($data['complete'] && ($data['continue_to_quiz'] ?? false) && filled($lesson->quiz_questions)) {
+            return redirect()->route('account.lessons.watch', [
+                $enrollment, $lesson, 'viewer' => 'quiz',
+            ] + $request->only('lang'))->with('status', 'Lesson marked complete.');
+        }
 
         return back()->with('status', (bool) $data['complete']
             ? 'Lesson marked complete.' : 'Lesson marked for review.');

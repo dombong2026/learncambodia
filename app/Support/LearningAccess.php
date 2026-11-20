@@ -40,7 +40,7 @@ final class LearningAccess
 
     public static function curriculumProgress(Course $course, CourseEnrollment $enrollment): array
     {
-        $course->load('modules.lessons:id,course_module_id,title,position,duration_minutes');
+        $course->load('modules.lessons:id,course_module_id,title,position,duration_minutes,quiz_questions');
 
         return $enrollment->lessonProgress()->whereNotNull('completed_at')
             ->whereIn('lesson_id', $course->modules->flatMap(fn ($module) => $module->lessons->modelKeys()))

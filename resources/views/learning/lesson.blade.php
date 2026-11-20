@@ -20,6 +20,9 @@
     ];
     $scrolls = in_array($viewer['type'], ['reading', 'audio', 'document', 'quiz', 'exam'], true);
     $lessonUrl = fn (array $query = []) => route('account.lessons.watch', [$enrollment, $lesson] + $query);
+    $hasQuiz = isset($materials['viewers']['quiz']);
+    $onQuiz = $viewerKey === 'quiz';
+    $quizChecked = $onQuiz && (\App\Support\LessonQuiz::resultFor(request(), $enrollment->id, $lesson->id)['answers'] ?? null) !== null;
 @endphp
 
 <div class="fl-grid">
@@ -77,18 +80,27 @@
         </section>
 
         <div class="fl-lesson-actions">
-            <form action="{{ route('account.progress.update', [$enrollment, $lesson]) }}" method="POST">
-                @csrf
-                <input type="hidden" name="complete" value="{{ $done ? '0' : '1' }}">
-                <button class="fl-button {{ $done ? '' : 'fl-primary' }}" type="submit">
-                    <x-workspace-icon name="check" />{{ $done ? __('focused_learning.review') : __('focused_learning.complete') }}
-                </button>
-            </form>
+            @unless($onQuiz)
+                <form action="{{ route('account.progress.update', [$enrollment, $lesson] + request()->only('lang')) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="complete" value="{{ $done ? '0' : '1' }}">
+                    @if($hasQuiz && !$done)
+                        <input type="hidden" name="continue_to_quiz" value="1">
+                    @endif
+                    <button class="fl-button {{ $done ? '' : 'fl-primary' }}" type="submit">
+                        <x-workspace-icon name="check" />{{ __($done ? 'focused_learning.review' : ($hasQuiz ? 'focused_learning.complete_and_quiz' : 'focused_learning.complete')) }}
+                    </button>
+                </form>
+            @endunless
             <nav aria-label="Previous and next lesson">
-                @if($previous)
+                @if($onQuiz)
+                    <a rel="prev" class="fl-button" href="{{ $lessonUrl() }}">← {{ __('focused_learning.back_to_lesson') }}</a>
+                @elseif($previous)
                     <a rel="prev" class="fl-button" href="{{ route('account.lessons.watch', [$enrollment, $previous]) }}">← {{ __('focused_learning.previous') }}</a>
                 @endif
-                @if($next)
+                @if($hasQuiz && !$onQuiz && $done)
+                    <a rel="next" class="fl-button fl-primary" href="{{ $lessonUrl(['viewer' => 'quiz']) }}">{{ __('focused_learning.start_quiz') }} →</a>
+                @elseif($next && (!$hasQuiz || $quizChecked))
                     <a rel="next" class="fl-button" href="{{ route('account.lessons.watch', [$enrollment, $next]) }}">{{ __('focused_learning.next') }} →</a>
                 @endif
             </nav>
