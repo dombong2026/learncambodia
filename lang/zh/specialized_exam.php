@@ -41,4 +41,12 @@ return [
     'instructions' => '考试说明和资料',
     'submit' => '提交考试',
     'back' => '返回考试主页',
+    'questionnaire' => '答题回顾',
+    'completed' => '已完成',
+    'your_answer' => '你的答案',
+    'unanswered' => '未作答',
+    'recording_submitted' => '已提交录音',
+    'feedback' => '反馈',
+    'answer_yes' => '是',
+    'answer_no' => '否',
 ];

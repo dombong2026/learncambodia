@@ -41,4 +41,12 @@ return [
     'instructions' => 'Instructions and resources',
     'submit' => 'Submit exam',
     'back' => 'Back to exam overview',
+    'questionnaire' => 'Questionnaire',
+    'completed' => 'Completed',
+    'your_answer' => 'Your answer',
+    'unanswered' => 'No response',
+    'recording_submitted' => 'Recording submitted',
+    'feedback' => 'Feedback',
+    'answer_yes' => 'Yes',
+    'answer_no' => 'No',
 ];

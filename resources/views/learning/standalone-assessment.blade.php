@@ -13,6 +13,7 @@
     $canStart = $quote['model'] === 'free' || ($access?->status === 'approved' && $access->matches($quote));
     $active = $history?->first(fn ($attempt) => !$attempt->submitted_at && $attempt->expires_at->isFuture());
 @endphp
+@section('study_catalog', $isQuiz ? 'assessments.quizzes' : 'assessments.exams')
 <x-detail-hero :title="$exam->title" :entry="$isQuiz ? $exam : null" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
     <x-slot:meta>
         @if($exam->type)<li>{{ $exam->type->name }}</li>@endif

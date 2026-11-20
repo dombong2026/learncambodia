@@ -41,4 +41,12 @@ return [
     'instructions' => 'ការណែនាំ និងធនធាន',
     'submit' => 'ដាក់ស្នើការប្រឡង',
     'back' => 'ត្រឡប់ទៅទិដ្ឋភាពទូទៅនៃការប្រឡង',
+    'questionnaire' => 'កម្រងសំណួរ',
+    'completed' => 'បានបញ្ចប់',
+    'your_answer' => 'ចម្លើយរបស់អ្នក',
+    'unanswered' => 'គ្មានចម្លើយ',
+    'recording_submitted' => 'បានដាក់ស្នើសំឡេងថត',
+    'feedback' => 'មតិកែលម្អ',
+    'answer_yes' => 'បាទ/ចាស',
+    'answer_no' => 'ទេ',
 ];

@@ -23,7 +23,8 @@ final class PublicPracticeQuizTest extends TestCase
         $start = route('specialized-exams.start', $quiz);
         $this->get($quiz->publicUrl())->assertRedirect(route('specialized-exams.show', [$quiz, 'lang' => 'en']));
         $this->get($launch)->assertOk()->assertCookie('specialized_exam_browser')
-            ->assertSee('20 questions')->assertSee('20 minutes')->assertSee('2 attempts')->assertSee('Start quiz');
+            ->assertSee('20 questions')->assertSee('20 minutes')->assertSee('2 attempts')->assertSee('Start quiz')
+            ->assertSee('public-site-header', false)->assertSee('<footer', false);
 
         $this->withCookie('specialized_exam_browser', self::BROWSER)->post($start)->assertRedirect();
         $first = ExamAttempt::sole();
@@ -39,7 +40,9 @@ final class PublicPracticeQuizTest extends TestCase
             'answers' => array_column($quiz->questions, 'correct'),
         ])->assertRedirect($result);
         $this->get($result)->assertOk()->assertSee('Quiz submitted')->assertSee('100%')
-            ->assertSee($quiz->questions[19]['feedback'])->assertDontSee('Create an account');
+            ->assertSee('Questionnaire')->assertSee('Completed')->assertSee('Your answer')
+            ->assertSee($quiz->questions[19]['prompt'])->assertSee($quiz->questions[19]['feedback'])
+            ->assertDontSee('Create an account')->assertDontSee('data-exam-attempt', false);
 
         $this->post($start)->assertRedirect();
         $second = ExamAttempt::latest('id')->firstOrFail();
