@@ -133,7 +133,7 @@ for file in "${files[@]}"; do
     installed+=("$file")
 done
 refresh_caches
-artisan route:list --name=admin.reviews.courses.approve-selected | rg 'reviews/courses/approve-selected'
+artisan route:list --name=admin.reviews.courses.approve-selected | grep -F 'reviews/courses/approve-selected'
 for file in public/css/admin-review-queue.css public/js/admin-review-queue.js; do
     curl -fsS --max-time 20 "https://learncambodia.com/${file#public/}?v=1" -o "$work/http"
     cmp "$file" "$work/http"
