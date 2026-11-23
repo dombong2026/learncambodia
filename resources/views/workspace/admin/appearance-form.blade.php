@@ -17,7 +17,21 @@
             @foreach($fields as $key => $type)
                 <div>
                     <label class="mb-2 block text-sm font-bold text-[#0e315e] dark:text-white" for="appearance-{{ $key }}">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
-                    @if($type === 'bool')
+                    @if($type === 'hero_mode')
+                        <select id="appearance-{{ $key }}" name="{{ $key }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                            <option value="default" @selected(old($key, $settings[$key] ?? 'default') === 'default')>Hero Default (current)</option>
+                            <option value="course_player" @selected(old($key, $settings[$key] ?? 'default') === 'course_player')>Course Player</option>
+                        </select>
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Only one hero is shown publicly. Switching follows the existing independent review and activation process.</p>
+                    @elseif($type === 'course_id')
+                        <select id="appearance-{{ $key }}" name="{{ $key }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                            <option value="">Automatically choose the latest published course with media</option>
+                            @foreach($promoCourses as $promoCourse)
+                                <option value="{{ $promoCourse->id }}" @selected((string) old($key, $settings[$key] ?? '') === (string) $promoCourse->id)>{{ $promoCourse->title }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">This course is featured first. The sidebar uses up to six published courses and public-preview lessons only.</p>
+                    @elseif($type === 'bool')
                         <select id="appearance-{{ $key }}" name="{{ $key }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
                             <option value="1" @selected((string) old($key, $settings[$key] ? '1' : '0') === '1')>Enabled</option>
                             <option value="0" @selected((string) old($key, $settings[$key] ? '1' : '0') === '0')>Disabled</option>
