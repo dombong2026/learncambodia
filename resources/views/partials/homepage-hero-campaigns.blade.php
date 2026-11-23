@@ -1,7 +1,6 @@
 @php
     $heroCampaigns = \App\Models\HomepageCampaignItem::published()
         ->orderByDesc('published_at')
-        ->limit(8)
         ->get(['id','slug','title','kind','cover_asset','published_at']);
 @endphp
 @if($heroCampaigns->isNotEmpty())
@@ -13,7 +12,7 @@
                     <h2 class="mt-1 text-base font-black text-white">Quiz &amp; Exam practice</h2></div>
                 <span class="rounded-full border border-amber-300/60 px-2.5 py-1 text-[10px] font-extrabold text-amber-200">{{ $heroCampaigns->count() }} available</span>
             </div>
-            <div class="grid gap-2" id="hc-campaign-list">
+            <div class="grid max-h-[435px] gap-2 overflow-y-auto overscroll-contain pr-1" id="hc-campaign-list">
                 @foreach($heroCampaigns as $item)
                 <button type="button" data-hc-start
                     data-play-url="{{ route('campaign-manager.play', $item) }}"
