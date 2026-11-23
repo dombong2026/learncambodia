@@ -6,6 +6,9 @@
 <div class="w-full">
     <div class="mb-5 flex flex-wrap gap-3">
         <a href="{{ route('admin.appearance.index') }}" class="rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold dark:border-slate-700">← Appearance Manager</a>
+        @if($section === 'home')
+            <a href="{{ route('admin.campaign.builder') }}" class="rounded-full border border-[#d5a953] px-4 py-2.5 text-sm font-bold text-[#9b6d24] dark:text-[#f2ce8a]">Open Campaign Builder</a>
+        @endif
         @if($previewUrl = \App\Support\Appearance::preview($section))
             <a href="{{ $previewUrl }}" target="_blank" rel="noopener" class="rounded-full border border-[#d5a953] px-4 py-2.5 text-sm font-bold text-[#9b6d24] dark:text-[#f2ce8a]">View public page</a>
         @endif
