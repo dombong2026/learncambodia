@@ -3,7 +3,6 @@
 @section('heading', 'Campaign Builder')
 @section('description', 'Create rich, interactive Quiz and Exam campaigns for the homepage. Admins save drafts or publish directly.')
 @section('content')
-@vite('resources/js/home-campaign-builder.ts')
 <style>
 .campaign-field{display:block;font-size:.8rem;font-weight:700;color:inherit}
 .campaign-field input,.campaign-field select,.campaign-field textarea{display:block;width:100%;margin-top:.4rem;padding:.65rem .85rem;border-radius:.75rem;border:1px solid #94a3b8;background:transparent;color:inherit;font-weight:400}
