@@ -1,3 +1,4 @@
+import './home-campaign-builder';
 import './rich-editor';
 import './editorial-media';
 import './media-library';
