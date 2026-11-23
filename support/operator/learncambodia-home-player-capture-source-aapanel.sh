@@ -50,17 +50,29 @@ for file in \
   resources/views/layouts/public.blade.php
 do
   target="$PREFIX/$file"
-  existing_sha="$(gh api "repos/$REPO/contents/$target?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)"
-  if [[ -n "$existing_sha" ]]; then
-    echo "SKIP: already exists, review before replacing: $target"
+  # An API error can yield the literal word 'null' rather than an empty SHA.
+  # Never treat a non-empty response as proof that the *exact file* exists.
+  existing_record="$(gh api -H 'Accept: application/vnd.github+json' \
+    "repos/$REPO/contents/$target?ref=$BRANCH" \
+    --jq '(.type // "null") + "|" + (.path // "null")' 2>/dev/null || true)"
+  if [[ "$existing_record" == "file|$target" ]]; then
+    echo "PRESENT: $target (no overwrite)"
     continue
+  fi
+  if [[ -n "$existing_record" && "$existing_record" != 'null|null' ]]; then
+    echo "ERROR: Unexpected GitHub metadata for $target (refusing write)" >&2
+    exit 1
   fi
   # GitHub Contents API requires base64; keep payload out of logs.
   payload="$(base64 -w 0 < "$SITE/$file")"
-  gh api --method PUT "repos/$REPO/contents/$target" \
+  created_path="$(gh api --method PUT "repos/$REPO/contents/$target" \
     -f message="chore(ops): capture current live UI dependency $file" \
     -f branch="$BRANCH" \
-    -f content="$payload" --jq '.commit.sha' >/dev/null
+    -f content="$payload" --jq '.content.path')"
+  if [[ "$created_path" != "$target" ]]; then
+    echo "ERROR: GitHub returned an unexpected created path" >&2
+    exit 1
+  fi
   unset payload
   echo "CAPTURED: $target"
 done
