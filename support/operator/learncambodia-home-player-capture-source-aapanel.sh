@@ -13,6 +13,7 @@ export GH_CONFIG_DIR=/root/learncambodia-github-auth/gh
 
 test -d "$SITE"
 command -v gh >/dev/null || { echo "ERROR: gh is unavailable"; exit 1; }
+command -v git >/dev/null || { echo "ERROR: git hash-object is unavailable"; exit 1; }
 LOGIN="$(gh api user --jq '.login')"
 if [[ "$LOGIN" != "dombong2026" ]]; then
   echo "ERROR: authenticated GitHub user is not dombong2026; refusing to upload."
@@ -39,7 +40,7 @@ do
   printf '%s bytes : %s\n' "$(wc -c < "$SITE/$file")" "$file"
 done
 printf '\nGitHub target: %s @ %s\n' "$REPO" "$BRANCH"
-echo "Uploading whitelisted, non-secret source snapshots to this feature branch."
+echo "Creating whitelisted snapshots in GitHub only. Existing files cannot be overwritten."
 
 for file in \
   public/css/home.css \
@@ -50,31 +51,24 @@ for file in \
   resources/views/layouts/public.blade.php
 do
   target="$PREFIX/$file"
-  # An API error can yield the literal word 'null' rather than an empty SHA.
-  # Never treat a non-empty response as proof that the *exact file* exists.
-  existing_record="$(gh api -H 'Accept: application/vnd.github+json' \
-    "repos/$REPO/contents/$target?ref=$BRANCH" \
-    --jq '(.type // "null") + "|" + (.path // "null")' 2>/dev/null || true)"
-  if [[ "$existing_record" == "file|$target" ]]; then
-    echo "PRESENT: $target (no overwrite)"
-    continue
-  fi
-  if [[ -n "$existing_record" && "$existing_record" != 'null|null' ]]; then
-    echo "ERROR: Unexpected GitHub metadata for $target (refusing write)" >&2
-    exit 1
-  fi
-  # GitHub Contents API requires base64; keep payload out of logs.
+  # Create-only: deliberately omit the SHA field. GitHub rejects an overwrite
+  # without the existing blob SHA, so this cannot replace an existing file.
   payload="$(base64 -w 0 < "$SITE/$file")"
-  created_path="$(gh api --method PUT "repos/$REPO/contents/$target" \
+  expected_bytes="$(wc -c < "$SITE/$file")"
+  expected_blob="$(git hash-object -- "$SITE/$file")"
+  echo "CREATE-ONLY: $target"
+  created_info="$(gh api --method PUT "repos/$REPO/contents/$target" \
     -f message="chore(ops): capture current live UI dependency $file" \
     -f branch="$BRANCH" \
-    -f content="$payload" --jq '.content.path')"
-  if [[ "$created_path" != "$target" ]]; then
-    echo "ERROR: GitHub returned an unexpected created path" >&2
+    -f content="$payload" \
+    --jq '(.content.path // "") + "|" + (.content.sha // "") + "|" + ((.content.size // -1) | tostring)')"
+  unset payload
+  if [[ "$created_info" != "$target|$expected_blob|$expected_bytes" ]]; then
+    echo "ERROR: GitHub create returned unexpected file metadata for $target" >&2
+    echo "STOP: check the GitHub PR before running any other command." >&2
     exit 1
   fi
-  unset payload
-  echo "CAPTURED: $target"
+  echo "CAPTURED: $target ($expected_bytes bytes; blob verified)"
 done
 
 echo "=== Complete. Production files were NOT modified. ==="
