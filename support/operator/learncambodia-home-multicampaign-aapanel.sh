@@ -159,7 +159,8 @@ applied=0
 completed=0
 rollback() {
   local code=$?
-  trap - ERR
+  # Prevent recursion: this handler runs on ERR and on explicit nonzero exit.
+  trap - ERR EXIT
   if test "$applied" -eq 1 && test "$completed" -eq 0; then
     set +e
     echo MULTICAMPAIGN_ROLLBACK=STARTED
@@ -175,7 +176,7 @@ rollback() {
   fi
   exit "$code"
 }
-trap rollback ERR
+trap rollback ERR EXIT
 applied=1
 while IFS= read -r p; do put "$STAGE/source/$p" "$LIVE/$p"; done <<< "$NEW"
 "$PHP" artisan migrate --path=database/migrations/2026_11_23_235700_create_homepage_campaign_items_table.php --force --no-interaction
