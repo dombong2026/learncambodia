@@ -334,8 +334,8 @@ Route::middleware('auth')->group(function (): void {
             Route::delete('/{course}/modules/{module}/lessons/{lesson}', [AdminCurriculumController::class, 'destroyLesson'])->name('lessons.destroy');
         });
 
-        Route::get('/appearance/home/campaign-builder', [HomeCampaignController::class, 'builder'])->name('campaign.builder');
-        Route::post('/appearance/home/campaign-builder', [HomeCampaignController::class, 'save'])->name('campaign.save');
+        Route::get('/appearance/home/campaign-builder/interactive', [HomeCampaignController::class, 'builder'])->name('campaign.builder');
+        Route::post('/appearance/home/campaign-builder/interactive', [HomeCampaignController::class, 'save'])->name('campaign.save');
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
             Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');
