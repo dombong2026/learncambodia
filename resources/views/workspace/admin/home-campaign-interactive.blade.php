@@ -23,7 +23,7 @@
     <a href="{{ route('admin.appearance.edit', 'home') }}" class="campaign-secondary">← Homepage appearance</a>
     <a href="{{ route('admin.campaign.builder') }}" class="campaign-secondary">+ New campaign</a>
     @if($campaign)
-        <a href="{{ route('campaign.show', $campaign) }}" target="_blank" rel="noopener" class="campaign-secondary">Preview / View campaign</a>
+        <a href="{{ route('interactive-campaign.show', $campaign) }}" target="_blank" rel="noopener" class="campaign-secondary">Preview / View campaign</a>
         <span class="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-900 dark:bg-amber-900 dark:text-amber-100">{{ strtoupper($campaign->status) }}</span>
     @endif
 </div>
@@ -70,7 +70,7 @@
             <p class="mt-1 text-xs leading-5 text-slate-500">Image on the right sidebar and on the public player. Recommended 1920 × 1080 px (16:9).</p>
             <div class="mt-4 aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
                 <img id="campaign-cover-preview" class="h-full w-full object-cover" alt="Campaign cover preview"
-                    @if($campaign?->cover_path) src="{{ route('campaign.cover', $campaign) }}" @else hidden @endif>
+                    @if($campaign?->cover_path) src="{{ route('interactive-campaign.cover', $campaign) }}" @else hidden @endif>
                 <div id="campaign-cover-empty" class="grid h-full place-items-center px-5 text-center text-xs text-slate-500" @if($campaign?->cover_path) hidden @endif>Choose a cover to preview the right-side media</div>
             </div>
             <label class="campaign-field mt-4">Upload cover image
