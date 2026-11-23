@@ -2,6 +2,9 @@
 @section('title', __('pages.home_title'))
 @section('meta_description', __('pages.home_intro'))
 @section('content')
+@if(\App\Support\Appearance::value('home','hero_mode') === 'course_player' && $heroCourses->isNotEmpty())
+    @include('partials.home-course-player-hero')
+@else
 <section class="relative isolate overflow-hidden bg-gradient-to-br from-[#09234b] via-[#123962] to-[#0b2a53] text-white">
     <div class="pointer-events-none absolute -right-20 top-4 h-80 w-80 rounded-full bg-[#f4c266]/10 blur-3xl" aria-hidden="true"></div>
     <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:py-20">
@@ -35,6 +38,7 @@
         </div>
     </div>
 </section>
+@endif
 
 <section data-home-featured-section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
     <div class="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1fr)]">
