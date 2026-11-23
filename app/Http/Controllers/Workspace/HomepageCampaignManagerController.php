@@ -300,7 +300,19 @@ final class HomepageCampaignManagerController extends Controller
                     $questions[] = ['prompt'=>$prompt,'options'=>$cleanOptions,'correct'=>$key,'feedback'=>$feedback];
                 }
             }
+            $cefr = strtoupper(trim((string) ($row['cefr'] ?? 'B2')));
+            if (!in_array($cefr, ['A1','A2','B1','B2','C1','C2'], true)) {
+                throw ValidationException::withMessages(['rows' => 'Invalid CEFR level.']);
+            }
+            $titleKm = trim((string) ($row['title_km'] ?? ''));
+            $bodyKm = trim((string) ($row['body_km'] ?? ''));
+            if (mb_strlen($titleKm) > 140 || mb_strlen($bodyKm) > 12000) {
+                throw ValidationException::withMessages(['rows' => 'Khmer lesson text exceeds the maximum length.']);
+            }
             $clean[] = [
+                'cefr' => $cefr,
+                'title_km' => $titleKm,
+                'body_km' => $bodyKm,
                 'course'=>$course,
                 'lesson'=>$title,
                 'type'=>$type,
