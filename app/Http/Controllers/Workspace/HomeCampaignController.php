@@ -24,7 +24,7 @@ class HomeCampaignController extends Controller
             ? HomeCampaign::query()->findOrFail($request->integer('id'))
             : null;
 
-        return view('workspace.admin.home-campaign-builder', compact('campaigns', 'campaign') + ['role' => 'admin']);
+        return view('workspace.admin.home-campaign-interactive', compact('campaigns', 'campaign') + ['role' => 'admin']);
     }
 
     public function save(Request $request): RedirectResponse
