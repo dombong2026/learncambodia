@@ -74,20 +74,31 @@ final class HomepageCampaignManagerController extends Controller
                 throw ValidationException::withMessages(['cover_asset' => 'Upload the 1920 × 1080 campaign cover before publishing.']);
             }
 
-            $campaign->title = trim($data['title']);
-            $campaign->kind = $data['kind'];
-            $campaign->cover_asset = $cover;
             $campaign->updated_by = $request->user()->id;
             $campaign->version = $version + 1;
             if ($data['action'] === 'publish') {
+                $campaign->title = trim($data['title']);
+                $campaign->kind = $data['kind'];
+                $campaign->cover_asset = $cover;
                 $campaign->published = $rows;
                 $campaign->draft = null;
+                $campaign->draft_title = null;
+                $campaign->draft_kind = null;
+                $campaign->draft_cover_asset = null;
                 $campaign->status = 'published';
                 $campaign->published_at = now();
             } else {
                 $campaign->draft = $rows;
-                if (!$campaign->exists) $campaign->status = 'draft';
-                // Saving a draft does not silently unpublish an existing published campaign.
+                if ($campaign->exists && $campaign->status === 'published') {
+                    $campaign->draft_title = trim($data['title']);
+                    $campaign->draft_kind = $data['kind'];
+                    $campaign->draft_cover_asset = $cover;
+                } else {
+                    $campaign->title = trim($data['title']);
+                    $campaign->kind = $data['kind'];
+                    $campaign->cover_asset = $cover;
+                    $campaign->status = 'draft';
+                }
             }
             $campaign->save();
 
@@ -114,16 +125,30 @@ final class HomepageCampaignManagerController extends Controller
             if ($data['action'] === 'publish') {
                 $rows = $item->draft ?? $item->published ?? [];
                 $rows = $this->cleanRows($rows, true);
-                $this->verifyCover($item->cover_asset);
-                if (!$item->cover_asset) {
+                $cover = $item->draft !== null ? $item->draft_cover_asset : $item->cover_asset;
+                $this->verifyCover($cover);
+                if (!$cover) {
                     throw ValidationException::withMessages(['cover_asset' => 'Add a featured cover before publishing.']);
                 }
                 $item->published = $rows;
+                $item->title = $item->draft_title ?? $item->title;
+                $item->kind = $item->draft_kind ?? $item->kind;
+                $item->cover_asset = $cover;
                 $item->draft = null;
+                $item->draft_title = null;
+                $item->draft_kind = null;
+                $item->draft_cover_asset = null;
                 $item->status = 'published';
                 $item->published_at = now();
             } else {
                 $item->draft = $item->draft ?? $item->published ?? [];
+                $item->title = $item->draft_title ?? $item->title;
+                $item->kind = $item->draft_kind ?? $item->kind;
+                $item->cover_asset = $item->draft !== null && $item->draft_cover_asset !== null
+                    ? $item->draft_cover_asset : $item->cover_asset;
+                $item->draft_title = null;
+                $item->draft_kind = null;
+                $item->draft_cover_asset = null;
                 $item->status = 'draft';
                 $item->published_at = null;
             }
@@ -286,6 +311,10 @@ final class HomepageCampaignManagerController extends Controller
                 'questions'=>$questions,
                 'feedback'=>mb_substr((string) ($row['feedback'] ?? ''),0,1000),
             ];
+        }
+        if ($publish && !collect($clean)->contains(fn ($row) =>
+            in_array($row['type'], ['quiz','exam'], true) && count($row['questions']) > 0)) {
+            throw ValidationException::withMessages(['rows' => 'Add at least one Quiz or Exam question before publishing.']);
         }
         return $clean;
     }
