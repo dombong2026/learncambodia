@@ -23,10 +23,6 @@ jobs:
           blocks = re.findall(r"<<'PY'\n(.*?)\nPY", sh, flags=re.S)
           assert len(blocks) == 1, len(blocks)
           ast.parse(blocks[0])
-          for token in [
-            'RUN_AS_ROOT',  # N/A
-          ]:
-            pass
           required = [
             'EXISTING_CAMPAIGN_DATA_BACKUP=PASS',
             'SURGICAL_LIVE_OVERLAY=PASS',
@@ -64,7 +60,7 @@ jobs:
             "data-question-number",
             'data-question-correct',
             'questionCard',
-            'question.feedback',
+            'q.feedback',
             'data-lesson-index',
             'data-module-index',
             'uploadFile',
