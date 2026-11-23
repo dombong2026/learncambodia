@@ -86,16 +86,27 @@ const readSourceHtml = html => {
     });
     return doc.body.innerHTML;
 };
+const svgIcons = {
+    bold:'<path d="M6 12h6a4 4 0 0 0 0-8H6v16h7a4 4 0 0 0 0-8H6"/>',
+    italic:'<path d="M19 4h-9M14 20H5M15 4 9 20"/>',
+    underline:'<path d="M6 4v7a6 6 0 0 0 12 0V4M4 21h16"/>',
+    insertUnorderedList:'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+    insertOrderedList:'<path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M3 9h3M3 15c1-1 3-1 3 0s-3 2-3 3h3"/>',
+    formatBlock:'<path d="M4 6v12M13 6v12M4 12h9M17 10h3a2 2 0 0 1 0 4h-3v4h5"/>',
+    createLink:'<path d="M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+    emoji:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
+    html:'<path d="m8 8-4 4 4 4m8-8 4 4-4 4M14 4l-4 16"/>'
+};
+const svg = name => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+svgIcons[name]+'</svg>';
 const editor = l => (
     '<div class="cs-editor-box">' +
     '<div class="cs-editor-toolbar" role="toolbar" aria-label="Text formatting">' +
     ['bold','italic','underline','insertUnorderedList','insertOrderedList','formatBlock','createLink',
     'emoji','html'].map(action => {
-        const name = {'bold':'B','italic':'I','underline':'U','insertUnorderedList':'• List',
-        'insertOrderedList':'1. List','formatBlock':'H2','createLink':'Link',
-        'emoji':'😊','html':'HTML'}[action];
-        return '<button type="button" data-format="' + action + '" aria-label="' +
-            escapeHtml(action) + '">' + name + '</button>';
+        const labels = {bold:'Bold',italic:'Italic',underline:'Underline',insertUnorderedList:'Bulleted list',
+            insertOrderedList:'Numbered list',formatBlock:'Heading',createLink:'Insert link',emoji:'Emoji',html:'HTML source'};
+        return '<button type="button" data-format="' + action + '" title="' + labels[action] +
+            '" aria-label="' + labels[action] + '">' + svg(action) + '</button>';
     }).join('') +
     '</div><div class="cs-editor" contenteditable="true" data-editor data-placeholder="Write lesson content, instructions, or rich text…" role="textbox" aria-multiline="true">' +
     readSourceHtml(l.body) + '</div>' +
@@ -288,9 +299,16 @@ async function save(action) {
     note(action==='publish'?'Publishing…':'Saving draft…',false);
     root.querySelectorAll('#cs-save-draft,#cs-publish,#cs-save-draft-top,#cs-publish-top').forEach(b=>b.disabled=true);
     try {
-        const response=await requestJSON(root.dataset.saveUrl,{action,version,rows});
+        const title=el('cs-campaign-title').value.trim();
+        if(!title)throw new Error('Enter a campaign title before saving.');
+        const response=await requestJSON(root.dataset.saveUrl,{
+            id:root.dataset.campaignId?Number(root.dataset.campaignId):null,
+            title,kind:coverKind,cover_asset:coverAsset||null,action,version,rows
+        });
         version=Number(response.version);
         root.dataset.version=String(version);
+        if(response.id){root.dataset.campaignId=String(response.id);
+            if(response.edit_url)window.history.replaceState({},'',response.edit_url);}
         note(response.message || (action==='publish'?'Campaign published.':'Draft saved.'),false);
     }catch(error){note(error.message,true)}
     finally {
@@ -310,9 +328,7 @@ async function uploadFile(file) {
     apiError(response,data);
     return data;
 }
-async function saveCover() {
-    await requestJSON(root.dataset.coverSaveUrl,{asset:coverAsset || null,kind:coverKind});
-}
+
 function previewCover() {
     const img=el('cs-cover-image');
     img.hidden=!coverAsset;
@@ -340,26 +356,21 @@ el('cs-cover-file').addEventListener('change',async event=>{
         status.textContent='Uploading featured cover…';
         const media=await uploadFile(file);
         if(media.type!=='image') throw new Error('Choose a JPG, PNG, or WebP image.');
-        const previous=coverAsset;
         coverAsset=media.asset;
-        try {await saveCover()} catch(error){coverAsset=previous;throw error}
         previewCover();
-        status.textContent='Featured cover uploaded and saved.';
+        status.textContent='Cover uploaded. Save draft or Publish to keep it.';
     } catch(error) {status.textContent=error.message;note(error.message,true)}
     event.target.value='';
 });
-el('cs-cover-kind').addEventListener('change',async event=>{
+el('cs-cover-kind').addEventListener('change',event=>{
     coverKind=event.target.value;
-    if(!coverAsset)return;
-    try{await saveCover();el('cs-cover-message').textContent='Featured type saved.'}
-    catch(error){note(error.message,true)}
+    note('Campaign type changed. Save draft or Publish to keep it.',false);
 });
-el('cs-remove-cover').addEventListener('click',async ()=>{
+el('cs-remove-cover').addEventListener('click',()=>{
     if(!window.confirm('Remove the campaign featured cover?'))return;
-    const old=coverAsset;
     coverAsset='';
-    try{await saveCover();previewCover();el('cs-cover-message').textContent='Featured cover removed.'}
-    catch(error){coverAsset=old;note(error.message,true)}
+    previewCover();
+    el('cs-cover-message').textContent='Cover removed from the editor. Save draft to apply the change.';
 });
 el('cs-save-draft').addEventListener('click',()=>save('draft'));
 el('cs-save-draft-top').addEventListener('click',()=>save('draft'));

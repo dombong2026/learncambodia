@@ -36,7 +36,8 @@ function fixture() {
   return [
     '<!doctype html><html><head><meta name="csrf-token" content="fixture-csrf"></head><body>',
     '<section id="cs-builder" data-save-url="/mock-campaign-save" data-upload-url="/mock-media"',
-    ' data-cover-save-url="/mock-cover-save" data-asset-base="/campaign-media" data-version="4" data-cover-asset="" data-cover-kind="quiz">',
+    ' data-campaign-id="" data-asset-base="/campaign-media" data-version="4" data-cover-asset="" data-cover-kind="quiz">',
+    '<input id="cs-campaign-title" value="English Grammar Practice">',
     '<span id="cs-save-state"></span><div id="cs-alert" hidden></div>',
     '<button id="cs-save-draft-top">Save draft</button><button id="cs-publish-top">Publish</button>',
     '<button id="cs-save-draft">Save draft</button><button id="cs-publish">Publish</button>',
@@ -98,6 +99,8 @@ test('campaign studio draft submission keeps correct answer keys and explanation
   await expect(page.locator('#cs-save-state')).toHaveText('Campaign draft saved.');
   expect(submissions).toHaveLength(1);
   expect(submissions[0].action).toBe('draft');
+  expect(submissions[0].title).toBe('English Grammar Practice');
+  expect(submissions[0].kind).toBe('quiz');
   expect(submissions[0].version).toBe(4);
   expect(submissions[0].rows).toHaveLength(2);
   expect(submissions[0].rows[0].questions[0].correct).toBe(1);

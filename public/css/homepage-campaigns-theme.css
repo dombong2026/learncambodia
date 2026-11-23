@@ -1,0 +1,208 @@
+/*
+ * Learn Cambodia / Homepage Campaign Manager
+ *
+ * Theme CSS deliberately compiled outside Tailwind/Vite. The campaign manager
+ * is installed as an additive Blade partial on aaPanel, so newly introduced
+ * Tailwind utility names may be absent from the site's previously built CSS.
+ * Scope every selector and use the existing html.dark theme switch.
+ */
+#homepage-campaign-management {
+    --hcm-panel: #ffffff;
+    --hcm-text: #23354d;
+    --hcm-muted: #536982;
+    --hcm-title: #14365e;
+    --hcm-border: #dbe4ee;
+    --hcm-subtle: #f4f7fb;
+    --hcm-header: #eaf0f7;
+    --hcm-row: #ffffff;
+    --hcm-stripe: #fafcff;
+    --hcm-hover: #edf4fb;
+    --hcm-link: #164f88;
+    --hcm-button: #17487c;
+    --hcm-button-text: #ffffff;
+    --hcm-control: #ffffff;
+    --hcm-accent: #a76811;
+    --hcm-popover: #ffffff;
+    --hcm-badge-border: #c8d7e7;
+    color: var(--hcm-text);
+    background-color: var(--hcm-panel);
+    border-color: var(--hcm-border);
+    box-shadow: 0 8px 30px rgb(18 37 67 / 5%);
+}
+html.dark #homepage-campaign-management {
+    --hcm-panel: #122a44;
+    --hcm-text: #e7eef7;
+    --hcm-muted: #b8c7db;
+    --hcm-title: #f4f7ff;
+    --hcm-border: #39536f;
+    --hcm-subtle: #0e243e;
+    --hcm-header: #1a3b60;
+    --hcm-row: #142e4c;
+    --hcm-stripe: #112941;
+    --hcm-hover: #214563;
+    --hcm-link: #9dd0ff;
+    --hcm-button: #265e9c;
+    --hcm-button-text: #ffffff;
+    --hcm-control: #10263e;
+    --hcm-accent: #f1b85e;
+    --hcm-popover: #173753;
+    --hcm-badge-border: #4b6887;
+    box-shadow: 0 8px 30px rgb(0 0 0 / 14%);
+}
+#homepage-campaign-management :is(h2, th, strong, label) {
+    color: var(--hcm-title);
+}
+#homepage-campaign-management :is(p, small, .text-slate-400, .text-slate-500, .text-slate-600, .text-slate-700, .text-slate-300) {
+    color: var(--hcm-muted);
+}
+#homepage-campaign-management > div:first-child > div:first-child > span {
+    color: var(--hcm-accent);
+}
+#homepage-campaign-management [data-hcm-create] {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border-radius: .75rem;
+    background-color: var(--hcm-button);
+    color: var(--hcm-button-text);
+    padding: .65rem 1rem;
+    font-weight: 800;
+    font-size: .78rem;
+    text-decoration: none;
+}
+#homepage-campaign-management [data-hcm-create]:hover {
+    filter: brightness(1.12);
+}
+#homepage-campaign-management :is(.overflow-x-auto, table, tr, td, th, form, details) {
+    border-color: var(--hcm-border);
+}
+#homepage-campaign-management > .overflow-x-auto {
+    background: var(--hcm-row);
+    border: 1px solid var(--hcm-border);
+    border-radius: .75rem;
+}
+#homepage-campaign-management table {
+    background-color: var(--hcm-row);
+    color: var(--hcm-text);
+    border-collapse: collapse;
+}
+#homepage-campaign-management thead {
+    background-color: var(--hcm-header);
+}
+#homepage-campaign-management thead th {
+    color: var(--hcm-title);
+    border-bottom: 1px solid var(--hcm-border);
+}
+#homepage-campaign-management tbody tr {
+    background-color: var(--hcm-row);
+    color: var(--hcm-text);
+    border-bottom: 1px solid var(--hcm-border);
+}
+#homepage-campaign-management tbody tr:nth-child(even) {
+    background-color: var(--hcm-stripe);
+}
+#homepage-campaign-management tbody tr:hover {
+    background-color: var(--hcm-hover);
+}
+#homepage-campaign-management tbody td {
+    color: var(--hcm-text);
+}
+#homepage-campaign-management tbody td a {
+    color: var(--hcm-link);
+}
+#homepage-campaign-management tbody td a:hover {
+    text-decoration: underline;
+}
+#homepage-campaign-management tbody td span.text-slate-500,
+#homepage-campaign-management tbody td span.text-slate-400,
+#homepage-campaign-management tbody td div.text-slate-400,
+#homepage-campaign-management tbody td.whitespace-nowrap {
+    color: var(--hcm-muted);
+}
+#homepage-campaign-management tbody td > span.rounded-lg {
+    background-color: var(--hcm-subtle);
+    border: 1px solid var(--hcm-badge-border);
+    color: var(--hcm-text);
+}
+#homepage-campaign-management tbody td [data-campaign-status="published"] {
+    background: #dff6e9;
+    color: #17683b;
+    border-color: #a7e3bd;
+}
+#homepage-campaign-management tbody td [data-campaign-status="draft"] {
+    background: #fff2d6;
+    color: #84500a;
+    border-color: #f3d49b;
+}
+html.dark #homepage-campaign-management tbody td [data-campaign-status="published"] {
+    background: #164e3b;
+    color: #adf3cc;
+    border-color: #347257;
+}
+html.dark #homepage-campaign-management tbody td [data-campaign-status="draft"] {
+    background: #553a15;
+    color: #ffde98;
+    border-color: #916a36;
+}
+#homepage-campaign-management [data-campaign-menu] > summary {
+    background-color: var(--hcm-control);
+    color: var(--hcm-text);
+    border: 1px solid var(--hcm-border);
+}
+#homepage-campaign-management [data-campaign-menu] > summary:hover,
+#homepage-campaign-management [data-campaign-menu][open] > summary {
+    background-color: var(--hcm-hover);
+}
+#homepage-campaign-management [data-campaign-popover] {
+    background-color: var(--hcm-popover);
+    color: var(--hcm-text);
+    border: 1px solid var(--hcm-border);
+    box-shadow: 0 15px 35px rgb(0 0 0 / 22%);
+}
+#homepage-campaign-management [data-campaign-popover] :is(a, button) {
+    color: var(--hcm-text);
+}
+#homepage-campaign-management [data-campaign-popover] :is(a, button):hover:not(:disabled) {
+    background-color: var(--hcm-hover);
+}
+#homepage-campaign-management [data-campaign-popover] :is(a, button):disabled {
+    opacity: .45;
+}
+#homepage-campaign-management form input[type=number] {
+    background-color: var(--hcm-control);
+    color: var(--hcm-text);
+    border: 1px solid var(--hcm-border);
+    border-radius: .5rem;
+}
+#homepage-campaign-management form button[type=submit] {
+    background-color: var(--hcm-subtle);
+    color: var(--hcm-title);
+    border: 1px solid var(--hcm-border);
+    border-radius: .5rem;
+}
+#homepage-campaign-management form button[type=submit]:hover:not(:disabled) {
+    background-color: var(--hcm-hover);
+}
+#homepage-campaign-management [role=navigation] :is(a, span) {
+    color: var(--hcm-text);
+    border-color: var(--hcm-border);
+}
+#homepage-campaign-management [role=navigation] a:hover {
+    background-color: var(--hcm-hover);
+}
+#homepage-campaign-management [role=navigation] [aria-current=page] > span {
+    background-color: var(--hcm-button);
+    color: var(--hcm-button-text);
+}
+#homepage-campaign-management [role=status] {
+    color: var(--hcm-text);
+}
+#homepage-campaign-management :is(a, button, summary, input):focus-visible {
+    outline: 2px solid var(--hcm-accent);
+    outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+    #homepage-campaign-management * {
+        transition: none !important;
+    }
+}

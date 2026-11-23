@@ -1,0 +1,106 @@
+name: Multi-Campaign homepage preflight
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  release-source-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check safe installer syntax and embedded Python
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-home-multicampaign-aapanel.sh
+          bash -n support/operator/learncambodia-campaign-theme-hotfix-aapanel.sh
+          python3 - <<'PY'
+          import ast,re
+          from pathlib import Path
+          s=Path('support/operator/learncambodia-home-multicampaign-aapanel.sh').read_text()
+          blocks=re.findall(r"<<'PY'\n(.*?)\nPY",s,re.S)
+          assert len(blocks)==1, len(blocks)
+          ast.parse(blocks[0])
+          for needle in [
+              "MULTICAMPAIGN_DEPLOY=PASS", "LEGACY_CAMPAIGN_DATA_BACKUP=PASS",
+              "LIVE_STUDIO_DRIFT","LIVE_EDITOR_DRIFT","SAFE_LIVE_OVERLAY=PASS",
+              'runuser -u www -- "$PHP" artisan view:cache',
+              "MULTICAMPAIGN_ROLLBACK=FILES_RESTORED",
+              "LEGACY_SINGLETON_DATA=PRESERVED",
+              'NODE_ON_SERVER=ABSENT_USING_GITHUB_CI_VALIDATED_JS',
+              'LOCAL_JAVASCRIPT_SYNTAX=SKIPPED_GITHUB_CI_REQUIRED',
+              'trap rollback ERR EXIT',
+              'trap - ERR EXIT',
+          ]: assert needle in s, needle
+          for bad in ["migrate:fresh","db:wipe","git reset --hard","chmod -R 777"]:
+              assert bad not in s,bad
+          theme=Path('support/operator/learncambodia-campaign-theme-hotfix-aapanel.sh').read_text()
+          for needle in ['LIVE_CAMPAIGN_TABLE_DRIFT', 'THEME_HOTFIX_ROLLBACK=PREVIOUS_TABLE_RESTORED',
+                         'runuser -u www -- "$PHP" artisan view:cache',
+                         'THEME_HOTFIX=PASS', 'THEME_CSS_HTTP=']:
+              assert needle in theme,needle
+          print('INSTALLER_SOURCE_GATES=PASS')
+          PY
+      - name: Validate standalone JavaScript and UI source contracts
+        run: |
+          node --check public/js/campaign-studio-premium.js
+          node --check public/js/homepage-hero-campaigns.js
+          python3 - <<'PY'
+          from pathlib import Path
+          js=Path('public/js/campaign-studio-premium.js').read_text()
+          table=Path('resources/views/workspace/admin/homepage-campaigns-table.blade.php').read_text()
+          hero=Path('resources/views/partials/homepage-hero-campaigns.blade.php').read_text()
+          for token in ['svgIcons','<svg viewBox','cs-campaign-title','cover_asset','root.dataset.campaignId']:
+              assert token in js,token
+          for token in ['paginate(10','campaign_page','Go to page','data-campaign-menu',
+                       "name=\"action\" value=\"draft\"","name=\"action\" value=\"publish\"",
+                       "Create a new campaign"]:
+              assert token in table,token
+          assert "css/homepage-campaigns-theme.css" in table
+          assert "data-hcm-create" in table
+          assert 'data-campaign-status' in table
+          css=Path('public/css/homepage-campaigns-theme.css').read_text()
+          for token in ['#homepage-campaign-management', 'html.dark #homepage-campaign-management',
+                        '[data-campaign-status="published"]', '[data-campaign-menu]', '[data-hcm-create]']:
+              assert token in css,token
+          for token in ['data-hc-start','hc-play','hc-question','homepage-hero-campaigns.js']:
+              assert token in hero,token
+          print('MULTICAMPAIGN_UI_SOURCE_GATES=PASS')
+          PY
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite
+      - name: PHP syntax and schema safety
+        run: |
+          php -l app/Models/HomepageCampaignItem.php
+          php -l app/Http/Controllers/Workspace/HomepageCampaignManagerController.php
+          php -l database/migrations/2026_11_23_235700_create_homepage_campaign_items_table.php
+
+  interactive-browser-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser test runtime
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Desktop tablet and mobile interaction checks
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/home-multicampaign.spec.mjs \
+            tests/browser/campaign-studio-premium.spec.mjs \
+            tests/browser/homepage-campaign-theme.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
