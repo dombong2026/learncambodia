@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class HomepageCampaignItem extends Model
 {
     protected $fillable = ['title', 'slug', 'kind', 'status', 'draft', 'published',
-        'version', 'cover_asset', 'published_at', 'created_by', 'updated_by'];
+        'version', 'cover_asset', 'published_at', 'created_by', 'updated_by',
+        'draft_title', 'draft_kind', 'draft_cover_asset'];
 
     protected function casts(): array
     {
