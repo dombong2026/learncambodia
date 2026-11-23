@@ -72,7 +72,7 @@
                                     aria-label="Actions for {{ $campaign->title }}" title="Campaign actions">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </summary>
-                                <div class="absolute right-0 z-20 mt-2 min-w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-xl dark:border-slate-700 dark:bg-[#173956]">
+                                <div data-campaign-popover class="fixed z-[200] min-w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-xl dark:border-slate-700 dark:bg-[#173956]">
                                     <a class="block rounded-lg px-3 py-2 font-bold hover:bg-slate-100 dark:hover:bg-slate-700"
                                         href="{{ route('admin.appearance.campaign.edit', ['id'=>$campaign->id, 'lang'=>'en']) }}">Edit</a>
                                     <form method="POST" action="{{ route('admin.appearance.campaign-manager.status', $campaign) }}">
@@ -113,3 +113,34 @@
 #homepage-campaign-management [data-campaign-menu][open] summary{background:#e9f2fb}
 #homepage-campaign-management table{border-spacing:0}
 </style>
+
+<script>
+(function(){
+  const root=document.getElementById('homepage-campaign-management');
+  if(!root)return;
+  const menus=[...root.querySelectorAll('[data-campaign-menu]')];
+  function place(menu){
+    const trigger=menu.querySelector('summary');
+    const panel=menu.querySelector('[data-campaign-popover]');
+    if(!trigger||!panel)return;
+    const r=trigger.getBoundingClientRect(),width=180;
+    panel.style.position='fixed';
+    panel.style.right='auto';
+    panel.style.left=Math.max(8,Math.min(window.innerWidth-width-8,r.right-width))+'px';
+    panel.style.top=(r.bottom+6)+'px';
+    panel.style.minWidth=width+'px';
+  }
+  menus.forEach(menu=>menu.addEventListener('toggle',()=>{
+    if(!menu.open)return;
+    menus.filter(other=>other!==menu).forEach(other=>other.open=false);
+    place(menu);
+  }));
+  document.addEventListener('click',event=>{
+    if(!root.contains(event.target)||!event.target.closest('[data-campaign-menu]')){
+      menus.forEach(menu=>menu.open=false);
+    }
+  });
+  window.addEventListener('scroll',()=>menus.forEach(menu=>{if(menu.open)menu.open=false}),true);
+  window.addEventListener('resize',()=>menus.forEach(menu=>{if(menu.open)menu.open=false}));
+})();
+</script>
