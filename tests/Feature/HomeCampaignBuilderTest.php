@@ -70,20 +70,20 @@ class HomeCampaignBuilderTest extends TestCase
         $this->assertSame('published', $campaign->status);
         $this->assertNotNull($campaign->published_at);
         $this->assertStringNotContainsString('<script>', $campaign->modules[0]['lessons'][0]['content_html']);
-        $this->actingAs($student)->get('/campaigns/'.$campaign->slug)->assertOk()
+        $this->actingAs($student)->get('/interactive-campaigns/'.$campaign->slug)->assertOk()
             ->assertSee('Grammar in context')->assertSee('Check answer');
-        $this->get('/campaigns/'.$campaign->slug.'/cover')->assertOk();
+        $this->get('/interactive-campaigns/'.$campaign->slug.'/cover')->assertOk();
 
-        $this->postJson('/campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer' => 1])
+        $this->postJson('/interactive-campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer' => 1])
             ->assertOk()->assertJsonPath('correct', true)
             ->assertJsonPath('feedback', 'Correct: goes describes a routine.');
-        $this->postJson('/campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer' => 0])
+        $this->postJson('/interactive-campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer' => 0])
             ->assertOk()->assertJsonPath('correct', false)
             ->assertJsonPath('expected', 'goes');
-        $this->postJson('/campaigns/'.$campaign->slug.'/lessons/grammar-match-123/check', [
+        $this->postJson('/interactive-campaigns/'.$campaign->slug.'/lessons/grammar-match-123/check', [
             'answer' => ['Regular habits', 'Happening now'],
         ])->assertOk()->assertJsonPath('correct', true);
-        $this->postJson('/campaigns/'.$campaign->slug.'/lessons/grammar-order-123/check', [
+        $this->postJson('/interactive-campaigns/'.$campaign->slug.'/lessons/grammar-order-123/check', [
             'answer' => ['She', 'reading', 'is'],
         ])->assertOk()->assertJsonPath('correct', false);
         $this->get('/')->assertOk()->assertSee('English Grammar in Context');
@@ -102,8 +102,8 @@ class HomeCampaignBuilderTest extends TestCase
         ])->assertRedirect();
 
         $campaign = HomeCampaign::firstOrFail();
-        $this->actingAs($student)->get('/campaigns/'.$campaign->slug)->assertNotFound();
-        $this->postJson('/campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer'=>1])->assertNotFound();
+        $this->actingAs($student)->get('/interactive-campaigns/'.$campaign->slug)->assertNotFound();
+        $this->postJson('/interactive-campaigns/'.$campaign->slug.'/lessons/grammar-choice-123/check', ['answer'=>1])->assertNotFound();
 
         $this->actingAs($admin)->post($endpoint, [
             'campaign_id' => $campaign->id,
@@ -114,6 +114,6 @@ class HomeCampaignBuilderTest extends TestCase
 
         $this->assertSame('published', $campaign->fresh()->status);
         $this->assertDatabaseMissing('appearance_revisions', ['section' => 'home_campaign']);
-        $this->actingAs($student)->get('/campaigns/'.$campaign->slug)->assertOk();
+        $this->actingAs($student)->get('/interactive-campaigns/'.$campaign->slug)->assertOk();
     }
 }
