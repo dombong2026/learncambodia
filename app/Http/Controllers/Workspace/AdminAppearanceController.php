@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppearanceRevision;
+use App\Models\Course;
 use App\Support\Appearance;
 use App\Support\ApprovalAudit;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +40,9 @@ class AdminAppearanceController extends Controller
             'role' => 'admin', 'section' => $section, 'revision' => $revision,
             'settings' => $revision?->settings ?? Appearance::approved($section),
             'fields' => Appearance::fields($section),
+            'promoCourses' => $section === 'home'
+                ? Course::discoverable()->orderByDesc('published_at')->limit(60)->get(['id', 'title'])
+                : collect(),
         ]);
     }
 
@@ -48,6 +52,14 @@ class AdminAppearanceController extends Controller
         foreach (Appearance::fields($section) as $field => $kind) {
             if (str_starts_with($kind, 'text:')) {
                 $data[$field] = (string) ($data[$field] ?? '');
+            }
+        }
+
+        if ($section === 'home') {
+            $approved = Appearance::approved('home');
+            $data['hero_mode'] = $data['hero_mode'] ?? $approved['hero_mode'] ?? 'default';
+            if (!array_key_exists('hero_course_id', $data)) {
+                $data['hero_course_id'] = $approved['hero_course_id'] ?? null;
             }
         }
 
