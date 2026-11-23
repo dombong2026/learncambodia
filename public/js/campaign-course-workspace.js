@@ -6,7 +6,8 @@ const list = document.getElementById('cs-modules');
 const tree = document.getElementById('cs-course-tree');
 const byId = id => document.getElementById(id);
 if (!list || !tree) return;
-let activeModule = 0, activeLesson = 0, activeTab = 'curriculum';
+// New campaigns start with required metadata; existing campaigns open the current lesson.
+let activeModule = 0, activeLesson = 0, activeTab = root.dataset.campaignId ? 'curriculum' : 'metadata';
 let pendingSelection = null, dragSource = null, scheduled = false;
 const collapsedUnits = new Set();
 const escaped = value => String(value ?? '').replace(/[&<>"']/g, x =>
