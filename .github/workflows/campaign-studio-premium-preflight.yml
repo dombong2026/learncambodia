@@ -1,0 +1,101 @@
+name: Campaign Studio premium UI preflight
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  premium-ui-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer shell and embedded Python syntax
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-studio-premium-aapanel.sh
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast, re
+          sh = Path('support/operator/learncambodia-campaign-studio-premium-aapanel.sh').read_text()
+          blocks = re.findall(r"<<'PY'\n(.*?)\nPY", sh, flags=re.S)
+          assert len(blocks) == 1, len(blocks)
+          ast.parse(blocks[0])
+          required = [
+            'EXISTING_CAMPAIGN_DATA_BACKUP=PASS',
+            'SURGICAL_LIVE_OVERLAY=PASS',
+            'BLADE_PERMISSIONS=PASS',
+            'CAMPAIGN_STUDIO_PREMIUM_DEPLOY=PASS',
+            'runuser -u www -- "$PHP" artisan view:cache',
+            'admin.appearance.campaign.cover.save',
+          ]
+          for item in required:
+            assert item in sh, item
+          forbidden=['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']
+          for item in forbidden: assert item not in sh, item
+          print('INSTALLER_STATIC_CHECKS=PASS')
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Standalone JavaScript syntax and field mapping
+        run: |
+          node --check public/js/campaign-studio-premium.js
+          python3 - <<'PY'
+          from pathlib import Path
+          blade=Path('resources/views/workspace/admin/campaign-studio-premium.blade.php').read_text()
+          js=Path('public/js/campaign-studio-premium.js').read_text()
+          for token in [
+            "@section('workspace_compact', '1')",
+            'id="cs-cover-file"',
+            'id="cs-modules"',
+            'id="cs-publish"',
+            'id="cs-save-draft"',
+            'data-save-url',
+            'id="cs-questions-count"',
+          ]: assert token in blade,token
+          for token in [
+            "data-question-number",
+            'data-question-correct',
+            'questionCard',
+            'q.feedback',
+            'data-lesson-index',
+            'data-module-index',
+            'uploadFile',
+            'version',
+            'csrf',
+          ]: assert token in js,token
+          print('CAMPAIGN_UI_STATIC_CHECKS=PASS')
+          PY
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+      - name: PHP syntax of additive migration and cover controller
+        run: |
+          php -l app/Http/Controllers/Workspace/CampaignCoverController.php
+          php -l database/migrations/2026_11_23_235500_create_homepage_campaign_cover_table.php
+
+  browser-ui-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated browser smoke dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Smoke-test curriculum interactions at desktop, tablet and mobile sizes
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-studio-premium.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
