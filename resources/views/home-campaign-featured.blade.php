@@ -10,9 +10,9 @@
         </div>
         <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             @foreach($interactiveCampaigns as $campaign)
-                <a href="{{ route('campaign.show', $campaign) }}" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-amber-400 hover:shadow-lg dark:border-slate-700 dark:bg-[#183759]">
+                <a href="{{ route('interactive-campaign.show', $campaign) }}" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-amber-400 hover:shadow-lg dark:border-slate-700 dark:bg-[#183759]">
                     @if($campaign->cover_path)
-                        <img src="{{ route('campaign.cover', $campaign) }}" alt="{{ $campaign->title }} cover" loading="lazy" class="aspect-video w-full object-cover">
+                        <img src="{{ route('interactive-campaign.cover', $campaign) }}" alt="{{ $campaign->title }} cover" loading="lazy" class="aspect-video w-full object-cover">
                     @endif
                     <div class="p-5">
                         <span class="text-[11px] font-extrabold uppercase tracking-widest text-[#ac7929]">{{ $campaign->kind }}</span>
