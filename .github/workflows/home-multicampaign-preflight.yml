@@ -29,6 +29,10 @@ jobs:
               'runuser -u www -- "$PHP" artisan view:cache',
               "MULTICAMPAIGN_ROLLBACK=FILES_RESTORED",
               "LEGACY_SINGLETON_DATA=PRESERVED",
+              'NODE_ON_SERVER=ABSENT_USING_GITHUB_CI_VALIDATED_JS',
+              'LOCAL_JAVASCRIPT_SYNTAX=SKIPPED_GITHUB_CI_REQUIRED',
+              'trap rollback ERR EXIT',
+              'trap - ERR EXIT',
           ]: assert needle in s, needle
           for bad in ["migrate:fresh","db:wipe","git reset --hard","chmod -R 777"]:
               assert bad not in s,bad
