@@ -6,23 +6,22 @@
 @endpush
 @section('content')
 @php
-    $studioCover = \Illuminate\Support\Facades\DB::table('homepage_campaign_cover')->where('id', 1)->first();
-    $coverAsset = $studioCover?->asset ?? '';
-    $coverKind = $studioCover?->kind ?? 'quiz';
+    $coverAsset = $campaign?->cover_asset ?? '';
+    $coverKind = $campaign?->kind ?? 'quiz';
 @endphp
 <section class="cs-shell" id="cs-builder"
     data-save-url="{{ route('admin.appearance.campaign.save') }}"
     data-upload-url="{{ route('admin.appearance.campaign.media') }}"
-    data-cover-save-url="{{ route('admin.appearance.campaign.cover.save') }}"
+    data-campaign-id="{{ $campaign?->id ?? '' }}"
     data-asset-base="{{ url('/campaign-media') }}"
     data-version="{{ (int) $version }}"
     data-cover-asset="{{ $coverAsset }}"
     data-cover-kind="{{ $coverKind }}">
     <div class="cs-topbar">
         <div class="cs-topbar-copy">
-            <a class="cs-back" href="{{ route('admin.appearance.edit', 'home') }}">← Home appearance</a>
+            <a class="cs-back" href="{{ route('admin.appearance.edit', 'home') }}">← All campaigns</a>
             <div class="cs-kicker">HOMEPAGE CAMPAIGN</div>
-            <h1>Campaign Builder</h1>
+            <h1>{{ $campaign ? 'Edit campaign' : 'Create a new campaign' }}</h1>
             <p>Build interactive quizzes and exams with modules, lessons, explanations, and feedback.</p>
         </div>
         <div class="cs-topbar-actions">
@@ -33,6 +32,11 @@
     </div>
 
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
+    <div class="cs-card" style="margin-bottom:17px">
+        <label class="cs-label" for="cs-campaign-title">Campaign title</label>
+        <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->title ?? '' }}" placeholder="e.g. English Grammar — 20 Questions">
+        <p class="cs-note">Create as many independent campaigns as you need. Each has its own cover, questions, and publication status.</p>
+    </div>
 
     <div class="cs-layout">
         <div class="cs-main">
@@ -61,14 +65,14 @@
                     <div><span class="cs-kicker">CAMPAIGN MEDIA</span><h2>Featured cover</h2></div>
                     <span class="cs-chip">1920 × 1080</span>
                 </div>
-                <p class="cs-subtext">This cover represents the whole Quiz or Exam campaign, not an individual lesson.</p>
+                <p class="cs-subtext">This cover represents this Quiz or Exam campaign, not an individual lesson.</p>
                 <div id="cs-cover-preview" class="cs-cover-preview" aria-label="Campaign cover preview">
                     <div id="cs-cover-placeholder" class="cs-cover-placeholder">
                         <span aria-hidden="true">▧</span>
                         <strong>No cover selected</strong>
                         <small>Upload a 16:9 image</small>
                     </div>
-                    <img id="cs-cover-image" src="{{ $coverAsset ? route('campaign.asset', $coverAsset) : '' }}" alt="Featured campaign cover" @if(!$coverAsset) hidden @endif>
+                    <img id="cs-cover-image" src="{{ $campaign?->cover_asset ? route('campaign-manager.cover', $campaign) : '' }}" alt="Featured campaign cover" @if(!$coverAsset) hidden @endif>
                 </div>
                 <label class="cs-label" for="cs-cover-kind">Featured content type</label>
                 <select id="cs-cover-kind" class="cs-control">
@@ -86,7 +90,7 @@
                 <p class="cs-subtext">Save your work privately or publish it directly as administrator. Existing review workflows elsewhere are unchanged.</p>
                 <div class="cs-publication-state">
                     <span class="cs-dot" aria-hidden="true"></span>
-                    <span>{{ $hasDraft ? 'Unpublished draft available' : ($publishedAt ? 'Published campaign' : 'Not published yet') }}</span>
+                    <span>{{ $hasDraft ? 'Unpublished changes available' : ($publishedAt ? 'Published campaign' : 'Not published yet') }}</span>
                 </div>
                 <button class="cs-btn cs-btn-primary cs-full" type="button" id="cs-publish">Publish campaign</button>
                 <button class="cs-btn cs-btn-outline cs-full" type="button" id="cs-save-draft">Save draft</button>
