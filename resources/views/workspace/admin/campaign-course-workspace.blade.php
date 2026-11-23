@@ -44,6 +44,7 @@
     </header>
 
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
+    <button id="cs-publish-top" type="button" hidden>Publish</button>
 
     <div class="cs-layout cs-course-grid">
         <aside class="cs-course-outline" aria-label="Course outline and lesson navigation">
