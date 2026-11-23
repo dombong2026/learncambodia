@@ -15,12 +15,12 @@ jobs:
       - name: Validate installer shell and embedded Python
         run: |
           set -Eeuo pipefail
-          bash -n support/operator/learncambodia-campaign-interactive-deploy-v3-aapanel.sh
+          bash -n support/operator/learncambodia-campaign-interactive-deploy-v4-aapanel.sh
           python3 - <<'PY'
           from pathlib import Path
           import ast
           import re
-          path = Path('support/operator/learncambodia-campaign-interactive-deploy-v3-aapanel.sh')
+          path = Path('support/operator/learncambodia-campaign-interactive-deploy-v4-aapanel.sh')
           source = path.read_text()
           blocks = re.findall(r"<<'PY'\n(.*?)\nPY", source, re.S)
           assert len(blocks) == 3, f'expected 3 embedded Python blocks, got {len(blocks)}'
@@ -33,6 +33,8 @@ jobs:
               'CAMPAIGN_DEPLOYMENT_ROLLBACK=RESTORED_EXISTING_FILES',
               'interactive-campaign.cover',
               'campaign.asset',
+              'runuser -u www -- "$PHP" artisan view:cache',
+              'COMPILED_BLADE_SERVICE_ACCOUNT=PASS',
               'campaign.check',
           ]
           for phrase in required:
