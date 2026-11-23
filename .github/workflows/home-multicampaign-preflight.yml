@@ -53,6 +53,13 @@ jobs:
                        "name=\"action\" value=\"draft\"","name=\"action\" value=\"publish\"",
                        "Create a new campaign"]:
               assert token in table,token
+          assert "css/homepage-campaigns-theme.css" in table
+          assert "data-hcm-create" in table
+          assert 'data-campaign-status' in table
+          css=Path('public/css/homepage-campaigns-theme.css').read_text()
+          for token in ['#homepage-campaign-management', 'html.dark #homepage-campaign-management',
+                        '[data-campaign-status="published"]', '[data-campaign-menu]', '[data-hcm-create]']:
+              assert token in css,token
           for token in ['data-hc-start','hc-play','hc-question','homepage-hero-campaigns.js']:
               assert token in hero,token
           print('MULTICAMPAIGN_UI_SOURCE_GATES=PASS')
@@ -86,6 +93,7 @@ jobs:
         run: |
           npx playwright test tests/browser/home-multicampaign.spec.mjs \
             tests/browser/campaign-studio-premium.spec.mjs \
+            tests/browser/homepage-campaign-theme.spec.mjs \
             --config=tests/browser/playwright.config.mjs \
             --project=desktop-chromium \
             --project=tablet-chromium \
