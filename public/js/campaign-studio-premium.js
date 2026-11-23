@@ -15,7 +15,7 @@ const optionsDefault = () => ['Option A', 'Option B', 'Option C', 'Option D'];
 const blankQuestion = () => ({prompt:'',options:optionsDefault(),correct:0,feedback:''});
 const blankLesson = () => ({
     uid: makeId(), title:'New lesson', type:'quiz', url:'', asset:'', body:'',
-    language:'', feedback:'', questions:[blankQuestion()]
+    language:'', cefr:'B2', title_km:'', body_km:'', feedback:'', questions:[blankQuestion()]
 });
 const blankModule = () => ({uid:makeId(),title:'New module',lessons:[blankLesson()]});
 const makeId = () => {
@@ -32,6 +32,9 @@ const normalizeLesson = r => ({
     url:String(r.url || ''),
     asset:String(r.asset || ''),
     language:String(r.language || ''),
+    cefr:String(r.cefr || 'B2'),
+    title_km:String(r.title_km || ''),
+    body_km:String(r.body_km || ''),
     feedback:String(r.feedback || ''),
     questions:Array.isArray(r.questions) ? r.questions.map(q => ({
         prompt:String(q.prompt || ''),
@@ -169,7 +172,23 @@ const lessonCard = (lesson, mi, li) => {
         ['image','Image'],['video','Video'],['youtube','YouTube video']].map(([v,n]) =>
             '<option value="' + v + '"' + (lesson.type===v?' selected':'') + '>' + n + '</option>').join('') +
         '</select></div></div>' +
+        '<div class="cs-course-cefr-field"><label class="cs-label">CEFR Level</label>' +
+        '<select class="cs-control" data-field="cefr">' +
+        ['A1','A2','B1','B2','C1','C2'].map(level => '<option value="' + level + '"' +
+            (lesson.cefr===level?' selected':'') + '>' + level + '</option>').join('') +
+        '</select></div>' +
         '<label class="cs-label">Lesson text editor</label>' + editor(lesson) +
+        '<div class="cs-course-translation-fields">' +
+          '<div class="cs-course-language-grid">' +
+          '<div class="cs-language-pane"><div class="cs-language-pane-head"><span class="cs-language-badge">EN</span><strong>English (EN)</strong><span class="cs-mini-chip">Primary language</span></div>' +
+          '<label class="cs-label">English title</label><div class="cs-english-title" data-cs-english-title>' + escapeHtml(lesson.title) + '</div>' +
+          '<label class="cs-label">English description</label><div class="cs-english-preview" data-cs-english-preview>' + readSourceHtml(lesson.body) + '</div>' +
+          '<small class="cs-muted">Edit English title in Metadata and the description in Curriculum.</small></div>' +
+          '<div class="cs-language-pane"><div class="cs-language-pane-head"><span class="cs-language-badge">KM</span><strong>Khmer (KM)</strong><span class="cs-mini-chip">CEFR ' + escapeHtml(lesson.cefr) + '</span></div>' +
+          '<label class="cs-label">Khmer lesson title</label>' + input('title_km',lesson.title_km,140,'lang="km" placeholder="ចំណងជើងមេរៀន"') +
+          '<label class="cs-label">Khmer description / objectives</label>' +
+          '<textarea class="cs-textarea" data-field="body_km" rows="7" maxlength="12000" lang="km" placeholder="សេចក្ដីពណ៌នាមេរៀន...">' + escapeHtml(lesson.body_km) + '</textarea>' +
+          '</div></div></div>' +
         '<div class="cs-lesson-media"><strong style="font-size:12px">Lesson media</strong>' +
         '<p class="cs-muted">Add optional image or video media. The featured cover is configured separately in the right sidebar.</p>' +
         '<div class="cs-media-toolbar"><label class="cs-btn cs-btn-outline cs-btn-xs">＋ Upload media' +
@@ -274,6 +293,9 @@ function exportRows() {
                 url:l.url.trim().slice(0,2048),
                 asset:l.asset || '',
                 language:l.language || '',
+                cefr:l.cefr || 'B2',
+                title_km:(l.title_km || '').trim().slice(0,140),
+                body_km:(l.body_km || '').trim().slice(0,12000),
                 feedback:l.feedback.trim().slice(0,1000),
                 questions:isQuiz?l.questions.map(q=>({
                     prompt:q.prompt.trim().slice(0,1000),
