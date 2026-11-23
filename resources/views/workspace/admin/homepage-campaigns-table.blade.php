@@ -17,6 +17,9 @@
             <span aria-hidden="true">＋</span> Create a new campaign
         </a>
     </div>
+    @if($errors->any())
+        <div role="alert" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200">{{ $errors->first() }}</div>
+    @endif
     @if(session('status'))
         <p class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold text-emerald-800" role="status">{{ session('status') }}</p>
     @endif
