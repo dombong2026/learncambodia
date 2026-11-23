@@ -4,6 +4,10 @@
 
 @push('public_styles')
     <link rel="stylesheet" href="{{ asset('css/home.css') }}?v=4">
+    @if(\App\Support\Appearance::value('home', 'hero_mode') === 'course_player')
+        <link rel="stylesheet" href="{{ asset('css/home-course-hero.css') }}?v=1">
+        <script defer src="{{ asset('js/home-course-hero.js') }}?v=1"></script>
+    @endif
 @endpush
 
 @section('content')
