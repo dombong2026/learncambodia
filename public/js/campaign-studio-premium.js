@@ -114,12 +114,12 @@ const questionCard = (q, idx) => (
     '<label class="cs-label">Answer choices · choose the correct option</label>' +
     '<div class="cs-options">' +
     q.options.map((o,i) =>
-        '<label class="cs-option"><input type="radio" data-question-correct name="cs-correct-' +
+        '<div class="cs-option"><input type="radio" data-question-correct name="cs-correct-' +
         idx + '-' + escapeHtml(q._uid || (q._uid=makeId())) + '" value="' + i +
         '"' + (Number(q.correct)===i?' checked':'') +
         ' aria-label="Correct choice ' + (i+1) + '">' +
         '<input class="cs-input" data-option-index="' + i + '" value="' +
-        escapeHtml(o) + '" maxlength="500" aria-label="Answer choice ' + (i+1) + '"></label>'
+        escapeHtml(o) + '" maxlength="500" aria-label="Answer choice ' + (i+1) + '"></div>'
     ).join('') + '</div>' +
     '<div class="cs-actions" style="justify-content:flex-start">' +
     buttons('add-choice','Add answer choice','＋ Choice') +
