@@ -31,6 +31,7 @@ class HomepageMultiCampaignTest extends TestCase
     private function routes(): void
     {
         Route::middleware('web')->group(function () {
+            Route::get('/_test/campaigns/editor', fn () => 'Editor')->name('admin.appearance.campaign.edit');
             Route::post('/_test/campaigns/save', [HomepageCampaignManagerController::class, 'save']);
             Route::get('/_test/campaigns/{campaign}/play', [HomepageCampaignManagerController::class, 'play']);
             Route::post('/_test/campaigns/{campaign}/check', [HomepageCampaignManagerController::class, 'check']);
@@ -53,7 +54,7 @@ class HomepageMultiCampaignTest extends TestCase
         $first = $this->actingAs($admin)->postJson('/_test/campaigns/save',
             $payload + ['title' => 'Grammar Quiz'])->assertOk()->json();
         $second = $this->postJson('/_test/campaigns/save',
-            $payload + ['title' => 'Grammar Exam', 'kind' => 'exam'])->assertOk()->json();
+            array_replace($payload, ['title' => 'Grammar Exam', 'kind' => 'exam']))->assertOk()->json();
         $this->assertNotSame($first['id'], $second['id']);
         $this->assertDatabaseCount('homepage_campaign_items', 2);
         $this->assertSame('draft', HomepageCampaignItem::findOrFail($first['id'])->status);
