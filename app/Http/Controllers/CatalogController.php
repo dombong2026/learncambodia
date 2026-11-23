@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\ContentEntry;
 use App\Models\PublicProfile;
 use App\Models\CourseInstructorAssignment;
+use App\Support\Appearance;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -31,9 +32,19 @@ class CatalogController extends Controller
         $publishedCategoryCount = Category::visibleInCatalog()->count();
         $publishedArticleCount = ContentEntry::query()->publishedArticles()->count();
 
+        $heroCourses = collect();
+        if (Appearance::value('home', 'hero_mode') === 'course_player') {
+            $preferred = (int) (Appearance::value('home', 'hero_course_id') ?? 0);
+            $heroCourses = Course::discoverable()
+                ->with(['featuredMedia', 'modules.lessons'])
+                ->orderByRaw('CASE WHEN id = ? THEN 0 ELSE 1 END', [$preferred])
+                ->orderByRaw("CASE WHEN featured_kind IN ('video', 'youtube', 'image') THEN 0 ELSE 1 END")
+                ->orderByDesc('published_at')->limit(6)->get();
+        }
+
         return view('home', compact(
             'featuredCategories','featuredCourses','latestArticles',
-            'featuredInstructors','publishedCourseCount',
+            'heroCourses','featuredInstructors','publishedCourseCount',
             'publishedCategoryCount','publishedArticleCount'
         ));
     }

@@ -1,0 +1,27 @@
+name: Course Player copy-deployment overlay QA
+
+on:
+  pull_request:
+    paths:
+      - 'support/operator/**'
+      - '.github/workflows/course-player-overlay-qa.yml'
+  push:
+    branches:
+      - feature/home-course-player-hero-20261123
+
+permissions:
+  contents: read
+
+jobs:
+  verify-overlay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          php --version
+          node --version
+          python3 --version
+      - name: Validate pinned source, PHP, JavaScript and homepage preservation
+        run: bash support/operator/learncambodia-course-player-overlay-selftest.sh

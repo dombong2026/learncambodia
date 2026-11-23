@@ -1,4 +1,5 @@
 import './featured-video';
+import './home-course-hero';
 import './lesson-media-player';
 import './policy-links';
 import './detail-title';
