@@ -12,7 +12,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'text:60', 'show_cefr' => 'bool'],
         'footer' => ['footer_note' => 'text:180'],
         'typography' => ['font_style' => 'font', 'text_scale' => 'scale'],
-        'home' => ['hero_title' => 'text:130', 'hero_intro' => 'text:480'],
+        'home' => ['hero_title' => 'text:130', 'hero_intro' => 'text:480', 'hero_mode' => 'hero_mode', 'hero_course_id' => 'course_id'],
         'about' => [
             'heading'=>'text:100','intro'=>'text:350',
             'mission_heading'=>'text:120','mission_body'=>'text:650',
@@ -121,7 +121,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'All categories', 'show_cefr' => true],
         'footer' => ['footer_note' => 'Independent preparation information. Third-party exams and qualifications belong to their respective organizations.'],
         'typography' => ['font_style' => 'system', 'text_scale' => 'normal'],
-        'home' => ['hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.'],
+        'home' => ['hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.', 'hero_mode' => 'default', 'hero_course_id' => null],
         'about' => [
             'heading'=>'About Learn Cambodia',
             'intro'=>'Learning pathways built for clarity, accessibility and responsible academic review.',
@@ -262,6 +262,8 @@ final class Appearance
                 $kind === 'bool' => ['required', 'boolean'],
                 $kind === 'font' => ['required', 'in:system,serif,mono'],
                 $kind === 'scale' => ['required', 'in:compact,normal,large'],
+                $kind === 'hero_mode' => ['nullable', 'in:default,course_player'],
+                $kind === 'course_id' => ['nullable', 'integer', 'exists:courses,id'],
                 default => ['nullable', 'string', 'max:'.explode(':', $kind)[1]],
             };
         }
