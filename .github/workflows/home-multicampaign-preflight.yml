@@ -43,7 +43,7 @@ jobs:
           js=Path('public/js/campaign-studio-premium.js').read_text()
           table=Path('resources/views/workspace/admin/homepage-campaigns-table.blade.php').read_text()
           hero=Path('resources/views/partials/homepage-hero-campaigns.blade.php').read_text()
-          for token in ['svgIcons','<svg viewBox','cs-campaign-title','cover_asset','data-campaign-id']:
+          for token in ['svgIcons','<svg viewBox','cs-campaign-title','cover_asset','root.dataset.campaignId']:
               assert token in js,token
           for token in ['paginate(10','campaign_page','Go to page','data-campaign-menu',
                        "name=\"action\" value=\"draft\"","name=\"action\" value=\"publish\"",
