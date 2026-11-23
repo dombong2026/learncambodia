@@ -1,0 +1,55 @@
+name: Campaign additive deployment preflight
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  campaign-installer-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate installer shell and embedded Python
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-interactive-deploy-v3-aapanel.sh
+          python3 - <<'PY'
+          from pathlib import Path
+          import ast
+          import re
+          path = Path('support/operator/learncambodia-campaign-interactive-deploy-v3-aapanel.sh')
+          source = path.read_text()
+          blocks = re.findall(r"<<'PY'\n(.*?)\nPY", source, re.S)
+          assert len(blocks) == 3, f'expected 3 embedded Python blocks, got {len(blocks)}'
+          for index, block in enumerate(blocks, 1):
+              ast.parse(block, filename=f'{path}:embedded-python-{index}')
+          required = [
+              'INTERACTIVE_BUILDER_URL=',
+              'EXISTING_CAMPAIGN_DATA_BACKUP=PASS',
+              'LEGACY_AND_INTERACTIVE_ROUTES=PASS',
+              'CAMPAIGN_DEPLOYMENT_ROLLBACK=RESTORED_EXISTING_FILES',
+              'interactive-campaign.cover',
+              'campaign.asset',
+              'campaign.check',
+          ]
+          for phrase in required:
+              assert phrase in source, f'missing expected safety or compatibility check: {phrase}'
+          forbidden = ['migrate:fresh','db:wipe','optimize:clear --force','composer install','git reset --hard']
+          for phrase in forbidden:
+              assert phrase not in source, f'dangerous installer operation: {phrase}'
+          print('CAMPAIGN_INSTALLER_EMBEDDED_PYTHON=PASS')
+          PY
+      - name: Validate standalone builder JavaScript
+        run: node --check public/js/home-campaign-interactive.js
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, dom, xml
+      - name: Validate new model and controller PHP
+        run: |
+          php -l app/Models/HomeCampaign.php
+          php -l app/Http/Controllers/Workspace/HomeCampaignController.php
+          php -l database/migrations/2026_11_23_000051_create_home_campaigns_table.php
