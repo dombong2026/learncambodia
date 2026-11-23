@@ -79,9 +79,9 @@ Route::post('/install/complete', [InstallController::class, 'complete'])
     ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
-Route::get('/campaigns/{campaign}', [HomeCampaignController::class, 'show'])->name('campaign.show');
-Route::get('/campaigns/{campaign}/cover', [HomeCampaignController::class, 'cover'])->name('campaign.cover');
-Route::post('/campaigns/{campaign}/lessons/{lessonId}/check', [HomeCampaignController::class, 'check'])->middleware('throttle:30,1')->name('campaign.check');
+Route::get('/interactive-campaigns/{campaign}', [HomeCampaignController::class, 'show'])->name('interactive-campaign.show');
+Route::get('/interactive-campaigns/{campaign}/cover', [HomeCampaignController::class, 'cover'])->name('interactive-campaign.cover');
+Route::post('/interactive-campaigns/{campaign}/lessons/{lessonId}/check', [HomeCampaignController::class, 'check'])->middleware('throttle:30,1')->name('interactive-campaign.check');
 Route::get('/brand/assets/{slot}/{version}', [BrandAssetController::class, 'image'])
     ->where('version', '[0-9A-HJKMNP-TV-Z]{26}')->name('brand.asset');
 Route::get('/brand/platform.webmanifest', [BrandAssetController::class, 'manifest'])->name('brand.manifest');
