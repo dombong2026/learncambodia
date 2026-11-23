@@ -123,6 +123,8 @@ class HomeCampaignController extends Controller
                     'explanation_html' => EditorHtml::clean($this->short($lesson['explanation_html'] ?? '', 20000), true) ?? '',
                     'feedback_correct' => $this->short($lesson['feedback_correct'] ?? '', 600),
                     'feedback_incorrect' => $this->short($lesson['feedback_incorrect'] ?? '', 600),
+                    'media_kind' => in_array(($lesson['media_kind'] ?? ''), ['', 'image', 'audio', 'video', 'youtube'], true) ? ($lesson['media_kind'] ?? '') : '',
+                    'media_url' => $this->safeMediaUrl($lesson['media_url'] ?? ''),
                 ];
 
                 if ($type === 'multiple_choice') {
@@ -166,6 +168,15 @@ class HomeCampaignController extends Controller
         }
 
         return $modules;
+    }
+
+    private function safeMediaUrl(mixed $url): string
+    {
+        $value = $this->short($url, 2048);
+        if ($value !== '' && (!filter_var($value, FILTER_VALIDATE_URL) || parse_url($value, PHP_URL_SCHEME) !== 'https')) {
+            $this->invalid('Media links must be valid HTTPS URLs.');
+        }
+        return $value;
     }
 
     private function short(mixed $value, int $max): string
