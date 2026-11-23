@@ -38,6 +38,7 @@ use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
+use App\Http\Controllers\Workspace\HomeCampaignController;
 use App\Http\Controllers\Workspace\AdminBrandingController;
 use App\Http\Controllers\Workspace\AdminSystemSettingsController;
 use App\Http\Controllers\Workspace\AdminReviewController;
@@ -78,6 +79,9 @@ Route::post('/install/complete', [InstallController::class, 'complete'])
     ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
+Route::get('/interactive-campaigns/{campaign}', [HomeCampaignController::class, 'show'])->name('interactive-campaign.show');
+Route::get('/interactive-campaigns/{campaign}/cover', [HomeCampaignController::class, 'cover'])->name('interactive-campaign.cover');
+Route::post('/interactive-campaigns/{campaign}/lessons/{lessonId}/check', [HomeCampaignController::class, 'check'])->middleware('throttle:30,1')->name('interactive-campaign.check');
 Route::get('/brand/assets/{slot}/{version}', [BrandAssetController::class, 'image'])
     ->where('version', '[0-9A-HJKMNP-TV-Z]{26}')->name('brand.asset');
 Route::get('/brand/platform.webmanifest', [BrandAssetController::class, 'manifest'])->name('brand.manifest');
@@ -329,6 +333,9 @@ Route::middleware('auth')->group(function (): void {
             Route::patch('/{course}/modules/{module}/lessons/{lesson}', [AdminCurriculumController::class, 'updateLesson'])->name('lessons.update');
             Route::delete('/{course}/modules/{module}/lessons/{lesson}', [AdminCurriculumController::class, 'destroyLesson'])->name('lessons.destroy');
         });
+
+        Route::get('/appearance/home/campaign-builder/interactive', [HomeCampaignController::class, 'builder'])->name('campaign.builder');
+        Route::post('/appearance/home/campaign-builder/interactive', [HomeCampaignController::class, 'save'])->name('campaign.save');
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
             Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\HomeCampaign;
 use App\Models\CefrLevel;
 use App\Models\Course;
 use App\Models\ContentEntry;
@@ -24,6 +25,7 @@ class CatalogController extends Controller
         $featuredCourses = Course::discoverable()->with(['category', 'featuredMedia'])
             ->withCount('lessons')->orderByDesc('published_at')->limit(6)->get();
         $latestArticles = ContentEntry::query()->publishedArticles()->orderByDesc('id')->limit(3)->get();
+        $featuredCampaigns = HomeCampaign::published()->latest('published_at')->limit(3)->get();
 
         $featuredInstructors = PublicProfile::visible()->where('kind','instructor')
             ->orderByDesc('published_at')->limit(4)->get();
@@ -32,7 +34,7 @@ class CatalogController extends Controller
         $publishedArticleCount = ContentEntry::query()->publishedArticles()->count();
 
         return view('home', compact(
-            'featuredCategories','featuredCourses','latestArticles',
+            'featuredCategories','featuredCourses','latestArticles','featuredCampaigns',
             'featuredInstructors','publishedCourseCount',
             'publishedCategoryCount','publishedArticleCount'
         ));

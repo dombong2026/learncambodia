@@ -37,6 +37,10 @@ jobs:
         run: git diff --exit-code -- composer.lock package-lock.json
       - name: TypeScript checks and frontend build
         run: npm run build
+      - name: Validate additive Campaign Builder release script and standalone JavaScript
+        run: |
+          bash -n support/operator/learncambodia-campaign-interactive-deploy-aapanel.sh
+          node --check public/js/home-campaign-interactive.js
       - name: Prepare isolated test environment
         run: |
           cp .env.example .env
