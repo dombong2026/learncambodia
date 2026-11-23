@@ -113,5 +113,5 @@
 
     <script type="application/json" id="cs-initial-rows">@json($rows ?? [])</script>
 </section>
-<script defer src="{{ asset('js/campaign-studio-premium.js') }}"></script>
+<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=multi-20261123"></script>
 @endsection
