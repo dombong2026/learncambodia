@@ -12,7 +12,7 @@ function back(){
     player.hidden=true;chooser.hidden=false;questions=[];current=0;score=0;checkUrl='';busy=false;report('');
 }
 function question(){
-    if(!questions.length){report('This campaign has no available Quiz or Exam questions.');back();return}
+    if(!questions.length){back();report('This campaign has no available Quiz or Exam questions.');return}
     const q=questions[current];
     get('hc-progress').textContent=(current+1)+' / '+questions.length;
     get('hc-lesson').textContent=(q.module||'')+(q.lesson?' · '+q.lesson:'');
