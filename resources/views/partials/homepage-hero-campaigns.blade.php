@@ -5,7 +5,7 @@
         ->get(['id','slug','title','kind','cover_asset','published_at']);
 @endphp
 @if($heroCampaigns->isNotEmpty())
-<div id="hc-hero" class="relative z-10 mx-auto -mt-3 flex w-full max-w-7xl justify-end px-4 pb-8 sm:px-6 lg:px-8">
+<div id="hc-hero" data-csrf="{{ csrf_token() }}" class="relative z-10 mx-auto -mt-3 flex w-full max-w-7xl justify-end px-4 pb-8 sm:px-6 lg:px-8">
     <aside class="hc-panel w-full max-w-[470px] overflow-hidden rounded-2xl border border-white/20 bg-[#112f54]/95 p-4 text-white shadow-xl backdrop-blur-md sm:p-5" aria-label="Interactive homepage Quiz and Exam campaigns">
         <div id="hc-chooser">
             <div class="mb-4 flex items-center justify-between gap-2">
