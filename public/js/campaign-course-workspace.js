@@ -8,6 +8,7 @@ const byId = id => document.getElementById(id);
 if (!list || !tree) return;
 let activeModule = 0, activeLesson = 0, activeTab = 'curriculum';
 let pendingSelection = null, dragSource = null, scheduled = false;
+const collapsedUnits = new Set();
 const escaped = value => String(value ?? '').replace(/[&<>"']/g, x =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const modules = () => [...list.querySelectorAll(':scope > .cs-module')];
@@ -62,10 +63,11 @@ function treeMarkup() {
         const entries = lessons(mod);
         let html = '<div class="cs-tree-unit" data-tree-module="'+mi+'"><div class="cs-tree-unit-heading">' +
             '<span class="cs-tree-drag" data-cs-drag-module="'+mi+'" draggable="true" title="Drag to reorder unit" aria-label="Drag unit '+(mi+1)+'">⠿</span>' +
+            '<button type="button" class="cs-tree-collapse" data-cs-toggle-unit="'+mi+'" aria-expanded="'+(!collapsedUnits.has(mi))+'" aria-label="Toggle Unit '+(mi+1)+' lessons">'+(collapsedUnits.has(mi)?'▸':'⌄')+'</button>' +
             '<button type="button" class="cs-tree-unit-button" data-cs-select-module="'+mi+'">' +
             '<span class="cs-tree-folder" aria-hidden="true">▣</span><span class="cs-tree-unit-name">Unit '+(mi+1)+': '+escaped(titleOf(mod)||'Untitled unit')+'</span></button>' +
             '<button type="button" class="cs-tree-add" data-cs-add-lesson="'+mi+'" title="Add lesson" aria-label="Add lesson to unit '+(mi+1)+'">＋</button></div>' +
-            '<div class="cs-tree-lessons">';
+            '<div class="cs-tree-lessons"'+(collapsedUnits.has(mi)?' hidden':'')+'>';
         entries.forEach((lesson,li)=>{
             const selected = mi===activeModule && li===activeLesson;
             html += '<div class="cs-tree-lesson'+(selected?' is-active':'')+'" data-tree-lesson="'+mi+'-'+li+'">' +
@@ -126,7 +128,7 @@ function sync(){
     setActivePanel();
 }
 function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(sync)}
-function select(mi,li){activeModule=mi;activeLesson=li;sync()}
+function select(mi,li){activeModule=mi;activeLesson=li;collapsedUnits.delete(mi);sync()}
 function setTab(tab){
     if(!['metadata','curriculum','assessments','translation'].includes(tab))return;
     activeTab=tab;setActivePanel();
@@ -136,9 +138,15 @@ tree.addEventListener('click',event=>{
     const unit=event.target.closest('[data-cs-select-module]');
     const lesson=event.target.closest('[data-cs-select-lesson]');
     const plus=event.target.closest('[data-cs-add-lesson]');
-    if(plus){
+    const toggle=event.target.closest('[data-cs-toggle-unit]');
+    if(toggle){
+        const mi=Number(toggle.dataset.csToggleUnit);
+        if(collapsedUnits.has(mi))collapsedUnits.delete(mi);else collapsedUnits.add(mi);
+        sync();
+    }else if(plus){
         const mi=Number(plus.dataset.csAddLesson), mod=moduleAt(mi);
         pendingSelection={mi,li:lessons(mod).length};
+        collapsedUnits.delete(mi);
         mod?.querySelector(':scope > .cs-module-body > button[data-action="add-lesson"]')?.click();
         schedule();
     }else if(lesson){
