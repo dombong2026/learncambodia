@@ -23,10 +23,8 @@ final class HomepageCampaignManagerController extends Controller
     public function edit(Request $request): View
     {
         $this->authorizeAdmin($request);
-        $campaign = $request->boolean('new') ? null
-            : ($request->filled('id')
-                ? HomepageCampaignItem::query()->findOrFail($request->integer('id'))
-                : HomepageCampaignItem::query()->latest('updated_at')->first());
+        $campaign = $request->filled('id')
+            ? HomepageCampaignItem::query()->findOrFail($request->integer('id')) : null;
 
         return view('workspace.admin.campaign-studio', [
             'role' => 'admin',
