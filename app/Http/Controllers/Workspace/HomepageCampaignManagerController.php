@@ -141,11 +141,11 @@ final class HomepageCampaignManagerController extends Controller
                 $item->status = 'published';
                 $item->published_at = now();
             } else {
+                $hadDraft = $item->draft !== null;
                 $item->draft = $item->draft ?? $item->published ?? [];
                 $item->title = $item->draft_title ?? $item->title;
                 $item->kind = $item->draft_kind ?? $item->kind;
-                $item->cover_asset = $item->draft !== null && $item->draft_cover_asset !== null
-                    ? $item->draft_cover_asset : $item->cover_asset;
+                if ($hadDraft) $item->cover_asset = $item->draft_cover_asset;
                 $item->draft_title = null;
                 $item->draft_kind = null;
                 $item->draft_cover_asset = null;
