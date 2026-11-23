@@ -5,6 +5,7 @@
         ->paginate(10, ['*'], 'campaign_page')
         ->withQueryString();
 @endphp
+<link rel="stylesheet" href="{{ asset('css/homepage-campaigns-theme.css') }}?v=1" data-hcm-theme-css>
 <section class="mt-6 min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-[#132d4a] sm:p-6" id="homepage-campaign-management">
     <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -13,7 +14,7 @@
             <p class="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-300">Manage individual campaigns shown in the homepage hero. 10 campaigns per page.</p>
         </div>
         <a href="{{ route('admin.appearance.campaign.edit', ['new' => 1, 'lang' => 'en']) }}"
-            class="inline-flex items-center gap-2 rounded-xl bg-[#17487c] px-4 py-2.5 text-xs font-extrabold text-white hover:bg-[#2565a0]">
+            data-hcm-create class="inline-flex items-center gap-2 rounded-xl bg-[#17487c] px-4 py-2.5 text-xs font-extrabold text-white hover:bg-[#2565a0]">
             <span aria-hidden="true">＋</span> Create a new campaign
         </a>
     </div>
@@ -61,7 +62,7 @@
                         <td class="px-4 py-3"><span class="rounded-lg border border-slate-200 px-2 py-1 font-bold uppercase dark:border-slate-700">{{ $campaign->kind }}</span></td>
                         <td class="px-4 py-3 font-semibold">{{ count($rows) }} / {{ $questions }}</td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold {{ $campaign->status === 'published' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
+                            <span data-campaign-status="{{ $campaign->status }}" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold {{ $campaign->status === 'published' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300' }}">
                                 <span aria-hidden="true">●</span> {{ ucfirst($campaign->status) }}
                             </span>
                             @if($campaign->draft !== null && $campaign->status === 'published')
