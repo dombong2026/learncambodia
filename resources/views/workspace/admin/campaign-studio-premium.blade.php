@@ -6,8 +6,8 @@
 @endpush
 @section('content')
 @php
-    $coverAsset = $campaign?->cover_asset ?? '';
-    $coverKind = $campaign?->kind ?? 'quiz';
+    $coverAsset = $campaign?->draft_cover_asset ?? $campaign?->cover_asset ?? '';
+    $coverKind = $campaign?->draft_kind ?? $campaign?->kind ?? 'quiz';
 @endphp
 <section class="cs-shell" id="cs-builder"
     data-save-url="{{ route('admin.appearance.campaign.save') }}"
@@ -34,7 +34,7 @@
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
     <div class="cs-card" style="margin-bottom:17px">
         <label class="cs-label" for="cs-campaign-title">Campaign title</label>
-        <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->title ?? '' }}" placeholder="e.g. English Grammar — 20 Questions">
+        <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->draft_title ?? $campaign?->title ?? '' }}" placeholder="e.g. English Grammar — 20 Questions">
         <p class="cs-note">Create as many independent campaigns as you need. Each has its own cover, questions, and publication status.</p>
     </div>
 
@@ -72,7 +72,7 @@
                         <strong>No cover selected</strong>
                         <small>Upload a 16:9 image</small>
                     </div>
-                    <img id="cs-cover-image" src="{{ $campaign?->cover_asset ? route('campaign-manager.cover', $campaign) : '' }}" alt="Featured campaign cover" @if(!$coverAsset) hidden @endif>
+                    <img id="cs-cover-image" src="{{ $coverAsset ? route('campaign.asset', $coverAsset) : '' }}" alt="Featured campaign cover" @if(!$coverAsset) hidden @endif>
                 </div>
                 <label class="cs-label" for="cs-cover-kind">Featured content type</label>
                 <select id="cs-cover-kind" class="cs-control">
