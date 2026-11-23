@@ -51,7 +51,7 @@ class HomeCampaignBuilderTest extends TestCase
         Storage::fake('local');
         $admin = User::factory()->create(['role' => 'admin']);
         $student = User::factory()->create(['role' => 'student']);
-        $path = '/dashboard/appearance/home/campaign-builder';
+        $path = '/dashboard/appearance/home/campaign-builder/interactive';
 
         $this->actingAs($student)->get($path)->assertForbidden();
         $this->actingAs($admin)->get($path)->assertOk()->assertSee('Publish campaign');
@@ -94,7 +94,7 @@ class HomeCampaignBuilderTest extends TestCase
         Storage::fake('local');
         $admin = User::factory()->create(['role' => 'admin']);
         $student = User::factory()->create(['role' => 'student']);
-        $endpoint = '/dashboard/appearance/home/campaign-builder';
+        $endpoint = '/dashboard/appearance/home/campaign-builder/interactive';
 
         $this->actingAs($admin)->post($endpoint, [
             'title' => 'Saved English Quiz', 'kind' => 'quiz',
