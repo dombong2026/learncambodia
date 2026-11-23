@@ -26,7 +26,7 @@
                     @elseif($type === 'course_id')
                         <select id="appearance-{{ $key }}" name="{{ $key }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
                             <option value="">Automatically choose the newest published course with media</option>
-                            @foreach(($promoCourses ?? \App\Models\Course::discoverable()->orderByDesc('published_at')->limit(60)->get(['id', 'title'])) as $promoCourse)
+                            @foreach($promoCourses as $promoCourse)
                                 <option value="{{ $promoCourse->id }}" @selected((string) old($key, $settings[$key] ?? '') === (string) $promoCourse->id)>{{ $promoCourse->title }}</option>
                             @endforeach
                         </select>
