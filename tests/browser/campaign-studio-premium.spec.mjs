@@ -53,6 +53,7 @@ function fixture() {
 }
 
 test('campaign studio preserves lessons, allows collapsible modules, and numbers questions', async ({ page }) => {
+  await page.route('**/up', route => route.fulfill({ status: 200, contentType:'text/html', body:'OK' }));
   await page.goto('/up');
   await page.setContent(fixture());
   await page.addScriptTag({ path: 'public/js/campaign-studio-premium.js' });
@@ -84,6 +85,7 @@ test('campaign studio preserves lessons, allows collapsible modules, and numbers
 
 test('campaign studio draft submission keeps correct answer keys and explanations', async ({ page }) => {
   const submissions=[];
+  await page.route('**/up', route => route.fulfill({ status: 200, contentType:'text/html', body:'OK' }));
   await page.goto('/up');
   await page.route('**/mock-campaign-save', async route => {
     submissions.push(JSON.parse(route.request().postData()));
