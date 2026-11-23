@@ -3,6 +3,12 @@
 @section('workspace_compact', '1')
 @push('workspace_styles')
 <link rel="stylesheet" href="{{ asset('css/campaign-studio-premium.css') }}">
+<style>
+#cs-builder .cs-editor-toolbar button{display:inline-grid;place-items:center;width:34px;height:34px;padding:6px;border:1px solid transparent;border-radius:8px;transition:background .15s,color .15s}
+#cs-builder .cs-editor-toolbar button:hover{background:rgba(87,134,186,.16);border-color:rgba(116,150,187,.3)}
+#cs-builder .cs-editor-toolbar button svg{display:block;flex:none;width:17px;height:17px;stroke:currentColor}
+#cs-builder .cs-editor-toolbar button:focus-visible{outline:2px solid #f0c36c;outline-offset:2px}
+</style>
 @endpush
 @section('content')
 @php
