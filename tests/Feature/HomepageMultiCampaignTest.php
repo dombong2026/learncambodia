@@ -37,6 +37,7 @@ class HomepageMultiCampaignTest extends TestCase
             Route::post('/_test/campaigns/{campaign}/check', [HomepageCampaignManagerController::class, 'check']);
             Route::post('/_test/campaigns/{campaign}/status', [HomepageCampaignManagerController::class, 'status']);
         });
+        Route::getRoutes()->refreshNameLookups();
     }
 
     public function test_multiple_independent_campaign_drafts_do_not_overwrite_each_other(): void
