@@ -139,17 +139,19 @@ done <<< "$MANIFEST"
 APPLY_STARTED=1
 while read -r old new path; do
   [[ -n "$path" ]] || continue
-  mkdir -p -- "$SITE/$(dirname "$path")"
+  target="$SITE/$path"
+  mkdir -p -- "$(dirname "$target")"
+  temp="$(mktemp "$target.XXXXXXXX")"
+  cp -- "$STAGE/$path" "$temp"
   if [[ "$old" == '-' ]]; then
-    cp -- "$STAGE/$path" "$SITE/$path"
-    chmod 644 -- "$SITE/$path"
-    chown --reference="$SITE/resources/views/home.blade.php" "$SITE/$path"
+    chmod 644 -- "$temp"
+    chown --reference="$SITE/resources/views/home.blade.php" "$temp"
   else
-    cp -- "$STAGE/$path" "$SITE/$path"
-    chmod --reference="$BACKUP/$path" "$SITE/$path"
-    chown --reference="$BACKUP/$path" "$SITE/$path"
+    chmod --reference="$BACKUP/$path" "$temp"
+    chown --reference="$BACKUP/$path" "$temp"
   fi
-  if [[ "$(git hash-object -- "$SITE/$path")" != "$new" ]]; then
+  mv -f -- "$temp" "$target"
+  if [[ "$(git hash-object -- "$target")" != "$new" ]]; then
     echo "ERROR: installed hash mismatch at $path" >&2
     exit 1
   fi
