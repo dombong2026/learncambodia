@@ -12,7 +12,8 @@
 @endpush
 @section('content')
 @php
-    $coverAsset = $campaign?->draft_cover_asset ?? $campaign?->cover_asset ?? '';
+    $coverAsset = $campaign && $campaign->draft !== null
+        ? ($campaign->draft_cover_asset ?? '') : ($campaign?->cover_asset ?? '');
     $coverKind = $campaign?->draft_kind ?? $campaign?->kind ?? 'quiz';
 @endphp
 <section class="cs-shell" id="cs-builder"
