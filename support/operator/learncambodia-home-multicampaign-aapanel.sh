@@ -2,6 +2,8 @@
 # Additive, pinned multi-campaign upgrade. Previous singleton tables remain intact.
 set -Eeuo pipefail
 umask 077
+# Print the failing line for any early, read-only prerequisite failure.
+trap 'code=$?; printf "PREDEPLOY_CHECK_FAILED line=%s exit=%s\n" "$LINENO" "$code" >&2' ERR
 REPO=dombong2026/learncambodia
 RELEASE="$1"
 [[ "$RELEASE" =~ ^[a-f0-9]{40}$ ]] || { echo INVALID_RELEASE_SHA; exit 2; }
@@ -11,7 +13,14 @@ LIVE=/www/wwwroot/learncambodia.com
 PHP=/www/server/php/85/bin/php
 BASE=68feceeb9c3e40c2cfef9c6a678189a2a5fd2385
 test -x "$PHP" && test "$("$PHP" -r 'echo PHP_VERSION_ID;')" -ge 80401
-for binary in gh node python3 curl flock runuser; do command -v "$binary" >/dev/null; done
+for binary in gh python3 curl flock runuser; do
+  command -v "$binary" >/dev/null || { echo "MISSING_REQUIRED_TOOL=$binary" >&2; exit 2; }
+done
+if command -v node >/dev/null 2>&1; then
+  echo "NODE_ON_SERVER=AVAILABLE"
+else
+  echo "NODE_ON_SERVER=ABSENT_USING_GITHUB_CI_VALIDATED_JS"
+fi
 test -f "$LIVE/artisan"
 test -f "$LIVE/resources/views/workspace/admin/home-studio-settings.blade.php"
 test -f "$LIVE/resources/views/workspace/admin/campaign-studio.blade.php"
@@ -59,8 +68,13 @@ while IFS= read -r p; do
 done <<< "$NEW"
 download resources/views/workspace/admin/campaign-studio-premium.blade.php "$RELEASE" "$STAGE/source/new-studio.blade.php"
 download public/js/campaign-studio-premium.js "$RELEASE" "$STAGE/source/new-studio.js"
-node --check "$STAGE/source/new-studio.js"
-node --check "$STAGE/source/public/js/homepage-hero-campaigns.js"
+if command -v node >/dev/null 2>&1; then
+  node --check "$STAGE/source/new-studio.js"
+  node --check "$STAGE/source/public/js/homepage-hero-campaigns.js"
+  echo "LOCAL_JAVASCRIPT_SYNTAX=PASS"
+else
+  echo "LOCAL_JAVASCRIPT_SYNTAX=SKIPPED_GITHUB_CI_REQUIRED"
+fi
 download resources/views/workspace/admin/campaign-studio-premium.blade.php "$BASE" "$STAGE/base/studio.blade.php"
 download public/js/campaign-studio-premium.js "$BASE" "$STAGE/base/studio.js"
 cmp -s "$STAGE/base/studio.blade.php" "$LIVE/resources/views/workspace/admin/campaign-studio.blade.php" || { echo LIVE_STUDIO_DRIFT; exit 2; }
