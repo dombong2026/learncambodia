@@ -69,6 +69,10 @@ test('three-column course outline selects lessons and keeps translated fields on
     });
     await mount(page);
     await expect(page.locator('#cs-course-tree .cs-tree-lesson')).toHaveCount(2);
+    await page.locator('[data-cs-toggle-unit="0"]').click();
+    await expect(page.locator('[data-tree-module="0"] .cs-tree-lessons')).toBeHidden();
+    await page.locator('[data-cs-toggle-unit="0"]').click();
+    await expect(page.locator('[data-tree-module="0"] .cs-tree-lessons')).toBeVisible();
     await expect(page.locator('#cs-edit-title')).toHaveText('Present simple');
     await expect(page.locator('#cs-modules-count')).toHaveText('1');
     await expect(page.locator('#cs-lessons-count')).toHaveText('2');
