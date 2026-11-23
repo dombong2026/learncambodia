@@ -16,6 +16,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           bash -n support/operator/learncambodia-home-multicampaign-aapanel.sh
+          bash -n support/operator/learncambodia-campaign-theme-hotfix-aapanel.sh
           python3 - <<'PY'
           import ast,re
           from pathlib import Path
@@ -36,6 +37,11 @@ jobs:
           ]: assert needle in s, needle
           for bad in ["migrate:fresh","db:wipe","git reset --hard","chmod -R 777"]:
               assert bad not in s,bad
+          theme=Path('support/operator/learncambodia-campaign-theme-hotfix-aapanel.sh').read_text()
+          for needle in ['LIVE_CAMPAIGN_TABLE_DRIFT', 'THEME_HOTFIX_ROLLBACK=PREVIOUS_TABLE_RESTORED',
+                         'runuser -u www -- "$PHP" artisan view:cache',
+                         'THEME_HOTFIX=PASS', 'THEME_CSS_HTTP=']:
+              assert needle in theme,needle
           print('INSTALLER_SOURCE_GATES=PASS')
           PY
       - name: Validate standalone JavaScript and UI source contracts
