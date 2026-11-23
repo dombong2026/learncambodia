@@ -1,0 +1,68 @@
+name: Campaign Course Workspace acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate pinned aaPanel release and embedded PHP
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-course-workspace-aapanel.sh
+          php -l app/Http/Controllers/Workspace/HomepageCampaignManagerController.php
+          node --check public/js/campaign-studio-premium.js
+          node --check public/js/campaign-course-workspace.js
+          python3 - <<'PY'
+          from pathlib import Path
+          shell=Path('support/operator/learncambodia-campaign-course-workspace-aapanel.sh').read_text()
+          view=Path('resources/views/workspace/admin/campaign-course-workspace.blade.php').read_text()
+          js=Path('public/js/campaign-course-workspace.js').read_text()
+          engine=Path('public/js/campaign-studio-premium.js').read_text()
+          controller=Path('app/Http/Controllers/Workspace/HomepageCampaignManagerController.php').read_text()
+          css=Path('public/css/campaign-course-workspace.css').read_text()
+          for token in ['COURSE_WORKSPACE_DEPLOY=PASS', 'EXISTING_EDITOR_BASELINE=PASS',
+                        'COURSE_UI_ROLLBACK=PREVIOUS_EDITOR_RESTORED',
+                        'runuser -u www -- "$PHP" artisan view:cache', 'CAMPAIGN_DATA_CHANGES=NONE']:
+            assert token in shell, token
+          for prohibited in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert prohibited not in shell, prohibited
+          for token in ['id="cs-course-tree"', 'data-cs-tab="curriculum"',
+                        'data-cs-tab="assessments"', 'data-cs-tab="translation"',
+                        'id="cs-save-draft"', 'id="cs-publish"', 'cs-initial-rows']:
+            assert token in view, token
+          for token in ['decorateLesson', 'data-cs-select-lesson', 'data-cs-panel', 'dragstart', 'data-cs-add-lesson']:
+            assert token in js, token
+          for token in ['title_km', 'body_km', 'cefr']:
+            assert token in engine and token in controller, token
+          assert 'html.dark #cs-builder.cs-course-workspace' in css
+          print('CAMPAIGN_WORKSPACE_SOURCE_SAFETY=PASS')
+          PY
+  desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Browser smoke — focus, tabs, translations, correct answers and themes
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-course-workspace.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
