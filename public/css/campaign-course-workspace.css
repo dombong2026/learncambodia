@@ -1,0 +1,202 @@
+/* LearnCambodia Course-style Campaign Builder.
+   Standalone scoped CSS: no Vite rebuild or global design-system overrides. */
+#cs-builder.cs-course-workspace{
+  --course-surface:#ffffff;--course-surface-raised:#f6f8fc;--course-surface-deep:#edf3f8;
+  --course-fg:#182f49;--course-muted:#59728d;--course-line:#d8e2ee;
+  --course-blue:#155596;--course-blue-hover:#2074c0;--course-teal:#007e85;
+  --course-selected:#e6f2fc;--course-green:#137b53;
+  color:var(--course-fg);font-family:inherit;max-width:none;
+}
+html.dark #cs-builder.cs-course-workspace{
+  --course-surface:#142940;--course-surface-raised:#0e2238;--course-surface-deep:#0b1d31;
+  --course-fg:#e9f1fa;--course-muted:#b2c4d7;--course-line:#36516c;
+  --course-blue:#2562a1;--course-blue-hover:#307fce;--course-teal:#19c4c6;
+  --course-selected:#204568;--course-green:#5de1b0;
+}
+#cs-builder.cs-course-workspace *{box-sizing:border-box}
+#cs-builder.cs-course-workspace .cs-course-header{
+  display:flex;align-items:center;flex-wrap:wrap;gap:13px 21px;
+  border:1px solid var(--course-line);border-radius:16px;
+  background:linear-gradient(110deg,var(--course-surface-deep),var(--course-surface));
+  padding:16px 20px;margin-bottom:16px;
+  box-shadow:0 6px 22px rgba(6,24,48,.08);
+}
+#cs-builder .cs-course-brand{display:flex;align-items:center;flex:none;gap:9px;
+  font-size:15px;font-weight:900;white-space:nowrap;color:var(--course-fg)}
+#cs-builder .cs-course-brandmark{color:var(--course-teal);display:grid;place-items:center}
+#cs-builder .cs-brand-accent{color:var(--course-teal)}
+#cs-builder .cs-course-header-title{min-width:180px;flex:1;border-left:1px solid var(--course-line);padding-left:20px}
+#cs-builder .cs-course-label{display:block;font-size:9px;letter-spacing:.13em;color:var(--course-teal);font-weight:900}
+#cs-builder .cs-course-header-title h1{font-size:clamp(17px,1.5vw,21px);font-weight:850;color:var(--course-fg);
+  line-height:1.35;margin:2px 0;overflow-wrap:anywhere}
+#cs-builder .cs-course-header-title h1>span:first-child{color:var(--course-muted);font-weight:400}
+#cs-builder .cs-course-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#cs-builder .cs-course-saved{display:inline-flex;gap:6px;align-items:center;color:var(--course-green);
+  font-size:11px;font-weight:750;max-width:230px;line-height:1.4}
+#cs-builder .cs-course-exit{font-size:11px;color:var(--course-muted);text-decoration:none;font-weight:800;
+  border:1px solid var(--course-line);border-radius:9px;padding:9px 12px}
+#cs-builder .cs-course-exit:hover{background:var(--course-surface-raised)}
+#cs-builder .cs-layout.cs-course-grid{
+  display:grid;grid-template-columns:minmax(198px,245px) minmax(0,1fr) minmax(235px,295px);
+  gap:15px;align-items:start;
+}
+#cs-builder .cs-course-outline,#cs-builder .cs-course-editor,#cs-builder .cs-course-workflow .cs-card{
+  background:var(--course-surface);border:1px solid var(--course-line);border-radius:15px;
+  box-shadow:0 8px 22px rgba(6,24,48,.045);
+}
+#cs-builder .cs-course-outline{position:sticky;top:80px;min-height:635px;overflow:hidden;display:flex;flex-direction:column}
+#cs-builder .cs-course-outline-heading{display:flex;gap:8px;align-items:center;justify-content:space-between;
+  padding:17px 15px;border-bottom:1px solid var(--course-line)}
+#cs-builder .cs-section-label{display:flex;align-items:center;gap:8px;min-width:0;color:var(--course-teal)}
+#cs-builder .cs-section-label h2,#cs-builder .cs-section-label h3{margin:0;font-size:14px;
+  font-weight:850;color:var(--course-fg)}
+#cs-builder .cs-mini-chip{font-size:10px;border:1px solid var(--course-line);background:var(--course-surface-deep);
+  color:var(--course-muted);border-radius:100px;padding:5px 8px;white-space:nowrap;font-weight:850}
+#cs-builder .cs-course-outline-help{padding:11px 15px;color:var(--course-muted);font-size:11px;line-height:1.6;
+  border-bottom:1px solid var(--course-line)}
+#cs-builder .cs-course-tree{padding:10px 8px 20px;flex:1;min-height:280px;overflow-y:auto}
+#cs-builder .cs-tree-unit{padding:5px 2px 14px;border-bottom:1px solid var(--course-line)}
+#cs-builder .cs-tree-unit:last-child{border:0}
+#cs-builder .cs-tree-unit-heading{display:flex;gap:5px;align-items:flex-start}
+#cs-builder .cs-tree-drag{cursor:grab;user-select:none;touch-action:none;color:var(--course-muted);font-size:16px;
+  width:16px;min-width:16px;text-align:center;line-height:29px}
+#cs-builder .cs-tree-drag:active{cursor:grabbing}
+#cs-builder .cs-tree-unit-button,#cs-builder .cs-tree-lesson-button{min-width:0;flex:1;text-align:left;border:0;
+  background:transparent;color:var(--course-fg);font-weight:700;font-size:11px;padding:7px 3px;border-radius:8px;cursor:pointer;
+  overflow-wrap:anywhere;line-height:1.55}
+#cs-builder .cs-tree-unit-button{display:flex;gap:7px}
+#cs-builder .cs-tree-unit-button:hover,#cs-builder .cs-tree-lesson-button:hover{background:var(--course-surface-raised)}
+#cs-builder .cs-tree-folder{color:var(--course-teal)}
+#cs-builder .cs-tree-add{border:1px solid var(--course-line);background:var(--course-surface-raised);
+  color:var(--course-fg);border-radius:8px;width:27px;height:27px;flex:none;cursor:pointer}
+#cs-builder .cs-tree-add:hover{border-color:var(--course-teal)}
+#cs-builder .cs-tree-lessons{padding-left:10px}
+#cs-builder .cs-tree-lesson{display:flex;gap:5px;align-items:center;margin:3px 0;border:1px solid transparent;border-radius:8px}
+#cs-builder .cs-tree-lesson.is-active{background:var(--course-selected);border-color:var(--course-line)}
+#cs-builder .cs-tree-lesson.is-active .cs-tree-lesson-button{color:var(--course-blue);font-weight:850}
+html.dark #cs-builder .cs-tree-lesson.is-active .cs-tree-lesson-button{color:#b0daff}
+#cs-builder .cs-tree-lesson-button{display:flex;flex-wrap:wrap;align-items:center;gap:3px 6px}
+#cs-builder .cs-tree-lesson-title{min-width:0;flex:1}
+#cs-builder .cs-tree-type{font-size:9px;text-transform:uppercase;color:var(--course-teal);letter-spacing:.05em}
+#cs-builder .cs-tree-empty{display:block;padding:11px;color:var(--course-muted);font-size:11px}
+#cs-builder .cs-course-outline-footer{padding:12px;border-top:1px solid var(--course-line);background:var(--course-surface-raised)}
+#cs-builder .cs-course-editor{min-width:0;overflow:hidden}
+#cs-builder .cs-course-editor-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:10px;padding:17px 18px;background:linear-gradient(100deg,var(--course-surface-deep),var(--course-surface))}
+#cs-builder .cs-course-editor-heading h2{margin:3px 0;font-size:18px;color:var(--course-fg);overflow-wrap:anywhere}
+#cs-builder .cs-course-editor-heading p{font-size:11px;color:var(--course-muted);margin:2px 0}
+#cs-builder .cs-course-editor-actions{display:flex;gap:8px;align-items:center}
+#cs-builder .cs-course-tabs{display:flex;align-items:center;overflow-x:auto;scrollbar-width:thin;
+  border-top:1px solid var(--course-line);border-bottom:1px solid var(--course-line);background:var(--course-surface-raised)}
+#cs-builder .cs-course-tabs button{border:0;border-bottom:3px solid transparent;padding:13px 11px;
+  flex:none;background:none;color:var(--course-muted);font-size:11px;font-weight:800;cursor:pointer}
+#cs-builder .cs-course-tabs button.is-active{color:var(--course-teal);border-bottom-color:var(--course-teal)}
+#cs-builder .cs-course-tabs button:hover{color:var(--course-fg)}
+#cs-builder .cs-course-stage{padding:16px 18px}
+#cs-builder .cs-course-campaign-metadata{padding:14px;background:var(--course-surface-raised);border:1px solid var(--course-line);
+  border-radius:12px;margin-bottom:16px}
+#cs-builder .cs-form-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+#cs-builder .cs-form-heading h3{margin:0;font-size:14px;color:var(--course-fg);font-weight:850}
+#cs-builder .cs-course-campaign-fields{display:grid;grid-template-columns:minmax(0,1fr) 175px;gap:12px;align-items:end}
+#cs-builder .cs-course-current-heading{margin-bottom:12px}
+#cs-builder .cs-course-current-heading h3{font-size:12px;font-weight:850;color:var(--course-fg)}
+#cs-builder .cs-course-selection-state{font-size:10px;letter-spacing:.06em;font-weight:900;color:var(--course-teal)}
+#cs-builder .cs-modules{display:block}
+#cs-builder .cs-modules>.cs-module:not([data-cs-active]){display:none}
+#cs-builder .cs-modules>.cs-module{border:0;background:transparent;border-radius:0;box-shadow:none;overflow:visible}
+#cs-builder .cs-modules>.cs-module>summary{display:none}
+#cs-builder .cs-modules>.cs-module>.cs-module-body{border:0;padding:0}
+#cs-builder .cs-module-body>.cs-field-grid{display:none;margin:0 0 14px;padding:12px;border:1px solid var(--course-line);
+  border-radius:10px;background:var(--course-surface-raised)}
+#cs-builder[data-cs-tab-active=metadata] .cs-module-body>.cs-field-grid{display:grid}
+#cs-builder .cs-module-body>.cs-actions,#cs-builder .cs-module-body>.cs-lesson-list+button[data-action=add-lesson]{display:none}
+#cs-builder .cs-lesson-list{display:block;margin:0}
+#cs-builder .cs-lesson-list>.cs-lesson:not([data-cs-active]){display:none}
+#cs-builder .cs-lesson-list>.cs-lesson{border:0;background:transparent;box-shadow:none;border-radius:0;overflow:visible}
+#cs-builder .cs-lesson-list>.cs-lesson>summary{display:none}
+#cs-builder .cs-lesson-list>.cs-lesson>.cs-lesson-body{border:0;padding:0}
+#cs-builder .cs-course-tab-panel{border:0;padding:0;margin:0}
+#cs-builder .cs-course-tab-panel>.cs-form-heading{margin:0 0 14px}
+#cs-builder .cs-course-tab-panel .cs-actions{margin-bottom:8px}
+#cs-builder .cs-course-cefr-field{max-width:190px}
+#cs-builder .cs-course-language-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+#cs-builder .cs-language-pane{border:1px solid var(--course-line);border-radius:12px;background:var(--course-surface-raised);
+  padding:14px;min-width:0}
+#cs-builder .cs-language-pane-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+#cs-builder .cs-language-pane-head strong{font-size:13px;color:var(--course-fg)}
+#cs-builder .cs-language-badge{border-radius:8px;background:var(--course-blue);color:#fff;font-size:10px;
+  font-weight:900;padding:5px 7px}
+#cs-builder .cs-english-title,#cs-builder .cs-english-preview{background:var(--course-surface);
+  border:1px solid var(--course-line);border-radius:9px;padding:10px 12px;min-height:40px;
+  color:var(--course-fg);font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+#cs-builder .cs-english-preview{min-height:135px;white-space:pre-wrap;max-height:240px;overflow:auto}
+#cs-builder .cs-editor{min-height:155px}
+#cs-builder .cs-course-tab-panel .cs-questions{margin:0}
+#cs-builder .cs-course-tab-panel .cs-quiz-card{margin-top:12px}
+#cs-builder .cs-course-metrics{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--course-line);
+  background:var(--course-surface-raised);gap:1px}
+#cs-builder .cs-course-metrics>div{display:grid;place-content:center;padding:9px;gap:3px;text-align:center}
+#cs-builder .cs-course-metrics span{font-size:17px;font-weight:900;color:var(--course-fg)}
+#cs-builder .cs-course-metrics small{font-size:10px;color:var(--course-muted)}
+#cs-builder .cs-course-workflow{position:sticky;top:80px;min-width:0;display:grid;gap:14px}
+#cs-builder .cs-course-workflow .cs-card{padding:17px;border-radius:15px}
+#cs-builder .cs-course-workflow .cs-section-label h2{font-size:14px}
+#cs-builder .cs-workflow-state{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:18px 0 10px;color:var(--course-muted);font-size:12px;font-weight:800}
+#cs-builder .cs-course-status{border-radius:999px;padding:6px 10px;background:#6c4b24;color:#ffe7bd;
+  font-size:10px;font-weight:900}
+#cs-builder .cs-course-status.is-published{background:#145f46;color:#b8ffe2}
+#cs-builder .cs-workflow-steps{margin-top:19px;padding-top:15px;border-top:1px solid var(--course-line)}
+#cs-builder .cs-workflow-step{position:relative;display:flex;gap:11px;padding:5px 0 17px;font-size:12px}
+#cs-builder .cs-workflow-step:not(:last-child):before{content:"";position:absolute;top:29px;left:12px;
+  width:1px;height:calc(100% - 20px);background:var(--course-line)}
+#cs-builder .cs-workflow-step-mark{display:grid;place-items:center;flex:none;width:25px;height:25px;
+  border:1px solid var(--course-line);border-radius:100%;background:var(--course-surface-deep);color:var(--course-muted);
+  font-size:11px;font-weight:900}
+#cs-builder .cs-workflow-step-mark.is-complete{background:#0e8a63;color:#fff;border-color:#0e8a63}
+#cs-builder .cs-workflow-step strong{display:block;color:var(--course-fg)}
+#cs-builder .cs-workflow-step small{display:block;margin-top:5px;line-height:1.5;color:var(--course-muted)}
+#cs-builder .cs-course-help-card .cs-subtext{margin:9px 0}
+#cs-builder .cs-course-workflow .cs-cover-preview{margin:12px 0}
+#cs-builder .cs-course-workflow .cs-cover-card{min-width:0}
+#cs-builder .cs-label{color:var(--course-fg)}
+#cs-builder .cs-input,#cs-builder .cs-textarea,#cs-builder .cs-control{
+  background:var(--course-surface-raised);color:var(--course-fg);border-color:var(--course-line)}
+#cs-builder .cs-card,#cs-builder .cs-module,#cs-builder .cs-lesson{color:var(--course-fg)}
+#cs-builder .cs-btn-primary{background:var(--course-blue);color:#fff}
+#cs-builder .cs-btn-primary:hover{background:var(--course-blue-hover)}
+#cs-builder .cs-btn-outline{background:var(--course-surface-raised);border-color:var(--course-line)}
+#cs-builder .cs-course-workflow .cs-subtext,#cs-builder .cs-note{color:var(--course-muted)}
+#cs-builder .cs-course-workflow .cs-cover-placeholder{color:var(--course-muted)}
+#cs-builder :is(button,input,select,textarea,a,[draggable=true]):focus-visible{
+  outline:2px solid var(--course-teal);outline-offset:3px}
+#cs-builder [hidden]{display:none!important}
+@media(max-width:1320px){
+  #cs-builder .cs-layout.cs-course-grid{grid-template-columns:205px minmax(0,1fr) 245px;gap:12px}
+  #cs-builder .cs-course-header-actions{width:100%;justify-content:flex-end}
+  #cs-builder .cs-course-campaign-fields{grid-template-columns:minmax(0,1fr) 140px}
+}
+@media(max-width:1070px){
+  #cs-builder .cs-layout.cs-course-grid{grid-template-columns:210px minmax(0,1fr);gap:12px}
+  #cs-builder .cs-course-workflow{grid-column:2;position:static;grid-template-columns:repeat(2,minmax(0,1fr))}
+  #cs-builder .cs-course-workflow .cs-course-help-card{grid-column:1/-1}
+  #cs-builder .cs-course-outline{top:70px}
+}
+@media(max-width:720px){
+  #cs-builder .cs-layout.cs-course-grid{grid-template-columns:minmax(0,1fr)}
+  #cs-builder .cs-course-outline{position:static;min-height:unset;max-height:370px}
+  #cs-builder .cs-course-tree{min-height:unset;max-height:220px}
+  #cs-builder .cs-course-workflow{grid-column:1}
+  #cs-builder .cs-course-header-title{border-left:0;padding-left:0;flex-basis:100%}
+  #cs-builder .cs-course-header-actions{justify-content:flex-start}
+  #cs-builder .cs-course-stage{padding:13px}
+}
+@media(max-width:515px){
+  #cs-builder .cs-course-language-grid,#cs-builder .cs-course-campaign-fields,
+  #cs-builder .cs-course-workflow{grid-template-columns:1fr}
+  #cs-builder .cs-course-workflow .cs-course-help-card{grid-column:auto}
+  #cs-builder .cs-course-header{padding:13px}
+  #cs-builder .cs-course-tabs button{padding:12px 9px}
+  #cs-builder .cs-course-editor-heading{padding:13px}
+}
+@media(prefers-reduced-motion:reduce){#cs-builder *{scroll-behavior:auto!important;transition:none!important}}
