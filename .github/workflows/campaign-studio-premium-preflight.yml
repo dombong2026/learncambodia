@@ -76,3 +76,26 @@ jobs:
         run: |
           php -l app/Http/Controllers/Workspace/CampaignCoverController.php
           php -l database/migrations/2026_11_23_235500_create_homepage_campaign_cover_table.php
+
+  browser-ui-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated browser smoke dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Smoke-test curriculum interactions at desktop, tablet and mobile sizes
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-studio-premium.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
