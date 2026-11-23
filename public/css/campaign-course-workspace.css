@@ -61,6 +61,9 @@ html.dark #cs-builder.cs-course-workspace{
 #cs-builder .cs-tree-drag{cursor:grab;user-select:none;touch-action:none;color:var(--course-muted);font-size:16px;
   width:16px;min-width:16px;text-align:center;line-height:29px}
 #cs-builder .cs-tree-drag:active{cursor:grabbing}
+#cs-builder .cs-tree-collapse{border:0;background:transparent;color:var(--course-muted);border-radius:8px;
+  cursor:pointer;padding:5px 2px;min-width:18px;font-size:14px;font-weight:850}
+#cs-builder .cs-tree-collapse:hover{background:var(--course-surface-raised);color:var(--course-fg)}
 #cs-builder .cs-tree-unit-button,#cs-builder .cs-tree-lesson-button{min-width:0;flex:1;text-align:left;border:0;
   background:transparent;color:var(--course-fg);font-weight:700;font-size:11px;padding:7px 3px;border-radius:8px;cursor:pointer;
   overflow-wrap:anywhere;line-height:1.55}
