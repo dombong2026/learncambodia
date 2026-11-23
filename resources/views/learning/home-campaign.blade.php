@@ -24,7 +24,7 @@
             <p class="mt-4 text-xs text-slate-200">{{ count($campaign->modules ?? []) }} modules · {{ collect($campaign->modules ?? [])->sum(fn($m) => count($m['lessons'] ?? [])) }} lessons · Check answers with real feedback</p>
         </div>
         @if($campaign->cover_path)
-        <img src="{{ route('campaign.cover', $campaign) }}" alt="{{ $campaign->title }} cover" class="aspect-video w-full rounded-2xl border border-white/20 object-cover shadow-xl">
+        <img src="{{ route('interactive-campaign.cover', $campaign) }}" alt="{{ $campaign->title }} cover" class="aspect-video w-full rounded-2xl border border-white/20 object-cover shadow-xl">
         @endif
     </div>
 </section>
@@ -66,7 +66,7 @@
                             <a href="{{ $lesson['media_url'] }}" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-600 underline dark:text-blue-300">Open the YouTube lesson</a>
                         @endif
                         @if($lesson['type'] !== 'reading')
-                        <form action="{{ route('campaign.check', [$campaign, $lesson['id']]) }}" method="POST" data-campaign-check class="mt-5 space-y-4">
+                        <form action="{{ route('interactive-campaign.check', [$campaign, $lesson['id']]) }}" method="POST" data-campaign-check class="mt-5 space-y-4">
                             @csrf
                             @if($lesson['type'] === 'multiple_choice')
                                 <fieldset class="space-y-2"><legend class="mb-2 font-bold">Choose the best answer</legend>
