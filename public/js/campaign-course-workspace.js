@@ -145,7 +145,14 @@ function sync(){
     setActivePanel();
 }
 function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(sync)}
-function select(mi,li){activeModule=mi;activeLesson=li;collapsedUnits.delete(mi);sync()}
+function select(mi,li){
+    activeModule=mi;
+    activeLesson=li;
+    collapsedUnits.delete(mi);
+    const kind=lessonType(lessonAt(mi,li));
+    activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
+    sync();
+}
 function setTab(tab){
     if(!['metadata','curriculum','assessments','translation'].includes(tab))return;
     activeTab=tab;setActivePanel();
