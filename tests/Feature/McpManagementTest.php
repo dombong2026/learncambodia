@@ -12,6 +12,12 @@ final class McpManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_guest_is_redirected_from_mcp_management(): void
     {
         $this->get('/dashboard/system-settings/mcp')->assertRedirect('/login');
