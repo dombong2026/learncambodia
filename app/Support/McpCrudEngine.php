@@ -159,6 +159,7 @@ final class McpCrudEngine
         }
         $data=Validator::make($payload,$rules)->validate();
         $data['slug']=$data['slug']??Str::slug($data['title']);
+        if(!$course) $data['body']=$data['body']??'';
         if(!$course && filled($data['body_html']??null)){
             $data['body_html']=EditorHtml::clean($data['body_html']);
             abort_if(EditorHtml::mediaIds($data['body_html'])!==[],422,
