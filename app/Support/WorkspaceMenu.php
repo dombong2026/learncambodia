@@ -76,6 +76,20 @@ final class WorkspaceMenu
                     'icon'=>'id-card','section_title'=>'People & Accounts',
                 ];
             }
+            // Keep the admin MCP entry visible even when the live server
+            // has an older cached workspaces config. Never duplicate it.
+            if ($role === 'admin' && $key === 'system-settings'
+                && Route::has('admin.system-settings.mcp')
+                && !collect($items)->contains(fn (array $item): bool =>
+                    ($item['route'] ?? null) === 'admin.system-settings.mcp')) {
+                $items[] = [
+                    'key' => 'mcp',
+                    'label' => 'MCP Management',
+                    'route' => 'admin.system-settings.mcp',
+                    'icon' => 'terminal',
+                    'section_title' => 'System Settings',
+                ];
+            }
             if ($items !== []) {
                 $groups[] = compact('key', 'title', 'icon', 'items');
             }
