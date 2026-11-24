@@ -49,8 +49,11 @@ final class McpBridgeController extends Controller
         abort_unless(config('mcp.remote_writes_enabled',false),403);
         abort_unless($request->user()->tokenCan('mcp:upload'),403);
         abort_unless($request->user()->hasEnabledTwoFactorAuthentication(),403);
+        $context=(string)$request->input('context','library');
+        abort_unless(in_array($context,['library','course','lesson','exam'],true),422,
+            'Unsupported MCP media context.');
         $request->headers->set('Accept','application/json');
-        $request->merge(['context'=>$request->input('context','library')]);
+        $request->merge(['context'=>$context]);
         $response=$request->input('context')==='library'
             ? $media->uploadToLibrary($request)
             : $media->store($request);
