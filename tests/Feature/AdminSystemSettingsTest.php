@@ -15,6 +15,12 @@ final class AdminSystemSettingsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
+
     public function test_admin_sidebar_links_to_each_setting_in_order_after_analytics(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));
