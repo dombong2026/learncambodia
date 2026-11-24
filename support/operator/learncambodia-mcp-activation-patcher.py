@@ -36,7 +36,7 @@ web=web[:match.end()]+addition+web[match.end():]
 anchor="            if ($items !== []) {\n                $groups[] = compact('key', 'title', 'icon', 'items');"
 if menu.count(anchor)!=1:
     raise SystemExit("MCP_SIDEBAR_INSERTION_DRIFT")
-if "cached workspaces config" in menu:
+if "&& $key === 'system-settings'" in menu and "Route::has('admin.system-settings.mcp')" in menu:
     raise SystemExit("MCP_SIDEBAR_FALLBACK_ALREADY_PRESENT")
 fallback="""            // Preserve the MCP link when production caches an older workspaces config.
             if ($role === 'admin' && $key === 'system-settings'
