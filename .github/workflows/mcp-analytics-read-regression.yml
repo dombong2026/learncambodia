@@ -1,0 +1,67 @@
+name: MCP Analytics READ Regression
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify analytics allowlist, schema, minimal patch, operator rollback, and syntax
+        run: |
+          set -Eeuo pipefail
+          php -l app/Support/McpCrudEngine.php
+          php -l tests/Feature/McpBrowserBridgeTest.php
+          bash -n support/operator/learncambodia-mcp-analytics-read-fix-aapanel.sh
+          python3 - <<'PY'
+          from pathlib import Path
+          source=Path("app/Support/McpCrudEngine.php").read_text()
+          test=Path("tests/Feature/McpBrowserBridgeTest.php").read_text()
+          op=Path("support/operator/learncambodia-mcp-analytics-read-fix-aapanel.sh").read_text()
+          assert "'settings','analytics','analytics'" not in source
+          assert source.count("'settings','analytics'") >= 1
+          assert "'categories','settings','analytics'\n            ])]" in source
+          assert "'analytics'=>['items'=>[" in source
+          assert "test_read_only_session_can_fetch_aggregate_analytics" in test
+          assert "assertJsonPath('result.isError',false)" in test
+          assert "assertJsonPath('result.structuredContent.http_status',403)" in test
+          assert "MCP_ANALYTICS_EXACT_TWO_LINE_PATCH=PASS" in op
+          assert "MCP_ANALYTICS_LIVE_SOURCE_DRIFT_ABORT" in op
+          assert "MCP_ANALYTICS_ROLLBACK=RESTORED" in op
+          assert "MCP_ANALYTICS_CI_NOT_GREEN" in op
+          for forbidden in ["migrate:fresh","db:wipe","git reset --hard",
+                            "chmod -R 777","artisan migrate",
+                            "MCP_REMOTE_WRITES_ENABLED=true"]:
+              assert forbidden not in op
+          print("MCP_ANALYTICS_SOURCE_SAFETY=PASS")
+          PY
+
+  php-read-only-authorization:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Exercise aggregate analytics, admin guards, and MCP browser bridge regression
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan test --filter=McpBrowserBridgeTest
+          php artisan test --filter=McpManagementTest
