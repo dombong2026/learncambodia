@@ -449,6 +449,10 @@ function exportRows() {
                 feedback:l.feedback.trim().slice(0,1000),
                 questions:isQuiz?l.questions.map(q=>({
                     prompt:q.prompt.trim().slice(0,1000),
+                    prompt_html:readSourceHtml(q.prompt_html || '').slice(0,6000),
+                    media_kind:q.media_kind || 'auto',
+                    media_url:(q.media_url || '').trim().slice(0,2048),
+                    media_asset:q.media_asset || '',
                     options:q.options.map(o=>String(o).slice(0,500)),
                     correct:Number(q.correct),
                     feedback:q.feedback.trim().slice(0,1000)
@@ -575,6 +579,13 @@ function getEntities(pos) {
     const question=pos.qi>=0 ? lesson?.questions[pos.qi]:undefined;
     return {module,lesson,question};
 }
+function updateQuestionPrompt(question, markup){
+    const cleaned=readSourceHtml(markup).slice(0,6000);
+    const div=document.createElement('div');
+    div.innerHTML=cleaned;
+    question.prompt_html=cleaned;
+    question.prompt=(div.textContent||'').trim().slice(0,1000);
+}
 function mutateFromInput(target) {
     const pos=coords(target);
     const {module,lesson,question}=getEntities(pos);
@@ -596,6 +607,10 @@ function mutateFromInput(target) {
             const heading=target.closest('[data-lesson-index]')?.querySelector('[data-lesson-heading]');
             if(heading)heading.textContent=lesson.title||'Untitled lesson';
         }
+    }else if(target.matches('[data-question-editor]') && question){
+        updateQuestionPrompt(question,target.innerHTML);
+    }else if(target.matches('[data-question-editor-source]') && question){
+        updateQuestionPrompt(question,target.value);
     }else if(target.matches('[data-editor]') && lesson){
         lesson.body=readSourceHtml(target.innerHTML);
     }else if(target.matches('[data-editor-source]') && lesson){
@@ -624,10 +639,14 @@ list.addEventListener('click',event=>{
     if(formatButton){
         const wrapper=formatButton.closest('.cs-editor-box');
         if(!wrapper)return;
-        const visual=wrapper.querySelector('[data-editor]');
-        const source=wrapper.querySelector('[data-editor-source]');
+        const visual=wrapper.querySelector('[data-editor],[data-question-editor]');
+        const source=wrapper.querySelector('[data-editor-source],[data-question-editor-source]');
         const action=formatButton.dataset.format;
-        const lesson=getEntities(coords(formatButton)).lesson;
+        const {lesson,question}=getEntities(coords(formatButton));
+        const store=html=>{
+            if(question)updateQuestionPrompt(question,html);
+            else if(lesson)lesson.body=readSourceHtml(html);
+        };
         if(action==='html') {
             if(source.hidden){
                 source.value=readSourceHtml(visual.innerHTML);
@@ -635,7 +654,7 @@ list.addEventListener('click',event=>{
             }else{
                 const safe=readSourceHtml(source.value);
                 visual.innerHTML=safe;
-                if(lesson)lesson.body=safe;
+                store(safe);
                 source.hidden=true;visual.hidden=false;
             }
             return;
@@ -674,7 +693,7 @@ list.addEventListener('click',event=>{
                 'justifyRight','indent','outdent','unlink','removeFormat'];
             if(commands.includes(action))document.execCommand(action,false,null);
         }
-        if(lesson)lesson.body=readSourceHtml(visual.innerHTML);
+        store(visual.innerHTML);
         return;
     }
     const button=event.target.closest('button[data-action]');
@@ -715,6 +734,8 @@ list.addEventListener('click',event=>{
         q.correct=Math.min(Number(q.correct),q.options.length-1);
     }else if(action==='remove-media'){
         l.asset='';l.url='';
+    }else if(action==='remove-question-media' && q){
+        q.media_asset='';q.media_url='';q.media_kind='auto';
     }else return;
     render();
     note('Unsaved changes. Save draft or Publish when ready.',false);
@@ -736,6 +757,26 @@ list.addEventListener('change',async event=>{
         note('Lesson media uploaded. Save draft to keep this attachment.',false);
     }catch(error){note(error.message,true)}
     field.value='';
+});
+
+list.addEventListener('change',async event=>{
+    const input=event.target;
+    if(!input.matches('[data-question-file]'))return;
+    const file=input.files?.[0];if(!file)return;
+    const {question}=getEntities(coords(input));
+    if(!question)return;
+    note('Uploading question media…',false);
+    try {
+        const uploaded=await uploadFile(file);
+        if(!['image','video'].includes(uploaded.type) || !uploaded.asset)
+            throw new Error('Select an image or video for this question.');
+        question.media_asset=uploaded.asset;
+        question.media_url='';
+        question.media_kind=uploaded.type;
+        render();
+        note('Question media uploaded. Save draft to retain it.',false);
+    }catch(error){note(error.message,true)}
+    input.value='';
 });
 render();
 })();
