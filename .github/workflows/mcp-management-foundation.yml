@@ -22,6 +22,7 @@ jobs:
           php -l config/workspaces.php
           php -l app/Support/WorkspaceMenu.php
           php -l tests/Feature/McpManagementTest.php
+          bash -n support/operator/learncambodia-mcp-foundation-aapanel.sh
           node --check public/js/mcp-management.js
           python3 - <<'PY'
           from pathlib import Path
@@ -32,6 +33,7 @@ jobs:
           view=Path('resources/views/workspace/admin/mcp-management.blade.php').read_text()
           js=Path('public/js/mcp-management.js').read_text()
           flags=Path('config/mcp.php').read_text()
+          installer=Path('support/operator/learncambodia-mcp-foundation-aapanel.sh').read_text()
           assert "Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp')" in route
           assert "middleware('role:admin')" in route or "middleware(['role:admin'])" in route
           assert "admin.system-settings.mcp" in config
@@ -47,6 +49,12 @@ jobs:
           for token in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'eval(', 'localStorage']:
             assert token not in js,token
           assert 'Route::post("/mcp"' not in route
+          for token in ['MCP_PINNED_CI=PASS','MCP_MANAGEMENT_FOUNDATION_DEPLOY=PASS',
+                        'MCP_FOUNDATION_ROLLBACK=RESTORED','MCP_REMOTE_WRITES=DISABLED',
+                        'MCP_ADMIN_ROUTE_AUTH=PASS','runuser -u www -- "$PHP" artisan view:cache']:
+            assert token in installer,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in installer,forbidden
           print('MCP_MANAGEMENT_SOURCE_SAFETY=PASS')
           PY
 
