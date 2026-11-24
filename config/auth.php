@@ -71,6 +71,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
         ],
+        'mcp_oauth_users' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\McpOAuthUser::class,
+        ],
 
         // 'users' => [
         //     'driver' => 'database',
