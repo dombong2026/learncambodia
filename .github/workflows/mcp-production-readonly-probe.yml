@@ -1,0 +1,31 @@
+name: MCP Production Read-only Acceptance Probe
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test probe parser, read-only execution and credential redaction
+        run: |
+          python3 -m py_compile support/operator/learncambodia-mcp-readonly-acceptance.py
+          python3 -m unittest discover -s tests/operator -p 'test_mcp_readonly_acceptance.py' -v
+          python3 - <<'PY'
+          from pathlib import Path
+          text=Path("support/operator/learncambodia-mcp-readonly-acceptance.py").read_text()
+          assert "getpass(" in text
+          assert "urllib.request.Request" in text
+          assert "ssl" not in text  # Default TLS verification must not be bypassed.
+          for token in ["'DELETE'","\"DELETE\"","'CREATE'","\"CREATE\"","'UPDATE'","\"UPDATE\"","'UPLOAD'","\"UPLOAD\"","'PUBLISH'","\"PUBLISH\"", "verify=False"]:
+              assert token not in text,token
+          assert '"READ"' in text
+          assert "ANONYMOUS_DENIAL=PASS" in text
+          assert "MCP_READ_ONLY_END_TO_END=PASS" in text
+          print("MCP_READONLY_PROBE_SOURCE_SAFETY=PASS")
+          PY
