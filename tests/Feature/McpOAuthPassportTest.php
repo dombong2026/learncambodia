@@ -45,7 +45,7 @@ final class McpOAuthPassportTest extends TestCase
         return (string) $client->getKey();
     }
 
-    private function query(string $client, array $overrides=[]): string
+    private function oauthQuery(string $client, array $overrides=[]): string
     {
         return http_build_query(array_merge([
             'client_id' => $client,
@@ -106,7 +106,7 @@ final class McpOAuthPassportTest extends TestCase
             ['response_type'=>'token'],
         ];
         foreach ($bad as $overrides) {
-            $this->get('/mcp/oauth/authorize?'.$this->query($client,$overrides))
+            $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client,$overrides))
                 ->assertBadRequest();
         }
 
@@ -132,7 +132,7 @@ final class McpOAuthPassportTest extends TestCase
         $student = User::factory()->create(['role'=>User::ROLE_STUDENT,
             'email_verified_at'=>now()]);
         $this->actingAs($student)->withSession(['auth.password_confirmed_at'=>time()]);
-        $this->get('/mcp/oauth/authorize?'.$this->query($client))
+        $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client))
             ->assertForbidden();
     }
 
@@ -162,7 +162,7 @@ final class McpOAuthPassportTest extends TestCase
         $verifier = str_repeat('V', 48);
         $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
         $state = str_repeat('s', 32);
-        $url = '/mcp/oauth/authorize?'.$this->query($client, [
+        $url = '/mcp/oauth/authorize?'.$this->oauthQuery($client, [
             'code_challenge' => $challenge,
             'state' => $state,
         ]);
