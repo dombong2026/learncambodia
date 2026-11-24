@@ -81,7 +81,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           composer validate --no-check-publish --no-check-all
-          composer install --no-interaction --prefer-dist --no-progress --no-scripts --no-audit
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
           composer show laravel/passport
           php artisan package:discover --ansi
           php artisan passport:keys --force --no-interaction
