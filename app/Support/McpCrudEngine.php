@@ -37,7 +37,7 @@ final class McpCrudEngine
                     'operation'=>['type'=>'string','enum'=>['READ','CREATE','UPDATE','UPLOAD','DELETE','PUBLISH','INSTALL','PUSH']],
                     'resource'=>['type'=>'string','enum'=>[
                         'courses','modules','lessons','quizzes','posts','pages','policies',
-                        'help_articles','campaigns','media','users','support_tickets','categories','settings','analytics','analytics'
+                        'help_articles','campaigns','media','users','support_tickets','categories','settings','analytics'
                     ]],
                     'payload'=>['type'=>'object'],
                 ],
@@ -76,7 +76,7 @@ final class McpCrudEngine
             'operation'=>['required',Rule::in(['READ','CREATE','UPDATE','UPLOAD','DELETE','PUBLISH','INSTALL','PUSH'])],
             'resource'=>['required',Rule::in([
                 'courses','modules','lessons','quizzes','posts','pages','policies',
-                'help_articles','campaigns','media','users','support_tickets','categories','settings'
+                'help_articles','campaigns','media','users','support_tickets','categories','settings','analytics'
             ])],
             'payload'=>['sometimes','array'],
         ])->validate();
