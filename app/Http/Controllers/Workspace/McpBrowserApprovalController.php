@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Workspace;
 
 use App\Http\Controllers\Controller;
 use App\Models\McpActionApproval;
+use App\Models\McpActionAudit;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,13 +45,27 @@ final class McpBrowserApprovalController extends Controller
         // This is a browser-only, CSRF-protected, password-confirmed decision.
         // It never executes the operation; the MCP endpoint must recheck the
         // exact token/resource/payload and consume approval atomically.
-        $changed=McpActionApproval::query()->whereKey($approval->getKey())
-            ->where('status','pending')->where('expires_at','>',now())
-            ->update([
-                'status'=>$data['decision']==='approve'?'approved':'denied',
-                'approved_at'=>$data['decision']==='approve'?now():null,
+        DB::transaction(function()use($approval,$data,$request){
+            $changed=McpActionApproval::query()->whereKey($approval->getKey())
+                ->where('status','pending')->where('expires_at','>',now())
+                ->update([
+                    'status'=>$data['decision']==='approve'?'approved':'denied',
+                    'approved_at'=>$data['decision']==='approve'?now():null,
+                ]);
+            abort_unless($changed===1,409,'This approval has already been decided.');
+            McpActionAudit::create([
+                'id'=>(string)Str::uuid(),
+                'user_id'=>$request->user()->id,
+                'token_id'=>$approval->token_id,
+                'tool'=>'browser_destructive_confirmation',
+                'operation'=>$approval->operation,
+                'resource'=>$approval->resource,
+                'resource_id'=>$approval->resource_id,
+                'result'=>$data['decision']==='approve'?'approved':'denied',
+                'http_status'=>200,
+                'summary'=>'Website Admin decided a one-time MCP action request.',
             ]);
-        abort_unless($changed===1,409,'This approval has already been decided.');
+        });
 
         return redirect()->route('admin.system-settings.mcp')
             ->with('status',$data['decision']==='approve'
