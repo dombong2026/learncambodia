@@ -198,6 +198,7 @@ final class McpBridgeController extends Controller
         }
         abort_unless($name==='crud_manage_platform',422,'Unknown MCP tool.');
         $result=McpCrudEngine::execute($request,$args);
+        $result['status']=$result['status']??'read';
         $result['http_status']=$result['status']==='created'?201:200;
         $result['receipt_id']=$this->audit($request,$name,(string)$args['operation'],
             (string)$args['resource'],(string)($result['resource_id']??''),'success',
