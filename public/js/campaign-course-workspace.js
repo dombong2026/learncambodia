@@ -71,6 +71,8 @@ function treeMarkup() {
             '<button type="button" class="cs-tree-collapse" data-cs-toggle-unit="'+mi+'" aria-expanded="'+(!collapsedUnits.has(mi))+'" aria-label="Toggle Unit '+(mi+1)+' lessons">'+(collapsedUnits.has(mi)?'▸':'⌄')+'</button>' +
             '<button type="button" class="cs-tree-unit-button" data-cs-select-module="'+mi+'">' +
             '<span class="cs-tree-folder" aria-hidden="true">▣</span><span class="cs-tree-unit-name">Unit '+(mi+1)+': '+escaped(titleOf(mod)||'Untitled unit')+'</span></button>' +
+            '<button type="button" class="cs-tree-rename" data-cs-rename-module="'+mi+'" title="Rename module" aria-label="Rename unit '+(mi+1)+'">' +
+            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/></svg></button>' +
             '<button type="button" class="cs-tree-add" data-cs-add-lesson="'+mi+'" title="Add lesson" aria-label="Add lesson to unit '+(mi+1)+'">＋</button></div>' +
             '<div class="cs-tree-lessons"'+(collapsedUnits.has(mi)?' hidden':'')+'>';
         entries.forEach((lesson,li)=>{
@@ -95,6 +97,13 @@ function setActivePanel() {
     byId('cs-current-content-type').textContent = lessonType(lesson).toUpperCase();
     byId('cs-unit-label').textContent = modules().length+' unit'+(modules().length===1?'':'s');
     root.dataset.csTabActive = activeTab;
+    const moduleEditor = byId('cs-selected-module-editor');
+    const moduleInput = byId('cs-selected-module-title');
+    const innerModuleInput = unit?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    moduleEditor.hidden = !unit || activeTab !== 'metadata';
+    if (innerModuleInput && moduleInput.value !== innerModuleInput.value) {
+        moduleInput.value = innerModuleInput.value;
+    }
     const help = {
         quiz: 'Quiz lesson: add written instructions here, then switch to Assessments for questions, choices, answer keys and feedback.',
         exam: 'Exam lesson: add written instructions here, then switch to Assessments for scored questions and explanations.',
@@ -126,6 +135,7 @@ function setActivePanel() {
         t.tabIndex=selected?0:-1;
         if(selected)byId('cs-course-stage').setAttribute('aria-labelledby',t.id);
     });
+    showActiveMedia();
     const campaignTitle=byId('cs-campaign-title');
     // Campaign title and type are global settings, not lesson-level fields.
     const count=Number(byId('cs-questions-count').textContent||'0');
@@ -163,10 +173,17 @@ tree.addEventListener('click',event=>{
     const lesson=event.target.closest('[data-cs-select-lesson]');
     const plus=event.target.closest('[data-cs-add-lesson]');
     const toggle=event.target.closest('[data-cs-toggle-unit]');
+    const rename=event.target.closest('[data-cs-rename-module]');
     if(toggle){
         const mi=Number(toggle.dataset.csToggleUnit);
         if(collapsedUnits.has(mi))collapsedUnits.delete(mi);else collapsedUnits.add(mi);
         sync();
+    }else if(rename){
+        select(Number(rename.dataset.csRenameModule),0);
+        setTab('metadata');
+        const moduleTitleInput=byId('cs-selected-module-title');
+        moduleTitleInput.focus();
+        moduleTitleInput.select();
     }else if(plus){
         const mi=Number(plus.dataset.csAddLesson), mod=moduleAt(mi);
         pendingSelection={mi,li:lessons(mod).length};
@@ -246,6 +263,14 @@ byId('cs-add-module').addEventListener('click',()=>{
     pendingSelection={mi:modules().length-1,li:0};schedule();
 });
 byId('cs-campaign-title').addEventListener('input',setActivePanel);
+byId('cs-selected-module-title').addEventListener('input',event=>{
+    const input=moduleAt(activeModule)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    if(!input)return;
+    input.value=event.target.value;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    byId('cs-current-unit-heading').textContent='Unit '+(activeModule+1)+': '+(event.target.value.trim()||'Untitled unit');
+    byId('cs-save-state').textContent='Unsaved module name. Save draft to keep changes.';
+});
 
 list.addEventListener('input',event=>{
     const lesson=event.target.closest('.cs-lesson');
@@ -268,6 +293,16 @@ list.addEventListener('change',event=>{
     }
     schedule();
 });
+// Capture the old lesson index before the base editor redraws the DOM.
+list.addEventListener('click',event=>{
+    const duplicate=event.target.closest('button[data-action="lesson-duplicate"]');
+    if(!duplicate)return;
+    const mod=duplicate.closest('[data-module-index]');
+    const lesson=duplicate.closest('[data-lesson-index]');
+    if(!mod || !lesson)return;
+    pendingSelection={mi:Number(mod.dataset.moduleIndex),li:Number(lesson.dataset.lessonIndex)+1};
+    activeTab='metadata';
+},true);
 list.addEventListener('click',event=>{
     const button=event.target.closest('[data-action]');
     if(!button)return;
