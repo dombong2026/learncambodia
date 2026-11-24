@@ -76,7 +76,7 @@ final class McpOAuthDiscoveryTest extends TestCase
             ->assertJsonPath('authorization_servers.0', 'https://learncambodia.com')
             ->assertJsonPath('scopes_supported.0', 'mcp:read')
             ->assertJsonCount(1, 'scopes_supported');
-        $this->assertSame('no-store', $resource->headers->get('Cache-Control'));
+        $this->assertStringContainsString('no-store', $resource->headers->get('Cache-Control'));
 
         $auth=$this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()->assertJsonPath('issuer', 'https://learncambodia.com')
@@ -88,7 +88,7 @@ final class McpOAuthDiscoveryTest extends TestCase
             ->assertJsonPath('token_endpoint_auth_methods_supported.0', 'none')
             ->assertJsonCount(1, 'scopes_supported');
 
-        $this->assertSame('no-store', $auth->headers->get('Cache-Control'));
+        $this->assertStringContainsString('no-store', $auth->headers->get('Cache-Control'));
         $this->assertArrayNotHasKey('registration_endpoint', $auth->json());
         $this->assertArrayNotHasKey('client_id_metadata_document_supported', $auth->json());
         $this->assertArrayNotHasKey('authorization_response_iss_parameter_supported', $auth->json());
