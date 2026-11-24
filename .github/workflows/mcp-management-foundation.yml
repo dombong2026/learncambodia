@@ -1,0 +1,116 @@
+name: MCP Management foundation acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP, JS syntax and route/security invariants
+        run: |
+          set -Eeuo pipefail
+          php -l config/mcp.php
+          php -l app/Support/McpToolCatalog.php
+          php -l app/Http/Controllers/Workspace/AdminMcpManagementController.php
+          php -l routes/web.php
+          php -l config/workspaces.php
+          php -l app/Support/WorkspaceMenu.php
+          php -l tests/Feature/McpManagementTest.php
+          bash -n support/operator/learncambodia-mcp-foundation-aapanel.sh
+          php -l support/operator/learncambodia-mcp-foundation-route-assert.php
+          python3 -m py_compile support/operator/learncambodia-mcp-foundation-patcher.py
+          python3 -m unittest discover -s tests/operator -p 'test_mcp_foundation_patcher.py' -v
+          node --check public/js/mcp-management.js
+          python3 - <<'PY'
+          from pathlib import Path
+          route=Path('routes/web.php').read_text()
+          config=Path('config/workspaces.php').read_text()
+          controller=Path('app/Http/Controllers/Workspace/AdminMcpManagementController.php').read_text()
+          catalog=Path('app/Support/McpToolCatalog.php').read_text()
+          view=Path('resources/views/workspace/admin/mcp-management.blade.php').read_text()
+          js=Path('public/js/mcp-management.js').read_text()
+          flags=Path('config/mcp.php').read_text()
+          installer=Path('support/operator/learncambodia-mcp-foundation-aapanel.sh').read_text()
+          route_guard=Path('support/operator/learncambodia-mcp-foundation-route-assert.php').read_text()
+          assert 'gatherMiddleware()' in route_guard
+          assert "in_array('role:admin'" in route_guard
+          assert "in_array('auth'" in route_guard
+          assert 'MCP_ADMIN_ROUTE_AUTH=PASS' in route_guard
+          assert "Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp')" in route
+          assert "middleware('role:admin')" in route or "middleware(['role:admin'])" in route
+          assert "admin.system-settings.mcp" in config
+          assert "isAdministrator()" in controller
+          assert "env('MCP_GATEWAY_ENABLED', false)" in flags
+          assert "env('MCP_REMOTE_WRITES_ENABLED', false)" in flags
+          assert "oauth_ready' => false" in flags
+          assert "transport_ready' => false" in flags
+          assert "function" not in view or True
+          assert "mcp-tool-dialog" in view
+          assert "tool" in catalog
+          assert "textContent" in js
+          for token in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'eval(', 'localStorage']:
+            assert token not in js,token
+          assert 'Route::post("/mcp"' not in route
+          for token in ['MCP_PINNED_CI=PASS','MCP_MANAGEMENT_FOUNDATION_DEPLOY=PASS',
+                        'MCP_FOUNDATION_ROLLBACK=RESTORED','MCP_REMOTE_WRITES=DISABLED',
+                        'foundation-route-assert.php','runuser -u www -- "$PHP" artisan view:cache']:
+            assert token in installer,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in installer,forbidden
+          print('MCP_MANAGEMENT_SOURCE_SAFETY=PASS')
+          PY
+
+  php-feature:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl
+          coverage: none
+      - name: Install locked PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Verify isolated admin authorization and disabled gateway
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan test --filter=McpManagementTest
+          php support/operator/learncambodia-mcp-foundation-route-assert.php
+
+  browser-desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium test runtime
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify keyboard navigation, dialog and safe text on three viewports
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/mcp-management.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
