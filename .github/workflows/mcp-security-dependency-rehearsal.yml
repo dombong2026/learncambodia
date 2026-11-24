@@ -1,0 +1,47 @@
+name: MCP security dependency patch rehearsal
+on:
+  pull_request:
+    branches:
+      - feature/learncambodia-mcp-passport-phase2b-20261124
+permissions:
+  contents: read
+jobs:
+  dependency-patch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      APP_ENV: testing
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom, openssl
+          coverage: none
+      - name: Resolve reviewed WebAuthn patch in disposable runner
+        run: |
+          set -Eeuo pipefail
+          composer update web-auth/webauthn-lib:5.3.13 --with-dependencies --no-scripts --no-plugins --no-interaction --prefer-dist --no-progress
+          composer validate --no-check-publish
+          composer check-platform-reqs --no-dev
+          git diff --exit-code -- composer.json package-lock.json
+          git diff -- composer.lock
+          composer show --locked web-auth/webauthn-lib
+          echo WEBAUTHN_LOCK_CANDIDATE=PASS
+      - name: Retain candidate lock for review, never deploy automatically
+        uses: actions/upload-artifact@v4
+        with:
+          name: learncambodia-webauthn-patched-lock
+          path: composer.lock
+          if-no-files-found: error
+      - name: Audit candidate against current advisories
+        run: composer audit --no-dev
+      - name: Run isolated feature regressions
+        run: |
+          cp .env.example .env
+          php artisan key:generate --no-interaction
+          php artisan package:discover --ansi
+          php artisan test --filter=McpOAuthPassportTest

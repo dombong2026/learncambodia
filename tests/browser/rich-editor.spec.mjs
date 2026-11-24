@@ -1,9 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authenticated rich editor against isolated Laravel fixture', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, info) => {
+    const scenario = info.title === 'System Settings opens every administrator page below Analytics'
+      ? 'settings'
+      : info.title === 'ticket rich content is saved to a private conversation' ? 'ticket' : null;
+    const email = scenario
+      ? `editor-${scenario}-${info.project.name}@example.test`
+      : 'editor-browser-qa@example.test';
     await page.goto('/login?lang=en');
-    await page.locator('#login_email').fill('editor-browser-qa@example.test');
+    await page.locator('#login_email').fill(email);
     await page.locator('#login_password').fill('Only-A-CI-Browser-Fixture-2026!');
     await page.locator('button[type="submit"]').first().click();
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
@@ -36,7 +42,10 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await table.getByRole('link', { name: 'Configure Amazon S3' }).click();
     await page.getByLabel('Current password').fill('Only-A-CI-Browser-Fixture-2026!');
+    const confirmation = page.waitForResponse(response =>
+      new URL(response.url()).pathname === '/security/confirm-password' && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Confirm password' }).click();
+    expect((await confirmation).status(), 'Password confirmation POST must redirect, not be throttled').toBe(302);
     const s3 = page.getByRole('dialog', { name: 'Configure Amazon S3' });
     await expect(s3).toBeVisible();
     await expect(s3.getByLabel('AWS region')).toBeVisible();
@@ -392,7 +401,10 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await page.locator('#support-subject').fill('Editor QA ticket ' + info.project.name + ' ' + Date.now());
     await page.locator('[data-editor-visual]').fill('Please review this support message.');
     await page.locator('#support-priority').selectOption('high');
+    const submitted = page.waitForResponse(response =>
+      new URL(response.url()).pathname === '/support/tickets' && response.request().method() === 'POST');
     await page.locator('button[form="support-create-form"]').click();
+    expect((await submitted).status(), 'Ticket creation POST must redirect, not be throttled').toBe(302);
     await expect(page).toHaveURL(/\/support\/tickets\/\d+/);
     await expect(page.locator('[data-support-feed]')).toContainText('Please review this support message.');
     await expect(page.locator('#ticket-priority')).toHaveValue('high');
