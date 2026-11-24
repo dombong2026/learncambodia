@@ -211,6 +211,7 @@ Route::middleware('auth')->group(function (): void {
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
+            Route::get('/mcp', [\App\Http\Controllers\Workspace\AdminMcpManagementController::class, 'index'])->name('mcp');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
             Route::get('/cloud-storage/configure', 'configureCloudStorage')
                 ->middleware('password.confirm')->name('cloud-storage.configure');
