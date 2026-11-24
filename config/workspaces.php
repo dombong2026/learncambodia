@@ -407,7 +407,8 @@ return json_decode(<<<'JSON'
         {"key": "branding", "label": "Branding", "route": "admin.system-settings.branding"},
         {"key": "security", "label": "Security", "route": "admin.system-settings.security"},
         {"key": "social-auth", "label": "Social Auth", "route": "admin.system-settings.social-auth"},
-        {"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"}
+        {"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"},
+        {"key": "mcp", "label": "MCP Management", "route": "admin.system-settings.mcp"}
       ]
     },
     {
