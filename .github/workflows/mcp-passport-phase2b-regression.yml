@@ -73,11 +73,11 @@ jobs:
           tools: composer:v2
           extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom, openssl
           coverage: none
-      - name: Resolve Passport 13 in isolated CI checkout only
+      - name: Install reviewed, locked Passport 13 in isolated CI only
         run: |
           set -Eeuo pipefail
-          composer update laravel/passport --with-all-dependencies \
-            --no-interaction --prefer-dist --no-progress --no-scripts --no-audit
+          composer validate --no-check-publish --no-check-all
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts --no-audit
           composer show laravel/passport
           php artisan package:discover --ansi
           php artisan passport:keys --force --no-interaction
