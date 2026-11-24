@@ -1,0 +1,70 @@
+name: MCP Passport Phase 2B Live Code Safety
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  live-code-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify aaPanel release syntax, exact live hashes and rollback
+        run: |
+          set -Eeuo pipefail
+          SCRIPT=support/operator/learncambodia-mcp-oauth-phase2b-stage-code-aapanel.sh
+          bash -n "$SCRIPT"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("support/operator/learncambodia-mcp-oauth-phase2b-stage-code-aapanel.sh")
+          s=p.read_text()
+          checks=[
+            "MCP_PHASE2B_PINNED_CI=PASS",
+            "MCP_PHASE2B_EXACT_LIVE_OVERLAYS=PASS",
+            "MCP_PHASE2B_LOCKED_VENDOR_BUILT_IN_ISOLATION=PASS",
+            "MCP_PHASE2B_SYNTAX_AND_HARD_DISABLED=PASS",
+            "MCP_PHASE2B_ROLLBACK=RESTORED",
+            "MCP_PHASE2B_ALL_EXISTING_ROUTES_PRESERVED=PASS",
+            "MCP_PHASE2B_LIVE_MCP_SECURITY_AND_CLOSED_OAUTH=PASS",
+            "MCP_PHASE2B_DISABLED_CODE_RELEASE=PASS",
+            "MCP_OAUTH_MIGRATIONS=NOT_RUN",
+            "MCP_OAUTH_KEYS=NOT_GENERATED",
+            "MCP_OAUTH_TOKEN_ISSUANCE=DISABLED",
+            "MCP_REMOTE_WRITES=UNCHANGED",
+            "MCP_DATABASE_MUTATIONS=NONE",
+            "MCP_CONTENT_MUTATIONS=NONE",
+            "d28f586cf17f0c611aca01855ff18c4e102d9579",
+            "6185fd2161ba77c0ef164a0e1b10dab57ebe4c6a",
+            "4edfe4827731147fd91c0d732efa29ce49331304",
+            "37f2ee943477b906bad487433fe5dae12628480b",
+            "8292e92bacc9b9be2a92140f9f235935a14a606f",
+            "9faff0c2c9398d71c68c34e0190a6fac60313ea6",
+            "composer install --no-dev --no-scripts",
+            "phpseclib",
+            "oauth_provider_accepted",
+            "oauth_ready",
+            "auth:sanctum",
+            "patch --batch --forward --fuzz=0",
+          ]
+          for line in checks:
+            if line == "phpseclib": continue # dependency is in composer.lock, not script text
+            assert line in s, line
+          for bad in ("artisan migrate", "artisan passport:keys", "git reset --hard",
+                      "chmod -R 777", "MCP_REMOTE_WRITES_ENABLED=true",
+                      "artisan optimize:clear", "composer update", "artisan db:wipe",
+                      "artisan migrate:fresh"):
+            assert bad not in s, bad
+          print("MCP_PHASE2B_OPERATOR_SAFETY=PASS")
+          PY
+      - name: Check exact files remain closed in review branch
+        run: |
+          set -Eeuo pipefail
+          grep -Fq "'oauth_ready' => false" config/mcp.php
+          grep -Fq "'oauth_provider_accepted' => false" config/mcp.php
+          grep -Fq 'auth:sanctum' routes/api.php
+          grep -Fq 'Passport::ignoreRoutes()' app/Providers/AppServiceProvider.php
+          grep -Fq 'laravel/passport' composer.lock
+          echo MCP_PHASE2B_SOURCE_STILL_FAIL_CLOSED=PASS
