@@ -111,21 +111,78 @@ done
 for f in "${changed[@]}"; do
  case "$f" in
   routes/web.php|app/Providers/AppServiceProvider.php|bootstrap/app.php)
-   python3 - "$STAGE/base/$f" "$STAGE/release/$f" "$STAGE/patch.diff" "$f" <<'PY'
+   # Do not apply a unified diff to production-customized files: its context
+   # differs from the GitHub baseline. Instead, isolate ONLY the reviewed
+   # insertions at unique semantic anchors. Refuse any ambiguity or conflict.
+   python3 - "$STAGE/base/$f" "$STAGE/release/$f" "$STAGE/old/$f" "$STAGE/merged/$f" "$f" <<'PY'
 from pathlib import Path
-import difflib,sys
-old=Path(sys.argv[1]).read_text().splitlines(keepends=True)
-new=Path(sys.argv[2]).read_text().splitlines(keepends=True)
-delta=''.join(difflib.unified_diff(old,new,fromfile='base',tofile='oauth',n=3))
-if not delta: raise SystemExit('NO_OAUTH_SOURCE_PATCH='+sys.argv[4])
-removed=[line for line in delta.splitlines() if line.startswith('-') and not line.startswith('---')]
-allowed=['-    ->withCommands([AssignAccountRole::class])'] if sys.argv[4]=='bootstrap/app.php' else []
-if removed!=allowed: raise SystemExit('NON_ADDITIVE_OAUTH_PATCH_REJECTED='+sys.argv[4])
-Path(sys.argv[3]).write_text(delta)
+import re,sys
+base=Path(sys.argv[1]).read_text()
+reviewed=Path(sys.argv[2]).read_text()
+live=Path(sys.argv[3]).read_text()
+name=sys.argv[5]
+ops={
+ 'routes/web.php': [
+  ("use App\\Http\\Controllers\\Api\\McpOAuthDiscoveryController;\n",
+   "// OAuth 2.1 discovery is fail-closed"),
+ ],
+ 'app/Providers/AppServiceProvider.php': [
+  ("use Laravel\\Fortify\\Fortify;\n", "class AppServiceProvider"),
+  ("        Fortify::ignoreRoutes();\n", "    }\n\n    public function boot"),
+  ("    public function boot(): void\n    {\n", "        View::composer("),
+ ],
+ 'bootstrap/app.php': [
+  ("use App\\Console\\Commands\\AssignAccountRole;\n",
+   "use App\\Http\\Middleware\\EnsureDeveloperToken;"),
+  ("use App\\Http\\Middleware\\SecurityHeaders;\n",
+   "use Illuminate\\Foundation\\Application;"),
+  ("use Illuminate\\Http\\Request;\n", "return Application::configure"),
+  ("            'developer.token' => EnsureDeveloperToken::class,\n", "        ]);"),
+  ("    ->withExceptions(function (Exceptions $exceptions): void {\n",
+   "        $exceptions->shouldRenderJsonWhen("),
+ ],
+}
+def between(s, a, z):
+ if s.count(a)!=1: raise SystemExit("ANCHOR_NOT_UNIQUE="+name+":"+a[:32])
+ start=s.index(a)+len(a)
+ stop=s.find(z,start)
+ if stop<0: raise SystemExit("STOP_ANCHOR_MISSING="+name+":"+z[:32])
+ return s[start:stop]
+def add_once(s,a,ins):
+ if s.count(a)!=1: raise SystemExit("LIVE_ANCHOR_MISMATCH="+name+":"+a[:30])
+ if ins.strip() in s: raise SystemExit("OAUTH_INSERTION_ALREADY_PRESENT="+name)
+ return s.replace(a,a+ins,1)
+old=base
+patched=live
+for anchor,stop in ops[name]:
+ before=between(base,anchor,stop)
+ after=between(reviewed,anchor,stop)
+ if before:
+  if not after.endswith(before):
+   raise SystemExit("REVIEWED_CHANGE_NOT_INSERT_ONLY="+name)
+  addition=after[:-len(before)]
+ else:
+  addition=after
+ if not addition.strip(): raise SystemExit("REVIEWED_INSERTION_EMPTY="+name)
+ old=add_once(old,anchor,addition)
+ patched=add_once(patched,anchor,addition)
+if name=='bootstrap/app.php':
+ pattern=re.compile(r'(->withCommands\(\[)([^\]\r\n]+)(\]\))')
+ def change(s):
+  matches=list(pattern.finditer(s))
+  if len(matches)!=1: raise SystemExit("WITH_COMMANDS_SHAPE_UNKNOWN")
+  existing=matches[0].group(2)
+  if 'AssignAccountRole::class' not in existing or 'RegisterMcpOAuthClient::class' in existing:
+   raise SystemExit("WITH_COMMANDS_CONFLICT")
+  return pattern.sub(lambda m: m.group(1)+m.group(2)+', RegisterMcpOAuthClient::class'+m.group(3),s,count=1)
+ old=change(old)
+ patched=change(patched)
+if old!=reviewed:
+ raise SystemExit("OVERLAY_DOES_NOT_REPRODUCE_REVIEWED_GITHUB_DIFF="+name)
+if patched==live: raise SystemExit("LIVE_OVERLAY_EMPTY="+name)
+Path(sys.argv[4]).write_text(patched)
+print("MCP_PHASE2B_VERIFIED_ADDITIVE_OVERLAY="+name)
 PY
-   patch --batch --forward --fuzz=0 -o "$STAGE/merged/$f" "$STAGE/old/$f" "$STAGE/patch.diff" || {
-    echo "LIVE_OAUTH_PATCH_NOT_APPLICABLE=$f" >&2; exit 2;
-   }
    ;;
   *)
    cmp -s "$STAGE/base/$f" "$STAGE/old/$f" || {
