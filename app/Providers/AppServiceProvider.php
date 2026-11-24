@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
         // staging gate; do not let Passport silently expose /oauth/* routes.
         if (class_exists(Passport::class)) {
             Passport::ignoreRoutes();
+            $this->app->when(McpOAuthAuthorizationController::class)
+                ->needs(StatefulGuard::class)
+                ->give(fn () => Auth::guard('web'));
         }
     }
 
