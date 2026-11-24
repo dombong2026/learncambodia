@@ -60,6 +60,12 @@ final class McpCrudEngine
         }
         if($operation!=='READ'){
             abort_unless(config('mcp.remote_writes_enabled',false),403,'MCP writes are disabled.');
+            abort_unless($request->user()->hasEnabledTwoFactorAuthentication(),403,
+                'A confirmed website-admin second factor is required for MCP mutations.');
+        }
+        if(in_array($resource,['users','settings'],true)){
+            abort_unless($request->user()->hasEnabledTwoFactorAuthentication(),403,
+                'A confirmed second factor is required for sensitive management reads.');
         }
     }
 
