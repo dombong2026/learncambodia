@@ -72,7 +72,7 @@ final class McpOAuthDiscoveryTest extends TestCase
         config()->set('mcp.oauth_provider_accepted', true);
 
         $resource=$this->getJson('/.well-known/oauth-protected-resource')
-            ->assertOk()->assertJsonPath('resource', 'https://learncambodia.com/api/mcp')
+            ->assertOk()->assertJsonPath('resource', 'https://learncambodia.com/api/mcp/oauth')
             ->assertJsonPath('authorization_servers.0', 'https://learncambodia.com')
             ->assertJsonPath('scopes_supported.0', 'mcp:read')
             ->assertJsonCount(1, 'scopes_supported');
