@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Laravel\Passport\Passport;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -26,6 +27,14 @@ final class ValidateMcpOAuthParameters
             && hash_equals($client, (string) $request->input('client_id', '')), 400,
             'Invalid OAuth resource or client.');
         abort_unless($request->input('client_secret') === null, 400, 'Public PKCE client only.');
+
+        // Public ChatGPT client is pre-registered on the server. No arbitrary
+        // client metadata URL, dynamic registration or confidential grant.
+        $passportClient = Passport::client()->newQuery()->find($client);
+        abort_unless($passportClient !== null && ! $passportClient->firstParty()
+            && $passportClient->hasGrantType('authorization_code')
+            && in_array($passportClient->provider, [null, 'mcp_oauth_users'], true), 400,
+            'Unregistered or unsupported OAuth client.');
 
         if ($phase === 'authorize') {
             abort_unless($request->isMethod('GET')
