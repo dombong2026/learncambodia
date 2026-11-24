@@ -3,6 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\ContentEntry;
+use App\Models\Category;
+use App\Models\Course;
+use App\Models\CourseModule;
+use App\Models\CourseLesson;
+use App\Models\CourseQuiz;
+use Database\Seeders\CategorySeeder;
 use App\Models\McpActionApproval;
 use App\Models\McpActionAudit;
 use App\Models\User;
@@ -217,4 +223,54 @@ final class McpBrowserBridgeTest extends TestCase
                 ]))->assertOk()->assertJsonPath('result.isError',true);
         }
     }
+    public function test_admin_creates_safe_course_module_lesson_and_quiz_drafts(): void
+    {
+        config()->set('mcp.gateway_enabled',true);
+        config()->set('mcp.remote_writes_enabled',true);
+        $this->seed(CategorySeeder::class);
+        $category=Category::where('code','GE')->firstOrFail();
+        $admin=$this->admin(true);
+        $token=$admin->createToken('LearnCambodia MCP: Curriculum Test',
+            ['mcp:use','mcp:read','mcp:write'],now()->addMinutes(15));
+        $this->withToken($token->plainTextToken);
+        $course=$this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'CREATE','resource'=>'courses','payload'=>[
+                'title'=>'Test MCP Course','summary'=>'MCP draft course with valid curriculum.',
+                'category_id'=>$category->id,'content_language'=>'en',
+                'delivery_mode'=>'online','description'=>'Draft content',
+            ],
+        ]))->assertOk()->assertJsonPath('result.isError',false)->json('result.structuredContent');
+        $this->assertSame('created',$course['status']);
+        $this->assertSame('draft',Course::findOrFail($course['resource_id'])->status);
+        $module=$this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'CREATE','resource'=>'modules','payload'=>[
+                'course_id'=>$course['resource_id'],'title'=>'Grammar Essentials',
+            ],
+        ]))->assertOk()->assertJsonPath('result.isError',false)->json('result.structuredContent');
+        $lesson=$this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'CREATE','resource'=>'lessons','payload'=>[
+                'course_module_id'=>$module['resource_id'],'title'=>'Past Tense',
+                'content_html'=>'<h2>Past Tense</h2><script>alert(1)</script>',
+            ],
+        ]))->assertOk()->assertJsonPath('result.isError',false)->json('result.structuredContent');
+        $this->assertStringNotContainsString('<script>',
+            CourseLesson::findOrFail($lesson['resource_id'])->content_html);
+        $quiz=$this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'CREATE','resource'=>'quizzes','payload'=>[
+                'course_id'=>$course['resource_id'],'title'=>'Grammar Check',
+                'passing_percent'=>70,
+            ],
+        ]))->assertOk()->assertJsonPath('result.isError',false)->json('result.structuredContent');
+        $this->assertSame('Grammar Check',CourseQuiz::findOrFail($quiz['resource_id'])->title);
+
+        $this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'UPDATE','resource'=>'modules','payload'=>[
+                'id'=>$module['resource_id'],'title'=>'Updated Grammar Essentials',
+            ],
+        ]))->assertOk()->assertJsonPath('result.isError',false);
+        $this->assertSame('Updated Grammar Essentials',
+            CourseModule::findOrFail($module['resource_id'])->title);
+        $this->assertDatabaseCount('mcp_action_audits',5);
+    }
+
 }
