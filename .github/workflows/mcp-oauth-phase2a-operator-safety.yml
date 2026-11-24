@@ -1,0 +1,40 @@
+name: MCP OAuth Phase 2A Operator Safety
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  operator-script-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax, pinned source, gates, rollback, and immutable sha
+        run: |
+          set -Eeuo pipefail
+          SCRIPT=support/operator/learncambodia-mcp-oauth-phase2a-deploy.sh
+          bash -n "$SCRIPT"
+          printf '%s  %s\n' '4e5e1ba949f1561ff5bc7296671b90589925f134254fbda654d50eb126d34a0e' "$SCRIPT" | sha256sum -c -
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("support/operator/learncambodia-mcp-oauth-phase2a-deploy.sh").read_text()
+          assert "REF=5b686eba5596ed1cd3e7720c11d666464eb04158" in s
+          assert "BASE=a4becc6b9696fb1e2e1b378c93ea2a22878f9799" in s
+          assert "MCP_OAUTH_PINNED_CI=PASS" in s
+          assert "MCP_OAUTH_PINNED_FILES_AND_GATES=PASS" in s
+          assert "MCP_OAUTH_PHASE2A_ROLLBACK=RESTORED" in s
+          assert "MCP_OAUTH_DISCOVERY_FAIL_CLOSED=PASS" in s
+          assert "MCP_PHASE1_SECURITY=PASS" in s
+          assert "MCP_OAUTH_PHASE2A_DEPLOYMENT=PASS" in s
+          assert "MCP_REMOTE_WRITES=UNCHANGED" in s
+          assert "MCP_CONTENT_MUTATIONS=NONE" in s
+          assert 'test ! -e "$SITE/$CTRL"' in s
+          for bad in ("migrate:fresh", "db:wipe", "git reset --hard",
+                      "chmod -R 777", "MCP_REMOTE_WRITES_ENABLED=true",
+                      "artisan migrate", "artisan key:generate"):
+              assert bad not in s, bad
+          print("MCP_OAUTH_OPERATOR_SCRIPT_SAFETY=PASS")
+          PY
