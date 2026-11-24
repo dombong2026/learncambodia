@@ -24,6 +24,19 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (class_exists(Passport::class)) {
+            Passport::tokensCan([
+                'mcp:read' => 'Read LearnCambodia course catalog and aggregate analytics',
+            ]);
+            Passport::defaultScopes([]);
+            Passport::tokensExpireIn(CarbonInterval::minutes(20));
+            Passport::refreshTokensExpireIn(CarbonInterval::days(7));
+            Passport::$revokeRefreshTokenAfterUse = true;
+            Passport::$implicitGrantEnabled = false;
+            Passport::$passwordGrantEnabled = false;
+            Passport::$deviceCodeGrantEnabled = false;
+            Passport::authorizationView('workspace.admin.mcp-oauth-consent');
+        }
         View::composer('partials.header', function (ViewInstance $view): void {
             $view->with(
                 'navigationCategories',
