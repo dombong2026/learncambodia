@@ -39,6 +39,7 @@ final class McpOAuthPassportTest extends TestCase
             name: 'ChatGPT MCP Test',
             redirectUris: [$this->callback],
             confidential: false,
+            user: $oauthOwner,
         );
         config()->set('mcp.oauth_client_id', (string) $client->getKey());
         return (string) $client->getKey();
