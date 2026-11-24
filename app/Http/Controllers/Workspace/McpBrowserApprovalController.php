@@ -42,10 +42,13 @@ final class McpBrowserApprovalController extends Controller
         // This is a browser-only, CSRF-protected, password-confirmed decision.
         // It never executes the operation; the MCP endpoint must recheck the
         // exact token/resource/payload and consume approval atomically.
-        $approval->update([
-            'status'=>$data['decision']==='approve'?'approved':'denied',
-            'approved_at'=>$data['decision']==='approve'?now():null,
-        ]);
+        $changed=McpActionApproval::query()->whereKey($approval->getKey())
+            ->where('status','pending')->where('expires_at','>',now())
+            ->update([
+                'status'=>$data['decision']==='approve'?'approved':'denied',
+                'approved_at'=>$data['decision']==='approve'?now():null,
+            ]);
+        abort_unless($changed===1,409,'This approval has already been decided.');
 
         return redirect()->route('admin.system-settings.mcp')
             ->with('status',$data['decision']==='approve'
