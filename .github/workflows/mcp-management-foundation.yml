@@ -23,6 +23,7 @@ jobs:
           php -l app/Support/WorkspaceMenu.php
           php -l tests/Feature/McpManagementTest.php
           bash -n support/operator/learncambodia-mcp-foundation-aapanel.sh
+          php -l support/operator/learncambodia-mcp-foundation-route-assert.php
           python3 -m py_compile support/operator/learncambodia-mcp-foundation-patcher.py
           python3 -m unittest discover -s tests/operator -p 'test_mcp_foundation_patcher.py' -v
           node --check public/js/mcp-management.js
@@ -36,6 +37,11 @@ jobs:
           js=Path('public/js/mcp-management.js').read_text()
           flags=Path('config/mcp.php').read_text()
           installer=Path('support/operator/learncambodia-mcp-foundation-aapanel.sh').read_text()
+          route_guard=Path('support/operator/learncambodia-mcp-foundation-route-assert.php').read_text()
+          assert 'gatherMiddleware()' in route_guard
+          assert "in_array('role:admin'" in route_guard
+          assert "in_array('auth'" in route_guard
+          assert 'MCP_ADMIN_ROUTE_AUTH=PASS' in route_guard
           assert "Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp')" in route
           assert "middleware('role:admin')" in route or "middleware(['role:admin'])" in route
           assert "admin.system-settings.mcp" in config
@@ -53,7 +59,7 @@ jobs:
           assert 'Route::post("/mcp"' not in route
           for token in ['MCP_PINNED_CI=PASS','MCP_MANAGEMENT_FOUNDATION_DEPLOY=PASS',
                         'MCP_FOUNDATION_ROLLBACK=RESTORED','MCP_REMOTE_WRITES=DISABLED',
-                        'MCP_ADMIN_ROUTE_AUTH=PASS','runuser -u www -- "$PHP" artisan view:cache']:
+                        'foundation-route-assert.php','runuser -u www -- "$PHP" artisan view:cache']:
             assert token in installer,token
           for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
             assert forbidden not in installer,forbidden
@@ -82,7 +88,9 @@ jobs:
           CACHE_STORE: array
           SESSION_DRIVER: array
           QUEUE_CONNECTION: sync
-        run: php artisan test --filter=McpManagementTest
+        run: |
+          php artisan test --filter=McpManagementTest
+          php support/operator/learncambodia-mcp-foundation-route-assert.php
 
   browser-desktop-tablet-mobile:
     runs-on: ubuntu-24.04
