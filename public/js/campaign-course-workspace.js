@@ -7,7 +7,7 @@ const tree = document.getElementById('cs-course-tree');
 const byId = id => document.getElementById(id);
 if (!list || !tree) return;
 // New campaigns start with required metadata; existing campaigns open the current lesson.
-let activeModule = 0, activeLesson = 0, activeTab = root.dataset.campaignId ? 'curriculum' : 'metadata';
+let activeModule = 0, activeLesson = 0, activeTab = 'metadata';
 let pendingSelection = null, dragSource = null, scheduled = false;
 const collapsedUnits = new Set();
 const escaped = value => String(value ?? '').replace(/[&<>"']/g, x =>
@@ -56,6 +56,10 @@ function decorateLesson(lesson) {
             panels.curriculum.appendChild(child);
         }
     }
+    const hint = document.createElement('p');
+    hint.className = 'cs-course-type-guidance';
+    hint.setAttribute('data-cs-type-hint', '');
+    panels.curriculum.insertBefore(hint, panels.curriculum.children[1] || null);
     Object.values(panels).forEach(p => body.appendChild(p));
     lesson.dataset.csAdapted = 'yes';
 }
@@ -90,8 +94,18 @@ function setActivePanel() {
     byId('cs-current-unit-heading').textContent = unit ? 'Unit '+(activeModule+1)+': '+(titleOf(unit)||'Untitled unit') : 'Course outline';
     byId('cs-current-content-type').textContent = lessonType(lesson).toUpperCase();
     byId('cs-unit-label').textContent = modules().length+' unit'+(modules().length===1?'':'s');
-    const meta=root.querySelector('.cs-course-campaign-metadata');
-    meta.hidden = activeTab !== 'metadata';
+    root.dataset.csTabActive = activeTab;
+    const help = {
+        quiz: 'Quiz lesson: add written instructions here, then switch to Assessments for questions, choices, answer keys and feedback.',
+        exam: 'Exam lesson: add written instructions here, then switch to Assessments for scored questions and explanations.',
+        text: 'Text lesson: use the rich text editor below for paragraphs, headings, lists, tables, links and formatting.',
+        html: 'Rich HTML lesson: use the HTML source control in the editor toolbar. Unsafe scripts are removed automatically.',
+        emoji: 'Emoji lesson: use the Emoji toolbar control or type emoji directly into the rich text editor.',
+        code: 'Code lesson: write code in the dedicated monospaced source editor below.',
+        image: 'Image lesson: upload or link an image in the Lesson Media section below.',
+        video: 'Video lesson: upload an MP4/WebM file or provide an HTTPS video URL below.',
+        youtube: 'YouTube lesson: paste the HTTPS YouTube video URL in Lesson Media below.'
+    };
     for (const mod of modules()) {
         const selected = Number(mod.dataset.moduleIndex) === activeModule;
         mod.toggleAttribute('data-cs-active',selected);
@@ -101,6 +115,8 @@ function setActivePanel() {
             l.toggleAttribute('data-cs-active',isActive);
             if(isActive && !l.open)l.open=true;
             l.querySelectorAll('[data-cs-panel]').forEach(p=>p.hidden=p.dataset.csPanel!==activeTab);
+            const hint=l.querySelector('[data-cs-type-hint]');
+            if(hint)hint.textContent=help[lessonType(l)]||help.text;
         }
     }
     root.querySelectorAll('[data-cs-tab]').forEach(t=>{
@@ -111,7 +127,7 @@ function setActivePanel() {
         if(selected)byId('cs-course-stage').setAttribute('aria-labelledby',t.id);
     });
     const campaignTitle=byId('cs-campaign-title');
-    byId('cs-header-title').textContent=campaignTitle.value.trim()||'New learning campaign';
+    // Campaign title and type are global settings, not lesson-level fields.
     const count=Number(byId('cs-questions-count').textContent||'0');
     const ready=count>0 && !byId('cs-cover-image').hidden && campaignTitle.value.trim();
     const marker=byId('cs-readiness-mark');
@@ -236,7 +252,15 @@ list.addEventListener('input',event=>{
     }
     if(event.target.matches('[data-field="module-title"],[data-field="title"]'))schedule();
 });
-list.addEventListener('change',schedule);
+list.addEventListener('change',event=>{
+    if(event.target.matches('[data-field="type"]')){
+        // The base editor redraws the lesson when its type changes. Switch to the
+        // relevant panel so its controls become visible immediately.
+        const kind=event.target.value;
+        activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
+    }
+    schedule();
+});
 list.addEventListener('click',event=>{
     const button=event.target.closest('[data-action]');
     if(!button)return;
