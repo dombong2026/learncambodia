@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Admin-only MCP Management foundation. No remote endpoint, migrations or tokens.
+# Admin-only MCP Management foundation; fail-closed route reconciliation.
 set -Eeuo pipefail
 umask 077
 RELEASE="${1:?Pinned reviewed commit SHA required}"
