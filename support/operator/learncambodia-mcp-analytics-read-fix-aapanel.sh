@@ -20,7 +20,7 @@ SITE=/www/wwwroot/learncambodia.com
 PHP=/www/server/php/85/bin/php
 MARKER="$SITE/storage/app/private/learncambodia-mcp-analytics-read-fix.txt"
 
-for tool in gh git python3 php sha256sum flock cmp mktemp runuser; do
+for tool in gh git python3 flock cmp mktemp; do
     command -v "$tool" >/dev/null || { echo "MISSING_TOOL=$tool" >&2; exit 2; }
 done
 test -f "$SITE/artisan" && test -x "$PHP" && test -f "$SITE/$FILE"
