@@ -205,7 +205,11 @@ for f in "${new[@]}"; do replace "$STAGE/release/$f" "$SITE/$f"; done
 mv "$SITE/vendor" "$STAGE/vendor-old"
 mv "$STAGE/qa/vendor" "$SITE/vendor"
 runuser -u www -- test -r "$SITE/vendor/autoload.php"
-"$PHP" artisan optimize:clear >/dev/null
+# Clear only local Laravel compiled/config/route files. optimize:clear
+# would also clear the configured cache store, potentially in the database.
+"$PHP" artisan config:clear >/dev/null
+"$PHP" artisan route:clear >/dev/null
+"$PHP" artisan event:clear >/dev/null
 "$PHP" artisan package:discover --no-interaction >/dev/null
 if test "$cached" -eq 1; then runuser -u www -- "$PHP" artisan route:cache >/dev/null; fi
 runuser -u www -- "$PHP" artisan route:list --json > "$STAGE/routes-after.json"
