@@ -8,6 +8,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View as ViewInstance;
 use Laravel\Fortify\Fortify;
 use Laravel\Passport\Passport;
+use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\McpOAuthAuthorizationController;
 use Carbon\CarbonInterval;
 
 class AppServiceProvider extends ServiceProvider
