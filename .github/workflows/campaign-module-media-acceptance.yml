@@ -1,0 +1,80 @@
+name: Campaign Module Duplicate Media acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer syntax, JS syntax, and UI source contracts
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-module-media-hotfix-aapanel.sh
+          node --check public/js/campaign-course-workspace.js
+          node --check public/js/campaign-studio-premium.js
+          python3 - <<'PY'
+          from pathlib import Path
+          root=Path('.')
+          view=(root/'resources/views/workspace/admin/campaign-course-workspace.blade.php').read_text()
+          core=(root/'public/js/campaign-studio-premium.js').read_text()
+          adapter=(root/'public/js/campaign-course-workspace.js').read_text()
+          css=(root/'public/css/campaign-course-workspace.css').read_text()
+          script=(root/'support/operator/learncambodia-campaign-module-media-hotfix-aapanel.sh').read_text()
+          for forbidden in [
+            "Changes are saved to this campaign only.",
+            "Administrators can save drafts and publish directly. No additional approval is required.",
+            "One title and type for the entire campaign. Units and lessons inherit these campaign settings."
+          ]:
+            assert forbidden not in view,forbidden
+          assert '<label class="cs-label">Lesson text editor</label>' not in core
+          for token in ['id="cs-selected-module-title"', 'id="cs-selected-module-editor"']:
+            assert token in view,token
+          for token in ['data-cs-rename-module','cs-selected-module-title',
+                        'pendingSelection={mi:Number(mod.dataset.moduleIndex),li:Number(lesson.dataset.lessonIndex)+1}',
+                        'data-cs-lesson-media-preview','youtube-nocookie.com/embed/','trustedPreviewUrl',
+                        'new URL(', 'preload', 'allowfullscreen']:
+            assert token in (adapter+core),token
+          assert "dup.uid=makeId()" in core
+          assert "(copy)" in core
+          assert "cs-selected-media-element" in css
+          assert "cs-tree-rename" in css
+          assert 'html.dark #cs-builder.cs-course-workspace' in css
+          for token in ['EXACT_LIVE_BASELINE=PASS', 'CAMPAIGN_MEDIA_ROLLBACK=RESTORED',
+                        'CAMPAIGN_MODULE_MEDIA_DEPLOY=PASS',
+                        'runuser -u www -- "$PHP" artisan view:cache','CAMPAIGN_DATA_MUTATIONS=NONE']:
+            assert token in script,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in script,forbidden
+          print('CAMPAIGN_MODULE_MEDIA_SOURCE_GATE=PASS')
+          PY
+
+  browser-desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Isolated browser test environment
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Module names, duplication, media previews, draft preservation and existing lessons
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-course-workspace.spec.mjs \
+            tests/browser/campaign-studio-premium.spec.mjs \
+            tests/browser/home-multicampaign.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium
