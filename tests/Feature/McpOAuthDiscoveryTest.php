@@ -31,6 +31,11 @@ final class McpOAuthDiscoveryTest extends TestCase
             ->name('mcp.oauth.authorize');
         Route::post('/__oauth-metadata-test/token', fn () => response('fixture'))
             ->name('mcp.oauth.token');
+        // Refresh the route collection's lookup cache for routes created
+        // after Laravel booted in this isolated fixture.
+        Route::getRoutes()->refreshNameLookups();
+        $this->assertTrue(Route::has('mcp.oauth.authorize'));
+        $this->assertTrue(Route::has('mcp.oauth.token'));
     }
 
     public function test_discovery_is_not_advertised_by_default(): void
