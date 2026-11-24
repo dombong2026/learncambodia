@@ -92,7 +92,7 @@ final class McpOAuthDiscoveryTest extends TestCase
         $this->assertArrayNotHasKey('registration_endpoint', $auth->json());
         $this->assertArrayNotHasKey('client_id_metadata_document_supported', $auth->json());
         $this->assertArrayNotHasKey('authorization_response_iss_parameter_supported', $auth->json());
-        $this->assertNotContains('refresh_token', $auth->json('grant_types_supported'));
+        $this->assertContains('refresh_token', $auth->json('grant_types_supported'));
         $this->assertNotContains('mcp:write', $auth->json('scopes_supported'));
     }
 
