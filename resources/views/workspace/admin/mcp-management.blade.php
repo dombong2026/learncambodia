@@ -4,8 +4,8 @@
 @section('description', 'Prepare secure, role-scoped AI management for LearnCambodia. Remote access is disabled until OAuth and tool-level authorization are implemented and verified.')
 
 @push('workspace_styles')
-<link rel="stylesheet" href="{{ asset('css/mcp-management.css') }}?v=foundation-1">
-<script defer src="{{ asset('js/mcp-management.js') }}?v=foundation-1"></script>
+<link rel="stylesheet" href="{{ asset('css/mcp-management.css') }}?v=bridge-1">
+<script defer src="{{ asset('js/mcp-management.js') }}?v=bridge-1"></script>
 @endpush
 
 @section('content')
@@ -23,14 +23,14 @@
         </div>
         <div class="mcp-hero-status" role="status">
             <span class="mcp-status-dot" aria-hidden="true"></span>
-            {{ $gatewayReady ? 'Ready for secure review' : 'Remote connection disabled' }}
+            {{ $gatewayReady ? 'Ready for secure review' : ($flagEnabled ? 'Direct bearer bridge enabled · OAuth pending' : 'Remote connection disabled') }}
         </div>
     </section>
 
     <section class="mcp-status-grid" aria-label="Connection readiness">
         <div class="mcp-status-card">
             <span class="mcp-stat-label">Gateway configuration</span>
-            <strong>{{ $flagEnabled ? 'Flag enabled' : 'Disabled' }}</strong>
+            <strong>{{ $flagEnabled ? 'Direct bridge flag enabled' : 'Disabled' }}</strong>
             <p>Feature flag only; it cannot expose an MCP endpoint by itself.</p>
         </div>
         <div class="mcp-status-card">
@@ -40,7 +40,7 @@
         </div>
         <div class="mcp-status-card">
             <span class="mcp-stat-label">Remote write operations</span>
-            <strong>{{ ($gatewayReady && $writeFlagEnabled) ? 'Flag enabled' : 'Locked' }}</strong>
+            <strong>{{ ($flagEnabled && $writeFlagEnabled) ? 'Scoped writes enabled' : 'Locked' }}</strong>
             <p>Publishing and configuration changes must require explicit approval.</p>
         </div>
         <div class="mcp-status-card">
@@ -48,6 +48,82 @@
             <strong>{{ count($tools) }}</strong>
             <p>{{ $readCount }} read-only · {{ $writeCount }} write/publish proposals · none registered.</p>
         </div>
+    </section>
+
+    <section class="mcp-panel mcp-browser-section" aria-labelledby="mcp-browser-heading"
+        data-mcp-issue-url="{{ route('admin.system-settings.mcp.sessions.issue') }}"
+        data-mcp-revoke-prefix="{{ url('/dashboard/system-settings/mcp/sessions') }}">
+        <div class="mcp-panel-header">
+            <div>
+                <span class="mcp-panel-kicker">WEBSITE ADMIN AUTHENTICATION</span>
+                <h3 id="mcp-browser-heading">Connect through LearnCambodia Admin</h3>
+                <p>You're signed in through the website's admin session. A separate password confirmation and any configured 2FA protect short-lived MCP permissions.</p>
+            </div>
+            <span class="mcp-neutral-chip">Browser consent</span>
+        </div>
+        <div class="mcp-browser-body">
+            <div class="mcp-browser-controls">
+                <button type="button" class="mcp-connect-button" data-mcp-open-auth>Authenticate in Browser</button>
+                <a class="mcp-regular-link" href="{{ route('login') }}" target="_blank" rel="noopener">Admin login portal</a>
+            </div>
+            <p class="mcp-bridge-warning">Direct short-lived bearer bridge: this is not yet the OAuth 2.1 automatic callback used by ChatGPT connectors. Remote operations remain blocked while the gateway is disabled.</p>
+            <h4>Authorized browser sessions</h4>
+            <div class="mcp-table-scroll">
+                <table class="mcp-table mcp-session-table">
+                    <thead><tr><th>Client</th><th>Scopes</th><th>Expires</th><th>Last used</th><th>Access</th></tr></thead>
+                    <tbody data-mcp-sessions>
+                    @forelse ($bridgeSessions as $session)
+                        <tr data-mcp-session-id="{{ $session->id }}">
+                            <td><strong>{{ $session->name }}</strong><small>ID {{ $session->id }}</small></td>
+                            <td>{{ implode(', ', array_values(array_filter($session->abilities ?? [], fn($scope)=>$scope!=='mcp:use'))) }}</td>
+                            <td>{{ $session->expires_at?->format('Y-m-d H:i') ?? 'Not set' }}</td>
+                            <td>{{ $session->last_used_at?->format('Y-m-d H:i') ?? 'Never' }}</td>
+                            <td><button type="button" class="mcp-revoke-button" data-mcp-revoke="{{ $session->id }}">Revoke</button></td>
+                        </tr>
+                    @empty
+                        <tr data-mcp-empty><td colspan="5">No browser-authorized MCP sessions.</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <dialog id="mcp-browser-auth-dialog" class="mcp-detail-dialog mcp-browser-dialog" aria-labelledby="mcp-browser-modal-title">
+            <div class="mcp-dialog-header">
+                <div><span class="mcp-panel-kicker">ADMIN PERMISSION CONSENT</span><h3 id="mcp-browser-modal-title">Connect to Learn Cambodia Admin</h3></div>
+                <button class="mcp-close" data-mcp-auth-close type="button" aria-label="Close consent dialog">✕</button>
+            </div>
+            <form id="mcp-browser-auth-form">
+                <p>Authorize a specific client to perform only the selected actions. This session never receives your website password or 2FA code.</p>
+                <label class="mcp-field-label" for="mcp-client-name">Session / client name</label>
+                <input id="mcp-client-name" name="client_name" maxlength="60" minlength="3" required value="LearnCambodia Admin MCP">
+                <fieldset class="mcp-consent-scopes"><legend>Permissions requested</legend>
+                    @foreach($bridgeScopes as $scope)
+                        <label><input type="checkbox" name="scopes[]" value="{{ $scope }}" @checked($scope==='mcp:read')>
+                            <span>{{ strtoupper(str_replace('mcp:', '', $scope)) }}</span></label>
+                    @endforeach
+                </fieldset>
+                <p class="mcp-bridge-warning">WRITE, UPLOAD, DELETE, PUBLISH and MANAGE require confirmed 2FA. Deletion also requires a separate browser approval. Code install/push is not available through this credential.</p>
+                <label class="mcp-field-label" for="mcp-expiry">Session expiry</label>
+                <select id="mcp-expiry" name="expires_in_minutes">
+                    <option value="15">15 minutes</option><option value="30" selected>30 minutes</option><option value="60">60 minutes</option>
+                </select>
+                <label class="mcp-consent-confirm"><input type="checkbox" id="mcp-consent-accept" required>
+                    I understand the requested access and approve issuing a short-lived token.</label>
+                <div class="mcp-dialog-footer">
+                    <button class="mcp-primary-close" type="submit" data-mcp-connect-submit>Approve browser session</button>
+                </div>
+            </form>
+            <div id="mcp-browser-issued" hidden>
+                <strong>Browser session created — copy the token once</strong>
+                <p>This token is shown only now. It is not a complete ChatGPT OAuth connection.</p>
+                <textarea id="mcp-issued-token" rows="3" readonly spellcheck="false" aria-label="One-time MCP bridge token"></textarea>
+                <div class="mcp-dialog-footer">
+                    <button type="button" class="mcp-primary-close" data-mcp-copy-token>Copy token</button>
+                    <button type="button" class="mcp-close-text" data-mcp-auth-close>Close</button>
+                </div>
+            </div>
+            <p id="mcp-browser-feedback" role="status" aria-live="polite"></p>
+        </dialog>
     </section>
 
     <div class="mcp-main-grid">
@@ -109,6 +185,21 @@
         </div>
     </section>
 
+    <section class="mcp-panel" aria-labelledby="mcp-audit-heading">
+        <div class="mcp-panel-header"><div><span class="mcp-panel-kicker">OPERATION RECEIPTS</span><h3 id="mcp-audit-heading">Recent MCP activity</h3></div></div>
+        <div class="mcp-table-scroll"><table class="mcp-table">
+        <thead><tr><th>Operation</th><th>Resource</th><th>Status</th><th>HTTP status</th><th>Receipt ID</th><th>Date</th></tr></thead>
+        <tbody>
+        @forelse($bridgeAudits as $receipt)
+            <tr><td><strong>{{ $receipt->tool }}</strong><small>{{ $receipt->operation }}</small></td>
+                <td>{{ $receipt->resource }} {{ $receipt->resource_id }}</td>
+                <td>{{ $receipt->result }}</td><td>{{ $receipt->http_status }}</td>
+                <td><code>{{ $receipt->id }}</code></td><td>{{ $receipt->created_at?->format('Y-m-d H:i') }}</td></tr>
+        @empty
+            <tr><td colspan="6">No MCP operation receipts yet.</td></tr>
+        @endforelse
+        </tbody></table></div>
+    </section>
     <p class="mcp-disclaimer"><strong>Security:</strong> No API keys, OAuth secrets or student records are displayed on this page. The developer catalog-read token cannot be used to administer the website. No public MCP endpoint is registered in this foundation.</p>
 
     <dialog class="mcp-detail-dialog" id="mcp-tool-dialog" aria-labelledby="mcp-dialog-title">

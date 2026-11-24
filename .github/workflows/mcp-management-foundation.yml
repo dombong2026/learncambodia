@@ -54,8 +54,14 @@ jobs:
           assert "mcp-tool-dialog" in view
           assert "tool" in catalog
           assert "textContent" in js
-          for token in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'eval(', 'localStorage']:
+          for token in ['XMLHttpRequest', 'innerHTML', 'eval(', 'localStorage']:
             assert token not in js,token
+          # The first foundation has no network controls; the later browser
+          # consent bridge legitimately uses same-origin fetch with CSRF.
+          if 'id="mcp-browser-auth-form"' in view:
+            assert 'fetch(' in js and "'X-CSRF-TOKEN':csrf" in js
+          else:
+            assert 'fetch(' not in js
           assert 'Route::post("/mcp"' not in route
           for token in ['MCP_PINNED_CI=PASS','MCP_MANAGEMENT_FOUNDATION_DEPLOY=PASS',
                         'MCP_FOUNDATION_ROLLBACK=RESTORED','MCP_REMOTE_WRITES=DISABLED',

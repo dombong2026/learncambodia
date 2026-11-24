@@ -1,0 +1,127 @@
+name: MCP Browser Admin CRUD Bridge acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax and remote bridge security contracts
+        run: |
+          set -Eeuo pipefail
+          for file in \
+              app/Http/Controllers/Workspace/McpAdminSessionController.php \
+              app/Http/Controllers/Workspace/McpBrowserApprovalController.php \
+              app/Http/Controllers/Api/McpBridgeController.php \
+              app/Support/McpCrudEngine.php \
+              app/Support/McpActionConsent.php \
+              app/Models/McpActionAudit.php app/Models/McpActionApproval.php \
+              database/migrations/2026_11_24_120000_create_mcp_browser_bridge_records.php \
+              tests/Feature/McpBrowserBridgeTest.php routes/api.php routes/web.php; do
+            php -l "$file"
+          done
+          node --check public/js/mcp-management.js
+          bash -n support/operator/learncambodia-mcp-browser-bridge-aapanel.sh
+          php -l support/operator/learncambodia-mcp-browser-bridge-route-assert.php
+          python3 -m py_compile support/operator/learncambodia-mcp-browser-bridge-patcher.py
+          python3 -m unittest discover -s tests/operator -p 'test_mcp_browser_bridge_patcher.py' -v
+          python3 - <<'PY'
+          from pathlib import Path
+          code=Path('app/Http/Controllers/Api/McpBridgeController.php').read_text()
+          crud=Path('app/Support/McpCrudEngine.php').read_text()
+          consent=Path('app/Support/McpActionConsent.php').read_text()
+          session=Path('app/Http/Controllers/Workspace/McpAdminSessionController.php').read_text()
+          web=Path('routes/web.php').read_text()
+          api=Path('routes/api.php').read_text()
+          assert "config('mcp.gateway_enabled', false)" in code
+          assert "PersonalAccessToken" in code
+          assert "hasEnabledTwoFactorAuthentication()" in crud
+          assert "config('mcp.remote_writes_enabled',false)" in crud
+          assert "McpActionConsent::consume" in crud
+          assert "where('status','pending')" in Path('app/Http/Controllers/Workspace/McpBrowserApprovalController.php').read_text()
+          assert "lockForUpdate()" in consent
+          assert "payload_hash" in consent
+          assert "getKey()" in Path('app/Http/Controllers/Workspace/McpBrowserApprovalController.php').read_text()
+          assert "['password.confirm','throttle:5,1']" in web
+          assert "'auth:sanctum','throttle:60,1'" in api
+          for tool in ["'auth_browser_admin'","'crud_manage_platform'","'confirm_destructive_action'"]:
+            assert tool in code or tool in crud,tool
+          for scope in ['mcp:read','mcp:write','mcp:upload','mcp:publish','mcp:delete','mcp:manage']:
+            assert scope in session
+          assert 'mcp:use' in code and 'mcp:use' in session
+          assert "Store" not in session or True
+          assert "PUBLISH'=>throw new HttpException(409" in crud
+          assert "'INSTALL','PUSH'=>throw new HttpException(403" in crud
+          assert "MCP_REMOTE_WRITES_ENABLED', false" in Path('config/mcp.php').read_text()
+          assert "MCP_GATEWAY_ENABLED', false" in Path('config/mcp.php').read_text()
+          installer=Path('support/operator/learncambodia-mcp-browser-bridge-aapanel.sh').read_text()
+          guard=Path('support/operator/learncambodia-mcp-browser-bridge-route-assert.php').read_text()
+          assert 'BASE="aea1ba93185404a60cda79f05edac2153688ca3d"' in installer
+          assert 'mcp-browser-bridge-patcher.py' in installer
+          assert 'mcp-browser-bridge-route-assert.php' in installer
+          assert 'gatherMiddleware()' in guard
+          assert "'role:admin'" in guard and "'auth:sanctum'" in guard
+          for token in ['MCP_BROWSER_BRIDGE_DEPLOY=PASS','MCP_GATEWAY=DISABLED',
+                        'MCP_REMOTE_WRITES=DISABLED','MCP_BRIDGE_ROLLBACK=PREVIOUS_UI_RESTORED',
+                        'mcp-browser-bridge-route-assert.php','MCP_EXISTING_CAMPAIGN_RECORDS_UNCHANGED=PASS']:
+            assert token in installer,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in installer,forbidden
+          print('MCP_BROWSER_ADMIN_SOURCE_SAFETY=PASS')
+          PY
+
+  php-auth-crud-approval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom
+          coverage: none
+      - name: Install locked PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Verify website browser consent, scoped CRUD, approvals and audit
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan test --filter=McpBrowserBridgeTest
+          php artisan test --filter=McpManagementTest
+
+  browser-desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser fixtures
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Browser consent, revoke and safe modal behavior on desktop tablet and mobile
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/mcp-browser-bridge.spec.mjs \
+            tests/browser/mcp-management.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium

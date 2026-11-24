@@ -56,9 +56,10 @@ final class McpManagementTest extends TestCase
 
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
         $this->actingAs($admin)->get('/dashboard/system-settings/mcp')->assertOk()
-            ->assertSee('Remote connection disabled')
+            ->assertSee('Direct bearer bridge enabled')
+            ->assertSee('OAuth pending')
             ->assertSee('Not configured')
-            ->assertSee('Locked')
+            ->assertSee('Scoped writes enabled')
             ->assertDontSee('Ready for secure review');
     }
 
