@@ -23,6 +23,8 @@ jobs:
           php -l app/Support/WorkspaceMenu.php
           php -l tests/Feature/McpManagementTest.php
           bash -n support/operator/learncambodia-mcp-foundation-aapanel.sh
+          python3 -m py_compile support/operator/learncambodia-mcp-foundation-patcher.py
+          python3 -m unittest discover -s tests/operator -p 'test_mcp_foundation_patcher.py' -v
           node --check public/js/mcp-management.js
           python3 - <<'PY'
           from pathlib import Path
