@@ -69,7 +69,7 @@ jobs:
           assert "'role:admin'" in guard and "'auth:sanctum'" in guard
           for token in ['MCP_BROWSER_BRIDGE_DEPLOY=PASS','MCP_GATEWAY=DISABLED',
                         'MCP_REMOTE_WRITES=DISABLED','MCP_BRIDGE_ROLLBACK=PREVIOUS_UI_RESTORED',
-                        'MCP_ADMIN_ROUTE_AUTH=PASS','MCP_EXISTING_CAMPAIGN_RECORDS_UNCHANGED=PASS']:
+                        'mcp-browser-bridge-route-assert.php','MCP_EXISTING_CAMPAIGN_RECORDS_UNCHANGED=PASS']:
             assert token in installer,token
           for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
             assert forbidden not in installer,forbidden
