@@ -25,6 +25,8 @@ final class McpActionConsent
         abort_unless(ctype_digit($id) && (int)$id>0, 422);
         $actor=$request->user();
         abort_unless($actor?->isAdministrator(), 403);
+        abort_unless($actor->hasEnabledTwoFactorAuthentication(),403,
+            'A confirmed second factor is required for destructive MCP requests.');
         $token=$actor->currentAccessToken();
         abort_unless($token instanceof \Laravel\Sanctum\PersonalAccessToken, 401);
 
