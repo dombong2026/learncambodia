@@ -166,8 +166,12 @@ test('rich text toolbar creates allowed heading and table content and strips scr
         })});
     });
     await mount(page);
+    // The initial Metadata tab intentionally hides the Curriculum editor.
+    // Navigate to the lesson's editing panel before exercising its toolbar.
+    await page.getByRole('tab',{name:'Curriculum'}).click();
     const active=page.locator('.cs-lesson[data-cs-active]');
     const body=active.locator('[data-editor]');
+    await expect(body).toBeVisible();
     await body.fill('Welcome to IELTS');
     await active.getByRole('button',{name:'Heading 2'}).click();
     await expect(body.locator('h2')).toContainText('Welcome to IELTS');
