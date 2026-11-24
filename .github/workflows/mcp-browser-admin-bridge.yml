@@ -27,6 +27,7 @@ jobs:
             php -l "$file"
           done
           node --check public/js/mcp-management.js
+          bash -n support/operator/learncambodia-mcp-browser-bridge-aapanel.sh
           python3 - <<'PY'
           from pathlib import Path
           code=Path('app/Http/Controllers/Api/McpBridgeController.php').read_text()
@@ -56,6 +57,13 @@ jobs:
           assert "'INSTALL','PUSH'=>throw new HttpException(403" in crud
           assert "MCP_REMOTE_WRITES_ENABLED', false" in Path('config/mcp.php').read_text()
           assert "MCP_GATEWAY_ENABLED', false" in Path('config/mcp.php').read_text()
+          installer=Path('support/operator/learncambodia-mcp-browser-bridge-aapanel.sh').read_text()
+          for token in ['MCP_BROWSER_BRIDGE_DEPLOY=PASS','MCP_GATEWAY=DISABLED',
+                        'MCP_REMOTE_WRITES=DISABLED','MCP_BRIDGE_ROLLBACK=PREVIOUS_UI_RESTORED',
+                        'MCP_ADMIN_ROUTE_AUTH=PASS','MCP_EXISTING_CAMPAIGN_RECORDS_UNCHANGED=PASS']:
+            assert token in installer,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in installer,forbidden
           print('MCP_BROWSER_ADMIN_SOURCE_SAFETY=PASS')
           PY
 
