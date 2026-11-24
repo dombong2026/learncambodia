@@ -153,7 +153,7 @@ final class McpBrowserBridgeTest extends TestCase
         $admin=$this->admin(true);
         $entry=ContentEntry::create([
             'type'=>'post','title'=>'Delete Test','slug'=>'delete-test',
-            'status'=>'draft','created_by'=>$admin->id,'updated_by'=>$admin->id,
+            'status'=>'draft','body'=>'Test content','created_by'=>$admin->id,'updated_by'=>$admin->id,
         ]);
         $token=$admin->createToken('LearnCambodia MCP: Delete Test',
             ['mcp:use','mcp:delete'],now()->addMinutes(15));
