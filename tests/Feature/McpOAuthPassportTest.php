@@ -33,6 +33,8 @@ final class McpOAuthPassportTest extends TestCase
 
     private function setupClient(): string
     {
+        $owner = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
+        $oauthOwner = McpOAuthUser::query()->findOrFail($owner->id);
         $client = app(ClientRepository::class)->createAuthorizationCodeGrantClient(
             name: 'ChatGPT MCP Test',
             redirectUris: [$this->callback],
