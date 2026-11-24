@@ -293,6 +293,8 @@ test('media URL and uploaded asset preview only on active lesson, and are remove
     await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] iframe'))
         .toHaveAttribute('src','https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
     await page.locator('[data-cs-select-lesson="0-0"]').click();
+    await expect(page.locator('#cs-edit-title')).toHaveText('Present simple');
+    await expect(page.locator('#cs-current-lesson-number')).toHaveText('LESSON 1.1');
     await expect(page.locator('[data-cs-lesson-media-preview] iframe')).toHaveCount(0);
 });
 test('blocks unsafe media URL schemes from preview',async({page})=>{
