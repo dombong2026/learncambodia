@@ -70,6 +70,14 @@ use App\Http\Controllers\Workspace\InstructorHomeworkController;
 use App\Http\Controllers\Workspace\InstructorGradingController;
 use App\Http\Controllers\Workspace\StudentHomeworkController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\McpOAuthDiscoveryController;
+
+// OAuth 2.1 discovery is fail-closed until a real authorization server
+// passes security acceptance. The existing /api/mcp bearer route is untouched.
+Route::get('/.well-known/oauth-protected-resource', [McpOAuthDiscoveryController::class, 'protectedResource'])
+    ->middleware('throttle:30,1')->name('mcp.oauth.metadata.resource');
+Route::get('/.well-known/oauth-authorization-server', [McpOAuthDiscoveryController::class, 'authorizationServer'])
+    ->middleware('throttle:30,1')->name('mcp.oauth.metadata.authorization-server');
 
 Route::get('/install', [InstallController::class, 'index'])->name('install.index');
 Route::post('/install/unlock', [InstallController::class, 'unlock'])

@@ -1,0 +1,20 @@
+name: MCP OAuth Live Overlay Operator Safety
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  operator-overlay-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify guarded installer and route-preserving patch
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-mcp-oauth-phase2a-live-overlay-aapanel.sh
+          python3 tests/operator/test_mcp_oauth_live_overlay.py
+          echo MCP_OAUTH_OPERATOR_CI=PASS
