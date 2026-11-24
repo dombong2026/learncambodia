@@ -14,6 +14,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthenticationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,6 +37,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AuthenticationException $error, Request $request) {
+            if (! $request->is('api/mcp/oauth')) {
+                return null;
+            }
+
+            // The dedicated OAuth resource must stay invisible until both
+            // independent security acceptance gates are enabled.
+            if (! config('mcp.oauth_provider_staging_enabled', false)
+                || ! config('mcp.oauth_provider_accepted', false)
+                || ! config('mcp.oauth_ready', false)) {
+                return response()->json(['error' => 'not_found'], 404)
+                    ->header('Cache-Control', 'no-store');
+            }
+
+            // RFC 9728 / MCP 401 challenge instructs clients where to find
+            // authoritative protected resource metadata, never a token URL.
+            return response()->json(['error' => 'unauthorized'], 401)
+                ->header('WWW-Authenticate',
+                    'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", scope="mcp:read"')
+                ->header('Cache-Control', 'no-store');
+        });
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
