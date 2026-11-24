@@ -62,6 +62,30 @@ final class McpManagementTest extends TestCase
             ->assertDontSee('Ready for secure review');
     }
 
+    public function test_admin_mcp_route_explicitly_declares_auth_and_admin_role(): void
+    {
+        $route = Route::getRoutes()->getByName('admin.system-settings.mcp');
+        $this->assertNotNull($route);
+        $this->assertSame('dashboard/system-settings/mcp', $route->uri());
+        $this->assertContains('GET', $route->methods());
+        $this->assertSame(
+            \App\Http\Controllers\Workspace\AdminMcpManagementController::class.'@index',
+            ltrim($route->getActionName(), '\\'),
+        );
+        // Check Laravel's actual route metadata, not the reformatted
+        // middleware column from artisan route:list.
+        $middleware = $route->gatherMiddleware();
+        $this->assertTrue(
+            in_array('auth', $middleware, true) || in_array('auth:web', $middleware, true),
+            'Admin MCP route must require website authentication.',
+        );
+        $this->assertTrue(
+            in_array('role:admin', $middleware, true)
+                || in_array(\App\Http\Middleware\EnsureRole::class.':admin', $middleware, true),
+            'Admin MCP route must require the administrator role.',
+        );
+    }
+
     public function test_tools_are_documentation_only_and_mcp_remote_routes_are_not_registered(): void
     {
         $this->assertNotEmpty(McpToolCatalog::tools());
