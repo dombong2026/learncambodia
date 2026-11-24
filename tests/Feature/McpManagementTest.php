@@ -94,7 +94,12 @@ final class McpManagementTest extends TestCase
         $this->assertTrue(Route::has('mcp.oauth.authorize'));
         // The Phase 2B route exists but MUST remain inaccessible until
         // security acceptance explicitly opens the OAuth stage gates.
-        $this->get('/mcp/oauth/authorize')->assertNotFound();
+        // Web routes redirect guests to login before evaluating the OAuth
+        // staging gate. The public token route must stay completely closed.
+        $this->get('/mcp/oauth/authorize')->assertRedirect('/login');
+        $this->postJson('/api/mcp/oauth/token', [
+            'grant_type' => 'authorization_code',
+        ])->assertNotFound();
         foreach (McpToolCatalog::tools() as $tool) {
             $this->assertNotEmpty($tool['scope']);
             $this->assertContains($tool['mode'], ['Read', 'Write', 'Publish']);
