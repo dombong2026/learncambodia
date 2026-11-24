@@ -32,7 +32,9 @@ function fixture() {
         '<button id="cs-tab-curriculum" data-cs-tab="curriculum" role="tab">Curriculum</button>',
         '<button id="cs-tab-assessments" data-cs-tab="assessments" role="tab">Assessments</button>',
         '<button id="cs-tab-translation" data-cs-tab="translation" role="tab">Translation (EN/KM)</button></nav>',
-        '<div id="cs-course-stage"><h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
+        '<div id="cs-course-stage"><div id="cs-selected-module-editor" hidden>',
+        '<label for="cs-selected-module-title">Module title</label><input id="cs-selected-module-title" maxlength="140"></div>',
+        '<h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
         '<div id="cs-modules"></div></div>',
         '<span id="cs-modules-count"></span><span id="cs-lessons-count"></span><span id="cs-questions-count"></span></main>',
         '<aside class="cs-sidebar cs-course-workflow"><section class="cs-card cs-course-campaign-metadata">',
@@ -209,4 +211,96 @@ test('Code source is safely escaped in saved lesson HTML',async({page})=>{
     expect(body).toContain('&lt;script&gt;');
     expect(body).not.toContain('<script>');
     expect(submissions[0].rows[0].language).toBe('php');
+});
+
+
+test('module title can be renamed from metadata or outline and persists for all lessons',async({page})=>{
+    const submissions=[];
+    await page.route('**/mock/course/save',async route=>{
+        submissions.push(JSON.parse(route.request().postData()));
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+            id:7,version:2,status:'draft',message:'Campaign draft saved.',edit_url:'/up?id=7'
+        })});
+    });
+    await mount(page);
+    await expect(page.locator('#cs-selected-module-title')).toBeVisible();
+    await expect(page.locator('#cs-selected-module-title')).toHaveValue('English Grammar');
+    await expect(page.locator('.cs-module[data-cs-active] [data-field="module-title"]')).toHaveCount(1);
+    await page.locator('#cs-selected-module-title').fill('Intensive IELTS Preparation');
+    await expect(page.locator('[data-tree-module="0"] .cs-tree-unit-name')).toContainText('Intensive IELTS Preparation');
+    await expect(page.locator('#cs-current-unit-heading')).toContainText('Intensive IELTS Preparation');
+    await page.getByRole('tab',{name:'Curriculum'}).click();
+    await expect(page.locator('#cs-selected-module-title')).toBeHidden();
+    await page.locator('[data-cs-rename-module="0"]').click();
+    await expect(page.locator('#cs-selected-module-title')).toBeFocused();
+    await page.locator('#cs-selected-module-title').fill('Academic Writing & Speaking');
+    await page.locator('#cs-save-draft-panel').click();
+    expect(submissions).toHaveLength(1);
+    expect(submissions[0].rows).toHaveLength(2);
+    for(const row of submissions[0].rows)expect(row.course).toBe('Academic Writing & Speaking');
+});
+test('duplicating a lesson opens an explicitly named copy with preserved answers',async({page})=>{
+    const submissions=[];
+    await page.route('**/mock/course/save',async route=>{
+        submissions.push(JSON.parse(route.request().postData()));
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+            id:7,version:2,status:'draft',message:'Campaign draft saved.',edit_url:'/up?id=7'
+        })});
+    });
+    await mount(page);
+    await page.locator('.cs-lesson[data-cs-active] button[data-action="lesson-duplicate"]').click();
+    await expect(page.locator('#cs-course-tree .cs-tree-lesson')).toHaveCount(3);
+    await expect(page.locator('#cs-edit-title')).toHaveText('Present simple (copy)');
+    await expect(page.locator('#cs-current-lesson-number')).toHaveText('LESSON 1.2');
+    await page.getByRole('tab',{name:'Assessments'}).click();
+    await expect(page.locator('.cs-lesson[data-cs-active] input[data-question-correct][value="1"]')).toBeChecked();
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-question-field="feedback"]')).toHaveValue('Third-person singular.');
+    await page.locator('#cs-save-draft-panel').click();
+    expect(submissions).toHaveLength(1);
+    expect(submissions[0].rows).toHaveLength(3);
+    expect(submissions[0].rows.map(r=>r.lesson)).toEqual(['Present simple','Present simple (copy)','Past tense']);
+    expect(submissions[0].rows[1].questions[0].correct).toBe(1);
+    expect(submissions[0].rows[1].questions[0].feedback).toBe('Third-person singular.');
+});
+test('media URL and uploaded asset preview only on active lesson, and are removed on navigation',async({page})=>{
+    const asset='a'.repeat(64)+'.png';
+    await page.route('**/mock/course/upload',route=>route.fulfill({
+        status:200,contentType:'application/json',
+        body:JSON.stringify({type:'image',asset,url:'https://cdn.example.org/ignored.png'})
+    }));
+    await page.route('**/campaign-media/**',route=>route.fulfill({
+        status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB','base64')
+    }));
+    await mount(page);
+    await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+    await page.locator('.cs-lesson[data-cs-active] select[data-field="type"]').selectOption('image');
+    await page.locator('.cs-lesson[data-cs-active] [data-field="url"]').fill('https://cdn.example.org/lesson.png');
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] img'))
+        .toHaveAttribute('src','https://cdn.example.org/lesson.png');
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview]')).toBeVisible();
+    await page.locator('.cs-lesson[data-cs-active] input[data-lesson-file]').setInputFiles({
+        name:'lesson.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB','base64')
+    });
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] img'))
+        .toHaveAttribute('src',new RegExp('/campaign-media/'+asset));
+    await page.locator('[data-cs-select-lesson="0-1"]').click();
+    await expect(page.locator('[data-cs-lesson-media-preview] img')).toHaveCount(0);
+    await expect(page.locator('#cs-edit-title')).toHaveText('Past tense');
+    await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+    await page.locator('.cs-lesson[data-cs-active] select[data-field="type"]').selectOption('youtube');
+    await page.locator('.cs-lesson[data-cs-active] [data-field="url"]')
+        .fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] iframe'))
+        .toHaveAttribute('src','https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+    await page.locator('[data-cs-select-lesson="0-0"]').click();
+    await expect(page.locator('[data-cs-lesson-media-preview] iframe')).toHaveCount(0);
+});
+test('blocks unsafe media URL schemes from preview',async({page})=>{
+    await mount(page);
+    await page.getByRole('tab',{name:'Curriculum'}).click();
+    await page.locator('.cs-lesson[data-cs-active] [data-field="url"]').fill('javascript:alert(1)');
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] .cs-media-error'))
+        .toContainText('valid HTTPS');
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] img')).toHaveCount(0);
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] iframe')).toHaveCount(0);
 });
