@@ -80,6 +80,24 @@ final class McpAdminSessionController
         ], 201)->header('Cache-Control', 'no-store');
     }
 
+    /**
+     * First-party browser reauthentication for a high-privilege MCP consent.
+     * The submitted website password never appears in the MCP token response
+     * or in a remotely callable MCP tool. Existing password timeout semantics
+     * remain enforced by the token issuance route.
+     */
+    public function confirmWebsitePassword(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->isAdministrator(), 403);
+        $request->validate(['password' => ['required', 'string', 'current_password']]);
+        $request->session()->passwordConfirmed();
+
+        return response()->json([
+            'status' => 'password_confirmed',
+            'message' => 'Website administrator password confirmed for this session.',
+        ])->header('Cache-Control', 'no-store');
+    }
+
     public function revoke(Request $request, int $token): JsonResponse
     {
         abort_unless($request->user()?->isAdministrator(), 403);
