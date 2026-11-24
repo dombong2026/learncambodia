@@ -1,0 +1,40 @@
+name: MCP OAuth Passport Compatibility (Isolated)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  passport-dependency-rehearsal:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom
+          coverage: none
+      - name: Install locked current application in CI only
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+      - name: Rehearse Passport and Laravel MCP dependency resolution without deploying
+        run: |
+          set -Eeuo pipefail
+          # These changes exist ONLY in this throwaway GitHub Actions checkout.
+          # Do not run a Passport installer or database migrations on production.
+          composer require 'laravel/passport:^13' 'laravel/mcp' \
+            --no-scripts --no-interaction --no-progress --no-audit
+          composer show laravel/passport --format=json | php -r '
+            $p=json_decode(stream_get_contents(STDIN),true);
+            if(!str_starts_with($p["versions"][0]??"", "v13.")) exit(2);
+            echo "PASSPORT_13_DEPENDENCY=PASS\n";
+          '
+          composer show laravel/mcp --no-ansi
+          # Existing application source has not been replaced, and the
+          # temporary package installation never modifies the live site.
+          test -f routes/api.php
+          grep -Fq "auth:sanctum" routes/api.php
+          echo MCP_OAUTH_PROVIDER_DEPENDENCY_REHEARSAL=PASS
