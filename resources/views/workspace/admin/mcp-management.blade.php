@@ -76,7 +76,7 @@
                     <div><strong>{{ $name }}</strong><p>{{ $description }}</p></div>
                 @endforeach
             </div>
-            <a class="mcp-regular-link" href="{{ route('admin.appearance.campaign.edit', ['lang' => 'en']) }}">Open Campaign Builder <span aria-hidden="true">↗</span></a>
+            <a class="mcp-regular-link" href="{{ url('/dashboard/appearance/home/campaign-builder') }}?lang=en">Open Campaign Builder <span aria-hidden="true">↗</span></a>
         </section>
     </div>
 
