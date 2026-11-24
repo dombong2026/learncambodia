@@ -60,26 +60,11 @@ done
 for i in "${!PATCH_FILES[@]}"; do
  cp -p "$SITE/${PATCH_FILES[$i]}" "$STAGE/backup/$i"
 done
-python3 - "$STAGE" <<'PY'
-from pathlib import Path
-import sys
-s=Path(sys.argv[1])
-edits=[
- ("0","Route::get('/social-auth', 'socialAuth')->name('social-auth');",
- "\n            Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp');"),
- ("1",'{"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"}',
- ',\n        {"key": "mcp", "label": "MCP Management", "route": "admin.system-settings.mcp"}'),
- ("2","'system-settings/cloud-storage' => 'cloud-storage',",
- "\n            'system-settings/mcp' => 'terminal',")
-]
-for i,needle,extra in edits:
- old=(s/'backup'/i).read_text()
- if old.count(needle)!=1 or extra.strip() in old:
-  raise SystemExit("MCP_LIVE_ANCHOR_DRIFT:"+i)
- (s/'patch'/i).write_text(old.replace(needle,needle+extra,1))
-print("MCP_ADDITIVE_LIVE_PATCHES=PASS")
-PY
-for i in 0 1 2; do
+PATCHER="$STAGE/foundation-patcher.py"
+gh api -H "Accept: application/vnd.github.raw+json" \
+  "repos/$REPO/contents/support/operator/learncambodia-mcp-foundation-patcher.py?ref=$RELEASE" > "$PATCHER"
+test -s "$PATCHER"
+python3 -B "$PATCHER" "$STAGE"for i in 0 1 2; do
  "$PHP" -l "$STAGE/new/$i" >/dev/null
  "$PHP" -l "$STAGE/patch/$i" >/dev/null
 done
