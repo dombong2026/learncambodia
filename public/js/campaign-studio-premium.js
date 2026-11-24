@@ -261,7 +261,8 @@ const lessonCard = (lesson, mi, li) => {
             : '<img class="cs-media-preview" loading="lazy" src="' + escapeHtml(assetURL) + '" alt="Lesson media preview">')
         : '';
     return '<details class="cs-lesson" data-lesson-index="' + li + '" data-lesson-id="' +
-        escapeHtml(lesson.uid) + '"' + (lessonOpen.get(lesson.uid)!==false?' open':'') + '>' +
+        escapeHtml(lesson.uid) + '" data-lesson-asset="' + escapeHtml(showAsset ? lesson.asset : '') + '"' +
+        (lessonOpen.get(lesson.uid)!==false?' open':'') + '>' +
         '<summary><span class="cs-lesson-number">' + (mi+1) + '.' + (li+1) + '</span>' +
         '<span class="cs-summary-copy"><span class="cs-summary-title" data-lesson-heading>' +
         escapeHtml(lesson.title || 'Untitled lesson') + '</span><span class="cs-summary-subtitle">' +
@@ -284,7 +285,7 @@ const lessonCard = (lesson, mi, li) => {
         ['A1','A2','B1','B2','C1','C2'].map(level => '<option value="' + level + '"' +
             (lesson.cefr===level?' selected':'') + '>' + level + '</option>').join('') +
         '</select></div>' +
-        '<label class="cs-label">Lesson text editor</label>' + editor(lesson) +
+        editor(lesson) +
         '<div class="cs-course-translation-fields">' +
           '<div class="cs-course-language-grid">' +
           '<div class="cs-language-pane"><div class="cs-language-pane-head"><span class="cs-language-badge">EN</span><strong>English (EN)</strong><span class="cs-mini-chip">Primary language</span></div>' +
@@ -301,7 +302,9 @@ const lessonCard = (lesson, mi, li) => {
         '<div class="cs-media-toolbar"><label class="cs-btn cs-btn-outline cs-btn-xs">＋ Upload media' +
         '<input type="file" data-lesson-file accept="image/png,image/jpeg,image/webp,video/mp4,video/webm" hidden></label>' +
         '<button type="button" class="cs-btn cs-btn-quiet cs-btn-xs" data-action="remove-media">Remove media</button></div>' +
-        (preview || '') +
+        (root.classList.contains('cs-course-workspace')
+            ? '<div class="cs-lesson-live-preview" data-cs-lesson-media-preview hidden></div>'
+            : (preview || '')) +
         '<label class="cs-label">' + (lesson.type === 'youtube' ? 'YouTube HTTPS URL' : 'Media URL (optional)') + '</label>' +
         input('url',lesson.url,2048,'placeholder="https://..."') +
         '</div>' +
@@ -651,8 +654,11 @@ list.addEventListener('click',event=>{
     else if(action==='lesson-down' && pos.li<m.lessons.length-1)
         [m.lessons[pos.li+1],m.lessons[pos.li]]=[m.lessons[pos.li],m.lessons[pos.li+1]];
     else if(action==='lesson-duplicate'){
+        if (!l || !m) return;
         const dup=structuredClone(l);
         dup.uid=makeId();
+        dup.title=((l.title || 'Untitled lesson').replace(/\s*\(copy(?: \d+)?\)$/i,'').slice(0,133) + ' (copy)');
+        lessonOpen.set(dup.uid,true);
         m.lessons.splice(pos.li+1,0,dup);
     }else if(action==='lesson-remove'){
         if(!window.confirm('Remove this lesson?'))return;
