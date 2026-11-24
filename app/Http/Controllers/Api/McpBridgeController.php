@@ -48,6 +48,7 @@ final class McpBridgeController extends Controller
         $this->requireSession($request);
         abort_unless(config('mcp.remote_writes_enabled',false),403);
         abort_unless($request->user()->tokenCan('mcp:upload'),403);
+        abort_unless($request->user()->hasEnabledTwoFactorAuthentication(),403);
         $request->headers->set('Accept','application/json');
         $request->merge(['context'=>$request->input('context','library')]);
         $response=$request->input('context')==='library'
