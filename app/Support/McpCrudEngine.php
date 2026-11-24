@@ -322,7 +322,7 @@ final class McpCrudEngine
             return url('/dashboard/editorial/'.$routeKind.'/'.$model->getRouteKey().'/edit');
         }
         return match($resource){
-            'courses'=>url('/dashboard/courses/'.$model->getRouteKey().'/edit'),
+            'courses'=>url('/dashboard/course-builder/'.$model->getRouteKey().'/edit'),
             'modules','lessons','quizzes'=>url('/dashboard/courses'),
             default=>url('/dashboard'),
         };
