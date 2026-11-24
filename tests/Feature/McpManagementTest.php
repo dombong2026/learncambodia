@@ -91,7 +91,10 @@ final class McpManagementTest extends TestCase
         $this->assertNotEmpty(McpToolCatalog::tools());
         $this->assertFalse(Route::has('mcp.initialize'));
         $this->assertFalse(Route::has('mcp.tools.call'));
-        $this->assertFalse(Route::has('mcp.oauth.authorize'));
+        $this->assertTrue(Route::has('mcp.oauth.authorize'));
+        // The Phase 2B route exists but MUST remain inaccessible until
+        // security acceptance explicitly opens the OAuth stage gates.
+        $this->get('/mcp/oauth/authorize')->assertNotFound();
         foreach (McpToolCatalog::tools() as $tool) {
             $this->assertNotEmpty($tool['scope']);
             $this->assertContains($tool['mode'], ['Read', 'Write', 'Publish']);
