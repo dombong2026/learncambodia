@@ -410,12 +410,18 @@ list.addEventListener('input',event=>{
 });
 list.addEventListener('change',event=>{
     if(event.target.matches('[data-field="type"]')){
-        // The base editor redraws the lesson when its type changes. Switch to the
-        // relevant panel so its controls become visible immediately.
+        // Redraw only when the editor layout changes. Redrawing every field on
+        // blur destroys tree buttons between pointerdown and click (notably after
+        // entering a media URL), preventing users from navigating to a lesson.
         const kind=event.target.value;
         activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
+        schedule();
+    }else if(event.target.matches('[data-field="cefr"]')){
+        // A CEFR change updates the Khmer preview badge and metadata text.
+        schedule();
     }
-    schedule();
+    // Text fields and media URLs already update the base model on input/change;
+    // they must not replace the outline while another control is being clicked.
 });
 // Capture the old lesson index before the base editor redraws the DOM.
 list.addEventListener('click',event=>{
