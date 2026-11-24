@@ -211,6 +211,7 @@ cp "$STAGE/merged/composer.lock" "$STAGE/qa/composer.lock"
  umask 022
  export COMPOSER_ALLOW_SUPERUSER=1
  export PATH="/www/server/php/85/bin:$PATH"
+ composer() { "$PHP" -d include_path=/usr/share/php:. /usr/bin/composer "$@"; }
  composer install --no-dev --no-scripts --no-interaction --prefer-dist --no-progress --optimize-autoloader
 )
 test -f "$STAGE/qa/vendor/laravel/passport/src/Passport.php"
@@ -264,10 +265,11 @@ mv "$STAGE/qa/vendor" "$SITE/vendor"
 runuser -u www -- test -r "$SITE/vendor/autoload.php"
 # Clear only local Laravel compiled/config/route files. optimize:clear
 # would also clear the configured cache store, potentially in the database.
-"$PHP" artisan config:clear >/dev/null
-"$PHP" artisan route:clear >/dev/null
-"$PHP" artisan event:clear >/dev/null
-"$PHP" artisan package:discover --no-interaction >/dev/null
+runuser -u www -- "$PHP" artisan config:clear >/dev/null
+runuser -u www -- "$PHP" artisan route:clear >/dev/null
+runuser -u www -- "$PHP" artisan event:clear >/dev/null
+runuser -u www -- "$PHP" artisan package:discover --no-interaction >/dev/null
+runuser -u www -- test -r "$SITE/bootstrap/cache/packages.php"
 if test "$cached" -eq 1; then runuser -u www -- "$PHP" artisan route:cache >/dev/null; fi
 runuser -u www -- "$PHP" artisan route:list --json > "$STAGE/routes-after.json"
 python3 - "$STAGE/routes-before.json" "$STAGE/routes-after.json" <<'PY'
