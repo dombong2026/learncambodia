@@ -161,6 +161,8 @@ final class McpCrudEngine
         $data['slug']=$data['slug']??Str::slug($data['title']);
         if(!$course && filled($data['body_html']??null)){
             $data['body_html']=EditorHtml::clean($data['body_html']);
+            abort_if(EditorHtml::mediaIds($data['body_html'])!==[],422,
+                'Attach verified editorial media through the existing website editor before publishing.');
             $data['body']=EditorHtml::text($data['body_html']);
         }
         return $data;
@@ -204,6 +206,8 @@ final class McpCrudEngine
             abort_unless($module->course?->isMutable(),409,'Course is not in a mutable draft state.');
             if(filled($fields['content_html']??null)){
                 $fields['content_html']=EditorHtml::clean($fields['content_html'],true);
+                abort_if(EditorHtml::mediaIds($fields['content_html'])!==[],422,
+                    'Course lesson media must be claimed through the website editor.');
                 $fields['content']=EditorHtml::courseText($fields['content_html']);
             }
             $fields['position']=(int)$module->lessons()->max('position')+1;
@@ -263,6 +267,8 @@ final class McpCrudEngine
             ])->validate();
             if(filled($fields['content_html']??null)){
                 $fields['content_html']=EditorHtml::clean($fields['content_html'],true);
+                abort_if(EditorHtml::mediaIds($fields['content_html'])!==[],422,
+                    'Course lesson media must be claimed through the website editor.');
                 $fields['content']=EditorHtml::courseText($fields['content_html']);
             }
         }elseif($resource==='quizzes'){
