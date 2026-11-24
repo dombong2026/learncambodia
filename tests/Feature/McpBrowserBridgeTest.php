@@ -22,9 +22,18 @@ final class McpBrowserBridgeTest extends TestCase
         $this->withoutVite();
     }
 
-    private function admin(): User
+    private function admin(bool $confirmedTwoFactor=false): User
     {
-        return User::factory()->create(['role'=>User::ROLE_ADMIN]);
+        $user=User::factory()->create(['role'=>User::ROLE_ADMIN]);
+        if($confirmedTwoFactor){
+            // Fortify's enabled check is based on a stored confirmed factor;
+            // the factor itself is never used in these isolated API tests.
+            $user->forceFill([
+                'two_factor_secret'=>encrypt('TEST-ONLY-BASE32-SECRET'),
+                'two_factor_confirmed_at'=>now(),
+            ])->save();
+        }
+        return $user;
     }
 
     private function rpc(string $name,array $args=[]): array
@@ -118,7 +127,7 @@ final class McpBrowserBridgeTest extends TestCase
     {
         config()->set('mcp.gateway_enabled',true);
         config()->set('mcp.remote_writes_enabled',true);
-        $admin=$this->admin();
+        $admin=$this->admin(true);
         $token=$admin->createToken('LearnCambodia MCP: Draft Test',
             ['mcp:use','mcp:write'],now()->addMinutes(15));
         $payload=['operation'=>'CREATE','resource'=>'posts',
@@ -141,7 +150,7 @@ final class McpBrowserBridgeTest extends TestCase
     {
         config()->set('mcp.gateway_enabled',true);
         config()->set('mcp.remote_writes_enabled',true);
-        $admin=$this->admin();
+        $admin=$this->admin(true);
         $entry=ContentEntry::create([
             'type'=>'post','title'=>'Delete Test','slug'=>'delete-test',
             'status'=>'draft','created_by'=>$admin->id,'updated_by'=>$admin->id,
@@ -198,7 +207,7 @@ final class McpBrowserBridgeTest extends TestCase
     {
         config()->set('mcp.gateway_enabled',true);
         config()->set('mcp.remote_writes_enabled',true);
-        $admin=$this->admin();
+        $admin=$this->admin(true);
         $token=$admin->createToken('LearnCambodia MCP: Restricted Test',
             ['mcp:use','mcp:manage','mcp:publish'],now()->addMinutes(15));
         foreach(['INSTALL','PUSH','PUBLISH'] as $op){
