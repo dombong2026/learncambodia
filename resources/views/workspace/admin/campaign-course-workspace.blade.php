@@ -3,7 +3,7 @@
 @section('workspace_compact', '1')
 @push('workspace_styles')
 <link rel="stylesheet" href="{{ asset('css/campaign-studio-premium.css') }}">
-<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-1">
+<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-2">
 @endpush
 @section('content')
 @php
@@ -22,29 +22,9 @@
     data-cover-asset="{{ $coverAsset }}"
     data-cover-kind="{{ $coverKind }}"
     data-publication-status="{{ $isPublished ? 'published' : 'draft' }}">
-    <header class="cs-course-header">
-        <div class="cs-course-brand">
-            <div class="cs-course-brandmark" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" width="28" height="28"><path d="M3 27h26M5 27V14h4v13m14 0V14h4v13M11 27V9l5-6 5 6v18M13 14h6m-6 6h6M1 17h4m22 0h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <span>Learn<span class="cs-brand-accent">Cambodia</span>.com</span>
-        </div>
-        <div class="cs-course-header-title">
-            <span class="cs-course-label">CAMPAIGN STUDIO</span>
-            <h1>{{ $campaign ? 'Edit campaign' : 'Course Builder' }} <span aria-hidden="true">/</span> <span id="cs-header-title">{{ $campaign?->draft_title ?? $campaign?->title ?? 'New learning campaign' }}</span></h1>
-        </div>
-        <div class="cs-course-header-actions">
-            <span class="cs-course-saved" id="cs-save-state" role="status" aria-live="polite">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg>
-                Ready to edit
-            </span>
-            <button class="cs-btn cs-btn-primary" id="cs-save-draft-top" type="button">Save draft</button>
-            <a href="{{ route('admin.appearance.edit', ['section' => 'home', 'lang' => 'en']) }}" class="cs-course-exit" title="All campaigns">All campaigns</a>
-        </div>
-    </header>
-
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
     <button id="cs-publish-top" type="button" hidden>Publish</button>
+    <button id="cs-save-draft-top" type="button" hidden>Save draft</button>
 
     <div class="cs-layout cs-course-grid">
         <aside class="cs-course-outline" aria-label="Course outline and lesson navigation">
@@ -83,26 +63,6 @@
                 <button type="button" role="tab" id="cs-tab-translation" data-cs-tab="translation" aria-selected="false" aria-controls="cs-course-stage">Translation (EN/KM)</button>
             </nav>
             <div id="cs-course-stage" class="cs-course-stage" role="tabpanel" aria-labelledby="cs-tab-metadata">
-                <div class="cs-course-campaign-metadata" data-cs-section="metadata">
-                    <div class="cs-form-heading">
-                        <div class="cs-section-label"><h3>Campaign details</h3></div>
-                        <span class="cs-mini-chip">CAMPAIGN SETTINGS</span>
-                    </div>
-                    <div class="cs-course-campaign-fields">
-                        <div>
-                            <label class="cs-label" for="cs-campaign-title">Campaign / course title</label>
-                            <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->draft_title ?? $campaign?->title ?? '' }}" placeholder="e.g. Intensive IELTS Preparation">
-                        </div>
-                        <div>
-                            <label class="cs-label" for="cs-course-type">Campaign type</label>
-                            <select class="cs-control" id="cs-course-type">
-                                <option value="quiz" @selected($coverKind === 'quiz')>Quiz campaign</option>
-                                <option value="exam" @selected($coverKind === 'exam')>Exam campaign</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="cs-note">All modules and lessons belong to this campaign. Create separate campaigns from the Homepage Appearance manager.</p>
-                </div>
                 <div class="cs-section-heading cs-course-current-heading">
                     <div>
                         <h3 id="cs-current-unit-heading">Unit 1</h3>
@@ -120,6 +80,27 @@
         </main>
 
         <aside class="cs-sidebar cs-course-workflow" aria-label="Campaign settings and publishing">
+                <section class="cs-card cs-course-campaign-metadata" aria-labelledby="cs-campaign-settings-heading">
+                    <div class="cs-form-heading">
+                        <div class="cs-section-label"><h2 id="cs-campaign-settings-heading">Campaign details</h2></div>
+                        <span class="cs-mini-chip">CAMPAIGN SETTINGS</span>
+                    </div>
+                    <div class="cs-course-campaign-fields">
+                        <div>
+                            <label class="cs-label" for="cs-campaign-title">Campaign / course title</label>
+                            <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->draft_title ?? $campaign?->title ?? '' }}" placeholder="e.g. Intensive IELTS Preparation">
+                        </div>
+                        <div>
+                            <label class="cs-label" for="cs-course-type">Campaign type</label>
+                            <select class="cs-control" id="cs-course-type">
+                                <option value="quiz" @selected($coverKind === 'quiz')>Quiz</option>
+                                <option value="exam" @selected($coverKind === 'exam')>Exam</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="cs-note">One title and type for the entire campaign. Units and lessons inherit these campaign settings.</p>
+                <a class="cs-course-exit" href="{{ route('admin.appearance.edit', ['section' => 'home', 'lang' => 'en']) }}">All campaigns</a>
+            </section>
             <section class="cs-card cs-course-publish-card">
                 <div class="cs-card-heading">
                     <div class="cs-section-label">
@@ -131,6 +112,7 @@
                     <span>Campaign state</span>
                     <span id="cs-publication-status" class="cs-course-status {{ $isPublished ? 'is-published' : 'is-draft' }}">{{ $isPublished ? 'Published' : 'Draft' }}</span>
                 </div>
+                <p id="cs-save-state" role="status" aria-live="polite" class="cs-course-saved">Ready to edit</p>
                 <p class="cs-subtext">Administrators can save drafts and publish directly. No additional approval is required.</p>
                 <button class="cs-btn cs-btn-primary cs-full" id="cs-publish" type="button">Publish campaign</button>
                 <button class="cs-btn cs-btn-outline cs-full" id="cs-save-draft" type="button">Save draft</button>
@@ -154,8 +136,7 @@
                     </div>
                     <img id="cs-cover-image" src="{{ $coverAsset ? route('campaign.asset', $coverAsset) : '' }}" alt="Campaign featured cover" @if(!$coverAsset) hidden @endif>
                 </div>
-                <label class="cs-label" for="cs-cover-kind">Featured content type</label>
-                <select id="cs-cover-kind" class="cs-control">
+                <select id="cs-cover-kind" class="cs-control" hidden aria-label="Campaign cover type">
                     <option value="quiz" @selected($coverKind === 'quiz')>Quiz</option>
                     <option value="exam" @selected($coverKind === 'exam')>Exam</option>
                 </select>
@@ -176,6 +157,6 @@
     </div>
     <script type="application/json" id="cs-initial-rows">@json($rows ?? [])</script>
 </section>
-<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124"></script>
+<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124-2"></script>
 <script defer src="{{ asset('js/campaign-course-workspace.js') }}?v=course-20261124"></script>
 @endsection
