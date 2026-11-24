@@ -144,6 +144,19 @@ jobs:
             ]);
             $user->forceFill(["role"=>"admin"])->save();
             $app->make(\Database\Seeders\LearningCategoryArticleSeeder::class)->run($user->id);
+            // Each rate-sensitive browser scenario has its own account.
+            // Never relax the application's production rate limits for CI.
+            foreach (["desktop-chromium", "mobile-chromium", "tablet-chromium", "desktop-webkit", "mobile-webkit"] as $project) {
+                foreach (["settings", "ticket"] as $scenario) {
+                    \App\Models\User::factory()->create([
+                        "name" => "Browser QA ".$scenario." ".$project,
+                        "email" => "editor-".$scenario."-".$project."@example.test",
+                        "password" => \Illuminate\Support\Facades\Hash::make("Only-A-CI-Browser-Fixture-2026!"),
+                        "role" => "admin",
+                        "email_verified_at" => now(),
+                    ]);
+                }
+            }
           '
       - name: Install browser engines
         run: |
