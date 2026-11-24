@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 final class McpOAuthDiscoveryController
 {
     private const ISSUER = 'https://learncambodia.com';
-    private const RESOURCE = 'https://learncambodia.com/api/mcp';
+    private const RESOURCE = 'https://learncambodia.com/api/mcp/oauth';
 
     private static function enabled(): bool
     {
