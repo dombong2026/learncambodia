@@ -260,6 +260,17 @@ function sync(){
 }
 function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(sync)}
 function select(mi,li){
+    // Unload media from the previously selected lesson *before* changing focus.
+    // In particular, this immediately destroys embedded YouTube iframes.
+    for(const box of list.querySelectorAll('[data-cs-lesson-media-preview]')){
+        if(box.firstChild)box.replaceChildren();
+        box.hidden=true;
+        box.removeAttribute('data-preview-key');
+    }
+    if(mediaPreviewTimer!==null){
+        clearTimeout(mediaPreviewTimer);
+        mediaPreviewTimer=null;
+    }
     activeModule=mi;
     activeLesson=li;
     collapsedUnits.delete(mi);
