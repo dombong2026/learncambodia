@@ -292,27 +292,9 @@ test('media URL and uploaded asset preview only on active lesson, and are remove
         .fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] iframe'))
         .toHaveAttribute('src','https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
-    const navigationErrors=[];
-    page.on('pageerror',error=>navigationErrors.push(String(error.stack || error)));
-    await page.evaluate(()=>{
-        window.__campaignNavEvents=[];
-        const tree=document.getElementById('cs-course-tree');
-        tree.addEventListener('click',event=>{
-            window.__campaignNavEvents.push({
-                selected:event.target.closest('[data-cs-select-lesson]')?.dataset.csSelectLesson || '',
-                before:document.getElementById('cs-edit-title')?.textContent || '',
-            });
-        },true);
-    });
+    // A focused URL input must not destroy an outline button when it blurs.
+    // The click is a user action, not a direct JS call to the navigation helper.
     await page.locator('[data-cs-select-lesson="0-0"]').click();
-    const debug=await page.evaluate(()=>({
-        events:window.__campaignNavEvents,
-        title:document.getElementById('cs-edit-title')?.textContent,
-        selected:[...document.querySelectorAll('.cs-lesson[data-cs-active]')].map(e=>e.dataset.lessonIndex),
-        treeSelected:[...document.querySelectorAll('#cs-course-tree [aria-current]')].map(e=>e.dataset.csSelectLesson),
-        src:[...document.querySelectorAll('[data-cs-lesson-media-preview] iframe')].map(e=>e.src)
-    }));
-    console.log('CAMPAIGN_NAV_DIAGNOSTIC='+JSON.stringify({debug,navigationErrors}));
     await expect(page.locator('#cs-edit-title')).toHaveText('Present simple');
     await expect(page.locator('#cs-current-lesson-number')).toHaveText('LESSON 1.1');
     await expect(page.locator('[data-cs-lesson-media-preview] iframe')).toHaveCount(0);
