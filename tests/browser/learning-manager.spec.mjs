@@ -27,6 +27,11 @@ test('course manager search and row actions stay usable at dashboard widths', as
   await trigger.click();
   const menu = page.locator('.learning-manager-menu:popover-open');
   await expect(menu).toBeVisible();
+  // Simulate a delayed table scroll notification following native focus.
+  // The open menu must remain usable while its trigger stays on screen.
+  await table.locator('.learning-manager-scroll').dispatchEvent('scroll');
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await expect(menu).toBeVisible();
   for (const label of ['Edit', 'Preview', 'Activate', 'Assign to user', 'Delete']) {
     await expect(menu.getByText(label, { exact: true })).toBeVisible();
   }
