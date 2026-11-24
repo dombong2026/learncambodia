@@ -15,6 +15,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         Fortify::ignoreRoutes();
+        // The OAuth code/token routes are registered explicitly under the
+        // staging gate; do not let Passport silently expose /oauth/* routes.
+        if (class_exists(Passport::class)) {
+            Passport::ignoreRoutes();
+        }
     }
 
     public function boot(): void
