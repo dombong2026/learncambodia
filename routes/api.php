@@ -8,10 +8,10 @@ use App\Http\Controllers\Api\McpBridgeController;
 // Passport OAuth remains isolated from the already-accepted Sanctum MCP route.
 // The middleware itself returns 404 until an audited future release enables it.
 Route::post('/mcp/oauth/token', [\App\Http\Controllers\Api\McpOAuthAccessTokenController::class, 'issueToken'])
-    ->middleware(['mcp.oauth.stage', 'mcp.oauth.params:token', 'throttle:15,1'])
+    ->middleware([\App\Http\Middleware\EnsureMcpOAuthApiEnabled::class, 'mcp.oauth.params:token', 'throttle:15,1'])
     ->name('mcp.oauth.token');
 Route::post('/mcp/oauth', [\App\Http\Controllers\Api\McpOAuthReadOnlyController::class, 'handle'])
-    ->middleware(['mcp.oauth.stage', 'auth:mcp_oauth', 'mcp.oauth.read', 'throttle:60,1'])
+    ->middleware([\App\Http\Middleware\EnsureMcpOAuthApiEnabled::class, 'auth:mcp_oauth', 'mcp.oauth.read', 'throttle:60,1'])
     ->name('mcp.oauth.rpc');
 
 Route::get('/mcp/auth-guide', [McpBridgeController::class, 'authGuide'])

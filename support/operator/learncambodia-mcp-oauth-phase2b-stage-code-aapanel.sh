@@ -79,6 +79,7 @@ new=(
  app/Http/Controllers/Api/McpOAuthReadOnlyController.php
  app/Http/Controllers/Workspace/McpOAuthTokenManagementController.php
  app/Http/Middleware/EnsureMcpOAuthStagingEnabled.php
+ app/Http/Middleware/EnsureMcpOAuthApiEnabled.php
  app/Http/Middleware/RequireMcpOAuthAdmin.php
  app/Http/Middleware/RequireMcpOAuthRead.php
  app/Http/Middleware/ValidateMcpOAuthParameters.php

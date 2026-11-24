@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(Passport::class)) {
             // Disabled OAuth routes must close before Passport resolves signing keys.
             $this->app->make(\Illuminate\Contracts\Http\Kernel::class)
-                ->prependToMiddlewarePriority(\App\Http\Middleware\EnsureMcpOAuthStagingEnabled::class);
+                ->prependToMiddlewarePriority(\App\Http\Middleware\EnsureMcpOAuthApiEnabled::class);
             Passport::tokensCan([
                 'mcp:read' => 'Read LearnCambodia course catalog and aggregate analytics',
             ]);
