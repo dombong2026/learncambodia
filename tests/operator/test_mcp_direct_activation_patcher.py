@@ -24,9 +24,9 @@ foreach ($definitions as [$key, $title, $icon, $sectionKeys]) {
     if ($role === 'admin' && $key === 'people') {
         $items[] = ['label'=>'Unrelated'];
     }
-    if ($items !== []) {
-        $groups[] = compact('key', 'title', 'icon', 'items');
-    }
+            if ($items !== []) {
+                $groups[] = compact('key', 'title', 'icon', 'items');
+            }
 }
 """
 
