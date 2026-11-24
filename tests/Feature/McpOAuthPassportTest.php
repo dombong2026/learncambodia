@@ -91,6 +91,21 @@ final class McpOAuthPassportTest extends TestCase
             ->assertUnauthorized();
     }
 
+    public function test_oauth_read_unauthorized_challenge_is_only_advertised_when_ready(): void
+    {
+        $this->setupClient();
+        $this->postJson('/api/mcp/oauth', [
+            'jsonrpc'=>'2.0', 'id'=>1, 'method'=>'initialize',
+        ])->assertUnauthorized()->assertHeader(
+            'WWW-Authenticate',
+            'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", scope="mcp:read"'
+        );
+        config()->set('mcp.oauth_ready', false);
+        $this->postJson('/api/mcp/oauth', [
+            'jsonrpc'=>'2.0', 'id'=>2, 'method'=>'initialize',
+        ])->assertNotFound();
+    }
+
     public function test_only_exact_client_resource_and_pkce_s256_are_accepted(): void
     {
         $client = $this->setupClient();
