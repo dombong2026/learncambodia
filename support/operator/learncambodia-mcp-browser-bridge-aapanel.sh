@@ -8,7 +8,7 @@ test "$(id -u)" -eq 0 || { echo MCP_BRIDGE_ROOT_REQUIRED >&2; exit 2; }
 export GH_CONFIG_DIR=/root/learncambodia-github-auth/gh
 REPO="dombong2026/learncambodia"
 BRANCH="feature/learncambodia-browser-admin-mcp-bridge-20261124"
-BASE="3f881a96c994033c6de35b222ef1a12fe8ea8695"
+BASE="aea1ba93185404a60cda79f05edac2153688ca3d"
 SITE="/www/wwwroot/learncambodia.com"
 PHP="/www/server/php/85/bin/php"
 BASE_MARKER="$SITE/storage/app/private/learncambodia-mcp-management-foundation.txt"
@@ -100,44 +100,11 @@ done
 for i in "${!PATCH_FILES[@]}"; do
  cp -p "$SITE/${PATCH_FILES[$i]}" "$STAGE/backup/patch-$i"
 done
-python3 - "$STAGE" <<'PY'
-from pathlib import Path
-import sys
-stage=Path(sys.argv[1])
-web=(stage/'backup/patch-0').read_text()
-api=(stage/'backup/patch-1').read_text()
-anchor="Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp');"
-after="""
-            Route::post('/mcp/sessions', [\\App\\Http\\Controllers\\Workspace\\McpAdminSessionController::class, 'issue'])
-                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.sessions.issue');
-            Route::delete('/mcp/sessions/{token}', [\\App\\Http\\Controllers\\Workspace\\McpAdminSessionController::class, 'revoke'])
-                ->whereNumber('token')->middleware('throttle:10,1')->name('mcp.sessions.revoke');
-            Route::get('/mcp/approvals/{approval}', [\\App\\Http\\Controllers\\Workspace\\McpBrowserApprovalController::class, 'show'])
-                ->middleware('password.confirm')->name('mcp.approvals.show');
-            Route::post('/mcp/approvals/{approval}', [\\App\\Http\\Controllers\\Workspace\\McpBrowserApprovalController::class, 'decide'])
-                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.approvals.decide');"""
-if web.count(anchor)!=1 or "mcp.sessions.issue" in web:
- raise SystemExit("MCP_WEB_ROUTE_PATCH_DRIFT")
-web=web.replace(anchor,anchor+"\n"+after,1)
-
-use_anchor="use Illuminate\\Support\\Facades\\Route;"
-api_anchor="Route::get('/navigation/categories', [CatalogController::class, 'navigationCategories'])"
-api_insert="""Route::get('/mcp/auth-guide', [McpBridgeController::class, 'authGuide'])
-    ->middleware('throttle:20,1')->name('mcp.auth-guide');
-Route::post('/mcp', [McpBridgeController::class, 'handle'])
-    ->middleware(['auth:sanctum','throttle:60,1'])->name('mcp.rpc');
-Route::post('/mcp/media', [McpBridgeController::class, 'upload'])
-    ->middleware(['auth:sanctum','throttle:15,1'])->name('mcp.media.upload');
-
-"""
-if api.count(use_anchor)!=1 or api.count(api_anchor)!=1 or "name('mcp.rpc')" in api:
- raise SystemExit("MCP_API_ROUTE_PATCH_DRIFT")
-api=api.replace(use_anchor,use_anchor+"\nuse App\\Http\\Controllers\\Api\\McpBridgeController;",1)
-api=api.replace(api_anchor,api_insert+api_anchor,1)
-(stage/'patch/0').write_text(web)
-(stage/'patch/1').write_text(api)
-print("MCP_ADDITIVE_ROUTE_PATCHES=PASS")
-PY
+PATCHER="$STAGE/mcp-bridge-patcher.py"
+gh api -H "Accept: application/vnd.github.raw+json" \
+  "repos/$REPO/contents/support/operator/learncambodia-mcp-browser-bridge-patcher.py?ref=$RELEASE" > "$PATCHER"
+test -s "$PATCHER"
+python3 -B "$PATCHER" "$STAGE"
 for i in "${!NEW_FILES[@]}"; do
  case "${NEW_FILES[$i]}" in *.php) "$PHP" -l "$STAGE/new/$i" >/dev/null;; esac
 done
@@ -200,20 +167,12 @@ chmod 0750 storage/framework/views
 runuser -u www -- "$PHP" artisan route:clear
 runuser -u www -- "$PHP" artisan view:clear
 runuser -u www -- "$PHP" artisan view:cache
-"$PHP" artisan route:list --json | python3 -c '
-import json,sys
-routes={r.get("name"):r for r in json.load(sys.stdin)}
-for key in ["admin.system-settings.mcp.sessions.issue",
- "admin.system-settings.mcp.sessions.revoke",
- "admin.system-settings.mcp.approvals.show",
- "admin.system-settings.mcp.approvals.decide","mcp.rpc","mcp.media.upload"]:
- if key not in routes: raise SystemExit("MCP_ROUTE_MISSING:"+key)
-rpc=" ".join(routes["mcp.rpc"].get("middleware") or [])
-issue=" ".join(routes["admin.system-settings.mcp.sessions.issue"].get("middleware") or [])
-if "auth:sanctum" not in rpc or "password.confirm" not in issue or "role:admin" not in issue:
- raise SystemExit("MCP_ROUTE_AUTH_MISSING")
-print("MCP_ADMIN_ROUTE_AUTH=PASS")
-'
+GUARD="$STAGE/mcp-bridge-route-assert.php"
+gh api -H "Accept: application/vnd.github.raw+json" \
+  "repos/$REPO/contents/support/operator/learncambodia-mcp-browser-bridge-route-assert.php?ref=$RELEASE" > "$GUARD"
+test -s "$GUARD"
+"$PHP" -l "$GUARD" >/dev/null
+"$PHP" "$GUARD"
 for path in / /css/mcp-management.css /js/mcp-management.js /api/mcp/auth-guide; do
  code="$(curl -4 -sS --connect-timeout 8 --max-time 20 \
    --resolve learncambodia.com:443:127.0.0.1 \
