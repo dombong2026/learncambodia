@@ -28,6 +28,9 @@ jobs:
           done
           node --check public/js/mcp-management.js
           bash -n support/operator/learncambodia-mcp-browser-bridge-aapanel.sh
+          php -l support/operator/learncambodia-mcp-browser-bridge-route-assert.php
+          python3 -m py_compile support/operator/learncambodia-mcp-browser-bridge-patcher.py
+          python3 -m unittest discover -s tests/operator -p 'test_mcp_browser_bridge_patcher.py' -v
           python3 - <<'PY'
           from pathlib import Path
           code=Path('app/Http/Controllers/Api/McpBridgeController.php').read_text()
@@ -58,6 +61,12 @@ jobs:
           assert "MCP_REMOTE_WRITES_ENABLED', false" in Path('config/mcp.php').read_text()
           assert "MCP_GATEWAY_ENABLED', false" in Path('config/mcp.php').read_text()
           installer=Path('support/operator/learncambodia-mcp-browser-bridge-aapanel.sh').read_text()
+          guard=Path('support/operator/learncambodia-mcp-browser-bridge-route-assert.php').read_text()
+          assert 'BASE="aea1ba93185404a60cda79f05edac2153688ca3d"' in installer
+          assert 'mcp-browser-bridge-patcher.py' in installer
+          assert 'mcp-browser-bridge-route-assert.php' in installer
+          assert 'gatherMiddleware()' in guard
+          assert "'role:admin'" in guard and "'auth:sanctum'" in guard
           for token in ['MCP_BROWSER_BRIDGE_DEPLOY=PASS','MCP_GATEWAY=DISABLED',
                         'MCP_REMOTE_WRITES=DISABLED','MCP_BRIDGE_ROLLBACK=PREVIOUS_UI_RESTORED',
                         'MCP_ADMIN_ROUTE_AUTH=PASS','MCP_EXISTING_CAMPAIGN_RECORDS_UNCHANGED=PASS']:
