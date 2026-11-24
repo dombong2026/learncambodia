@@ -195,6 +195,73 @@ function showActiveMedia() {
         box.hidden=false;
     }
 }
+function showQuestionMedia(){
+    const selected=lessonAt(activeModule,activeLesson);
+    for(const box of list.querySelectorAll('[data-cs-question-media-preview]')){
+        const card=box.closest('[data-question-index]');
+        const visible=box.closest('.cs-lesson')===selected && activeTab==='assessments';
+        if(!visible){
+            if(box.firstChild)box.replaceChildren();
+            box.hidden=true;box.removeAttribute('data-preview-key');
+            continue;
+        }
+        const asset=card?.dataset.questionAsset||'';
+        const kind=card?.querySelector('[data-question-field="media_kind"]')?.value||'auto';
+        const raw=card?.querySelector('[data-question-field="media_url"]')?.value?.trim()||'';
+        const key=asset+'|'+kind+'|'+raw;
+        if(box.dataset.previewKey===key)continue;
+        box.dataset.previewKey=key;box.replaceChildren();box.hidden=true;
+        let url=null;
+        if(/^[a-f0-9]{64}\.(jpg|png|webp|mp4|webm)$/.test(asset)){
+            url=trustedPreviewUrl(root.dataset.assetBase.replace(/\/$/,'')+'/'+encodeURIComponent(asset));
+        }else if(raw) url=trustedPreviewUrl(raw);
+        if(!url){
+            if(raw){
+                const msg=document.createElement('p');
+                msg.className='cs-media-error';
+                msg.textContent='Enter a valid HTTPS media URL.';
+                box.appendChild(msg);box.hidden=false;
+            }
+            continue;
+        }
+        const yt=youtubeVideoId(url);
+        const type=asset ? /\.(mp4|webm)$/.test(asset)?'video':'image' :
+            kind!=='auto'?kind:
+            yt?'youtube':
+            /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(url.pathname)?'image':
+            /\.(mp4|webm|ogv)$/i.test(url.pathname)?'video':
+            /\.(mp3|m4a|wav|oga)$/i.test(url.pathname)?'audio':'link';
+        const heading=document.createElement('strong');
+        heading.className='cs-media-preview-heading';
+        heading.textContent='Question media preview';
+        box.appendChild(heading);
+        let element;
+        if(type==='youtube' && yt){
+            element=document.createElement('iframe');
+            element.src='https://www.youtube-nocookie.com/embed/'+yt;
+            element.loading='lazy';element.title='Question video preview';
+            element.referrerPolicy='strict-origin-when-cross-origin';
+            element.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+            element.setAttribute('allow','encrypted-media; picture-in-picture; fullscreen');
+            element.setAttribute('allowfullscreen','');
+        }else if(type==='image'){
+            element=document.createElement('img');element.src=url.href;
+            element.alt='Question illustration preview';element.loading='lazy';
+        }else if(type==='video'){
+            element=document.createElement('video');element.src=url.href;
+            element.controls=true;element.preload='metadata';
+        }else if(type==='audio'){
+            element=document.createElement('audio');element.src=url.href;
+            element.controls=true;element.preload='none';
+        }else{
+            element=document.createElement('a');element.href=url.href;
+            element.target='_blank';element.rel='noopener noreferrer';
+            element.textContent='Open question media';
+        }
+        element.className='cs-selected-media-element';
+        box.appendChild(element);box.hidden=false;
+    }
+}
 function setActivePanel() {
     const unit = moduleAt(activeModule), lesson = lessonAt(activeModule,activeLesson);
     byId('cs-edit-title').textContent = lesson ? titleOf(lesson) : 'Add a lesson';
@@ -238,6 +305,7 @@ function setActivePanel() {
         if(selected)byId('cs-course-stage').setAttribute('aria-labelledby',t.id);
     });
     showActiveMedia();
+    showQuestionMedia();
     const campaignTitle=byId('cs-campaign-title');
     // Campaign title and type are global settings, not lesson-level fields.
     const count=Number(byId('cs-questions-count').textContent||'0');
@@ -438,6 +506,7 @@ function scheduleMediaPreview(){
     mediaPreviewTimer=setTimeout(()=>{
         mediaPreviewTimer=null;
         showActiveMedia();
+        showQuestionMedia();
     },350);
 }
 list.addEventListener('input',event=>{
@@ -450,7 +519,7 @@ list.addEventListener('input',event=>{
         const mirror=lesson.querySelector('[data-cs-english-preview]');
         if(mirror)mirror.textContent=event.target.innerText;
     }
-    if(event.target.matches('[data-field="url"]'))scheduleMediaPreview();
+    if(event.target.matches('[data-field="url"],[data-question-field="media_url"]'))scheduleMediaPreview();
     if(event.target.matches('[data-field="module-title"],[data-field="title"]'))schedule();
 });
 list.addEventListener('change',event=>{
@@ -461,6 +530,8 @@ list.addEventListener('change',event=>{
         const kind=event.target.value;
         activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
         schedule();
+    }else if(event.target.matches('[data-question-field="media_kind"]')){
+        scheduleMediaPreview();
     }else if(event.target.matches('[data-field="cefr"]')){
         // A CEFR change updates the Khmer preview badge and metadata text.
         schedule();
