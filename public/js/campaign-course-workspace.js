@@ -119,7 +119,8 @@ function showActiveMedia() {
         const asset=lesson.dataset.lessonAsset||'';
         const url=(lesson.querySelector('[data-field="url"]')?.value||'').trim();
         const key=kind+'|'+asset+'|'+url;
-        if(box.dataset.previewKey===key)return;
+        // Keep walking the other lessons: their old iframe/video must be unloaded.
+        if(box.dataset.previewKey===key)continue;
         box.dataset.previewKey=key;
         box.replaceChildren();
         box.hidden=true;
