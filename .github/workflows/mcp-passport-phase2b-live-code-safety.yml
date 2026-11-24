@@ -50,7 +50,7 @@ jobs:
             "oauth_provider_accepted",
             "oauth_ready",
             "auth:sanctum",
-            "patch --batch --forward --fuzz=0",
+            "MCP_PHASE2B_VERIFIED_ADDITIVE_OVERLAY=",
           ]
           for line in checks:
             if line == "phpseclib": continue # dependency is in composer.lock, not script text
