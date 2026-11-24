@@ -396,7 +396,9 @@ function exportRows() {
                 course:module.title.trim().slice(0,140) || 'Untitled module',
                 lesson:l.title.trim().slice(0,140) || 'Untitled lesson',
                 type:l.type,
-                body:readSourceHtml(l.body).slice(0,20000),
+                body:(l.type==='code'
+                    ? '<pre><code>'+escapeHtml(codePlainText(l.body))+'</code></pre>'
+                    : readSourceHtml(l.body)).slice(0,20000),
                 url:l.url.trim().slice(0,2048),
                 asset:l.asset || '',
                 language:l.language || '',
@@ -557,6 +559,8 @@ function mutateFromInput(target) {
         lesson.body=readSourceHtml(target.innerHTML);
     }else if(target.matches('[data-editor-source]') && lesson){
         lesson.body=readSourceHtml(target.value);
+    }else if(target.matches('[data-editor-code]') && lesson){
+        lesson.body=target.value;
     }
     if(field==='module-title'||field==='title')renderOutline();
 }
@@ -570,10 +574,15 @@ list.addEventListener('change',event=>{
         render();
     }
 });
+// Prevent toolbar clicks from clearing an active text selection.
+list.addEventListener('mousedown',event=>{
+    if(event.target.closest('button[data-format]'))event.preventDefault();
+});
 list.addEventListener('click',event=>{
-    const formatButton=event.target.closest('[data-format]');
+    const formatButton=event.target.closest('button[data-format]');
     if(formatButton){
         const wrapper=formatButton.closest('.cs-editor-box');
+        if(!wrapper)return;
         const visual=wrapper.querySelector('[data-editor]');
         const source=wrapper.querySelector('[data-editor-source]');
         const action=formatButton.dataset.format;
@@ -590,14 +599,40 @@ list.addEventListener('click',event=>{
             }
             return;
         }
-        if(!source.hidden){note('Switch back to Visual editor before using formatting tools.',true);return;}
+        if(!source.hidden){note('Switch to the visual editor to use formatting tools.',true);return;}
         visual.focus();
-        if(action==='emoji'){document.execCommand('insertText',false,'😊');}
-        else if(action==='formatBlock'){document.execCommand('formatBlock',false,'h2');}
-        else if(action==='createLink'){
+        const formatBlocks = {
+            paragraph:'p',heading1:'h1',heading2:'h2',heading3:'h3',
+            blockquote:'blockquote',codeBlock:'pre'
+        };
+        if(action in formatBlocks) {
+            document.execCommand('formatBlock',false,formatBlocks[action]);
+        } else if(action==='table') {
+            // The HTML is fixed and contains no user input or remote resources.
+            document.execCommand('insertHTML',false,
+                '<table><tbody><tr><th>Heading 1</th><th>Heading 2</th></tr>'+
+                '<tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table><p></p>');
+        } else if(action==='horizontalRule') {
+            document.execCommand('insertHorizontalRule',false,null);
+        } else if(action==='emoji') {
+            const emoji=window.prompt('Insert an emoji', '😊');
+            if(emoji && [...emoji].length<=8)document.execCommand('insertText',false,emoji);
+        } else if(action==='textColor' || action==='highlight') {
+            const color=window.prompt(action==='textColor'?'Enter text color (#RRGGBB)':'Enter highlight color (#RRGGBB)',
+                action==='textColor'?'#2563eb':'#fef08a');
+            if(color && /^#[a-f0-9]{6}$/i.test(color)){
+                document.execCommand(action==='textColor'?'foreColor':'hiliteColor',false,color);
+            }
+        } else if(action==='createLink') {
             const url=window.prompt('Enter a secure HTTPS link');
-            if(url && /^https:\/\//i.test(url))document.execCommand('createLink',false,url);
-        }else{document.execCommand(action,false,null)}
+            if(url && url.length<=2048 && /^https:\/\/[^\s]+$/i.test(url))
+                document.execCommand('createLink',false,url);
+        } else {
+            const commands=['undo','redo','bold','italic','underline','strikeThrough',
+                'insertUnorderedList','insertOrderedList','justifyLeft','justifyCenter',
+                'justifyRight','indent','outdent','unlink','removeFormat'];
+            if(commands.includes(action))document.execCommand(action,false,null);
+        }
         if(lesson)lesson.body=readSourceHtml(visual.innerHTML);
         return;
     }
