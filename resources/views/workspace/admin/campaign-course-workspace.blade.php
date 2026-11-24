@@ -3,7 +3,7 @@
 @section('workspace_compact', '1')
 @push('workspace_styles')
 <link rel="stylesheet" href="{{ asset('css/campaign-studio-premium.css') }}">
-<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-2">
+<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-3">
 @endpush
 @section('content')
 @php
@@ -63,10 +63,14 @@
                 <button type="button" role="tab" id="cs-tab-translation" data-cs-tab="translation" aria-selected="false" aria-controls="cs-course-stage">Translation (EN/KM)</button>
             </nav>
             <div id="cs-course-stage" class="cs-course-stage" role="tabpanel" aria-labelledby="cs-tab-metadata">
+                <div id="cs-selected-module-editor" class="cs-selected-module-editor" hidden>
+                    <label class="cs-label" for="cs-selected-module-title">Module title</label>
+                    <input id="cs-selected-module-title" type="text" class="cs-input" maxlength="140" autocomplete="off" placeholder="Enter module title" aria-describedby="cs-selected-module-help">
+                    <p id="cs-selected-module-help" class="cs-sr-only">Rename the selected unit. Save draft to keep changes.</p>
+                </div>
                 <div class="cs-section-heading cs-course-current-heading">
                     <div>
                         <h3 id="cs-current-unit-heading">Unit 1</h3>
-                        <p>Changes are saved to this campaign only.</p>
                     </div>
                     <span class="cs-course-selection-state" id="cs-current-content-type">QUIZ</span>
                 </div>
@@ -98,7 +102,6 @@
                             </select>
                         </div>
                     </div>
-                    <p class="cs-note">One title and type for the entire campaign. Units and lessons inherit these campaign settings.</p>
                 <a class="cs-course-exit" href="{{ route('admin.appearance.edit', ['section' => 'home', 'lang' => 'en']) }}">All campaigns</a>
             </section>
             <section class="cs-card cs-course-publish-card">
@@ -113,7 +116,6 @@
                     <span id="cs-publication-status" class="cs-course-status {{ $isPublished ? 'is-published' : 'is-draft' }}">{{ $isPublished ? 'Published' : 'Draft' }}</span>
                 </div>
                 <p id="cs-save-state" role="status" aria-live="polite" class="cs-course-saved">Ready to edit</p>
-                <p class="cs-subtext">Administrators can save drafts and publish directly. No additional approval is required.</p>
                 <button class="cs-btn cs-btn-primary cs-full" id="cs-publish" type="button">Publish campaign</button>
                 <button class="cs-btn cs-btn-outline cs-full" id="cs-save-draft" type="button">Save draft</button>
                 <div class="cs-workflow-steps" aria-label="Campaign readiness">
@@ -157,6 +159,6 @@
     </div>
     <script type="application/json" id="cs-initial-rows">@json($rows ?? [])</script>
 </section>
-<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124-2"></script>
-<script defer src="{{ asset('js/campaign-course-workspace.js') }}?v=course-20261124"></script>
+<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124-3"></script>
+<script defer src="{{ asset('js/campaign-course-workspace.js') }}?v=course-20261124-3"></script>
 @endsection

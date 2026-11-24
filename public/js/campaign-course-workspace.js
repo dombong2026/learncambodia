@@ -71,6 +71,8 @@ function treeMarkup() {
             '<button type="button" class="cs-tree-collapse" data-cs-toggle-unit="'+mi+'" aria-expanded="'+(!collapsedUnits.has(mi))+'" aria-label="Toggle Unit '+(mi+1)+' lessons">'+(collapsedUnits.has(mi)?'▸':'⌄')+'</button>' +
             '<button type="button" class="cs-tree-unit-button" data-cs-select-module="'+mi+'">' +
             '<span class="cs-tree-folder" aria-hidden="true">▣</span><span class="cs-tree-unit-name">Unit '+(mi+1)+': '+escaped(titleOf(mod)||'Untitled unit')+'</span></button>' +
+            '<button type="button" class="cs-tree-rename" data-cs-rename-module="'+mi+'" title="Rename module" aria-label="Rename unit '+(mi+1)+'">' +
+            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/></svg></button>' +
             '<button type="button" class="cs-tree-add" data-cs-add-lesson="'+mi+'" title="Add lesson" aria-label="Add lesson to unit '+(mi+1)+'">＋</button></div>' +
             '<div class="cs-tree-lessons"'+(collapsedUnits.has(mi)?' hidden':'')+'>';
         entries.forEach((lesson,li)=>{
@@ -84,6 +86,110 @@ function treeMarkup() {
         return html+(!entries.length?'<span class="cs-tree-empty">No lessons. Use + to add one.</span>':'')+'</div></div>';
     }).join('');
 }
+function trustedPreviewUrl(raw) {
+    try {
+        const address=new URL(String(raw||''),location.href);
+        const trustedLocal=address.origin===location.origin && address.pathname.startsWith('/campaign-media/');
+        return address.protocol==='https:' || trustedLocal ? address : null;
+    }catch(_error){return null}
+}
+function youtubeVideoId(url) {
+    if(!url)return null;
+    const host=url.hostname.toLowerCase();
+    if(!['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com',
+        'www.youtube-nocookie.com','youtu.be','www.youtu.be'].includes(host))return null;
+    let id='';
+    if(host.endsWith('youtu.be')) id=url.pathname.slice(1).split('/')[0];
+    else if(url.pathname==='/watch') id=url.searchParams.get('v')||'';
+    else id=url.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:\/|$)/)?.[1]||'';
+    return /^[A-Za-z0-9_-]{11}$/.test(id)?id:null;
+}
+function showActiveMedia() {
+    const selected=lessonAt(activeModule,activeLesson);
+    for(const box of list.querySelectorAll('[data-cs-lesson-media-preview]')) {
+        const isActive=box.closest('.cs-lesson')===selected && activeTab==='curriculum';
+        if(!isActive){
+            if(box.firstChild)box.replaceChildren();
+            box.hidden=true;
+            box.removeAttribute('data-preview-key');
+            continue;
+        }
+        const lesson=selected;
+        const kind=lessonType(lesson);
+        const asset=lesson.dataset.lessonAsset||'';
+        const url=(lesson.querySelector('[data-field="url"]')?.value||'').trim();
+        const key=kind+'|'+asset+'|'+url;
+        // Keep walking the other lessons: their old iframe/video must be unloaded.
+        if(box.dataset.previewKey===key)continue;
+        box.dataset.previewKey=key;
+        box.replaceChildren();
+        box.hidden=true;
+
+        let resolved=null;
+        if(/^[a-f0-9]{64}\.(?:jpg|png|webp|mp4|webm)$/.test(asset)){
+            resolved=trustedPreviewUrl(root.dataset.assetBase.replace(/\/$/,'')+'/'+encodeURIComponent(asset));
+        }else if(url){
+            resolved=trustedPreviewUrl(url);
+        }
+        if(!resolved){
+            if(url){
+                const hint=document.createElement('p');
+                hint.className='cs-media-error';
+                hint.textContent='Preview unavailable. Use a valid HTTPS media URL.';
+                box.appendChild(hint);
+                box.hidden=false;
+            }
+            continue;
+        }
+        const mediaType=asset?(/\.(mp4|webm)$/.test(asset)?'video':'image'):
+            youtubeVideoId(resolved)?'youtube':
+            kind==='image'?'image':
+            kind==='video'?'video':
+            /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(resolved.pathname)?'image':
+            /\.(mp4|webm|ogg|mov)$/i.test(resolved.pathname)?'video':
+            /\.(mp3|wav|m4a|oga)$/i.test(resolved.pathname)?'audio':'link';
+        const caption=document.createElement('div');
+        caption.className='cs-media-preview-heading';
+        caption.textContent='Lesson media preview';
+        box.appendChild(caption);
+        let node;
+        if(mediaType==='youtube') {
+            node=document.createElement('iframe');
+            node.src='https://www.youtube-nocookie.com/embed/'+youtubeVideoId(resolved);
+            node.title='YouTube lesson video preview';
+            node.loading='lazy';
+            node.referrerPolicy='strict-origin-when-cross-origin';
+            node.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+            node.setAttribute('allow','encrypted-media; picture-in-picture; fullscreen');
+            node.setAttribute('allowfullscreen','');
+        }else if(mediaType==='image') {
+            node=document.createElement('img');
+            node.src=resolved.href;
+            node.alt='Selected lesson image preview';
+            node.loading='lazy';
+        }else if(mediaType==='video') {
+            node=document.createElement('video');
+            node.src=resolved.href;
+            node.controls=true;
+            node.preload='metadata';
+            node.setAttribute('playsinline','');
+        }else if(mediaType==='audio') {
+            node=document.createElement('audio');
+            node.src=resolved.href;
+            node.controls=true;
+            node.preload='none';
+        }else {
+            node=document.createElement('a');
+            node.href=resolved.href;
+            node.target='_blank';
+            node.rel='noopener noreferrer';
+            node.textContent='Open media preview';
+        }
+        node.className='cs-selected-media-element';
+        box.appendChild(node);
+        box.hidden=false;
+    }
+}
 function setActivePanel() {
     const unit = moduleAt(activeModule), lesson = lessonAt(activeModule,activeLesson);
     byId('cs-edit-title').textContent = lesson ? titleOf(lesson) : 'Add a lesson';
@@ -95,6 +201,13 @@ function setActivePanel() {
     byId('cs-current-content-type').textContent = lessonType(lesson).toUpperCase();
     byId('cs-unit-label').textContent = modules().length+' unit'+(modules().length===1?'':'s');
     root.dataset.csTabActive = activeTab;
+    const moduleEditor = byId('cs-selected-module-editor');
+    const moduleInput = byId('cs-selected-module-title');
+    const innerModuleInput = unit?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    moduleEditor.hidden = !unit || activeTab !== 'metadata';
+    if (innerModuleInput && moduleInput.value !== innerModuleInput.value) {
+        moduleInput.value = innerModuleInput.value;
+    }
     const help = {
         quiz: 'Quiz lesson: add written instructions here, then switch to Assessments for questions, choices, answer keys and feedback.',
         exam: 'Exam lesson: add written instructions here, then switch to Assessments for scored questions and explanations.',
@@ -126,6 +239,7 @@ function setActivePanel() {
         t.tabIndex=selected?0:-1;
         if(selected)byId('cs-course-stage').setAttribute('aria-labelledby',t.id);
     });
+    showActiveMedia();
     const campaignTitle=byId('cs-campaign-title');
     // Campaign title and type are global settings, not lesson-level fields.
     const count=Number(byId('cs-questions-count').textContent||'0');
@@ -146,6 +260,17 @@ function sync(){
 }
 function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(sync)}
 function select(mi,li){
+    // Unload media from the previously selected lesson *before* changing focus.
+    // In particular, this immediately destroys embedded YouTube iframes.
+    for(const box of list.querySelectorAll('[data-cs-lesson-media-preview]')){
+        if(box.firstChild)box.replaceChildren();
+        box.hidden=true;
+        box.removeAttribute('data-preview-key');
+    }
+    if(mediaPreviewTimer!==null){
+        clearTimeout(mediaPreviewTimer);
+        mediaPreviewTimer=null;
+    }
     activeModule=mi;
     activeLesson=li;
     collapsedUnits.delete(mi);
@@ -163,10 +288,17 @@ tree.addEventListener('click',event=>{
     const lesson=event.target.closest('[data-cs-select-lesson]');
     const plus=event.target.closest('[data-cs-add-lesson]');
     const toggle=event.target.closest('[data-cs-toggle-unit]');
+    const rename=event.target.closest('[data-cs-rename-module]');
     if(toggle){
         const mi=Number(toggle.dataset.csToggleUnit);
         if(collapsedUnits.has(mi))collapsedUnits.delete(mi);else collapsedUnits.add(mi);
         sync();
+    }else if(rename){
+        select(Number(rename.dataset.csRenameModule),0);
+        setTab('metadata');
+        const moduleTitleInput=byId('cs-selected-module-title');
+        moduleTitleInput.focus();
+        moduleTitleInput.select();
     }else if(plus){
         const mi=Number(plus.dataset.csAddLesson), mod=moduleAt(mi);
         pendingSelection={mi,li:lessons(mod).length};
@@ -246,7 +378,23 @@ byId('cs-add-module').addEventListener('click',()=>{
     pendingSelection={mi:modules().length-1,li:0};schedule();
 });
 byId('cs-campaign-title').addEventListener('input',setActivePanel);
+byId('cs-selected-module-title').addEventListener('input',event=>{
+    const input=moduleAt(activeModule)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    if(!input)return;
+    input.value=event.target.value;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    byId('cs-current-unit-heading').textContent='Unit '+(activeModule+1)+': '+(event.target.value.trim()||'Untitled unit');
+    byId('cs-save-state').textContent='Unsaved module name. Save draft to keep changes.';
+});
 
+let mediaPreviewTimer=null;
+function scheduleMediaPreview(){
+    if(mediaPreviewTimer!==null)clearTimeout(mediaPreviewTimer);
+    mediaPreviewTimer=setTimeout(()=>{
+        mediaPreviewTimer=null;
+        showActiveMedia();
+    },350);
+}
 list.addEventListener('input',event=>{
     const lesson=event.target.closest('.cs-lesson');
     if(lesson && event.target.matches('[data-field="title"]')){
@@ -257,17 +405,34 @@ list.addEventListener('input',event=>{
         const mirror=lesson.querySelector('[data-cs-english-preview]');
         if(mirror)mirror.textContent=event.target.innerText;
     }
+    if(event.target.matches('[data-field="url"]'))scheduleMediaPreview();
     if(event.target.matches('[data-field="module-title"],[data-field="title"]'))schedule();
 });
 list.addEventListener('change',event=>{
     if(event.target.matches('[data-field="type"]')){
-        // The base editor redraws the lesson when its type changes. Switch to the
-        // relevant panel so its controls become visible immediately.
+        // Redraw only when the editor layout changes. Redrawing every field on
+        // blur destroys tree buttons between pointerdown and click (notably after
+        // entering a media URL), preventing users from navigating to a lesson.
         const kind=event.target.value;
         activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
+        schedule();
+    }else if(event.target.matches('[data-field="cefr"]')){
+        // A CEFR change updates the Khmer preview badge and metadata text.
+        schedule();
     }
-    schedule();
+    // Text fields and media URLs already update the base model on input/change;
+    // they must not replace the outline while another control is being clicked.
 });
+// Capture the old lesson index before the base editor redraws the DOM.
+list.addEventListener('click',event=>{
+    const duplicate=event.target.closest('button[data-action="lesson-duplicate"]');
+    if(!duplicate)return;
+    const mod=duplicate.closest('[data-module-index]');
+    const lesson=duplicate.closest('[data-lesson-index]');
+    if(!mod || !lesson)return;
+    pendingSelection={mi:Number(mod.dataset.moduleIndex),li:Number(lesson.dataset.lessonIndex)+1};
+    activeTab='metadata';
+},true);
 list.addEventListener('click',event=>{
     const button=event.target.closest('[data-action]');
     if(!button)return;

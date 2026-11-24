@@ -266,3 +266,47 @@ html.dark #cs-builder .cs-tree-lesson.is-active .cs-tree-lesson-button{color:#b0
 @media(max-width:1070px){
  #cs-builder .cs-course-workflow .cs-course-campaign-metadata{grid-column:auto}
 }
+
+
+/* Selected module title is a real form field, independent from lesson fields. */
+#cs-builder.cs-course-workspace .cs-module-body>.cs-field-grid,
+#cs-builder.cs-course-workspace[data-cs-tab-active="metadata"] .cs-module-body>.cs-field-grid{
+    display:none!important;
+}
+#cs-builder .cs-selected-module-editor{
+    padding:13px 15px;margin:0 0 15px;border:1px solid var(--course-line);
+    border-radius:12px;background:var(--course-surface-raised);
+}
+#cs-builder .cs-selected-module-editor .cs-label{display:block;margin:0 0 8px;font-size:12px}
+#cs-builder .cs-selected-module-editor .cs-input{min-width:0;width:100%;background:var(--course-surface)}
+#cs-builder .cs-tree-rename{
+    display:grid;place-items:center;flex:none;width:27px;height:27px;border:1px solid var(--course-line);
+    border-radius:8px;background:var(--course-surface-raised);color:var(--course-muted);cursor:pointer;
+}
+#cs-builder .cs-tree-rename:hover,#cs-builder .cs-tree-rename:focus-visible{
+    color:var(--course-teal);border-color:var(--course-teal);background:var(--course-selected);
+}
+#cs-builder .cs-tree-rename svg{width:14px;height:14px;stroke:currentColor;display:block}
+#cs-builder .cs-sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0
+}
+#cs-builder .cs-lesson-live-preview{
+    background:var(--course-surface-raised);border:1px solid var(--course-line);
+    border-radius:12px;padding:12px;margin:12px 0 13px;overflow:hidden;
+}
+#cs-builder .cs-media-preview-heading{font-size:11px;font-weight:850;color:var(--course-fg);margin:0 0 9px}
+#cs-builder .cs-selected-media-element:is(img,video,iframe){
+    display:block;width:100%;max-width:100%;height:auto;max-height:355px;
+    object-fit:contain;background:var(--course-surface-deep);border:1px solid var(--course-line);
+    border-radius:9px;
+}
+#cs-builder .cs-selected-media-element:is(iframe,video){aspect-ratio:16/9}
+#cs-builder .cs-selected-media-element:is(audio){display:block;width:100%;max-width:100%}
+#cs-builder .cs-selected-media-element:is(a){
+    display:inline-flex;color:var(--course-teal);text-decoration:underline;font-size:12px;font-weight:800;
+}
+#cs-builder .cs-media-error{font-size:12px;color:var(--course-muted);line-height:1.6;margin:0}
+@media(max-width:720px){
+  #cs-builder .cs-selected-media-element:is(img,video,iframe){max-height:270px}
+}
