@@ -48,8 +48,8 @@ final class McpOAuthDiscoveryController
         // production security acceptance. No pretend token endpoint.
         return response()->json([
             'issuer' => self::ISSUER,
-            'authorization_endpoint' => route('mcp.oauth.authorize'),
-            'token_endpoint' => route('mcp.oauth.token'),
+            'authorization_endpoint' => self::ISSUER.route('mcp.oauth.authorize', [], false),
+            'token_endpoint' => self::ISSUER.route('mcp.oauth.token', [], false),
             'response_types_supported' => ['code'],
             'grant_types_supported' => ['authorization_code'],
             'token_endpoint_auth_methods_supported' => ['none'],
