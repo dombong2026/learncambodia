@@ -86,6 +86,109 @@ function treeMarkup() {
         return html+(!entries.length?'<span class="cs-tree-empty">No lessons. Use + to add one.</span>':'')+'</div></div>';
     }).join('');
 }
+function trustedPreviewUrl(raw) {
+    try {
+        const address=new URL(String(raw||''),location.href);
+        const trustedLocal=address.origin===location.origin && address.pathname.startsWith('/campaign-media/');
+        return address.protocol==='https:' || trustedLocal ? address : null;
+    }catch(_error){return null}
+}
+function youtubeVideoId(url) {
+    if(!url)return null;
+    const host=url.hostname.toLowerCase();
+    if(!['youtube.com','www.youtube.com','m.youtube.com','youtube-nocookie.com',
+        'www.youtube-nocookie.com','youtu.be','www.youtu.be'].includes(host))return null;
+    let id='';
+    if(host.endsWith('youtu.be')) id=url.pathname.slice(1).split('/')[0];
+    else if(url.pathname==='/watch') id=url.searchParams.get('v')||'';
+    else id=url.pathname.match(/^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:\/|$)/)?.[1]||'';
+    return /^[A-Za-z0-9_-]{11}$/.test(id)?id:null;
+}
+function showActiveMedia() {
+    const selected=lessonAt(activeModule,activeLesson);
+    for(const box of list.querySelectorAll('[data-cs-lesson-media-preview]')) {
+        const isActive=box.closest('.cs-lesson')===selected && activeTab==='curriculum';
+        if(!isActive){
+            if(box.firstChild)box.replaceChildren();
+            box.hidden=true;
+            box.removeAttribute('data-preview-key');
+            continue;
+        }
+        const lesson=selected;
+        const kind=lessonType(lesson);
+        const asset=lesson.dataset.lessonAsset||'';
+        const url=(lesson.querySelector('[data-field="url"]')?.value||'').trim();
+        const key=kind+'|'+asset+'|'+url;
+        if(box.dataset.previewKey===key)return;
+        box.dataset.previewKey=key;
+        box.replaceChildren();
+        box.hidden=true;
+
+        let resolved=null;
+        if(/^[a-f0-9]{64}\.(?:jpg|png|webp|mp4|webm)$/.test(asset)){
+            resolved=trustedPreviewUrl(root.dataset.assetBase.replace(/\/$/,'')+'/'+encodeURIComponent(asset));
+        }else if(url){
+            resolved=trustedPreviewUrl(url);
+        }
+        if(!resolved){
+            if(url){
+                const hint=document.createElement('p');
+                hint.className='cs-media-error';
+                hint.textContent='Preview unavailable. Use a valid HTTPS media URL.';
+                box.appendChild(hint);
+                box.hidden=false;
+            }
+            continue;
+        }
+        const mediaType=asset?(/\.(mp4|webm)$/.test(asset)?'video':'image'):
+            youtubeVideoId(resolved)?'youtube':
+            kind==='image'?'image':
+            kind==='video'?'video':
+            /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(resolved.pathname)?'image':
+            /\.(mp4|webm|ogg|mov)$/i.test(resolved.pathname)?'video':
+            /\.(mp3|wav|m4a|oga)$/i.test(resolved.pathname)?'audio':'link';
+        const caption=document.createElement('div');
+        caption.className='cs-media-preview-heading';
+        caption.textContent='Lesson media preview';
+        box.appendChild(caption);
+        let node;
+        if(mediaType==='youtube') {
+            node=document.createElement('iframe');
+            node.src='https://www.youtube-nocookie.com/embed/'+youtubeVideoId(resolved);
+            node.title='YouTube lesson video preview';
+            node.loading='lazy';
+            node.referrerPolicy='strict-origin-when-cross-origin';
+            node.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+            node.setAttribute('allow','encrypted-media; picture-in-picture; fullscreen');
+            node.setAttribute('allowfullscreen','');
+        }else if(mediaType==='image') {
+            node=document.createElement('img');
+            node.src=resolved.href;
+            node.alt='Selected lesson image preview';
+            node.loading='lazy';
+        }else if(mediaType==='video') {
+            node=document.createElement('video');
+            node.src=resolved.href;
+            node.controls=true;
+            node.preload='metadata';
+            node.setAttribute('playsinline','');
+        }else if(mediaType==='audio') {
+            node=document.createElement('audio');
+            node.src=resolved.href;
+            node.controls=true;
+            node.preload='none';
+        }else {
+            node=document.createElement('a');
+            node.href=resolved.href;
+            node.target='_blank';
+            node.rel='noopener noreferrer';
+            node.textContent='Open media preview';
+        }
+        node.className='cs-selected-media-element';
+        box.appendChild(node);
+        box.hidden=false;
+    }
+}
 function setActivePanel() {
     const unit = moduleAt(activeModule), lesson = lessonAt(activeModule,activeLesson);
     byId('cs-edit-title').textContent = lesson ? titleOf(lesson) : 'Add a lesson';
@@ -272,6 +375,14 @@ byId('cs-selected-module-title').addEventListener('input',event=>{
     byId('cs-save-state').textContent='Unsaved module name. Save draft to keep changes.';
 });
 
+let mediaPreviewTimer=null;
+function scheduleMediaPreview(){
+    if(mediaPreviewTimer!==null)clearTimeout(mediaPreviewTimer);
+    mediaPreviewTimer=setTimeout(()=>{
+        mediaPreviewTimer=null;
+        showActiveMedia();
+    },350);
+}
 list.addEventListener('input',event=>{
     const lesson=event.target.closest('.cs-lesson');
     if(lesson && event.target.matches('[data-field="title"]')){
@@ -282,6 +393,7 @@ list.addEventListener('input',event=>{
         const mirror=lesson.querySelector('[data-cs-english-preview]');
         if(mirror)mirror.textContent=event.target.innerText;
     }
+    if(event.target.matches('[data-field="url"]'))scheduleMediaPreview();
     if(event.target.matches('[data-field="module-title"],[data-field="title"]'))schedule();
 });
 list.addEventListener('change',event=>{
