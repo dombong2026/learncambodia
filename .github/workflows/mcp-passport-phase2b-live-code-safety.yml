@@ -12,11 +12,14 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Verify aaPanel release syntax, exact live hashes and rollback
         run: |
           set -Eeuo pipefail
           SCRIPT=support/operator/learncambodia-mcp-oauth-phase2b-stage-code-aapanel.sh
           bash -n "$SCRIPT"
+          python3 tests/operator/test_mcp_oauth_phase2b_semantic_overlay.py
           python3 - <<'PY'
           from pathlib import Path
           p=Path("support/operator/learncambodia-mcp-oauth-phase2b-stage-code-aapanel.sh")
