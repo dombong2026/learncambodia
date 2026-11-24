@@ -64,7 +64,8 @@ PATCHER="$STAGE/foundation-patcher.py"
 gh api -H "Accept: application/vnd.github.raw+json" \
   "repos/$REPO/contents/support/operator/learncambodia-mcp-foundation-patcher.py?ref=$RELEASE" > "$PATCHER"
 test -s "$PATCHER"
-python3 -B "$PATCHER" "$STAGE"for i in 0 1 2; do
+python3 -B "$PATCHER" "$STAGE"
+for i in 0 1 2; do
  "$PHP" -l "$STAGE/new/$i" >/dev/null
  "$PHP" -l "$STAGE/patch/$i" >/dev/null
 done
