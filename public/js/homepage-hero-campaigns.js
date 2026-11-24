@@ -9,6 +9,10 @@ const csrf=root.dataset.csrf||document.querySelector('meta[name="csrf-token"]')?
 let questions=[],current=0,score=0,checkUrl='',busy=false;
 const report=message=>{errors.textContent=message;errors.hidden=!message};
 function back(){
+    // Remove embedded video/audio elements before hiding the player: merely
+    // setting hidden=true can leave YouTube playback running in the background.
+    get('hc-question').replaceChildren();
+    get('hc-feedback').replaceChildren();
     player.hidden=true;chooser.hidden=false;questions=[];current=0;score=0;checkUrl='';busy=false;report('');
 }
 const validatedURL=raw=>{
