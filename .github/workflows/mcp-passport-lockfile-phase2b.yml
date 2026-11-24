@@ -1,0 +1,56 @@
+name: MCP Passport 2B Locked Dependencies
+
+on:
+  push:
+    branches:
+      - feature/learncambodia-mcp-passport-phase2b-20261124
+    paths:
+      - .github/workflows/mcp-passport-lockfile-phase2b.yml
+
+permissions:
+  contents: write
+
+jobs:
+  lock-passport:
+    if: github.repository == 'dombong2026/learncambodia' && github.ref == 'refs/heads/feature/learncambodia-mcp-passport-phase2b-20261124'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom, openssl
+          coverage: none
+      - name: Lock Passport dependencies only in the review branch
+        run: |
+          set -Eeuo pipefail
+          test "$(git branch --show-current)" = "feature/learncambodia-mcp-passport-phase2b-20261124"
+          composer update laravel/passport --with-all-dependencies \
+            --no-interaction --prefer-dist --no-progress --no-scripts --no-audit
+          composer validate --no-check-publish --no-check-all
+          php -r '
+          $lock=json_decode(file_get_contents("composer.lock"),true);
+          foreach($lock["packages"] as $p){
+            if($p["name"]==="laravel/passport"){
+              if(!str_starts_with($p["version"],"v13."))exit(3);
+              echo "MCP_OAUTH_LOCKED_PASSPORT=".$p["version"]."\n";
+              exit;
+            }
+          }
+          exit(2);
+          '
+          if git diff --quiet -- composer.lock; then
+            echo MCP_PASSPORT_LOCKFILE_ALREADY_MATCHES=PASS
+            exit 0
+          fi
+          git config user.name "LearnCambodia GitHub Actions"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- composer.lock
+          git commit -m "Lock Laravel Passport 13 dependencies for isolated Phase2B QA"
+          git push origin "HEAD:refs/heads/feature/learncambodia-mcp-passport-phase2b-20261124"
+          echo MCP_PASSPORT_LOCKFILE_COMMITTED=PASS
