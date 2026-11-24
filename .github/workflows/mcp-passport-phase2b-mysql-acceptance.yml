@@ -1,0 +1,71 @@
+name: MCP Passport Phase 2B MySQL Acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-passport-mysql-\${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mysql8-passport:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: only-in-ci-testing-password
+          MYSQL_DATABASE: learncambodia_mcp_oauth_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_URL: https://learncambodia.com
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: learncambodia_mcp_oauth_test
+      DB_USERNAME: root
+      DB_PASSWORD: only-in-ci-testing-password
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, pdo_mysql, mysqlnd, fileinfo, curl, dom, openssl
+          coverage: none
+      - name: Install reproducible locked Passport vendor on temporary runner
+        run: |
+          set -Eeuo pipefail
+          composer validate --no-check-publish --no-check-all
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          php artisan package:discover
+          php artisan passport:keys --force --no-interaction
+          php -r '
+            $lock=json_decode(file_get_contents("composer.lock"),true);
+            $passport=array_values(array_filter($lock["packages"], fn($p)=>$p["name"]==="laravel/passport"));
+            if(count($passport)!==1 || $passport[0]["version"]!=="v13.12.0")exit(2);
+            echo "MCP_PASSPORT_PINNED_MYSQL8=PASS\n";
+          '
+      - name: Check Passport migrations and OAuth READ against clean MySQL 8
+        run: |
+          set -Eeuo pipefail
+          php artisan test --filter=McpOAuthPassportTest
+          php artisan test --filter=McpOAuthDiscoveryTest
+          php artisan test --filter=McpBrowserBridgeTest
+          php artisan test --filter=McpManagementTest
+          echo MCP_OAUTH_PHASE2B_MYSQL8_REGRESSION=PASS
