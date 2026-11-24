@@ -214,6 +214,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/mcp', [\App\Http\Controllers\Workspace\AdminMcpManagementController::class, 'index'])->name('mcp');
             Route::post('/mcp/sessions', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'issue'])
                 ->middleware(['password.confirm','throttle:5,1'])->name('mcp.sessions.issue');
+            Route::post('/mcp/confirm-password', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'confirmWebsitePassword'])
+                ->middleware('throttle:5,1')->name('mcp.confirm-password');
             Route::delete('/mcp/sessions/{token}', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'revoke'])
                 ->whereNumber('token')->middleware('throttle:10,1')->name('mcp.sessions.revoke');
             Route::get('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'show'])

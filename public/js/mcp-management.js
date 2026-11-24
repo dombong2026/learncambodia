@@ -32,6 +32,10 @@
     const authDialog=root.querySelector('#mcp-browser-auth-dialog');
     if(!browserSection||!authDialog)return;
     const authForm=root.querySelector('#mcp-browser-auth-form');
+    const passwordForm=root.querySelector('#mcp-browser-password-form');
+    const passwordInput=root.querySelector('#mcp-browser-password');
+    const passwordUrl=browserSection.dataset.mcpPasswordUrl;
+    let passwordVerifiedForThisConsent=false;
     const issued=root.querySelector('#mcp-browser-issued');
     const tokenInput=root.querySelector('#mcp-issued-token');
     const feedback=root.querySelector('#mcp-browser-feedback');
@@ -41,6 +45,9 @@
     const showMessage=msg=>{feedback.textContent=String(msg||'');};
     function clearSecret(){
         tokenInput.value='';
+        if(passwordInput)passwordInput.value='';
+        passwordVerifiedForThisConsent=false;
+        if(passwordForm)passwordForm.hidden=true;
         issued.hidden=true;
         authForm.hidden=false;
         root.querySelector('#mcp-consent-accept').checked=false;
@@ -56,6 +63,13 @@
         if(event.target.closest('[data-mcp-auth-close]')){
             clearSecret();
             authDialog.close();
+            return;
+        }
+        if(event.target.closest('[data-mcp-password-back]')){
+            if(passwordInput)passwordInput.value='';
+            if(passwordForm)passwordForm.hidden=true;
+            authForm.hidden=false;
+            showMessage('');
             return;
         }
         if(event.target.closest('[data-mcp-copy-token]')){
@@ -86,6 +100,39 @@
         }
     });
     authDialog.addEventListener('close',clearSecret);
+    // First-party password verification is a separate HTTPS, same-origin,
+    // CSRF-protected request. Never include the password in an MCP token call.
+    passwordForm?.addEventListener('submit',async event=>{
+        event.preventDefault();
+        if(!passwordForm.reportValidity())return;
+        const submit=passwordForm.querySelector('[data-mcp-password-submit]');
+        submit.disabled=true;
+        showMessage('Confirming website administrator password…');
+        try{
+            const response=await fetch(passwordUrl,{
+                method:'POST',credentials:'same-origin',
+                headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf},
+                body:JSON.stringify({password:passwordInput.value}),
+            });
+            passwordInput.value='';
+            const body=await response.json().catch(()=>({}));
+            if(!response.ok){
+                const errors=Object.values(body.errors||{}).flat();
+                throw new Error(errors[0]||body.message||('Password verification failed (HTTP '+response.status+').'));
+            }
+            if(body.status!=='password_confirmed')throw new Error('Password confirmation was not acknowledged.');
+            passwordVerifiedForThisConsent=true;
+            passwordForm.hidden=true;
+            authForm.hidden=false;
+            showMessage('Website password confirmed. Issuing approved browser session…');
+            authForm.requestSubmit();
+        }catch(error){
+            passwordInput.value='';
+            showMessage(error.message);
+        }finally{
+            submit.disabled=false;
+        }
+    });
     authForm.addEventListener('submit',async event=>{
         event.preventDefault();
         if(!authForm.reportValidity())return;
@@ -93,6 +140,13 @@
         if(!chosen.length){showMessage('Choose at least one permission.');return}
         if(!root.querySelector('#mcp-consent-accept').checked){
             showMessage('Confirm the permission statement before connecting.');return;
+        }
+        if(!passwordVerifiedForThisConsent){
+            authForm.hidden=true;
+            passwordForm.hidden=false;
+            showMessage('Enter your Website Admin password before granting MCP access.');
+            passwordInput.focus();
+            return;
         }
         const submit=authForm.querySelector('[data-mcp-connect-submit]');
         submit.disabled=true;showMessage('Verifying administrator approval…');
@@ -108,13 +162,23 @@
                 }),
             });
             if(response.redirected && response.url.includes('/security/confirm-password')){
-                showMessage('Re-enter your website password first. Opening the password confirmation page.');
-                window.location.assign(response.url);
+                passwordVerifiedForThisConsent=false;
+                authForm.hidden=true;
+                passwordForm.hidden=false;
+                passwordInput.focus();
+                showMessage('Administrator password confirmation is required again.');
                 return;
             }
             const body=await response.json().catch(()=>({}));
             if(!response.ok){
                 const errors=Object.values(body.errors||{}).flat();
+                if(response.status===423 || (body.message||'').toLowerCase().includes('password confirmation')){
+                    passwordVerifiedForThisConsent=false;
+                    authForm.hidden=true;
+                    passwordForm.hidden=false;
+                    passwordInput.focus();
+                    throw new Error('Confirm your Website Admin password again to authorize this session.');
+                }
                 throw new Error(errors[0]||body.message||('Authorization refused (HTTP '+response.status+').'));
             }
             if(!body.access_token)throw new Error('Server did not return a one-time credential.');

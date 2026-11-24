@@ -141,3 +141,19 @@
  padding:9px 13px;color:inherit;cursor:pointer}
 @media(max-width:590px){.mcp-manager .mcp-consent-scopes{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mcp-manager .mcp-browser-body{padding:14px}.mcp-manager .mcp-browser-dialog{padding:16px}}
+
+
+/* Inline website-admin password confirmation, inside the consent dialog. */
+.mcp-manager #mcp-browser-password-form[hidden]{display:none!important}
+.mcp-manager #mcp-browser-auth-form[hidden]{display:none!important}
+.mcp-manager #mcp-browser-issued[hidden]{display:none!important}
+.mcp-manager .mcp-password-step-heading{margin-bottom:12px}
+.mcp-manager .mcp-password-step-heading h4{font-size:16px;font-weight:850;margin:5px 0 0}
+.mcp-manager .mcp-browser-dialog input[type="password"]{width:100%;display:block;
+ border:1px solid #cbd5e1;border-radius:9px;padding:11px 12px;font-size:13px;
+ color:#0f172a;background:#fff}
+.dark .mcp-manager .mcp-browser-dialog input[type="password"]{color:#f1f5f9;
+ border-color:#475569;background:#182338}
+.mcp-manager .mcp-password-alternative{margin-top:14px;font-size:12px!important}
+.mcp-manager .mcp-password-alternative a{color:#0f766e;text-decoration:underline;text-underline-offset:3px}
+.dark .mcp-manager .mcp-password-alternative a{color:#5eead4}

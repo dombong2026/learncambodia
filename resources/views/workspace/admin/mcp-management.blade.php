@@ -52,6 +52,7 @@
 
     <section class="mcp-panel mcp-browser-section" aria-labelledby="mcp-browser-heading"
         data-mcp-issue-url="{{ route('admin.system-settings.mcp.sessions.issue') }}"
+        data-mcp-password-url="{{ route('admin.system-settings.mcp.confirm-password') }}"
         data-mcp-revoke-prefix="{{ url('/dashboard/system-settings/mcp/sessions') }}">
         <div class="mcp-panel-header">
             <div>
@@ -112,6 +113,20 @@
                 <div class="mcp-dialog-footer">
                     <button class="mcp-primary-close" type="submit" data-mcp-connect-submit>Approve browser session</button>
                 </div>
+            </form>
+            <form id="mcp-browser-password-form" hidden autocomplete="off">
+                <div class="mcp-password-step-heading"><span class="mcp-panel-kicker">SECURE REAUTHENTICATION</span>
+                    <h4>Confirm your Website Admin password</h4>
+                </div>
+                <p>Enter the password for your LearnCambodia administrator account to approve this browser session. The password goes only to LearnCambodia over HTTPS and will never be included in the MCP token.</p>
+                <label class="mcp-field-label" for="mcp-browser-password">Website Admin password</label>
+                <input id="mcp-browser-password" name="password" type="password" autocomplete="current-password"
+                    required minlength="1" aria-describedby="mcp-browser-feedback" placeholder="Enter your website password">
+                <div class="mcp-dialog-footer">
+                    <button type="button" class="mcp-close-text" data-mcp-password-back>Back</button>
+                    <button type="submit" class="mcp-primary-close" data-mcp-password-submit>Confirm password and authorize</button>
+                </div>
+                <p class="mcp-password-alternative"><a href="{{ route('password.confirm') }}" target="_blank" rel="noopener">Open the website password confirmation page</a></p>
             </form>
             <div id="mcp-browser-issued" hidden>
                 <strong>Browser session created — copy the token once</strong>

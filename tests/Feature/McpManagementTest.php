@@ -39,6 +39,29 @@ final class McpManagementTest extends TestCase
             ->assertSee('id="mcp-tool-dialog"', false);
     }
 
+    public function test_admin_sidebar_includes_mcp_even_when_cached_workspace_config_omits_it(): void
+    {
+        $config=config('workspaces.admin');
+        foreach ($config as &$section) {
+            if (($section['key']??'')==='system-settings') {
+                $section['items']=array_values(array_filter($section['items'],fn(array $item):bool =>
+                    ($item['route']??'')!=='admin.system-settings.mcp'
+                ));
+            }
+        }
+        unset($section);
+        config()->set('workspaces.admin',$config);
+        $this->actingAs(User::factory()->create(['role'=>User::ROLE_ADMIN]));
+        $groups=\App\Support\WorkspaceMenu::groups('admin');
+        $settings=collect($groups)->firstWhere('key','system-settings');
+        $this->assertNotNull($settings);
+        $matches=array_values(array_filter($settings['items'],fn(array $item):bool =>
+            ($item['route']??'')==='admin.system-settings.mcp'
+        ));
+        $this->assertCount(1,$matches);
+        $this->assertSame('MCP Management',$matches[0]['label']);
+    }
+
     public function test_student_and_developer_cannot_access_administration(): void
     {
         foreach ([User::ROLE_STUDENT, User::ROLE_DEVELOPER] as $role) {

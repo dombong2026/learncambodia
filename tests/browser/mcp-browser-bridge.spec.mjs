@@ -6,12 +6,24 @@ test('browser-admin permission consent displays short-lived token once and suppo
     }));
     let issuedRequests=0;
     let revocations=0;
+    let passwordChecks=0;
+    await page.route('**/dashboard/system-settings/mcp/confirm-password',route=>{
+        passwordChecks++;
+        const pwd=route.request().postDataJSON().password;
+        if(pwd!=='correct-test-password'){
+            return route.fulfill({status:422,contentType:'application/json',
+                body:JSON.stringify({message:'Invalid password',errors:{password:['Incorrect Website Admin password.']}})});
+        }
+        return route.fulfill({status:200,contentType:'application/json',
+            body:JSON.stringify({status:'password_confirmed'})});
+    });
     await page.route('**/dashboard/system-settings/mcp/sessions',route=>{
         issuedRequests++;
         const data=route.request().postDataJSON();
         expect(data.client_name).toBe('LearnCambodia Admin MCP');
         expect(data.scopes).toContain('mcp:read');
         expect(data.confirmation).toBe('CONNECT');
+        expect(JSON.stringify(data)).not.toContain('correct-test-password');
         return route.fulfill({
             status:201,contentType:'application/json',
             body:JSON.stringify({
@@ -35,6 +47,7 @@ test('browser-admin permission consent displays short-lived token once and suppo
         '<p id="mcp-detail-id"></p><p id="mcp-detail-scope"></p><p id="mcp-detail-risk"></p>',
         '<p id="mcp-detail-summary"></p><button data-mcp-dialog-close>Close</button></dialog>',
         '<section class="mcp-browser-section" data-mcp-issue-url="/dashboard/system-settings/mcp/sessions"',
+        ' data-mcp-password-url="/dashboard/system-settings/mcp/confirm-password"',
         ' data-mcp-revoke-prefix="/dashboard/system-settings/mcp/sessions">',
         '<button data-mcp-open-auth>Authenticate in Browser</button>',
         '<table><tbody data-mcp-sessions><tr data-mcp-empty><td>None</td></tr></tbody></table></section>',
@@ -47,6 +60,10 @@ test('browser-admin permission consent displays short-lived token once and suppo
         '<select id="mcp-expiry"><option value="30">30m</option></select>',
         '<input type="checkbox" id="mcp-consent-accept" required>',
         '<button type="submit" data-mcp-connect-submit>Approve browser session</button>',
+        '</form><form id="mcp-browser-password-form" hidden>',
+        '<input id="mcp-browser-password" type="password" required>',
+        '<button data-mcp-password-back type="button">Back</button>',
+        '<button data-mcp-password-submit type="submit">Confirm password and authorize</button>',
         '</form><div id="mcp-browser-issued" hidden>',
         '<textarea id="mcp-issued-token" readonly></textarea>',
         '<button type="button" data-mcp-copy-token>Copy token</button>',
@@ -58,7 +75,17 @@ test('browser-admin permission consent displays short-lived token once and suppo
     await expect(page.locator('#mcp-browser-auth-dialog')).toBeVisible();
     await page.locator('#mcp-consent-accept').check();
     await page.getByRole('button',{name:'Approve browser session'}).click();
+    await expect(page.locator('#mcp-browser-password-form')).toBeVisible();
+    expect(issuedRequests).toBe(0);
+    await page.locator('#mcp-browser-password').fill('incorrect');
+    await page.getByRole('button',{name:'Confirm password and authorize'}).click();
+    await expect(page.locator('#mcp-browser-feedback')).toContainText('Incorrect Website Admin password.');
+    expect(issuedRequests).toBe(0);
+    await page.locator('#mcp-browser-password').fill('correct-test-password');
+    await page.getByRole('button',{name:'Confirm password and authorize'}).click();
     await expect(page.locator('#mcp-issued-token')).toHaveValue('77|one-time-fixture-token');
+    expect(passwordChecks).toBe(2);
+    await expect(page.locator('#mcp-browser-password')).toHaveValue('');
     expect(issuedRequests).toBe(1);
     await expect(page.locator('[data-mcp-session-id="77"]')).toBeVisible();
     await page.getByRole('button',{name:'Close authentication'}).click();

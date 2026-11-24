@@ -56,6 +56,28 @@ final class McpBrowserBridgeTest extends TestCase
         ])->assertUnauthorized();
     }
 
+    public function test_mcp_browser_consent_shows_password_step_and_uses_real_password_confirmation(): void
+    {
+        $admin=$this->admin();
+        $admin->forceFill(['password'=>\Illuminate\Support\Facades\Hash::make('correct-admin-password')])->save();
+        $this->actingAs($admin);
+        $url='/dashboard/system-settings/mcp/confirm-password';
+        $this->postJson($url,['password'=>'wrong-password'])
+            ->assertUnprocessable()->assertJsonValidationErrors('password');
+        $this->postJson('/dashboard/system-settings/mcp/sessions',[
+            'client_name'=>'Guard Test','scopes'=>['mcp:read'],
+            'confirmation'=>'CONNECT','expires_in_minutes'=>15,
+        ])->assertStatus(423);
+        $this->postJson($url,['password'=>'correct-admin-password'])
+            ->assertOk()->assertJsonPath('status','password_confirmed')
+            ->assertDontSee('correct-admin-password');
+        $this->postJson('/dashboard/system-settings/mcp/sessions',[
+            'client_name'=>'Guard Test','scopes'=>['mcp:read'],
+            'confirmation'=>'CONNECT','expires_in_minutes'=>15,
+        ])->assertCreated()->assertJsonPath('status','issued');
+        $this->assertDatabaseCount('personal_access_tokens',1);
+    }
+
     public function test_website_admin_issues_read_only_token_with_expiry_and_revokes_it(): void
     {
         $admin=$this->admin();
