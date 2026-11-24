@@ -146,6 +146,7 @@ final class WorkspaceMenu
             'system-settings/security' => 'shield-check',
             'system-settings/social-auth' => 'log-in',
             'system-settings/cloud-storage' => 'cloud-storage',
+            'system-settings/mcp' => 'terminal',
             'academic-quality/gradebook' => 'chart-line',
             'academic-quality/evidence' => 'badge-check',
             'learning/categories' => 'compass',
