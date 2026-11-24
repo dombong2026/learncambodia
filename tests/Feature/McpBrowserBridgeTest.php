@@ -151,6 +151,44 @@ final class McpBrowserBridgeTest extends TestCase
         $this->assertDatabaseCount('mcp_action_audits',2);
     }
 
+    public function test_read_only_session_can_fetch_aggregate_analytics_without_management_scope(): void
+    {
+        config()->set('mcp.gateway_enabled', true);
+        config()->set('mcp.remote_writes_enabled', false);
+        $admin=$this->admin();
+        $token=$admin->createToken('LearnCambodia MCP: Analytics Acceptance',
+            ['mcp:use','mcp:read'],now()->addMinutes(15));
+        $this->withToken($token->plainTextToken);
+
+        $schema=$this->postJson('/api/mcp',[
+            'jsonrpc'=>'2.0','id'=>2,'method'=>'tools/list',
+        ])->assertOk()->json('result.tools.1.inputSchema.properties.resource.enum');
+        $this->assertSame(1, count(array_filter($schema,fn($item)=>$item==='analytics')));
+
+        $response=$this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'READ','resource'=>'analytics','payload'=>[],
+        ]))->assertOk()->assertJsonPath('result.isError',false)
+            ->assertJsonPath('result.structuredContent.status','read')
+            ->assertJsonPath('result.structuredContent.resource','analytics');
+        $data=$response->json('result.structuredContent');
+        $this->assertCount(8,$data['items']);
+        foreach (['courses_total','courses_published','lessons_total','quizzes_total',
+                  'enrollments_total','students_total','editorial_published','campaigns_published'] as $key) {
+            $this->assertArrayHasKey($key,$data['items']);
+            $this->assertIsInt($data['items'][$key]);
+            $this->assertGreaterThanOrEqual(0,$data['items'][$key]);
+        }
+        $this->assertNotEmpty($data['receipt_id']);
+        $this->assertSame('Aggregate counts only; personal student data is not included.',$data['note']);
+
+        // This new READ resource must never grant sensitive settings access.
+        $this->postJson('/api/mcp',$this->rpc('crud_manage_platform',[
+            'operation'=>'READ','resource'=>'settings','payload'=>[],
+        ]))->assertOk()->assertJsonPath('result.isError',true)
+            ->assertJsonPath('result.structuredContent.http_status',403);
+        $this->assertDatabaseCount('mcp_action_audits',2);
+    }
+
     public function test_browser_authorized_write_scope_creates_only_unpublished_editorial_draft(): void
     {
         config()->set('mcp.gateway_enabled',true);
