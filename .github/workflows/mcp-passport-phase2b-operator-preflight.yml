@@ -1,0 +1,38 @@
+name: MCP Passport Phase 2B Operator Preflight Safety
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-aa-panel-inspection:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify diagnostic script cannot mutate production
+        run: |
+          set -Eeuo pipefail
+          SCRIPT=support/operator/learncambodia-mcp-oauth-phase2b-live-preflight.sh
+          bash -n "$SCRIPT"
+          python3 - <<'PY'
+          from pathlib import Path
+          c=Path("support/operator/learncambodia-mcp-oauth-phase2b-live-preflight.sh").read_text()
+          assert "SITE=\"/www/wwwroot/learncambodia.com\"" in c
+          assert "MCP_OAUTH_PHASE2B_LIVE_PREFLIGHT=COMPLETE" in c
+          assert "OAUTH_TABLE" in c
+          assert "LIVE_BLOB" in c
+          assert "LEGACY_MCP_ANONYMOUS" in c
+          assert "NO_DATABASE_MUTATIONS=PASS" in c
+          for f in ("routes/web.php","routes/api.php","composer.lock","config/auth.php",
+                    "config/mcp.php","app/Providers/AppServiceProvider.php","bootstrap/app.php"):
+              assert f in c
+          for forbidden in ("artisan migrate", "composer install","composer update",
+                           "gh auth", "ssh ", "git reset", "git checkout", "rm -rf",
+                           "sed -i", "env |", "cat .env", "php artisan tinker",
+                           "passport:keys", "chmod -R", "chown -R"):
+              assert forbidden not in c, forbidden
+          print("MCP_PHASE2B_READ_ONLY_OPERATOR_PREFLIGHT=PASS")
+          PY

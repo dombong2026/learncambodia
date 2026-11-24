@@ -12,6 +12,11 @@ return [
     // authorization-code + S256 PKCE provider is available and approved.
     'oauth_discovery_enabled' => (bool) env('MCP_OAUTH_DISCOVERY_ENABLED', false),
     'oauth_provider_accepted' => false,
+    'oauth_provider_staging_enabled' => (bool) env('MCP_OAUTH_PROVIDER_STAGING_ENABLED', false),
+    'oauth_resource' => 'https://learncambodia.com/api/mcp/oauth',
+    // An administrator must register an exact public client ID and callback.
+    'oauth_client_id' => (string) env('MCP_OAUTH_CLIENT_ID', ''),
+    'oauth_redirect_uri' => (string) env('MCP_OAUTH_REDIRECT_URI', ''),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];

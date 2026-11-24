@@ -1,0 +1,96 @@
+name: MCP Passport Phase 2B Isolated Regression
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-passport2b-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm existing Sanctum bridge and hard-disabled production gates
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          u=Path("app/Models/User.php").read_text()
+          o=Path("app/Models/McpOAuthUser.php").read_text()
+          m=Path("config/mcp.php").read_text()
+          a=Path("routes/api.php").read_text()
+          p=Path("app/Providers/AppServiceProvider.php").read_text()
+          assert "use Laravel\\Sanctum\\HasApiTokens;" in u
+          assert "HasPassportApiTokens" in o
+          assert "protected $table = 'users'" in o
+          assert "'oauth_ready' => false" in m
+          assert "'oauth_provider_accepted' => false" in m
+          assert "MCP_OAUTH_PROVIDER_STAGING_ENABLED" in m
+          assert "'remote_writes_enabled' => (bool) env('MCP_REMOTE_WRITES_ENABLED', false)" in m
+          assert "auth:sanctum" in a
+          assert "auth:mcp_oauth" in a
+          assert "McpOAuthReadOnlyController" in a
+          assert "Passport::ignoreRoutes()" in p
+          assert "Passport::$passwordGrantEnabled = false" in p
+          assert "Passport::$implicitGrantEnabled = false" in p
+          assert "Passport::$revokeRefreshTokenAfterUse = true" in p
+          print("MCP_PHASE2B_FAIL_CLOSED_SOURCE=PASS")
+          PY
+          php -l app/Models/McpOAuthUser.php
+          php -l app/Http/Middleware/EnsureMcpOAuthStagingEnabled.php
+          php -l app/Http/Middleware/RequireMcpOAuthRead.php
+          php -l app/Http/Middleware/ValidateMcpOAuthParameters.php
+          php -l app/Http/Controllers/Api/McpOAuthAuthorizationController.php
+          php -l app/Http/Controllers/Api/McpOAuthAccessTokenController.php
+          php -l app/Http/Controllers/Api/McpOAuthReadOnlyController.php
+          php -l app/Http/Controllers/Workspace/McpOAuthTokenManagementController.php
+          php -l app/Console/Commands/RegisterMcpOAuthClient.php
+          php -l config/auth.php
+          php -l routes/api.php
+          php -l routes/web.php
+          php -l bootstrap/app.php
+          php -l app/Providers/AppServiceProvider.php
+
+  php-passport-oauth:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_URL: https://learncambodia.com
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          extensions: mbstring, sqlite3, pdo_sqlite, fileinfo, curl, dom, openssl
+          coverage: none
+      - name: Install reviewed, locked Passport 13 in isolated CI only
+        run: |
+          set -Eeuo pipefail
+          composer validate --no-check-publish --no-check-all
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          composer show laravel/passport
+          php artisan package:discover --ansi
+          php artisan passport:keys --force --no-interaction
+          php artisan route:list --path=mcp/oauth
+          echo MCP_PASSPORT_INSTALLED_IN_CI=PASS
+      - name: Exercise OAuth security, real Passport code+PKCE and existing MCP
+        run: |
+          set -Eeuo pipefail
+          php artisan test --filter=McpOAuthPassportTest
+          php artisan test --filter=McpOAuthDiscoveryTest
+          php artisan test --filter=McpBrowserBridgeTest
+          echo MCP_PASSPORT_PHASE2B_ISOLATED_ACCEPTANCE=PASS

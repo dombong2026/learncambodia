@@ -72,6 +72,28 @@ use App\Http\Controllers\Workspace\StudentHomeworkController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\McpOAuthDiscoveryController;
 
+// The Passport authorization flow is isolated under /mcp/oauth and
+// remains behind hard-disabled Phase 2B acceptance gates.
+Route::middleware(['mcp.oauth.stage', 'throttle:20,1'])->prefix('mcp/oauth')->group(function (): void {
+    Route::get('/authorize', [\App\Http\Controllers\Api\McpOAuthAuthorizationController::class, 'authorize'])
+        ->middleware(['auth', 'password.confirm', 'mcp.oauth.admin', 'mcp.oauth.params:authorize'])
+        ->name('mcp.oauth.authorize');
+    Route::post('/authorize', [\Laravel\Passport\Http\Controllers\ApproveAuthorizationController::class, 'approve'])
+        ->middleware(['auth', 'password.confirm', 'mcp.oauth.admin'])
+        ->name('passport.authorizations.approve');
+    Route::delete('/authorize', [\Laravel\Passport\Http\Controllers\DenyAuthorizationController::class, 'deny'])
+        ->middleware(['auth', 'password.confirm', 'mcp.oauth.admin'])
+        ->name('passport.authorizations.deny');
+});
+
+Route::middleware(['auth', 'password.confirm', 'mcp.oauth.stage', 'mcp.oauth.admin'])
+    ->prefix('dashboard/system-settings/mcp/oauth')->group(function (): void {
+        Route::get('/tokens', [\App\Http\Controllers\Workspace\McpOAuthTokenManagementController::class, 'index'])
+            ->name('mcp.oauth.tokens.index');
+        Route::delete('/tokens/{token}', [\App\Http\Controllers\Workspace\McpOAuthTokenManagementController::class, 'revoke'])
+            ->middleware('throttle:10,1')->name('mcp.oauth.tokens.revoke');
+    });
+
 // OAuth 2.1 discovery is fail-closed until a real authorization server
 // passes security acceptance. The existing /api/mcp bearer route is untouched.
 Route::get('/.well-known/oauth-protected-resource', [McpOAuthDiscoveryController::class, 'protectedResource'])

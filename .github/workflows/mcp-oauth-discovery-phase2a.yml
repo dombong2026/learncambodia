@@ -38,10 +38,10 @@ jobs:
           assert "Route::has('mcp.oauth.token')" in controller
           assert "Route::has('mcp.oauth.authorize')" in controller
           assert "private const ISSUER = 'https://learncambodia.com'" in controller
-          assert "private const RESOURCE = 'https://learncambodia.com/api/mcp'" in controller
+          assert "private const RESOURCE = 'https://learncambodia.com/api/mcp/oauth'" in controller
           assert "'scopes_supported' => ['mcp:read']" in controller
           assert "'code_challenge_methods_supported' => ['S256']" in controller
-          assert "'grant_types_supported' => ['authorization_code']" in controller
+          assert "'grant_types_supported' => ['authorization_code', 'refresh_token']" in controller
           assert "route('mcp.oauth.token', [], false)" in controller
           assert "Route::post('/mcp', [McpBridgeController::class, 'handle'])" in api
           assert "auth:sanctum" in api

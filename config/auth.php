@@ -42,6 +42,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // Dedicated Passport guard; leaves Sanctum /api/mcp and the web guard untouched.
+        'mcp_oauth' => [
+            'driver' => 'passport',
+            'provider' => 'mcp_oauth_users',
+        ],
     ],
 
     /*
@@ -65,6 +70,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'mcp_oauth_users' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\McpOAuthUser::class,
         ],
 
         // 'users' => [
