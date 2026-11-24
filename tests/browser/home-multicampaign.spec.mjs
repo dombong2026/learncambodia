@@ -71,8 +71,48 @@ test('SVG editor toolbar controls have accessible labels', async ({page}) => {
     '</section></body></html>'
   ].join(''));
   await page.addScriptTag({path:'public/js/campaign-studio-premium.js'});
-  await expect(page.locator('.cs-editor-toolbar button svg')).toHaveCount(28);
-  await expect(page.getByRole('button',{name:'Bold'})).toBeVisible();
-  await expect(page.getByRole('button',{name:'Underline'})).toBeVisible();
-  await expect(page.getByRole('button',{name:'HTML source'})).toBeVisible();
+  await expect(page.locator('.cs-editor-toolbar button svg')).toHaveCount(56);
+  await expect(page.getByRole('button',{name:'Bold'}).first()).toBeVisible();
+  await expect(page.getByRole('button',{name:'Underline'}).first()).toBeVisible();
+  await expect(page.getByRole('button',{name:'HTML source'}).first()).toBeVisible();
+});
+
+test('homepage quiz renders rich question text and media without leaving the page',async({page})=>{
+  await page.route('**/up',route=>route.fulfill({status:200,contentType:'text/html',body:'ok'}));
+  await page.route('**/mock/play-rich',route=>route.fulfill({
+    status:200,contentType:'application/json',body:JSON.stringify({
+      title:'Multimedia IELTS Quiz',kind:'quiz',questions:[
+        {row:0,question:0,module:'IELTS',lesson:'Reading',
+          prompt:'Select the best option',prompt_html:'<h2>Select the best option</h2><p><strong>Grammar</strong></p>',
+          media_kind:'image',media_url:'https://example.org/question.png',options:['One','Two']},
+        {row:0,question:1,module:'IELTS',lesson:'Listening',
+          prompt:'Listen to the question',prompt_html:'<p>Listen to the question</p>',
+          media_kind:'youtube',media_url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          options:['Yes','No']}
+      ]
+    })
+  }));
+  await page.goto('/up');
+  await page.setContent([
+    '<html><head><meta name="csrf-token" content="test-token"></head><body>',
+    '<div id="hc-hero" data-csrf="test-token">',
+    '<div id="hc-chooser"><button data-hc-start data-play-url="/mock/play-rich" data-check-url="/mock/check">Open IELTS Quiz</button></div>',
+    '<div id="hc-play" hidden><button id="hc-back">Back</button><span id="hc-progress"></span>',
+    '<h3 id="hc-title"></h3><p id="hc-lesson"></p><div id="hc-question"></div>',
+    '<div id="hc-feedback" hidden></div><button id="hc-next" hidden>Next question</button>',
+    '<button id="hc-finish" hidden>All campaigns</button></div><div id="hc-error" hidden></div>',
+    '</div></body></html>'
+  ].join(''));
+  await page.addScriptTag({path:'public/js/homepage-hero-campaigns.js'});
+  await page.getByRole('button',{name:'Open IELTS Quiz'}).click();
+  await expect(page.locator('#hc-question .hc-prompt h2')).toHaveText('Select the best option');
+  await expect(page.locator('#hc-question .hc-question-media img')).toHaveAttribute('src','https://example.org/question.png');
+  await expect(page).toHaveURL(/\/up$/);
+  await page.locator('#hc-next').evaluate(e=>e.hidden=false);
+  await page.locator('#hc-next').click();
+  await expect(page.locator('#hc-question .hc-question-media iframe'))
+    .toHaveAttribute('src','https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+  await expect(page.locator('#hc-question .hc-question-media img')).toHaveCount(0);
+  await page.getByRole('button',{name:'Back'}).click();
+  await expect(page.locator('#hc-question .hc-question-media iframe')).toHaveCount(0);
 });

@@ -71,8 +71,13 @@ function treeMarkup() {
             '<button type="button" class="cs-tree-collapse" data-cs-toggle-unit="'+mi+'" aria-expanded="'+(!collapsedUnits.has(mi))+'" aria-label="Toggle Unit '+(mi+1)+' lessons">'+(collapsedUnits.has(mi)?'▸':'⌄')+'</button>' +
             '<button type="button" class="cs-tree-unit-button" data-cs-select-module="'+mi+'">' +
             '<span class="cs-tree-folder" aria-hidden="true">▣</span><span class="cs-tree-unit-name">Unit '+(mi+1)+': '+escaped(titleOf(mod)||'Untitled unit')+'</span></button>' +
-            '<button type="button" class="cs-tree-rename" data-cs-rename-module="'+mi+'" title="Rename module" aria-label="Rename unit '+(mi+1)+'">' +
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/></svg></button>' +
+            '<details class="cs-tree-unit-menu" data-cs-unit-menu="'+mi+'">' +
+            '<summary title="Unit actions" aria-label="Actions for Unit '+(mi+1)+'">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></summary>' +
+            '<div class="cs-tree-menu-options" role="group" aria-label="Unit actions">' +
+            '<button type="button" data-cs-unit-action="edit" data-cs-unit-index="'+mi+'">Edit</button>' +
+            '<button type="button" class="cs-tree-delete" data-cs-unit-action="delete" data-cs-unit-index="'+mi+'">Delete</button>' +
+            '</div></details>' +
             '<button type="button" class="cs-tree-add" data-cs-add-lesson="'+mi+'" title="Add lesson" aria-label="Add lesson to unit '+(mi+1)+'">＋</button></div>' +
             '<div class="cs-tree-lessons"'+(collapsedUnits.has(mi)?' hidden':'')+'>';
         entries.forEach((lesson,li)=>{
@@ -190,6 +195,73 @@ function showActiveMedia() {
         box.hidden=false;
     }
 }
+function showQuestionMedia(){
+    const selected=lessonAt(activeModule,activeLesson);
+    for(const box of list.querySelectorAll('[data-cs-question-media-preview]')){
+        const card=box.closest('[data-question-index]');
+        const visible=box.closest('.cs-lesson')===selected && activeTab==='assessments';
+        if(!visible){
+            if(box.firstChild)box.replaceChildren();
+            box.hidden=true;box.removeAttribute('data-preview-key');
+            continue;
+        }
+        const asset=card?.dataset.questionAsset||'';
+        const kind=card?.querySelector('[data-question-field="media_kind"]')?.value||'auto';
+        const raw=card?.querySelector('[data-question-field="media_url"]')?.value?.trim()||'';
+        const key=asset+'|'+kind+'|'+raw;
+        if(box.dataset.previewKey===key)continue;
+        box.dataset.previewKey=key;box.replaceChildren();box.hidden=true;
+        let url=null;
+        if(/^[a-f0-9]{64}\.(jpg|png|webp|mp4|webm)$/.test(asset)){
+            url=trustedPreviewUrl(root.dataset.assetBase.replace(/\/$/,'')+'/'+encodeURIComponent(asset));
+        }else if(raw) url=trustedPreviewUrl(raw);
+        if(!url){
+            if(raw){
+                const msg=document.createElement('p');
+                msg.className='cs-media-error';
+                msg.textContent='Enter a valid HTTPS media URL.';
+                box.appendChild(msg);box.hidden=false;
+            }
+            continue;
+        }
+        const yt=youtubeVideoId(url);
+        const type=asset ? /\.(mp4|webm)$/.test(asset)?'video':'image' :
+            kind!=='auto'?kind:
+            yt?'youtube':
+            /\.(png|jpg|jpeg|webp|gif|avif)$/i.test(url.pathname)?'image':
+            /\.(mp4|webm|ogv)$/i.test(url.pathname)?'video':
+            /\.(mp3|m4a|wav|oga)$/i.test(url.pathname)?'audio':'link';
+        const heading=document.createElement('strong');
+        heading.className='cs-media-preview-heading';
+        heading.textContent='Question media preview';
+        box.appendChild(heading);
+        let element;
+        if(type==='youtube' && yt){
+            element=document.createElement('iframe');
+            element.src='https://www.youtube-nocookie.com/embed/'+yt;
+            element.loading='lazy';element.title='Question video preview';
+            element.referrerPolicy='strict-origin-when-cross-origin';
+            element.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+            element.setAttribute('allow','encrypted-media; picture-in-picture; fullscreen');
+            element.setAttribute('allowfullscreen','');
+        }else if(type==='image'){
+            element=document.createElement('img');element.src=url.href;
+            element.alt='Question illustration preview';element.loading='lazy';
+        }else if(type==='video'){
+            element=document.createElement('video');element.src=url.href;
+            element.controls=true;element.preload='metadata';
+        }else if(type==='audio'){
+            element=document.createElement('audio');element.src=url.href;
+            element.controls=true;element.preload='none';
+        }else{
+            element=document.createElement('a');element.href=url.href;
+            element.target='_blank';element.rel='noopener noreferrer';
+            element.textContent='Open question media';
+        }
+        element.className='cs-selected-media-element';
+        box.appendChild(element);box.hidden=false;
+    }
+}
 function setActivePanel() {
     const unit = moduleAt(activeModule), lesson = lessonAt(activeModule,activeLesson);
     byId('cs-edit-title').textContent = lesson ? titleOf(lesson) : 'Add a lesson';
@@ -201,13 +273,6 @@ function setActivePanel() {
     byId('cs-current-content-type').textContent = lessonType(lesson).toUpperCase();
     byId('cs-unit-label').textContent = modules().length+' unit'+(modules().length===1?'':'s');
     root.dataset.csTabActive = activeTab;
-    const moduleEditor = byId('cs-selected-module-editor');
-    const moduleInput = byId('cs-selected-module-title');
-    const innerModuleInput = unit?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
-    moduleEditor.hidden = !unit || activeTab !== 'metadata';
-    if (innerModuleInput && moduleInput.value !== innerModuleInput.value) {
-        moduleInput.value = innerModuleInput.value;
-    }
     const help = {
         quiz: 'Quiz lesson: add written instructions here, then switch to Assessments for questions, choices, answer keys and feedback.',
         exam: 'Exam lesson: add written instructions here, then switch to Assessments for scored questions and explanations.',
@@ -240,6 +305,7 @@ function setActivePanel() {
         if(selected)byId('cs-course-stage').setAttribute('aria-labelledby',t.id);
     });
     showActiveMedia();
+    showQuestionMedia();
     const campaignTitle=byId('cs-campaign-title');
     // Campaign title and type are global settings, not lesson-level fields.
     const count=Number(byId('cs-questions-count').textContent||'0');
@@ -288,17 +354,19 @@ tree.addEventListener('click',event=>{
     const lesson=event.target.closest('[data-cs-select-lesson]');
     const plus=event.target.closest('[data-cs-add-lesson]');
     const toggle=event.target.closest('[data-cs-toggle-unit]');
-    const rename=event.target.closest('[data-cs-rename-module]');
+    const unitAction=event.target.closest('[data-cs-unit-action]');
     if(toggle){
         const mi=Number(toggle.dataset.csToggleUnit);
         if(collapsedUnits.has(mi))collapsedUnits.delete(mi);else collapsedUnits.add(mi);
         sync();
-    }else if(rename){
-        select(Number(rename.dataset.csRenameModule),0);
-        setTab('metadata');
-        const moduleTitleInput=byId('cs-selected-module-title');
-        moduleTitleInput.focus();
-        moduleTitleInput.select();
+    }else if(unitAction){
+        const mi=Number(unitAction.dataset.csUnitIndex);
+        const kind=unitAction.dataset.csUnitAction;
+        if(kind==='edit')openUnitDialog('edit',mi);
+        else if(kind==='delete'){
+            const target=moduleAt(mi)?.querySelector(':scope > .cs-module-body button[data-action="module-remove"]');
+            target?.click();schedule();
+        }
     }else if(plus){
         const mi=Number(plus.dataset.csAddLesson), mod=moduleAt(mi);
         pendingSelection={mi,li:lessons(mod).length};
@@ -378,14 +446,59 @@ byId('cs-add-module').addEventListener('click',()=>{
     pendingSelection={mi:modules().length-1,li:0};schedule();
 });
 byId('cs-campaign-title').addEventListener('input',setActivePanel);
-byId('cs-selected-module-title').addEventListener('input',event=>{
-    const input=moduleAt(activeModule)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
-    if(!input)return;
-    input.value=event.target.value;
-    input.dispatchEvent(new Event('input',{bubbles:true}));
-    byId('cs-current-unit-heading').textContent='Unit '+(activeModule+1)+': '+(event.target.value.trim()||'Untitled unit');
-    byId('cs-save-state').textContent='Unsaved module name. Save draft to keep changes.';
+// Unit management is independent from lesson metadata and assessment editing.
+const unitDialog=byId('cs-unit-dialog');
+const unitName=byId('cs-unit-name');
+const unitError=byId('cs-unit-name-error');
+let unitDialogMode='new', unitDialogIndex=-1, allowingUnitCreation=false;
+function openUnitDialog(mode,index=-1){
+    unitDialogMode=mode;unitDialogIndex=index;
+    byId('cs-unit-dialog-title').textContent=mode==='new'?'Add Unit':'Edit Unit';
+    byId('cs-unit-save').textContent=mode==='new'?'Create unit':'Save changes';
+    unitName.value=mode==='edit'?(moduleAt(index)?.querySelector('[data-field="module-title"]')?.value||''):'';
+    unitError.hidden=true;
+    unitDialog.showModal();
+    unitName.focus();
+    if(mode==='edit')unitName.select();
+}
+byId('cs-unit-cancel').addEventListener('click',()=>unitDialog.close());
+unitDialog.addEventListener('click',event=>{
+    if(event.target===unitDialog)unitDialog.close();
 });
+unitDialog.addEventListener('close',()=>{unitError.hidden=true});
+byId('cs-unit-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const title=unitName.value.trim();
+    if(!title||title.length>140){
+        unitError.textContent='Enter a unit title (up to 140 characters).';
+        unitError.hidden=false;unitName.focus();return;
+    }
+    let mi=unitDialogIndex;
+    if(unitDialogMode==='new'){
+        allowingUnitCreation=true;
+        try{byId('cs-add-module').click()}
+        finally{allowingUnitCreation=false}
+        mi=modules().length-1;
+        pendingSelection={mi,li:0};
+        collapsedUnits.delete(mi);
+    }
+    const input=moduleAt(mi)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    if(!input){unitError.textContent='Unable to update this unit. Reload and try again.';unitError.hidden=false;return}
+    input.value=title;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    activeModule=mi;activeLesson=0;
+    byId('cs-save-state').textContent='Unit updated. Save draft to keep changes.';
+    unitDialog.close();
+    schedule();
+});
+// Stop the old one-click Add Unit behavior until a valid title is provided.
+root.addEventListener('click',event=>{
+    if(event.target.closest('#cs-add-module')&&!allowingUnitCreation){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openUnitDialog('new');
+    }
+},true);
 
 let mediaPreviewTimer=null;
 function scheduleMediaPreview(){
@@ -393,6 +506,7 @@ function scheduleMediaPreview(){
     mediaPreviewTimer=setTimeout(()=>{
         mediaPreviewTimer=null;
         showActiveMedia();
+        showQuestionMedia();
     },350);
 }
 list.addEventListener('input',event=>{
@@ -405,7 +519,7 @@ list.addEventListener('input',event=>{
         const mirror=lesson.querySelector('[data-cs-english-preview]');
         if(mirror)mirror.textContent=event.target.innerText;
     }
-    if(event.target.matches('[data-field="url"]'))scheduleMediaPreview();
+    if(event.target.matches('[data-field="url"],[data-question-field="media_url"]'))scheduleMediaPreview();
     if(event.target.matches('[data-field="module-title"],[data-field="title"]'))schedule();
 });
 list.addEventListener('change',event=>{
@@ -416,6 +530,8 @@ list.addEventListener('change',event=>{
         const kind=event.target.value;
         activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum';
         schedule();
+    }else if(event.target.matches('[data-question-field="media_kind"]')){
+        scheduleMediaPreview();
     }else if(event.target.matches('[data-field="cefr"]')){
         // A CEFR change updates the Khmer preview badge and metadata text.
         schedule();

@@ -135,4 +135,64 @@ class HomepageMultiCampaignTest extends TestCase
             'row'=>0,'question'=>0,'answer'=>1,
         ])->assertNotFound();
     }
+    public function test_question_rich_content_and_https_media_are_saved_and_delivered_without_answer_keys(): void
+    {
+        $this->routes();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $rows = $this->rows();
+        $rows[0]['questions'][0]['prompt'] = 'Choose the correct verb.';
+        $rows[0]['questions'][0]['prompt_html'] =
+            '<h2>Choose the correct verb.</h2><script>alert("unsafe")</script>';
+        $rows[0]['questions'][0]['media_kind'] = 'image';
+        $rows[0]['questions'][0]['media_url'] = 'https://example.org/grammar.png';
+        $response = $this->actingAs($admin)->postJson('/_test/campaigns/save', [
+            'title' => 'Rich Assessment Test',
+            'version' => 0, 'kind' => 'quiz', 'cover_asset' => null,
+            'action' => 'draft', 'rows' => $rows,
+        ])->assertOk()->json();
+        $campaign = HomepageCampaignItem::findOrFail($response['id']);
+        $question = $campaign->draft[0]['questions'][0];
+        $this->assertSame('Choose the correct verb.', $question['prompt']);
+        $this->assertStringContainsString('<h2>', $question['prompt_html']);
+        $this->assertStringNotContainsString('<script>', $question['prompt_html']);
+        $this->assertSame('https://example.org/grammar.png', $question['media_url']);
+        $this->assertSame('image', $question['media_kind']);
+        $this->assertSame(1, $question['correct']);
+
+        $campaign->published = $campaign->draft;
+        $campaign->draft = null;
+        $campaign->status = 'published';
+        $campaign->published_at = now();
+        $campaign->save();
+        $this->get('/_test/campaigns/'.$campaign->slug.'/play')->assertOk()
+            ->assertJsonPath('questions.0.prompt', 'Choose the correct verb.')
+            ->assertJsonPath('questions.0.media_url', 'https://example.org/grammar.png')
+            ->assertJsonMissingPath('questions.0.correct')
+            ->assertJsonMissingPath('questions.0.feedback');
+    }
+
+    public function test_invalid_question_media_and_oversize_question_rich_text_are_rejected(): void
+    {
+        $this->routes();
+        $admin = User::factory()->create(['role' => 'admin']);
+        $payload = [
+            'title' => 'Safety Test', 'version' => 0, 'kind' => 'quiz',
+            'cover_asset' => null, 'action' => 'draft', 'rows' => $this->rows(),
+        ];
+        $payload['rows'][0]['questions'][0]['media_url'] = 'javascript:alert(1)';
+        $this->actingAs($admin)->postJson('/_test/campaigns/save', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('rows');
+
+        $payload['rows'][0]['questions'][0]['media_url'] = '';
+        $payload['rows'][0]['questions'][0]['prompt_html'] = str_repeat('x', 6001);
+        $this->postJson('/_test/campaigns/save', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('rows');
+
+        $payload['rows'][0]['questions'][0]['prompt_html'] = '<p>Valid question</p>';
+        $payload['rows'][0]['questions'][0]['media_asset'] = str_repeat('a', 64).'.png';
+        $this->postJson('/_test/campaigns/save', $payload)
+            ->assertUnprocessable()->assertJsonValidationErrors('rows');
+        $this->assertDatabaseCount('homepage_campaign_items', 0);
+    }
+
 }

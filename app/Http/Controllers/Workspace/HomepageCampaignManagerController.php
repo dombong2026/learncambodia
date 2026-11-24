@@ -174,6 +174,15 @@ final class HomepageCampaignManagerController extends Controller
                     'lesson' => $row['lesson'] ?? '',
                     'body' => EditorHtml::clean($row['body'] ?? '', true) ?? '',
                     'prompt' => $question['prompt'] ?? '',
+                    'prompt_html' => EditorHtml::clean($question['prompt_html'] ?? '', true) ?? '',
+                    'media_kind' => $question['media_kind'] ?? 'auto',
+                    'media_url' => isset($question['media_url'])
+                        && str_starts_with(strtolower((string) $question['media_url']), 'https://')
+                            ? $question['media_url'] : '',
+                    'media_asset_url' => isset($question['media_asset'])
+                        && preg_match('/^[a-f0-9]{64}\.(jpg|png|webp|mp4|webm)$/D', $question['media_asset'])
+                        && is_file(storage_path('app/campaign-assets/'.$question['media_asset']))
+                            ? url('/campaign-media/'.$question['media_asset']) : '',
                     'options' => array_values($question['options'] ?? []),
                 ];
             }
@@ -297,7 +306,30 @@ final class HomepageCampaignManagerController extends Controller
                     }
                     $feedback = trim((string) ($q['feedback'] ?? ''));
                     if (mb_strlen($feedback)>1000) throw ValidationException::withMessages(['rows' => 'Answer explanation too long.']);
-                    $questions[] = ['prompt'=>$prompt,'options'=>$cleanOptions,'correct'=>$key,'feedback'=>$feedback];
+                    $promptHtml = (string) ($q['prompt_html'] ?? '');
+                    if (mb_strlen($promptHtml)>6000) {
+                        throw ValidationException::withMessages(['rows' => 'Question rich text is too long.']);
+                    }
+                    $promptHtml = EditorHtml::clean($promptHtml, true) ?? '';
+                    $mediaKind = (string) ($q['media_kind'] ?? 'auto');
+                    $mediaUrl = trim((string) ($q['media_url'] ?? ''));
+                    $mediaAsset = trim((string) ($q['media_asset'] ?? ''));
+                    if (!in_array($mediaKind, ['auto','image','video','audio','youtube'], true)
+                        || mb_strlen($mediaUrl)>2048 || mb_strlen($mediaAsset)>75) {
+                        throw ValidationException::withMessages(['rows' => 'Invalid question media information.']);
+                    }
+                    if ($mediaAsset !== '' && (!preg_match('/^[a-f0-9]{64}\.(jpg|png|webp|mp4|webm)$/D',$mediaAsset)
+                        || !is_file(storage_path('app/campaign-assets/'.$mediaAsset)))) {
+                        throw ValidationException::withMessages(['rows' => 'Upload verified question media.']);
+                    }
+                    if ($mediaUrl !== '' && !preg_match('~^https://~i', $mediaUrl)) {
+                        throw ValidationException::withMessages(['rows' => 'Question media URL must use HTTPS.']);
+                    }
+                    $questions[] = [
+                        'prompt'=>$prompt, 'prompt_html'=>$promptHtml, 'options'=>$cleanOptions,
+                        'correct'=>$key, 'feedback'=>$feedback, 'media_kind'=>$mediaKind,
+                        'media_url'=>$mediaUrl, 'media_asset'=>$mediaAsset
+                    ];
                 }
             }
             $cefr = strtoupper(trim((string) ($row['cefr'] ?? 'B2')));

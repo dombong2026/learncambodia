@@ -1,0 +1,77 @@
+name: Campaign Unit Assessment acceptance
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pinned production overlay, PHP and JS source
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-unit-assessment-aapanel.sh
+          php -l app/Http/Controllers/Workspace/HomepageCampaignManagerController.php
+          node --check public/js/campaign-studio-premium.js
+          node --check public/js/campaign-course-workspace.js
+          node --check public/js/homepage-hero-campaigns.js
+          python3 - <<'PY'
+          from pathlib import Path
+          view=Path('resources/views/workspace/admin/campaign-course-workspace.blade.php').read_text()
+          editor=Path('public/js/campaign-studio-premium.js').read_text()
+          adapter=Path('public/js/campaign-course-workspace.js').read_text()
+          player=Path('public/js/homepage-hero-campaigns.js').read_text()
+          controller=Path('app/Http/Controllers/Workspace/HomepageCampaignManagerController.php').read_text()
+          shell=Path('support/operator/learncambodia-campaign-unit-assessment-aapanel.sh').read_text()
+          assert 'id="cs-unit-dialog"' in view
+          assert 'id="cs-selected-module-title"' not in view
+          for token in ['data-cs-unit-action="edit"','data-cs-unit-action="delete"',
+                        'cs-tree-unit-menu','data-cs-add-lesson']:
+            assert token in adapter,token
+          for token in ['const questionEditor', 'prompt_html', 'media_asset',
+                        'media_url','media_kind','data-cs-question-media-preview',
+                        'data-question-editor','data-question-file','remove-question-media']:
+            assert token in editor,token
+          assert 'showQuestionMedia()' in adapter
+          assert 'displayQuestionMedia' in player
+          assert 'EditorHtml::clean($promptHtml' in controller
+          assert "str_starts_with(strtolower" in controller
+          for token in ['EXACT_LIVE_BASELINE=PASS','UNIT_ASSESSMENT_ROLLBACK=RESTORED',
+                        'CAMPAIGN_UNIT_ASSESSMENT_DEPLOY=PASS',
+                        'CAMPAIGN_DATA_MUTATIONS=NONE',
+                        'runuser -u www -- "$PHP" artisan view:cache']:
+            assert token in shell,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in shell,forbidden
+          print('CAMPAIGN_UNIT_ASSESSMENT_SOURCE=PASS')
+          PY
+
+  browser-desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated browser dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Unit actions, rich questions, question media and previous campaign behavior
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-course-workspace.spec.mjs \
+            tests/browser/home-multicampaign.spec.mjs \
+            tests/browser/campaign-studio-premium.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium

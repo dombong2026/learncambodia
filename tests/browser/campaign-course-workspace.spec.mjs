@@ -21,6 +21,10 @@ function fixture() {
         ' data-save-url="/mock/course/save" data-upload-url="/mock/course/upload"',
         ' data-asset-base="/campaign-media" data-cover-asset="" data-cover-kind="quiz" data-publication-status="draft">',
         '<div id="cs-alert" hidden></div><button id="cs-publish-top" hidden></button>',
+        '<dialog id="cs-unit-dialog" aria-labelledby="cs-unit-dialog-title"><form id="cs-unit-form" method="dialog">',
+        '<h2 id="cs-unit-dialog-title">Add Unit</h2><input id="cs-unit-name" maxlength="140" required>',
+        '<p id="cs-unit-name-error" hidden></p><button id="cs-unit-cancel" type="button">Cancel</button>',
+        '<button type="submit" id="cs-unit-save">Create unit</button></form></dialog>',
         '<button id="cs-save-draft-top" hidden></button>',
         '<div class="cs-layout cs-course-grid">',
         '<aside class="cs-course-outline"><span id="cs-unit-label"></span><nav id="cs-course-tree"></nav>',
@@ -32,9 +36,7 @@ function fixture() {
         '<button id="cs-tab-curriculum" data-cs-tab="curriculum" role="tab">Curriculum</button>',
         '<button id="cs-tab-assessments" data-cs-tab="assessments" role="tab">Assessments</button>',
         '<button id="cs-tab-translation" data-cs-tab="translation" role="tab">Translation (EN/KM)</button></nav>',
-        '<div id="cs-course-stage"><div id="cs-selected-module-editor" hidden>',
-        '<label for="cs-selected-module-title">Module title</label><input id="cs-selected-module-title" maxlength="140"></div>',
-        '<h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
+        '<div id="cs-course-stage"><h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
         '<div id="cs-modules"></div></div>',
         '<span id="cs-modules-count"></span><span id="cs-lessons-count"></span><span id="cs-questions-count"></span></main>',
         '<aside class="cs-sidebar cs-course-workflow"><section class="cs-card cs-course-campaign-metadata">',
@@ -108,7 +110,12 @@ test('three-column course outline selects lessons and keeps translated fields on
 test('course outline creates units and lessons, supports tabs and readable dark mode',async({page})=>{
     await mount(page);
     await page.locator('#cs-add-module').click();
+    await expect(page.locator('#cs-unit-dialog')).toBeVisible();
+    await expect(page.locator('#cs-course-tree .cs-tree-unit')).toHaveCount(1);
+    await page.locator('#cs-unit-name').fill('IELTS Listening');
+    await page.locator('#cs-unit-save').click();
     await expect(page.locator('#cs-course-tree .cs-tree-unit')).toHaveCount(2);
+    await expect(page.locator('[data-tree-module="1"] .cs-tree-unit-name')).toContainText('IELTS Listening');
     await page.locator('[data-cs-add-lesson="1"]').click();
     await expect(page.locator('#cs-course-tree [data-tree-lesson="1-1"]')).toHaveCount(1);
     await page.locator('[data-cs-select-lesson="1-1"]').click();
@@ -214,7 +221,7 @@ test('Code source is safely escaped in saved lesson HTML',async({page})=>{
 });
 
 
-test('module title can be renamed from metadata or outline and persists for all lessons',async({page})=>{
+test('unit naming is independent of lesson metadata and Edit/Delete appear in 3-dot menu',async({page})=>{
     const submissions=[];
     await page.route('**/mock/course/save',async route=>{
         submissions.push(JSON.parse(route.request().postData()));
@@ -223,21 +230,32 @@ test('module title can be renamed from metadata or outline and persists for all 
         })});
     });
     await mount(page);
-    await expect(page.locator('#cs-selected-module-title')).toBeVisible();
-    await expect(page.locator('#cs-selected-module-title')).toHaveValue('English Grammar');
-    await expect(page.locator('.cs-module[data-cs-active] [data-field="module-title"]')).toHaveCount(1);
-    await page.locator('#cs-selected-module-title').fill('Intensive IELTS Preparation');
-    await expect(page.locator('[data-tree-module="0"] .cs-tree-unit-name')).toContainText('Intensive IELTS Preparation');
-    await expect(page.locator('#cs-current-unit-heading')).toContainText('Intensive IELTS Preparation');
-    await page.getByRole('tab',{name:'Curriculum'}).click();
-    await expect(page.locator('#cs-selected-module-title')).toBeHidden();
-    await page.locator('[data-cs-rename-module="0"]').click();
-    await expect(page.locator('#cs-selected-module-title')).toBeFocused();
-    await page.locator('#cs-selected-module-title').fill('Academic Writing & Speaking');
+    await expect(page.locator('#cs-selected-module-editor')).toHaveCount(0);
+    await expect(page.locator('[data-cs-rename-module]')).toHaveCount(0);
+    await expect(page.locator('[data-cs-unit-menu="0"]')).toHaveCount(1);
+    const plus=page.locator('[data-cs-add-lesson="0"]');
+    await expect(plus).toHaveCSS('background-color','rgba(0, 0, 0, 0)');
+    await page.locator('[data-cs-unit-menu="0"] summary').click();
+    await expect(page.locator('[data-cs-unit-action="edit"]')).toBeVisible();
+    await expect(page.locator('[data-cs-unit-action="delete"]')).toBeVisible();
+    await page.locator('[data-cs-unit-action="edit"]').click();
+    await expect(page.locator('#cs-unit-dialog')).toBeVisible();
+    await expect(page.locator('#cs-unit-name')).toHaveValue('English Grammar');
+    await page.locator('#cs-unit-name').fill('IELTS Grammar');
+    await page.locator('#cs-unit-save').click();
+    await expect(page.locator('[data-tree-module="0"] .cs-tree-unit-name')).toHaveText('Unit 1: IELTS Grammar');
     await page.locator('#cs-save-draft-panel').click();
     expect(submissions).toHaveLength(1);
     expect(submissions[0].rows).toHaveLength(2);
-    for(const row of submissions[0].rows)expect(row.course).toBe('Academic Writing & Speaking');
+    for(const row of submissions[0].rows)expect(row.course).toBe('IELTS Grammar');
+    await page.locator('#cs-add-module').click();
+    await page.locator('#cs-unit-name').fill('Temporary Unit');
+    await page.locator('#cs-unit-save').click();
+    await expect(page.locator('#cs-course-tree .cs-tree-unit')).toHaveCount(2);
+    page.once('dialog', dialog=>dialog.accept());
+    await page.locator('[data-cs-unit-menu="1"] summary').click();
+    await page.locator('[data-cs-unit-index="1"][data-cs-unit-action="delete"]').click();
+    await expect(page.locator('#cs-course-tree .cs-tree-unit')).toHaveCount(1);
 });
 test('duplicating a lesson opens an explicitly named copy with preserved answers',async({page})=>{
     const submissions=[];
@@ -307,4 +325,60 @@ test('blocks unsafe media URL schemes from preview',async({page})=>{
         .toContainText('valid HTTPS');
     await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] img')).toHaveCount(0);
     await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-lesson-media-preview] iframe')).toHaveCount(0);
+});
+
+test('assessment shows question, rich editor, media, options and explanation; saves formatted content',async({page})=>{
+    const submissions=[];
+    await page.route('**/mock/course/save',async route=>{
+        submissions.push(JSON.parse(route.request().postData()));
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+            id:7,version:2,status:'draft',message:'Campaign draft saved.',edit_url:'/up?id=7'
+        })});
+    });
+    await mount(page);
+    await page.getByRole('tab',{name:'Assessments'}).click();
+    const question=page.locator('.cs-lesson[data-cs-active] .cs-assessment-card').first();
+    await expect(question.locator('.cs-assessment-section')).toHaveCount(4);
+    for(const label of ['Question','Media','Answer Choices','Answer Explanation & Feedback']){
+        await expect(question.locator('.cs-assessment-section-heading',{hasText:label})).toHaveCount(1);
+    }
+    await expect(question.locator('[data-question-editor]')).toBeVisible();
+    await expect(question.locator('button[data-format]')).toHaveCount(28);
+    await question.locator('[data-question-editor]').fill('Complete the sentence.');
+    await question.getByRole('button',{name:'Heading 2'}).click();
+    await expect(question.locator('[data-question-editor] h2')).toHaveText('Complete the sentence.');
+    await question.locator('[data-question-field="media_url"]').fill('https://example.org/grammar.png');
+    await expect(question.locator('[data-cs-question-media-preview] img')).toHaveAttribute('src','https://example.org/grammar.png');
+    await question.locator('[data-question-field="media_kind"]').selectOption('image');
+    await question.locator('[data-question-field="feedback"]').fill('The third-person subject requires -s.');
+    await page.locator('#cs-save-draft-panel').click();
+    expect(submissions).toHaveLength(1);
+    const q=submissions[0].rows[0].questions[0];
+    expect(q.prompt).toBe('Complete the sentence.');
+    expect(q.prompt_html).toContain('<h2>');
+    expect(q.media_url).toBe('https://example.org/grammar.png');
+    expect(q.media_kind).toBe('image');
+    expect(q.correct).toBe(1);
+    expect(q.feedback).toBe('The third-person subject requires -s.');
+});
+test('question media upload uses existing secure uploader and preview follows selected lesson',async({page})=>{
+    const asset='a'.repeat(64)+'.png';
+    await page.route('**/mock/course/upload',route=>route.fulfill({
+        status:200,contentType:'application/json',
+        body:JSON.stringify({type:'image',asset,url:'https://cdn.example.org/ignored.png'})
+    }));
+    await page.route('**/campaign-media/**',route=>route.fulfill({
+        status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB','base64')
+    }));
+    await mount(page);
+    await page.getByRole('tab',{name:'Assessments'}).click();
+    await page.locator('.cs-lesson[data-cs-active] input[data-question-file]').setInputFiles({
+        name:'question.png',mimeType:'image/png',
+        buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB','base64')
+    });
+    await expect(page.locator('.cs-lesson[data-cs-active] [data-cs-question-media-preview] img'))
+        .toHaveAttribute('src',new RegExp('/campaign-media/'+asset));
+    await page.locator('[data-cs-select-lesson="0-1"]').click();
+    await expect(page.locator('[data-cs-question-media-preview] img')).toHaveCount(0);
+    await expect(page.locator('#cs-edit-title')).toHaveText('Past tense');
 });

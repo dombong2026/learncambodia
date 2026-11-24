@@ -12,7 +12,10 @@ const extract = (text, fallback) => {
 };
 const initialRows = extract(el('cs-initial-rows')?.textContent || '[]', []);
 const optionsDefault = () => ['Option A', 'Option B', 'Option C', 'Option D'];
-const blankQuestion = () => ({prompt:'',options:optionsDefault(),correct:0,feedback:''});
+const blankQuestion = () => ({
+    prompt:'',prompt_html:'',media_kind:'auto',media_url:'',media_asset:'',
+    options:optionsDefault(),correct:0,feedback:''
+});
 const blankLesson = () => ({
     uid: makeId(), title:'New lesson', type:'quiz', url:'', asset:'', body:'',
     language:'', cefr:'B2', title_km:'', body_km:'', feedback:'', questions:[blankQuestion()]
@@ -38,6 +41,10 @@ const normalizeLesson = r => ({
     feedback:String(r.feedback || ''),
     questions:Array.isArray(r.questions) ? r.questions.map(q => ({
         prompt:String(q.prompt || ''),
+        prompt_html:String(q.prompt_html || ''),
+        media_kind:['auto','image','video','audio','youtube'].includes(q.media_kind) ? q.media_kind : 'auto',
+        media_url:String(q.media_url || ''),
+        media_asset:String(q.media_asset || ''),
         options:Array.isArray(q.options) && q.options.length >= 2
             ? q.options.map(o => String(o)) : optionsDefault(),
         correct:Number.isInteger(Number(q.correct)) ? Number(q.correct) : 0,
@@ -222,17 +229,46 @@ const editor = l => l.type === 'code' ? (
     readSourceHtml(l.body) + '</div>' +
     '<textarea class="cs-editor-html" data-editor-source aria-label="Lesson HTML source" hidden></textarea></div>'
 );
+const questionEditor = q => {
+    // Reuse the complete 28-control SVG lesson editor for each question prompt.
+    const html=q.prompt_html || escapeHtml(q.prompt);
+    return editor({type:'text',body:html})
+        .replace('data-editor-source','data-question-editor-source')
+        .replace(/ data-editor(?=\s)/, ' data-question-editor')
+        .replace('Write the lesson content, instructions or rich text...', 'Write a question, insert headings, lists, code or a table...');
+};
 const questionCard = (q, idx) => (
-    '<div class="cs-quiz-card" data-question-index="' + idx + '">' +
+    '<div class="cs-quiz-card cs-assessment-card" data-question-index="' + idx +
+       '" data-question-asset="' + escapeHtml(q.media_asset||'') + '">' +
     '<div class="cs-question-head"><span class="cs-question-number" data-question-number>Q</span>' +
     '<strong>Question ' + (idx+1) + '</strong>' +
     buttons('move-question-up','Move question up','↑') +
     buttons('move-question-down','Move question down','↓') +
     buttons('remove-question','Remove question','✕') + '</div>' +
-    '<label class="cs-label">Question prompt</label>' +
-    '<textarea class="cs-textarea" data-question-field="prompt" rows="2" maxlength="1000" placeholder="Write a clear question">' +
-    escapeHtml(q.prompt) + '</textarea>' +
-    '<label class="cs-label">Answer choices · choose the correct option</label>' +
+    '<section class="cs-assessment-section" aria-label="Question prompt">' +
+    '<h3 class="cs-assessment-section-heading">Question</h3>' +
+    questionEditor(q) +
+    '</section>' +
+    '<section class="cs-assessment-section" aria-label="Question media">' +
+    '<h3 class="cs-assessment-section-heading">Media <span class="cs-muted">(optional)</span></h3>' +
+    '<div class="cs-media-toolbar">' +
+    '<label class="cs-btn cs-btn-outline cs-btn-xs cs-question-upload">＋ Upload media' +
+    '<input type="file" data-question-file accept="image/png,image/jpeg,image/webp,video/mp4,video/webm" hidden></label>' +
+    buttons('remove-question-media','Remove question media','Remove media') +
+    '</div>' +
+    '<div class="cs-question-media-fields"><div>' +
+    '<label class="cs-label">Media URL (HTTPS)</label>' +
+    '<input class="cs-input" type="url" maxlength="2048" data-question-field="media_url" placeholder="https://... or YouTube link" value="' +
+    escapeHtml(q.media_url||'') + '"></div><div>' +
+    '<label class="cs-label">Media type</label>' +
+    '<select class="cs-control" data-question-field="media_kind" aria-label="Question media type">' +
+    [['auto','Auto-detect'],['image','Image'],['video','Video'],['youtube','YouTube'],['audio','Audio']]
+        .map(([kind,title])=>'<option value="'+kind+'"'+(q.media_kind===kind?' selected':'')+'>'+title+'</option>').join('') +
+    '</select></div></div>' +
+    '<div class="cs-lesson-live-preview cs-question-live-preview" data-cs-question-media-preview hidden></div>' +
+    '</section>' +
+    '<section class="cs-assessment-section" aria-label="Answer choices">' +
+    '<h3 class="cs-assessment-section-heading">Answer Choices</h3>' +
     '<div class="cs-options">' +
     q.options.map((o,i) =>
         '<div class="cs-option"><input type="radio" data-question-correct name="cs-correct-' +
@@ -245,10 +281,12 @@ const questionCard = (q, idx) => (
     '<div class="cs-actions" style="justify-content:flex-start">' +
     buttons('add-choice','Add answer choice','＋ Choice') +
     buttons('remove-choice','Remove last answer choice','− Choice') + '</div>' +
-    '<label class="cs-label">Answer explanation &amp; feedback</label>' +
-    '<textarea class="cs-textarea" data-question-field="feedback" maxlength="1000" rows="2" placeholder="Explain why this answer is correct. This appears after checking an answer.">' +
+    '</section>' +
+    '<section class="cs-assessment-section" aria-label="Answer explanation and feedback">' +
+    '<h3 class="cs-assessment-section-heading">Answer Explanation &amp; Feedback</h3>' +
+    '<textarea class="cs-textarea" data-question-field="feedback" maxlength="1000" rows="3" placeholder="Explain why the correct answer is right; students see this after checking.">' +
     escapeHtml(q.feedback) + '</textarea>' +
-    '</div>'
+    '</section></div>'
 );
 const lessonCard = (lesson, mi, li) => {
     const isQuiz = lesson.type === 'quiz' || lesson.type === 'exam';
@@ -411,6 +449,10 @@ function exportRows() {
                 feedback:l.feedback.trim().slice(0,1000),
                 questions:isQuiz?l.questions.map(q=>({
                     prompt:q.prompt.trim().slice(0,1000),
+                    prompt_html:readSourceHtml(q.prompt_html || '').slice(0,6000),
+                    media_kind:q.media_kind || 'auto',
+                    media_url:(q.media_url || '').trim().slice(0,2048),
+                    media_asset:q.media_asset || '',
                     options:q.options.map(o=>String(o).slice(0,500)),
                     correct:Number(q.correct),
                     feedback:q.feedback.trim().slice(0,1000)
@@ -537,6 +579,13 @@ function getEntities(pos) {
     const question=pos.qi>=0 ? lesson?.questions[pos.qi]:undefined;
     return {module,lesson,question};
 }
+function updateQuestionPrompt(question, markup){
+    const cleaned=readSourceHtml(markup).slice(0,6000);
+    const div=document.createElement('div');
+    div.innerHTML=cleaned;
+    question.prompt_html=cleaned;
+    question.prompt=(div.textContent||'').trim().slice(0,1000);
+}
 function mutateFromInput(target) {
     const pos=coords(target);
     const {module,lesson,question}=getEntities(pos);
@@ -558,6 +607,10 @@ function mutateFromInput(target) {
             const heading=target.closest('[data-lesson-index]')?.querySelector('[data-lesson-heading]');
             if(heading)heading.textContent=lesson.title||'Untitled lesson';
         }
+    }else if(target.matches('[data-question-editor]') && question){
+        updateQuestionPrompt(question,target.innerHTML);
+    }else if(target.matches('[data-question-editor-source]') && question){
+        updateQuestionPrompt(question,target.value);
     }else if(target.matches('[data-editor]') && lesson){
         lesson.body=readSourceHtml(target.innerHTML);
     }else if(target.matches('[data-editor-source]') && lesson){
@@ -586,10 +639,14 @@ list.addEventListener('click',event=>{
     if(formatButton){
         const wrapper=formatButton.closest('.cs-editor-box');
         if(!wrapper)return;
-        const visual=wrapper.querySelector('[data-editor]');
-        const source=wrapper.querySelector('[data-editor-source]');
+        const visual=wrapper.querySelector('[data-editor],[data-question-editor]');
+        const source=wrapper.querySelector('[data-editor-source],[data-question-editor-source]');
         const action=formatButton.dataset.format;
-        const lesson=getEntities(coords(formatButton)).lesson;
+        const {lesson,question}=getEntities(coords(formatButton));
+        const store=html=>{
+            if(question)updateQuestionPrompt(question,html);
+            else if(lesson)lesson.body=readSourceHtml(html);
+        };
         if(action==='html') {
             if(source.hidden){
                 source.value=readSourceHtml(visual.innerHTML);
@@ -597,7 +654,7 @@ list.addEventListener('click',event=>{
             }else{
                 const safe=readSourceHtml(source.value);
                 visual.innerHTML=safe;
-                if(lesson)lesson.body=safe;
+                store(safe);
                 source.hidden=true;visual.hidden=false;
             }
             return;
@@ -636,7 +693,7 @@ list.addEventListener('click',event=>{
                 'justifyRight','indent','outdent','unlink','removeFormat'];
             if(commands.includes(action))document.execCommand(action,false,null);
         }
-        if(lesson)lesson.body=readSourceHtml(visual.innerHTML);
+        store(visual.innerHTML);
         return;
     }
     const button=event.target.closest('button[data-action]');
@@ -677,6 +734,8 @@ list.addEventListener('click',event=>{
         q.correct=Math.min(Number(q.correct),q.options.length-1);
     }else if(action==='remove-media'){
         l.asset='';l.url='';
+    }else if(action==='remove-question-media' && q){
+        q.media_asset='';q.media_url='';q.media_kind='auto';
     }else return;
     render();
     note('Unsaved changes. Save draft or Publish when ready.',false);
@@ -698,6 +757,26 @@ list.addEventListener('change',async event=>{
         note('Lesson media uploaded. Save draft to keep this attachment.',false);
     }catch(error){note(error.message,true)}
     field.value='';
+});
+
+list.addEventListener('change',async event=>{
+    const input=event.target;
+    if(!input.matches('[data-question-file]'))return;
+    const file=input.files?.[0];if(!file)return;
+    const {question}=getEntities(coords(input));
+    if(!question)return;
+    note('Uploading question media…',false);
+    try {
+        const uploaded=await uploadFile(file);
+        if(!['image','video'].includes(uploaded.type) || !uploaded.asset)
+            throw new Error('Select an image or video for this question.');
+        question.media_asset=uploaded.asset;
+        question.media_url='';
+        question.media_kind=uploaded.type;
+        render();
+        note('Question media uploaded. Save draft to retain it.',false);
+    }catch(error){note(error.message,true)}
+    input.value='';
 });
 render();
 })();

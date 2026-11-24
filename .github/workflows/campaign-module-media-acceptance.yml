@@ -33,9 +33,10 @@ jobs:
           ]:
             assert forbidden not in view,forbidden
           assert '<label class="cs-label">Lesson text editor</label>' not in core
-          for token in ['id="cs-selected-module-title"', 'id="cs-selected-module-editor"']:
-            assert token in view,token
-          for token in ['data-cs-rename-module','cs-selected-module-title',
+          assert 'id="cs-selected-module-editor"' not in view
+          assert 'id="cs-unit-dialog"' in view
+          assert 'id="cs-unit-name"' in view
+          for token in ['data-cs-unit-menu','data-cs-unit-action','cs-unit-dialog',
                         'pendingSelection={mi:Number(mod.dataset.moduleIndex),li:Number(lesson.dataset.lessonIndex)+1}',
                         'data-cs-lesson-media-preview','youtube-nocookie.com/embed/','trustedPreviewUrl',
                         'new URL(', 'preload', 'allowfullscreen']:
@@ -43,7 +44,7 @@ jobs:
           assert "dup.uid=makeId()" in core
           assert "(copy)" in core
           assert "cs-selected-media-element" in css
-          assert "cs-tree-rename" in css
+          assert "cs-tree-unit-menu" in css
           assert 'html.dark #cs-builder.cs-course-workspace' in css
           for token in ['EXACT_LIVE_BASELINE=PASS', 'CAMPAIGN_MEDIA_ROLLBACK=RESTORED',
                         'CAMPAIGN_MODULE_MEDIA_DEPLOY=PASS',

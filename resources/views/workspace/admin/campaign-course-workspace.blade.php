@@ -3,7 +3,7 @@
 @section('workspace_compact', '1')
 @push('workspace_styles')
 <link rel="stylesheet" href="{{ asset('css/campaign-studio-premium.css') }}">
-<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-3">
+<link rel="stylesheet" href="{{ asset('css/campaign-course-workspace.css') }}?v=20261124-4">
 @endpush
 @section('content')
 @php
@@ -23,6 +23,22 @@
     data-cover-kind="{{ $coverKind }}"
     data-publication-status="{{ $isPublished ? 'published' : 'draft' }}">
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
+    <dialog id="cs-unit-dialog" class="cs-unit-dialog" aria-labelledby="cs-unit-dialog-title">
+        <form id="cs-unit-form" method="dialog" novalidate>
+            <div class="cs-unit-dialog-heading">
+                <h2 id="cs-unit-dialog-title">Add Unit</h2>
+                <p>Give each unit a clear title. Lessons are managed separately.</p>
+            </div>
+            <label class="cs-label" for="cs-unit-name">Unit / module title</label>
+            <input id="cs-unit-name" class="cs-input" maxlength="140" required autocomplete="off"
+                placeholder="e.g. IELTS Reading and Listening">
+            <p id="cs-unit-name-error" class="cs-unit-input-error" role="alert" hidden>Enter a unit title.</p>
+            <div class="cs-unit-dialog-actions">
+                <button type="button" class="cs-btn cs-btn-outline" id="cs-unit-cancel">Cancel</button>
+                <button type="submit" class="cs-btn cs-btn-primary" id="cs-unit-save">Save unit</button>
+            </div>
+        </form>
+    </dialog>
     <button id="cs-publish-top" type="button" hidden>Publish</button>
     <button id="cs-save-draft-top" type="button" hidden>Save draft</button>
 
@@ -63,11 +79,6 @@
                 <button type="button" role="tab" id="cs-tab-translation" data-cs-tab="translation" aria-selected="false" aria-controls="cs-course-stage">Translation (EN/KM)</button>
             </nav>
             <div id="cs-course-stage" class="cs-course-stage" role="tabpanel" aria-labelledby="cs-tab-metadata">
-                <div id="cs-selected-module-editor" class="cs-selected-module-editor" hidden>
-                    <label class="cs-label" for="cs-selected-module-title">Module title</label>
-                    <input id="cs-selected-module-title" type="text" class="cs-input" maxlength="140" autocomplete="off" placeholder="Enter module title" aria-describedby="cs-selected-module-help">
-                    <p id="cs-selected-module-help" class="cs-sr-only">Rename the selected unit. Save draft to keep changes.</p>
-                </div>
                 <div class="cs-section-heading cs-course-current-heading">
                     <div>
                         <h3 id="cs-current-unit-heading">Unit 1</h3>
@@ -159,6 +170,6 @@
     </div>
     <script type="application/json" id="cs-initial-rows">@json($rows ?? [])</script>
 </section>
-<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124-3"></script>
-<script defer src="{{ asset('js/campaign-course-workspace.js') }}?v=course-20261124-3"></script>
+<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=course-20261124-4"></script>
+<script defer src="{{ asset('js/campaign-course-workspace.js') }}?v=course-20261124-4"></script>
 @endsection
