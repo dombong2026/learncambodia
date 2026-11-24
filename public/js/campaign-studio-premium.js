@@ -72,46 +72,153 @@ const input = (field, value, max, extra) => (
     '<input class="cs-input" data-field="' + field + '" maxlength="' + max +
     '" value="' + escapeHtml(value) + '" ' + (extra || '') + '>'
 );
+// Keep the same allowlisted formats that Laravel's EditorHtml accepts.
+const safeEditorStyle = raw => {
+    const safe = new Map();
+    for (const declaration of String(raw || '').toLowerCase().split(';')) {
+        const index = declaration.indexOf(':');
+        if (index < 1) continue;
+        const key = declaration.slice(0,index).trim();
+        let value = declaration.slice(index+1).trim();
+        if (['color','background-color'].includes(key)) {
+            const hex = /^#[a-f0-9]{3}(?:[a-f0-9]{3})?$/.test(value);
+            const match = value.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
+            if (!hex && match && match.slice(1).every(v => Number(v) <= 255))
+                value = '#' + match.slice(1).map(v=>Number(v).toString(16).padStart(2,'0')).join('');
+            if (hex || /^#[a-f0-9]{6}$/.test(value)) safe.set(key,value);
+        } else if (key==='text-align' && ['left','center','right','justify'].includes(value)) {
+            safe.set(key,value);
+        } else if (['margin-left','margin-inline-start'].includes(key) &&
+            /^(40|80|120|160)px$/.test(value)) {
+            safe.set('margin-inline-start',value);
+        } else if (key==='font-size' && /^(12|14|16|18|20|24|28|32|36)px$/.test(value)) {
+            safe.set(key,value);
+        } else if (key==='font-family' && ['arial','georgia','monospace'].includes(value)) {
+            safe.set(key,value);
+        }
+    }
+    return [...safe.entries()].map(([k,v])=>k+':'+v).join(';');
+};
 const readSourceHtml = html => {
     const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
     doc.querySelectorAll('script,style,iframe,object,embed,svg,math,form,input,button,link,meta,base').forEach(n => n.remove());
-    const allowed = new Set(['P','DIV','BR','STRONG','B','EM','I','U','S','H2','H3','H4',
+    const allowed = new Set(['P','DIV','BR','STRONG','B','EM','I','U','S','STRIKE','H1','H2','H3','H4','H5','H6',
         'BLOCKQUOTE','PRE','CODE','UL','OL','LI','HR','A','TABLE','THEAD','TBODY','TR','TH','TD',
         'SPAN','SUP','SUB','FIGURE','FIGCAPTION']);
     [...doc.body.querySelectorAll('*')].forEach(n => {
-        const href = n.tagName === 'A' ? n.getAttribute('href') : null;
-        for (const a of [...n.attributes]) n.removeAttribute(a.name);
-        if (n.tagName === 'A' && href && /^(https?:\/\/|mailto:)/i.test(href)) {
-            n.setAttribute('href', href);
-            n.setAttribute('rel', 'noopener noreferrer');
+        if (!n.isConnected) return;
+        const tag = n.tagName;
+        const href = tag==='A' ? n.getAttribute('href') : null;
+        let sourceStyle = n.getAttribute('style') || '';
+        if (n.hasAttribute('align')) sourceStyle += ';text-align:'+n.getAttribute('align');
+        if (tag==='FONT') {
+            if (n.getAttribute('color')) sourceStyle += ';color:'+n.getAttribute('color');
+            const sizes = {1:12,2:14,3:16,4:18,5:24,6:32,7:36};
+            const size=sizes[Number(n.getAttribute('size'))];
+            if (size) sourceStyle += ';font-size:'+size+'px';
+            const face=(n.getAttribute('face')||'').toLowerCase();
+            if (['arial','georgia','monospace'].includes(face)) sourceStyle += ';font-family:'+face;
         }
-        if (!allowed.has(n.tagName)) n.replaceWith(...n.childNodes);
+        const safeStyle = safeEditorStyle(sourceStyle);
+        const language = tag==='CODE' ? n.getAttribute('data-language') : '';
+        const colspan = ['TD','TH'].includes(tag) ? n.getAttribute('colspan') : '';
+        const rowspan = ['TD','TH'].includes(tag) ? n.getAttribute('rowspan') : '';
+        for (const attribute of [...n.attributes]) n.removeAttribute(attribute.name);
+        const element = tag==='FONT' ? doc.createElement('span') : n;
+        if (safeStyle) element.setAttribute('style',safeStyle);
+        if (tag==='A' && href && /^(https?:\/\/|mailto:|\/(?!\/))/i.test(href)) {
+            element.setAttribute('href',href);
+            element.setAttribute('rel','noopener noreferrer nofollow');
+        }
+        if (tag==='CODE' && language && /^[a-z][a-z0-9+#-]{0,23}$/i.test(language))
+            element.setAttribute('data-language',language);
+        if (['TD','TH'].includes(tag)) {
+            if (colspan && /^[1-8]$/.test(colspan)) element.setAttribute('colspan',colspan);
+            if (rowspan && /^[1-8]$/.test(rowspan)) element.setAttribute('rowspan',rowspan);
+        }
+        if (tag==='FONT') {
+            while (n.firstChild) element.appendChild(n.firstChild);
+            n.replaceWith(element);
+        } else if (!allowed.has(tag)) {
+            n.replaceWith(...n.childNodes);
+        }
     });
     return doc.body.innerHTML;
 };
+const codePlainText = raw => {
+    const value=String(raw||'');
+    if (/^\s*<pre[\s>]/i.test(value)) {
+        const doc = new DOMParser().parseFromString(value,'text/html');
+        return doc.querySelector('pre')?.textContent || '';
+    }
+    return value;
+};
+// Icon controls are SVG-only, with accessible names and matching dark/light styling.
 const svgIcons = {
-    bold:'<path d="M6 12h6a4 4 0 0 0 0-8H6v16h7a4 4 0 0 0 0-8H6"/>',
-    italic:'<path d="M19 4h-9M14 20H5M15 4 9 20"/>',
+    undo:'<path d="m9 14-5-5 5-5M4 9h10a6 6 0 0 1 0 12h-2"/>',
+    redo:'<path d="m15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h2"/>',
+    bold:'<path d="M6 4h7a4 4 0 0 1 0 8H6V4Zm0 8h8a4 4 0 0 1 0 8H6v-8Z"/>',
+    italic:'<path d="M19 4h-9m4-0-4 16m-5 0h10"/>',
     underline:'<path d="M6 4v7a6 6 0 0 0 12 0V4M4 21h16"/>',
-    insertUnorderedList:'<path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+    strikeThrough:'<path d="M4 12h16M8 8a4 4 0 0 1 8-1m-8 9a4 4 0 0 0 8-1"/>',
+    paragraph:'<path d="M18 4H9a5 5 0 0 0 0 10h3M12 4v16m4-16v16"/>',
+    heading1:'<path d="M3 6v12M11 6v12M3 12h8M17 9h3v10m-3 0h6"/>',
+    heading2:'<path d="M2 6v12m8-12v12M2 12h8m6-2a3 3 0 0 1 6 0c0 3-6 4-6 8h7"/>',
+    heading3:'<path d="M2 6v12m8-12v12M2 12h8m7-2h5l-3 4a3 3 0 1 1-2 5"/>',
+    insertUnorderedList:'<path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
     insertOrderedList:'<path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M3 9h3M3 15c1-1 3-1 3 0s-3 2-3 3h3"/>',
-    formatBlock:'<path d="M4 6v12M13 6v12M4 12h9M17 10h3a2 2 0 0 1 0 4h-3v4h5"/>',
-    createLink:'<path d="M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+    justifyLeft:'<path d="M4 6h16M4 10h12M4 14h16M4 18h12"/>',
+    justifyCenter:'<path d="M4 6h16M6 10h12M4 14h16M6 18h12"/>',
+    justifyRight:'<path d="M4 6h16M8 10h12M4 14h16M8 18h12"/>',
+    indent:'<path d="M4 6h16M10 10h10M10 14h10M4 18h16m-1-2"/>',
+    outdent:'<path d="M4 6h16M10 10h10M10 14h10M4 18h16m-1-2"/>',
+    blockquote:'<path d="M9 10H4v6h6v-6c0-3 1-5 4-6M20 10h-5v6h6v-6c0-3 1-5 3-6"/>',
+    codeBlock:'<path d="M8 7 3 12l5 5m8-10 5 5-5 5M14 4l-4 16"/>',
+    table:'<rect x="3" y="4" width="18" height="16" rx="1"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/>',
+    horizontalRule:'<path d="M4 12h16"/>',
+    createLink:'<path d="M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+    unlink:'<path d="M8 10 4 14m12-4 4-4M8 16a5 5 0 0 0 7 0m-6-7a5 5 0 0 1 7 0M4 4l16 16"/>',
+    removeFormat:'<path d="M4 5h16M12 5l-4 13m-4 2h16M3 3l18 18"/>',
+    textColor:'<path d="m5 17 7-14 7 14M7 13h10M4 21h16"/>',
+    highlight:'<path d="M6 16 15 4l5 4-9 12H6v-4ZM3 22h18"/>',
     emoji:'<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>',
     html:'<path d="m8 8-4 4 4 4m8-8 4 4-4 4M14 4l-4 16"/>'
 };
 const svg = name => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+svgIcons[name]+'</svg>';
-const editor = l => (
+const editorActions = [
+    ['undo','Undo'],['redo','Redo'],['bold','Bold'],['italic','Italic'],
+    ['underline','Underline'],['strikeThrough','Strikethrough'],
+    ['paragraph','Paragraph'],['heading1','Heading 1'],['heading2','Heading 2'],['heading3','Heading 3'],
+    ['insertUnorderedList','Bulleted list'],['insertOrderedList','Numbered list'],
+    ['justifyLeft','Align left'],['justifyCenter','Align center'],['justifyRight','Align right'],
+    ['indent','Indent'],['outdent','Outdent'],['blockquote','Blockquote'],
+    ['codeBlock','Code block'],['table','Insert table'],['horizontalRule','Horizontal line'],
+    ['createLink','Insert link'],['unlink','Remove link'],['textColor','Text color'],
+    ['highlight','Highlight'],['removeFormat','Clear formatting'],
+    ['emoji','Insert emoji'],['html','HTML source']
+];
+const codeLanguages = [
+    ['text','Plain text'],['javascript','JavaScript'],['typescript','TypeScript'],['php','PHP'],
+    ['python','Python'],['html','HTML'],['css','CSS'],['sql','SQL'],
+    ['json','JSON'],['bash','Bash'],['java','Java'],['cpp','C++']
+];
+const editor = l => l.type === 'code' ? (
+    '<div class="cs-code-source">' +
+    '<label class="cs-label">Programming language</label><select class="cs-control" data-field="language" aria-label="Programming language">' +
+    codeLanguages.map(([key,label])=>'<option value="'+key+'"'+(l.language===key?' selected':'')+'>'+label+'</option>').join('') +
+    '</select><label class="cs-label">Code source</label>' +
+    '<textarea class="cs-code-editor cs-textarea" spellcheck="false" data-editor-code aria-label="Code source" rows="13" maxlength="20000" placeholder="Write or paste your code here...">'+
+    escapeHtml(codePlainText(l.body))+'</textarea>' +
+    '<p class="cs-muted">Code is rendered as escaped text, not executed by students.</p></div>'
+) : (
     '<div class="cs-editor-box">' +
-    '<div class="cs-editor-toolbar" role="toolbar" aria-label="Text formatting">' +
-    ['bold','italic','underline','insertUnorderedList','insertOrderedList','formatBlock','createLink',
-    'emoji','html'].map(action => {
-        const labels = {bold:'Bold',italic:'Italic',underline:'Underline',insertUnorderedList:'Bulleted list',
-            insertOrderedList:'Numbered list',formatBlock:'Heading',createLink:'Insert link',emoji:'Emoji',html:'HTML source'};
-        return '<button type="button" data-format="' + action + '" title="' + labels[action] +
-            '" aria-label="' + labels[action] + '">' + svg(action) + '</button>';
+    '<div class="cs-editor-toolbar" role="toolbar" aria-label="Full lesson text editor">' +
+    editorActions.map(([action,label],i) => {
+        const groupBreak = [2,6,10,12,15,17,21,25].includes(i) ? ' cs-tool-group-start' : '';
+        return '<button type="button" class="cs-tool-button'+groupBreak+'" data-format="' + action +
+            '" title="' + label + '" aria-label="' + label + '">' + svg(action) + '</button>';
     }).join('') +
-    '</div><div class="cs-editor" contenteditable="true" data-editor data-placeholder="Write lesson content, instructions, or rich text…" role="textbox" aria-multiline="true">' +
+    '</div><div class="cs-editor" contenteditable="true" data-editor data-placeholder="Write the lesson content, instructions or rich text..." role="textbox" aria-multiline="true">' +
     readSourceHtml(l.body) + '</div>' +
     '<textarea class="cs-editor-html" data-editor-source aria-label="Lesson HTML source" hidden></textarea></div>'
 );
@@ -289,7 +396,9 @@ function exportRows() {
                 course:module.title.trim().slice(0,140) || 'Untitled module',
                 lesson:l.title.trim().slice(0,140) || 'Untitled lesson',
                 type:l.type,
-                body:readSourceHtml(l.body).slice(0,20000),
+                body:(l.type==='code'
+                    ? '<pre><code>'+escapeHtml(codePlainText(l.body))+'</code></pre>'
+                    : readSourceHtml(l.body)).slice(0,20000),
                 url:l.url.trim().slice(0,2048),
                 asset:l.asset || '',
                 language:l.language || '',
@@ -450,6 +559,8 @@ function mutateFromInput(target) {
         lesson.body=readSourceHtml(target.innerHTML);
     }else if(target.matches('[data-editor-source]') && lesson){
         lesson.body=readSourceHtml(target.value);
+    }else if(target.matches('[data-editor-code]') && lesson){
+        lesson.body=target.value;
     }
     if(field==='module-title'||field==='title')renderOutline();
 }
@@ -463,10 +574,15 @@ list.addEventListener('change',event=>{
         render();
     }
 });
+// Prevent toolbar clicks from clearing an active text selection.
+list.addEventListener('mousedown',event=>{
+    if(event.target.closest('button[data-format]'))event.preventDefault();
+});
 list.addEventListener('click',event=>{
-    const formatButton=event.target.closest('[data-format]');
+    const formatButton=event.target.closest('button[data-format]');
     if(formatButton){
         const wrapper=formatButton.closest('.cs-editor-box');
+        if(!wrapper)return;
         const visual=wrapper.querySelector('[data-editor]');
         const source=wrapper.querySelector('[data-editor-source]');
         const action=formatButton.dataset.format;
@@ -483,14 +599,40 @@ list.addEventListener('click',event=>{
             }
             return;
         }
-        if(!source.hidden){note('Switch back to Visual editor before using formatting tools.',true);return;}
+        if(!source.hidden){note('Switch to the visual editor to use formatting tools.',true);return;}
         visual.focus();
-        if(action==='emoji'){document.execCommand('insertText',false,'😊');}
-        else if(action==='formatBlock'){document.execCommand('formatBlock',false,'h2');}
-        else if(action==='createLink'){
+        const formatBlocks = {
+            paragraph:'p',heading1:'h1',heading2:'h2',heading3:'h3',
+            blockquote:'blockquote',codeBlock:'pre'
+        };
+        if(action in formatBlocks) {
+            document.execCommand('formatBlock',false,formatBlocks[action]);
+        } else if(action==='table') {
+            // The HTML is fixed and contains no user input or remote resources.
+            document.execCommand('insertHTML',false,
+                '<table><tbody><tr><th>Heading 1</th><th>Heading 2</th></tr>'+
+                '<tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table><p></p>');
+        } else if(action==='horizontalRule') {
+            document.execCommand('insertHorizontalRule',false,null);
+        } else if(action==='emoji') {
+            const emoji=window.prompt('Insert an emoji', '😊');
+            if(emoji && [...emoji].length<=8)document.execCommand('insertText',false,emoji);
+        } else if(action==='textColor' || action==='highlight') {
+            const color=window.prompt(action==='textColor'?'Enter text color (#RRGGBB)':'Enter highlight color (#RRGGBB)',
+                action==='textColor'?'#2563eb':'#fef08a');
+            if(color && /^#[a-f0-9]{6}$/i.test(color)){
+                document.execCommand(action==='textColor'?'foreColor':'hiliteColor',false,color);
+            }
+        } else if(action==='createLink') {
             const url=window.prompt('Enter a secure HTTPS link');
-            if(url && /^https:\/\//i.test(url))document.execCommand('createLink',false,url);
-        }else{document.execCommand(action,false,null)}
+            if(url && url.length<=2048 && /^https:\/\/[^\s]+$/i.test(url))
+                document.execCommand('createLink',false,url);
+        } else {
+            const commands=['undo','redo','bold','italic','underline','strikeThrough',
+                'insertUnorderedList','insertOrderedList','justifyLeft','justifyCenter',
+                'justifyRight','indent','outdent','unlink','removeFormat'];
+            if(commands.includes(action))document.execCommand(action,false,null);
+        }
         if(lesson)lesson.body=readSourceHtml(visual.innerHTML);
         return;
     }

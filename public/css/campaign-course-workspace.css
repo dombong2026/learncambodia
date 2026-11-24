@@ -203,3 +203,66 @@ html.dark #cs-builder .cs-tree-lesson.is-active .cs-tree-lesson-button{color:#b0
   #cs-builder .cs-course-editor-heading{padding:13px}
 }
 @media(prefers-reduced-motion:reduce){#cs-builder *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Course Builder hierarchy correction: one global campaign card, not a card in each module. */
+#cs-builder .cs-course-workflow{position:static}
+#cs-builder .cs-course-workflow .cs-course-campaign-metadata{margin:0;padding:17px;background:var(--course-surface)}
+#cs-builder .cs-course-workflow .cs-course-campaign-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:7px}
+#cs-builder .cs-course-workflow .cs-course-campaign-fields .cs-label{font-size:12px}
+#cs-builder .cs-course-workflow .cs-course-campaign-metadata .cs-form-heading{flex-wrap:wrap;gap:7px}
+#cs-builder .cs-course-workflow .cs-course-campaign-metadata .cs-note{margin:11px 0;line-height:1.6}
+#cs-builder .cs-course-workflow .cs-course-exit{
+  display:inline-flex;justify-content:center;width:100%;padding:9px;
+  font-size:12px;color:var(--course-fg);border-color:var(--course-line);
+  text-decoration:none;margin-top:3px;
+}
+#cs-builder .cs-course-workflow .cs-course-exit:hover{background:var(--course-surface-raised)}
+#cs-builder .cs-course-workflow .cs-course-saved{display:block;font-size:11px;font-weight:800;
+  color:var(--course-green);margin:11px 0;line-height:1.5}
+#cs-builder .cs-course-type-guidance{background:var(--course-surface-deep);
+  color:var(--course-muted);border-left:3px solid var(--course-teal);
+  border-radius:0 9px 9px 0;font-size:12px;line-height:1.65;
+  padding:10px 12px;margin:0 0 15px;
+}
+#cs-builder .cs-code-source{border:1px solid var(--course-line);padding:14px;
+  border-radius:12px;background:var(--course-surface-raised)}
+#cs-builder .cs-code-editor{display:block;width:100%;min-height:230px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,'Liberation Mono',monospace;
+  font-size:12px;line-height:1.7;white-space:pre;tab-size:4}
+#cs-builder .cs-editor-toolbar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:3px;
+  padding:8px;background:var(--course-surface-deep);border-bottom:1px solid var(--course-line)
+}
+#cs-builder .cs-editor-toolbar button.cs-tool-button{
+  display:grid;place-items:center;flex:none;width:33px;height:33px;
+  padding:6px;background:transparent;color:var(--course-fg);
+  border:1px solid transparent;border-radius:7px;cursor:pointer;
+}
+#cs-builder .cs-editor-toolbar button.cs-tool-button:hover,
+#cs-builder .cs-editor-toolbar button.cs-tool-button:focus-visible{
+  background:var(--course-selected);border-color:var(--course-line);color:var(--course-teal)
+}
+#cs-builder .cs-editor-toolbar .cs-tool-group-start{
+  margin-left:5px;padding-left:6px;border-left:1px solid var(--course-line)!important;border-radius:0 6px 6px 0
+}
+#cs-builder .cs-editor-toolbar button.cs-tool-button svg{display:block;width:17px;height:17px;stroke:currentColor}
+#cs-builder .cs-editor :is(h1,h2,h3,h4,p,blockquote,ul,ol,pre,table){margin:.35em 0 .65em}
+#cs-builder .cs-editor h1{font-size:1.8em;font-weight:850}
+#cs-builder .cs-editor h2{font-size:1.45em;font-weight:800}
+#cs-builder .cs-editor h3{font-size:1.2em;font-weight:800}
+#cs-builder .cs-editor :is(ul,ol){padding-inline-start:24px}
+#cs-builder .cs-editor blockquote{border-inline-start:3px solid var(--course-teal);
+  padding:8px 12px;background:var(--course-surface-deep)}
+#cs-builder .cs-editor pre{padding:12px;background:var(--course-surface-deep);
+  border:1px solid var(--course-line);border-radius:8px;overflow:auto}
+#cs-builder .cs-editor :is(table,td,th){border:1px solid var(--course-line)}
+#cs-builder .cs-editor table{border-collapse:collapse;width:100%;max-width:100%}
+#cs-builder .cs-editor :is(td,th){padding:7px 9px}
+#cs-builder .cs-editor a{color:var(--course-teal);text-decoration:underline}
+#cs-builder .cs-editor:focus-visible{outline:2px solid var(--course-teal);outline-offset:-2px}
+#cs-builder .cs-editor-html{min-height:220px;font-size:12px;white-space:pre;overflow:auto}
+#cs-builder .cs-course-editor-heading{border-bottom:1px solid var(--course-line)}
+@media(max-width:1070px){
+ #cs-builder .cs-course-workflow .cs-course-campaign-metadata{grid-column:auto}
+}

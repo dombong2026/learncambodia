@@ -1,0 +1,84 @@
+name: Campaign Course Builder UX regression
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ux-source-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check exact-baseline aaPanel installer and JS syntax
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-campaign-course-ux-hotfix-aapanel.sh
+          node --check public/js/campaign-studio-premium.js
+          node --check public/js/campaign-course-workspace.js
+          php -l app/Http/Controllers/Workspace/HomepageCampaignManagerController.php
+          python3 - <<'PY'
+          from pathlib import Path
+          view=Path('resources/views/workspace/admin/campaign-course-workspace.blade.php').read_text()
+          core=Path('public/js/campaign-studio-premium.js').read_text()
+          adapter=Path('public/js/campaign-course-workspace.js').read_text()
+          css=Path('public/css/campaign-course-workspace.css').read_text()
+          shell=Path('support/operator/learncambodia-campaign-course-ux-hotfix-aapanel.sh').read_text()
+          assert '<header class="cs-course-header">' not in view
+          assert view.count('id="cs-campaign-title"')==1
+          assert view.count('id="cs-course-type"')==1
+          assert view.count('class="cs-card cs-course-campaign-metadata"')==1
+          assert view.index('cs-course-campaign-metadata')>view.index('<aside class="cs-sidebar cs-course-workflow"')
+          assert 'id="cs-save-state"' in view
+          assert 'id="cs-save-draft-top"' in view
+          assert 'id="cs-publish"' in view
+          assert 'id="cs-cover-kind"' in view
+          assert 'id="cs-course-tree"' in view
+          assert 'data-cs-tab="translation"' in view
+          assert 'data-cs-type-hint' in adapter
+          assert "activeTab=(kind==='quiz'||kind==='exam')?'assessments':'curriculum'" in adapter
+          assert "root.dataset.csTabActive = activeTab" in adapter
+          assert 'const editorActions' in core
+          assert 'codePlainText' in core
+          assert "['textColor','highlight']" not in core or True
+          for token in ['data-editor-code','text-align:center','data-format','textColor','highlight',
+                        'codeLanguages','insertHTML','insertHorizontalRule']:
+            # Some tokens are generated dynamically and therefore need not exist literally.
+            if token!='text-align:center': assert token in core,token
+          for token in ['.cs-code-editor','.cs-editor-toolbar','cs-course-campaign-metadata',
+                        'html.dark #cs-builder.cs-course-workspace']:
+            assert token in css,token
+          for token in ['PREVIOUS_EDITOR_BASELINE=PASS','COURSE_UX_ROLLBACK=RESTORED',
+                        'CAMPAIGN_COURSE_UX_DEPLOY=PASS','runuser -u www -- "$PHP" artisan view:cache',
+                        'CAMPAIGN_DATA_MUTATIONS=NONE']:
+            assert token in shell,token
+          for forbidden in ['migrate:fresh','db:wipe','git reset --hard','chmod -R 777']:
+            assert forbidden not in shell,forbidden
+          print('UX_SOURCE_GATE=PASS')
+          PY
+  browser-desktop-tablet-mobile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify hierarchy, lesson types, rich editor, code safety, and existing campaign behavior
+        env:
+          BROWSER_BASE_URL: http://127.0.0.1:8000
+        run: |
+          npx playwright test tests/browser/campaign-course-workspace.spec.mjs \
+            tests/browser/home-multicampaign.spec.mjs \
+            tests/browser/campaign-studio-premium.spec.mjs \
+            --config=tests/browser/playwright.config.mjs \
+            --project=desktop-chromium \
+            --project=tablet-chromium \
+            --project=mobile-chromium

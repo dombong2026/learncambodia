@@ -71,7 +71,7 @@ test('SVG editor toolbar controls have accessible labels', async ({page}) => {
     '</section></body></html>'
   ].join(''));
   await page.addScriptTag({path:'public/js/campaign-studio-premium.js'});
-  await expect(page.locator('.cs-editor-toolbar button svg')).toHaveCount(9);
+  await expect(page.locator('.cs-editor-toolbar button svg')).toHaveCount(28);
   await expect(page.getByRole('button',{name:'Bold'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Underline'})).toBeVisible();
   await expect(page.getByRole('button',{name:'HTML source'})).toBeVisible();
