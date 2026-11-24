@@ -75,7 +75,7 @@ use App\Http\Controllers\Api\McpOAuthDiscoveryController;
 // The Passport authorization flow is isolated under /mcp/oauth and
 // remains behind hard-disabled Phase 2B acceptance gates.
 Route::middleware(['mcp.oauth.stage', 'throttle:20,1'])->prefix('mcp/oauth')->group(function (): void {
-    Route::get('/authorize', [\Laravel\Passport\Http\Controllers\AuthorizationController::class, 'authorize'])
+    Route::get('/authorize', [\App\Http\Controllers\Api\McpOAuthAuthorizationController::class, 'authorize'])
         ->middleware(['auth', 'password.confirm', 'mcp.oauth.admin', 'mcp.oauth.params:authorize'])
         ->name('mcp.oauth.authorize');
     Route::post('/authorize', [\Laravel\Passport\Http\Controllers\ApproveAuthorizationController::class, 'approve'])
