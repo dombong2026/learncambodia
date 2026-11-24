@@ -31,6 +31,26 @@ final class McpOAuthPassportTest extends TestCase
         config()->set('mcp.remote_writes_enabled', false);
     }
 
+
+    /**
+     * Only enabled-flow tests need signing keys. Keep the disabled-gate
+     * tests independent of this fixture, and never write to storage or .env.
+     */
+    private function configureEphemeralPassportKeys(): void
+    {
+        $this->assertTrue($this->app->environment('testing'));
+        $key = openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'private_key_bits' => 2048,
+        ]);
+        $this->assertNotFalse($key);
+        $this->assertTrue(openssl_pkey_export($key, $privateKey));
+        $details = openssl_pkey_get_details($key);
+        $this->assertIsArray($details);
+        config()->set('passport.private_key', $privateKey);
+        config()->set('passport.public_key', $details['key']);
+    }
+
     private function setupClient(): string
     {
         $owner = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
@@ -93,6 +113,7 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_oauth_read_unauthorized_challenge_is_only_advertised_when_ready(): void
     {
+        $this->configureEphemeralPassportKeys();
         $this->setupClient();
         $this->postJson('/api/mcp/oauth', [
             'jsonrpc'=>'2.0', 'id'=>1, 'method'=>'initialize',
@@ -173,6 +194,7 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_authorization_code_s256_exchange_read_refresh_and_browser_revocation(): void
     {
+        $this->configureEphemeralPassportKeys();
         $client = $this->setupClient();
         $admin = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
         $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at'=>time()]);
