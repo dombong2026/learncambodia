@@ -133,7 +133,8 @@ jobs:
       - name: Seed synthetic editor account in disposable browser database
         run: |
           test "$APP_ENV" = testing
-          php -r '
+          php <<'PHP'
+          <?php
             require "vendor/autoload.php";
             $app = require "bootstrap/app.php";
             $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
@@ -157,7 +158,7 @@ jobs:
                     ]);
                 }
             }
-          '
+          PHP
       - name: Install browser engines
         run: |
           npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
