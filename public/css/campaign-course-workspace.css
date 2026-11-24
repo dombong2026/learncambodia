@@ -310,3 +310,55 @@ html.dark #cs-builder .cs-tree-lesson.is-active .cs-tree-lesson-button{color:#b0
 @media(max-width:720px){
   #cs-builder .cs-selected-media-element:is(img,video,iframe){max-height:270px}
 }
+
+
+/* Unit actions live in Course Outline, not inside Lesson Metadata. */
+#cs-builder.cs-course-workspace .cs-tree-unit-heading{position:relative;align-items:center}
+#cs-builder.cs-course-workspace .cs-tree-unit-menu{position:relative;flex:none}
+#cs-builder.cs-course-workspace .cs-tree-unit-menu>summary{
+  list-style:none;display:grid;place-items:center;cursor:pointer;
+  width:27px;height:29px;border-radius:8px;color:var(--course-muted);
+  background:transparent;border:1px solid transparent;
+}
+#cs-builder.cs-course-workspace .cs-tree-unit-menu>summary::-webkit-details-marker{display:none}
+#cs-builder.cs-course-workspace .cs-tree-unit-menu>summary:hover,
+#cs-builder.cs-course-workspace .cs-tree-unit-menu[open]>summary{
+  color:var(--course-fg);background:var(--course-surface-raised);border-color:var(--course-line);
+}
+#cs-builder.cs-course-workspace .cs-tree-menu-options{
+  position:absolute;right:0;top:31px;z-index:20;min-width:105px;
+  padding:4px;background:var(--course-surface);border:1px solid var(--course-line);
+  border-radius:10px;box-shadow:0 10px 24px rgba(2,14,30,.24);
+}
+#cs-builder.cs-course-workspace .cs-tree-menu-options button{
+  width:100%;display:block;text-align:left;border:0;background:transparent;
+  border-radius:7px;padding:9px 11px;font-size:12px;font-weight:750;color:var(--course-fg);
+  cursor:pointer;
+}
+#cs-builder.cs-course-workspace .cs-tree-menu-options button:hover{background:var(--course-selected)}
+#cs-builder.cs-course-workspace .cs-tree-menu-options button.cs-tree-delete{color:#e87979}
+#cs-builder.cs-course-workspace .cs-tree-add{
+  background:transparent;border:0;color:var(--course-muted);
+  width:27px;height:29px;border-radius:7px;font-size:18px;
+}
+#cs-builder.cs-course-workspace .cs-tree-add:hover,#cs-builder.cs-course-workspace .cs-tree-add:focus-visible{
+  background:var(--course-surface-raised);color:var(--course-teal);
+}
+#cs-builder.cs-course-workspace .cs-tree-unit-button{min-width:0}
+#cs-builder.cs-course-workspace .cs-unit-dialog{
+  position:fixed;inset:0;z-index:100;max-width:min(94vw,440px);width:440px;
+  border:1px solid var(--course-line);border-radius:16px;
+  color:var(--course-fg);background:var(--course-surface);
+  padding:22px;box-shadow:0 24px 60px rgba(3,12,29,.45);
+}
+#cs-builder.cs-course-workspace .cs-unit-dialog::backdrop{background:rgba(2,12,27,.72);backdrop-filter:blur(3px)}
+#cs-builder.cs-course-workspace .cs-unit-dialog h2{margin:0 0 8px;font-size:17px;font-weight:850}
+#cs-builder.cs-course-workspace .cs-unit-dialog-heading p{
+  color:var(--course-muted);font-size:12px;margin:0 0 19px;line-height:1.6;
+}
+#cs-builder.cs-course-workspace .cs-unit-dialog .cs-label{display:block;margin-bottom:8px}
+#cs-builder.cs-course-workspace .cs-unit-dialog .cs-input{width:100%}
+#cs-builder.cs-course-workspace .cs-unit-dialog-actions{
+  display:flex;gap:8px;justify-content:flex-end;margin-top:18px;
+}
+#cs-builder.cs-course-workspace .cs-unit-input-error{color:#f87171;font-size:12px;margin-top:7px}
