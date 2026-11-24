@@ -55,10 +55,11 @@ final class McpOAuthDiscoveryTest extends TestCase
         $this->getJson('/.well-known/oauth-authorization-server')->assertNotFound();
     }
 
-    public function test_oauth_is_not_advertised_without_named_provider_routes(): void
+    public function test_oauth_is_not_advertised_while_discovery_switch_is_disabled(): void
     {
         $this->readyExceptProvider();
         config()->set('mcp.oauth_provider_accepted', true);
+        config()->set('mcp.oauth_discovery_enabled', false);
         $this->assertTrue(Route::has('mcp.oauth.authorize'));
         $this->assertTrue(Route::has('mcp.oauth.token'));
         $this->getJson('/.well-known/oauth-protected-resource')->assertNotFound();
