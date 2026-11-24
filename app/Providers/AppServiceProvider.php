@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\View as ViewInstance;
 use Laravel\Fortify\Fortify;
+use Laravel\Passport\Passport;
+use Carbon\CarbonInterval;
 
 class AppServiceProvider extends ServiceProvider
 {
