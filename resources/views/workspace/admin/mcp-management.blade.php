@@ -23,14 +23,14 @@
         </div>
         <div class="mcp-hero-status" role="status">
             <span class="mcp-status-dot" aria-hidden="true"></span>
-            {{ $gatewayReady ? 'Ready for secure review' : 'Remote connection disabled' }}
+            {{ $gatewayReady ? 'Ready for secure review' : ($flagEnabled ? 'Direct bearer bridge enabled · OAuth pending' : 'Remote connection disabled') }}
         </div>
     </section>
 
     <section class="mcp-status-grid" aria-label="Connection readiness">
         <div class="mcp-status-card">
             <span class="mcp-stat-label">Gateway configuration</span>
-            <strong>{{ $flagEnabled ? 'Flag enabled' : 'Disabled' }}</strong>
+            <strong>{{ $flagEnabled ? 'Direct bridge flag enabled' : 'Disabled' }}</strong>
             <p>Feature flag only; it cannot expose an MCP endpoint by itself.</p>
         </div>
         <div class="mcp-status-card">
@@ -40,7 +40,7 @@
         </div>
         <div class="mcp-status-card">
             <span class="mcp-stat-label">Remote write operations</span>
-            <strong>{{ ($gatewayReady && $writeFlagEnabled) ? 'Flag enabled' : 'Locked' }}</strong>
+            <strong>{{ ($flagEnabled && $writeFlagEnabled) ? 'Scoped writes enabled' : 'Locked' }}</strong>
             <p>Publishing and configuration changes must require explicit approval.</p>
         </div>
         <div class="mcp-status-card">
