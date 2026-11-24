@@ -153,6 +153,98 @@ final class McpOAuthPassportTest extends TestCase
         $this->assertSame(['mcp:read'], Passport::scopeIds());
     }
 
+    public function test_authorization_code_s256_exchange_read_refresh_and_browser_revocation(): void
+    {
+        $client = $this->setupClient();
+        $admin = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
+        $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at'=>time()]);
+
+        $verifier = str_repeat('V', 48);
+        $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+        $state = str_repeat('s', 32);
+        $url = '/mcp/oauth/authorize?'.$this->query($client, [
+            'code_challenge' => $challenge,
+            'state' => $state,
+        ]);
+
+        $consent = $this->get($url)->assertOk()->assertSee('Authorize READ access');
+        $this->assertMatchesRegularExpression('/name="auth_token" value="[^"]+"/',
+            $consent->getContent());
+        preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
+        $authToken = $matches[1];
+
+        $approve = $this->post('/mcp/oauth/authorize', [
+            'state' => $state, 'client_id' => $client,
+            'auth_token' => $authToken,
+        ])->assertRedirect();
+        $redirect = $approve->headers->get('Location');
+        $this->assertStringStartsWith($this->callback, $redirect);
+        parse_str(parse_url($redirect, PHP_URL_QUERY) ?? '', $parameters);
+        $this->assertSame($state, $parameters['state'] ?? null);
+        $this->assertNotEmpty($parameters['code'] ?? null);
+
+        $exchange = [
+            'grant_type' => 'authorization_code',
+            'client_id' => $client,
+            'code' => $parameters['code'],
+            'redirect_uri' => $this->callback,
+            'code_verifier' => $verifier,
+            'resource' => config('mcp.oauth_resource'),
+        ];
+        $response = $this->postJson('/api/mcp/oauth/token', $exchange)->assertOk();
+        $token = $response->json('access_token');
+        $refresh = $response->json('refresh_token');
+        $this->assertIsString($token);
+        $this->assertIsString($refresh);
+        $this->assertDatabaseCount('mcp_oauth_token_audiences', 1);
+
+        $this->withToken($token)->postJson('/api/mcp/oauth', [
+            'jsonrpc' => '2.0', 'id' => 1, 'method' => 'initialize',
+        ])->assertOk()->assertJsonPath('result.serverInfo.name',
+            'learncambodia-oauth-read-only');
+
+        $this->withToken($token)->postJson('/api/mcp/oauth', [
+            'jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list',
+        ])->assertOk()->assertJsonCount(1, 'result.tools')
+            ->assertJsonPath('result.tools.0.inputSchema.properties.operation.enum.0', 'READ');
+
+        $this->withToken($token)->postJson('/api/mcp/oauth', [
+            'jsonrpc' => '2.0', 'id' => 3, 'method' => 'tools/call',
+            'params' => ['name' => 'crud_manage_platform', 'arguments' => [
+                'operation' => 'CREATE', 'resource' => 'courses']],
+        ])->assertOk()->assertJsonPath('result.isError', true);
+
+        $refreshResponse = $this->postJson('/api/mcp/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => $client,
+            'refresh_token' => $refresh,
+            'resource' => config('mcp.oauth_resource'),
+        ])->assertOk();
+
+        $newToken = $refreshResponse->json('access_token');
+        $this->assertNotSame($token, $newToken);
+        $this->assertDatabaseCount('mcp_oauth_token_audiences', 2);
+
+        // A refresh token must not be reusable after rotation.
+        $this->postJson('/api/mcp/oauth/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => $client,
+            'refresh_token' => $refresh,
+            'resource' => config('mcp.oauth_resource'),
+        ])->assertStatus(400);
+
+        $jti = json_decode(base64_decode(strtr(explode('.', $newToken)[1], '-_', '+/')), true)['jti'];
+        $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+        $this->deleteJson('/dashboard/system-settings/mcp/oauth/tokens/'.$jti)
+            ->assertOk()->assertJsonPath('status', 'revoked');
+        $this->assertDatabaseHas('oauth_access_tokens', ['id' => $jti, 'revoked' => true]);
+        $this->assertDatabaseMissing('mcp_oauth_token_audiences', ['access_token_id' => $jti]);
+
+        $this->withToken($newToken)->postJson('/api/mcp/oauth', [
+            'jsonrpc' => '2.0', 'id' => 4, 'method' => 'initialize',
+        ])->assertUnauthorized();
+    }
+
     public function test_revocation_does_not_modify_sanctum_tokens(): void
     {
         $client = $this->setupClient();
