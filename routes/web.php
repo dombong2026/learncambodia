@@ -212,6 +212,14 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/security', 'security')->name('security');
             Route::get('/social-auth', 'socialAuth')->name('social-auth');
             Route::get('/mcp', [\App\Http\Controllers\Workspace\AdminMcpManagementController::class, 'index'])->name('mcp');
+            Route::post('/mcp/sessions', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'issue'])
+                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.sessions.issue');
+            Route::delete('/mcp/sessions/{token}', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'revoke'])
+                ->whereNumber('token')->middleware('throttle:10,1')->name('mcp.sessions.revoke');
+            Route::get('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'show'])
+                ->middleware('password.confirm')->name('mcp.approvals.show');
+            Route::post('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'decide'])
+                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.approvals.decide');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
             Route::get('/cloud-storage/configure', 'configureCloudStorage')
                 ->middleware('password.confirm')->name('cloud-storage.configure');
