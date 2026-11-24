@@ -120,17 +120,14 @@ chmod 0750 storage/framework/views
 runuser -u www -- "$PHP" artisan route:clear
 runuser -u www -- "$PHP" artisan view:clear
 runuser -u www -- "$PHP" artisan view:cache
-"$PHP" artisan route:list --json | python3 -c '
-import json,sys
-routes=json.load(sys.stdin)
-matched=[r for r in routes if r.get("name")=="admin.system-settings.mcp"]
-if len(matched)!=1 or "GET" not in matched[0].get("method",""):
- raise SystemExit("MCP_ADMIN_ROUTE_MISSING")
-middleware=" ".join(matched[0].get("middleware") or [])
-if "role:admin" not in middleware:
- raise SystemExit("MCP_ADMIN_AUTH_MISSING")
-print("MCP_ADMIN_ROUTE_AUTH=PASS")
-'
+# Laravel route:list --json may expand role:admin into its middleware class,
+# so verify the actual registered route metadata and declared middleware.
+GUARD="$STAGE/foundation-route-assert.php"
+gh api -H 'Accept: application/vnd.github.raw+json' \
+ "repos/$REPO/contents/support/operator/learncambodia-mcp-foundation-route-assert.php?ref=$RELEASE" > "$GUARD"
+test -s "$GUARD"
+"$PHP" -l "$GUARD" >/dev/null
+"$PHP" "$GUARD"
 for path in / /css/mcp-management.css /js/mcp-management.js; do
  code="$(curl -4 -sS --connect-timeout 8 --max-time 20 \
    --resolve learncambodia.com:443:127.0.0.1 \
