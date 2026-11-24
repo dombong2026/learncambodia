@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Workspace;
 
+use App\Models\McpActionAudit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -55,10 +56,18 @@ final class McpAdminSessionController
         // mcp:use marks these tokens as MCP-specific. Existing developer
         // catalog:read tokens cannot call MCP CRUD endpoints.
         $issued = $user->createToken($name, ['mcp:use', ...$data['scopes']], $expiry);
+        $receipt=(string)Str::uuid();
+        McpActionAudit::create([
+            'id'=>$receipt,'user_id'=>$user->id,'token_id'=>$issued->accessToken->id,
+            'tool'=>'browser_admin_authorization','operation'=>'CREATE','resource'=>'mcp_session',
+            'resource_id'=>(string)$issued->accessToken->id,'result'=>'success','http_status'=>201,
+            'summary'=>'Website-admin browser issued a scoped, short-lived MCP bearer session.',
+        ]);
 
         return response()->json([
             'status' => 'issued',
             'session_id' => $issued->accessToken->id,
+            'receipt_id' => $receipt,
             'access_token' => $issued->plainTextToken,
             'token_type' => 'Bearer',
             'expires_at' => $expiry->toIso8601String(),
@@ -74,10 +83,18 @@ final class McpAdminSessionController
             ->where('name', 'like', self::LABEL_PREFIX.'%')
             ->findOrFail($token);
         $credential->delete();
+        $receipt=(string)Str::uuid();
+        McpActionAudit::create([
+            'id'=>$receipt,'user_id'=>$request->user()->id,'token_id'=>$token,
+            'tool'=>'browser_admin_revoke','operation'=>'DELETE','resource'=>'mcp_session',
+            'resource_id'=>(string)$token,'result'=>'success','http_status'=>200,
+            'summary'=>'Website administrator revoked an MCP session.',
+        ]);
 
         return response()->json([
             'status' => 'revoked',
             'session_id' => $token,
+            'receipt_id' => $receipt,
         ])->header('Cache-Control', 'no-store');
     }
 }
