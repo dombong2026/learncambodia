@@ -5,7 +5,7 @@ test('MCP tool detail dialog is usable and does not dispatch network requests',a
     page.on('request',request=>{
         if(!request.url().startsWith('data:')&&!request.url().startsWith('about:'))requests.push(request.url());
     });
-    await page.goto('/up');
+    await page.goto('about:blank');
     await page.setContent([
         '<html><body><div data-mcp-manager>',
         '<button type="button" data-mcp-tool-details data-name="campaigns.list"',
@@ -37,7 +37,7 @@ test('MCP tool detail dialog is usable and does not dispatch network requests',a
 });
 
 test('MCP details are inserted as text, not executable HTML',async({page})=>{
-    await page.goto('/up');
+    await page.goto('about:blank');
     await page.setContent([
         '<html><body><div data-mcp-manager>',
         '<button id="unsafe" data-mcp-tool-details>Open tool</button>',
