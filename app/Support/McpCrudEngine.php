@@ -239,6 +239,9 @@ final class McpCrudEngine
             $model=ContentEntry::query()->where('type',self::EDITORIAL[$resource])->findOrFail($id);
             abort_unless(in_array($model->status,['draft','rejected'],true),409,'Only draft or rejected editorial entries can be edited by MCP.');
             $fields=self::draftData($payload);
+            if(!array_key_exists('body',$payload) && !array_key_exists('body_html',$payload)){
+                unset($fields['body']);
+            }
             if($fields['slug']!==$model->slug){
                 $fields['slug']=self::uniqueSlug(ContentEntry::class,$fields['slug'],$model->id);
             }
@@ -319,6 +322,9 @@ final class McpCrudEngine
             }else{
                 $model=ContentEntry::query()->where('type',self::EDITORIAL[$resource])
                     ->lockForUpdate()->findOrFail((int)$id);
+                if($resource==='policies' && in_array($model->slug,['privacy','terms'],true)){
+                    throw new HttpException(409,'Core legal policies cannot be removed through MCP.');
+                }
             }
             McpActionConsent::consume($request,$data['approval_id'],'DELETE',$resource,$id);
             $model->delete();
