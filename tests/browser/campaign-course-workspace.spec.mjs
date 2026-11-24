@@ -80,7 +80,7 @@ test('three-column course outline selects lessons and keeps translated fields on
     await expect(page.locator('#cs-modules-count')).toHaveText('1');
     await expect(page.locator('#cs-lessons-count')).toHaveText('2');
     await expect(page.locator('#cs-questions-count')).toHaveText('2');
-    await expect(page.locator('[data-cs-tab="curriculum"]')).toHaveAttribute('aria-selected','true');
+    await expect(page.locator('[data-cs-tab="metadata"]')).toHaveAttribute('aria-selected','true');
 
     await page.locator('[data-cs-select-lesson="0-1"]').click();
     await expect(page.locator('#cs-edit-title')).toHaveText('Past tense');
