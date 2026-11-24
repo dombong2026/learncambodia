@@ -69,7 +69,6 @@ final class McpOAuthDiscoveryTest extends TestCase
     public function test_accepted_provider_has_only_read_scopes_and_canonical_metadata(): void
     {
         $this->readyExceptProvider();
-        $this->fakeProviderRoutes();
         config()->set('mcp.oauth_provider_accepted', true);
 
         $resource=$this->getJson('/.well-known/oauth-protected-resource')
@@ -82,9 +81,9 @@ final class McpOAuthDiscoveryTest extends TestCase
         $auth=$this->getJson('/.well-known/oauth-authorization-server')
             ->assertOk()->assertJsonPath('issuer', 'https://learncambodia.com')
             ->assertJsonPath('authorization_endpoint',
-                'https://learncambodia.com/__oauth-metadata-test/authorize')
+                'https://learncambodia.com/mcp/oauth/authorize')
             ->assertJsonPath('token_endpoint',
-                'https://learncambodia.com/__oauth-metadata-test/token')
+                'https://learncambodia.com/api/mcp/oauth/token')
             ->assertJsonPath('code_challenge_methods_supported.0', 'S256')
             ->assertJsonPath('token_endpoint_auth_methods_supported.0', 'none')
             ->assertJsonCount(1, 'scopes_supported');
@@ -100,7 +99,6 @@ final class McpOAuthDiscoveryTest extends TestCase
     public function test_discovery_url_cannot_be_poisoned_by_host_header(): void
     {
         $this->readyExceptProvider();
-        $this->fakeProviderRoutes();
         config()->set('mcp.oauth_provider_accepted', true);
         $response=$this->withHeaders(['Host'=>'untrusted.example'])
             ->getJson('/.well-known/oauth-authorization-server')
