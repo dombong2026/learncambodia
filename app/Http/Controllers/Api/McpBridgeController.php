@@ -9,6 +9,7 @@ use App\Support\McpActionConsent;
 use App\Support\McpCrudEngine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -184,6 +185,9 @@ final class McpBridgeController extends Controller
             $data=['status'=>'browser_login_required','login_url'=>url('/login'),
                 'consent_url'=>url('/dashboard/system-settings/mcp?lang=en'),
                 'message'=>'Complete website-admin login and 2FA, then issue the desired scopes from the browser. This is not an automatic OAuth callback.'];
+            $data['receipt_id']=$this->audit($request,$name,'AUTH','mcp_session','','success',200,
+                'Website login and permission-consent URLs returned.');
+            $data['http_status']=200;
             return self::content($data);
         }
         if($name==='confirm_destructive_action'){
@@ -200,12 +204,17 @@ final class McpBridgeController extends Controller
             return self::content($data);
         }
         abort_unless($name==='crud_manage_platform',422,'Unknown MCP tool.');
-        $result=McpCrudEngine::execute($request,$args);
-        $result['status']=$result['status']??'read';
-        $result['http_status']=$result['status']==='created'?201:200;
-        $result['receipt_id']=$this->audit($request,$name,(string)$args['operation'],
-            (string)$args['resource'],(string)($result['resource_id']??''),'success',
-            $result['http_status'],'Authorized operation completed.');
+        // The operation, approval consumption and receipt must commit together.
+        $result=DB::transaction(function()use($request,$name,$args){
+            $out=McpCrudEngine::execute($request,$args);
+            $out['status']=$out['status']??'read';
+            $out['resource']=$out['resource']??(string)$args['resource'];
+            $out['http_status']=$out['status']==='created'?201:200;
+            $out['receipt_id']=$this->audit($request,$name,(string)$args['operation'],
+                (string)$args['resource'],(string)($out['resource_id']??''),'success',
+                $out['http_status'],'Authorized operation completed.');
+            return $out;
+        },3);
         return self::content($result);
     }
 
