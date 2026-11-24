@@ -20,9 +20,8 @@ function fixture() {
         '<section id="cs-builder" class="cs-course-workspace" data-campaign-id="7" data-version="1"',
         ' data-save-url="/mock/course/save" data-upload-url="/mock/course/upload"',
         ' data-asset-base="/campaign-media" data-cover-asset="" data-cover-kind="quiz" data-publication-status="draft">',
-        '<header><h1><span id="cs-header-title"></span></h1>',
-        '<span id="cs-save-state"></span><button id="cs-save-draft-top"></button></header>',
         '<div id="cs-alert" hidden></div><button id="cs-publish-top" hidden></button>',
+        '<button id="cs-save-draft-top" hidden></button>',
         '<div class="cs-layout cs-course-grid">',
         '<aside class="cs-course-outline"><span id="cs-unit-label"></span><nav id="cs-course-tree"></nav>',
         '<button id="cs-add-module">Add New Unit</button></aside>',
@@ -33,13 +32,13 @@ function fixture() {
         '<button id="cs-tab-curriculum" data-cs-tab="curriculum" role="tab">Curriculum</button>',
         '<button id="cs-tab-assessments" data-cs-tab="assessments" role="tab">Assessments</button>',
         '<button id="cs-tab-translation" data-cs-tab="translation" role="tab">Translation (EN/KM)</button></nav>',
-        '<div id="cs-course-stage"><div class="cs-course-campaign-metadata">',
-        '<input id="cs-campaign-title" value="English Grammar">',
-        '<select id="cs-course-type"><option value="quiz">Quiz</option><option value="exam">Exam</option></select></div>',
-        '<h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
+        '<div id="cs-course-stage"><h3 id="cs-current-unit-heading"></h3><span id="cs-current-content-type"></span>',
         '<div id="cs-modules"></div></div>',
         '<span id="cs-modules-count"></span><span id="cs-lessons-count"></span><span id="cs-questions-count"></span></main>',
-        '<aside class="cs-sidebar"><div id="cs-readiness-mark"></div><span id="cs-readiness-label"></span>',
+        '<aside class="cs-sidebar cs-course-workflow"><section class="cs-card cs-course-campaign-metadata">',
+        '<div class="cs-course-campaign-fields"><input id="cs-campaign-title" value="English Grammar">',
+        '<select id="cs-course-type"><option value="quiz">Quiz</option><option value="exam">Exam</option></select></div></section>',
+        '<span id="cs-save-state"></span><div id="cs-readiness-mark"></div><span id="cs-readiness-label"></span>',
         '<span id="cs-publication-status"></span><span id="cs-published-mark"></span>',
         '<span id="cs-published-label"></span><button id="cs-publish"></button><button id="cs-save-draft"></button>',
         '<img id="cs-cover-image" hidden><div id="cs-cover-placeholder"></div>',
@@ -69,6 +68,10 @@ test('three-column course outline selects lessons and keeps translated fields on
     });
     await mount(page);
     await expect(page.locator('#cs-course-tree .cs-tree-lesson')).toHaveCount(2);
+    await expect(page.locator('.cs-course-campaign-metadata')).toHaveCount(1);
+    await expect(page.locator('#cs-campaign-title')).toHaveCount(1);
+    await expect(page.locator('#cs-course-type')).toHaveCount(1);
+    await expect(page.locator('.cs-course-header')).toHaveCount(0);
     await page.locator('[data-cs-toggle-unit="0"]').click();
     await expect(page.locator('[data-tree-module="0"] .cs-tree-lessons')).toBeHidden();
     await page.locator('[data-cs-toggle-unit="0"]').click();
@@ -118,4 +121,88 @@ test('course outline creates units and lessons, supports tabs and readable dark 
     });
     expect(colors.bg).not.toBe('rgba(0, 0, 0, 0)');
     await expect(page.locator('#cs-course-tree')).toBeVisible();
+});
+
+
+test('lesson type activates its relevant editor and preserves question keys when switched back',async({page})=>{
+    await mount(page);
+    const select=()=>page.locator('.cs-lesson[data-cs-active] select[data-field="type"]');
+    const active=()=>page.locator('.cs-lesson[data-cs-active]');
+    for(const kind of ['exam','quiz']){
+        await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+        await select().selectOption(kind);
+        await expect(page.getByRole('tab',{name:'Assessments'})).toHaveAttribute('aria-selected','true');
+        await expect(active().locator('.cs-course-tab-panel[data-cs-panel="assessments"]')).toBeVisible();
+        await expect(active().locator('.cs-quiz-card')).toHaveCount(1);
+        await expect(active().locator('input[data-question-correct][value="1"]')).toBeChecked();
+    }
+    for(const kind of ['text','html','emoji','image','video','youtube']){
+        await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+        await select().selectOption(kind);
+        await expect(page.getByRole('tab',{name:'Curriculum'})).toHaveAttribute('aria-selected','true');
+        await expect(active().locator('.cs-course-tab-panel[data-cs-panel="curriculum"]')).toBeVisible();
+        await expect(active().locator('[data-cs-type-hint]')).toBeVisible();
+        await expect(active().locator('[data-editor]')).toBeVisible();
+        await expect(active().locator('.cs-editor-toolbar button[data-format]')).toHaveCount(28);
+    }
+    await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+    await select().selectOption('code');
+    await expect(page.getByRole('tab',{name:'Curriculum'})).toHaveAttribute('aria-selected','true');
+    await expect(active().locator('[data-editor-code]')).toBeVisible();
+    await expect(active().locator('select[data-field="language"]')).toBeVisible();
+    await active().locator('[data-editor-code]').fill('<?php echo "<script>alert(1)</script>";');
+    await expect(active().locator('[data-editor-code]')).toHaveValue('<?php echo "<script>alert(1)</script>";');
+    await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+    await select().selectOption('quiz');
+    await expect(active().locator('.cs-quiz-card')).toHaveCount(1);
+    await expect(active().locator('input[data-question-correct][value="1"]')).toBeChecked();
+});
+test('rich text toolbar creates allowed heading and table content and strips script tags', async({page})=>{
+    const submissions=[];
+    await page.route('**/mock/course/save',async route=>{
+        submissions.push(JSON.parse(route.request().postData()));
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+            id:7,version:2,status:'draft',message:'Campaign draft saved.',edit_url:'/up?id=7'
+        })});
+    });
+    await mount(page);
+    const active=page.locator('.cs-lesson[data-cs-active]');
+    const body=active.locator('[data-editor]');
+    await body.fill('Welcome to IELTS');
+    await active.getByRole('button',{name:'Heading 2'}).click();
+    await expect(body.locator('h2')).toContainText('Welcome to IELTS');
+    await active.getByRole('button',{name:'Insert table'}).click();
+    await expect(body.locator('table')).toHaveCount(1);
+    await active.getByRole('button',{name:'HTML source'}).click();
+    const source=active.locator('[data-editor-source]');
+    await expect(source).toBeVisible();
+    await source.fill('<h2>Lesson</h2><script>alert("unsafe")</script><p style="text-align:center">Centered</p>');
+    await active.getByRole('button',{name:'HTML source'}).click();
+    await expect(body.locator('script')).toHaveCount(0);
+    await expect(body.locator('h2')).toHaveText('Lesson');
+    await page.locator('#cs-save-draft-panel').click();
+    expect(submissions).toHaveLength(1);
+    expect(submissions[0].rows[0].body).not.toContain('<script');
+    expect(submissions[0].rows[0].body).toContain('text-align:center');
+});
+test('Code source is safely escaped in saved lesson HTML',async({page})=>{
+    const submissions=[];
+    await page.route('**/mock/course/save',async route=>{
+        submissions.push(JSON.parse(route.request().postData()));
+        await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+            id:7,version:2,status:'draft',message:'Campaign draft saved.',edit_url:'/up?id=7'
+        })});
+    });
+    await mount(page);
+    await page.getByRole('tab',{name:'Metadata (CEFR)'}).click();
+    await page.locator('.cs-lesson[data-cs-active] select[data-field="type"]').selectOption('code');
+    await page.locator('.cs-lesson[data-cs-active] select[data-field="language"]').selectOption('php');
+    await page.locator('.cs-lesson[data-cs-active] [data-editor-code]').fill('<?php echo "<script>alert(1)</script>";');
+    await page.locator('#cs-save-draft-panel').click();
+    expect(submissions).toHaveLength(1);
+    const body=submissions[0].rows[0].body;
+    expect(body).toContain('<pre><code>');
+    expect(body).toContain('&lt;script&gt;');
+    expect(body).not.toContain('<script>');
+    expect(submissions[0].rows[0].language).toBe('php');
 });
