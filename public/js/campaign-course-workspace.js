@@ -71,8 +71,13 @@ function treeMarkup() {
             '<button type="button" class="cs-tree-collapse" data-cs-toggle-unit="'+mi+'" aria-expanded="'+(!collapsedUnits.has(mi))+'" aria-label="Toggle Unit '+(mi+1)+' lessons">'+(collapsedUnits.has(mi)?'▸':'⌄')+'</button>' +
             '<button type="button" class="cs-tree-unit-button" data-cs-select-module="'+mi+'">' +
             '<span class="cs-tree-folder" aria-hidden="true">▣</span><span class="cs-tree-unit-name">Unit '+(mi+1)+': '+escaped(titleOf(mod)||'Untitled unit')+'</span></button>' +
-            '<button type="button" class="cs-tree-rename" data-cs-rename-module="'+mi+'" title="Rename module" aria-label="Rename unit '+(mi+1)+'">' +
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/></svg></button>' +
+            '<details class="cs-tree-unit-menu" data-cs-unit-menu="'+mi+'">' +
+            '<summary title="Unit actions" aria-label="Actions for Unit '+(mi+1)+'">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg></summary>' +
+            '<div class="cs-tree-menu-options" role="group" aria-label="Unit actions">' +
+            '<button type="button" data-cs-unit-action="edit" data-cs-unit-index="'+mi+'">Edit</button>' +
+            '<button type="button" class="cs-tree-delete" data-cs-unit-action="delete" data-cs-unit-index="'+mi+'">Delete</button>' +
+            '</div></details>' +
             '<button type="button" class="cs-tree-add" data-cs-add-lesson="'+mi+'" title="Add lesson" aria-label="Add lesson to unit '+(mi+1)+'">＋</button></div>' +
             '<div class="cs-tree-lessons"'+(collapsedUnits.has(mi)?' hidden':'')+'>';
         entries.forEach((lesson,li)=>{
@@ -201,13 +206,6 @@ function setActivePanel() {
     byId('cs-current-content-type').textContent = lessonType(lesson).toUpperCase();
     byId('cs-unit-label').textContent = modules().length+' unit'+(modules().length===1?'':'s');
     root.dataset.csTabActive = activeTab;
-    const moduleEditor = byId('cs-selected-module-editor');
-    const moduleInput = byId('cs-selected-module-title');
-    const innerModuleInput = unit?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
-    moduleEditor.hidden = !unit || activeTab !== 'metadata';
-    if (innerModuleInput && moduleInput.value !== innerModuleInput.value) {
-        moduleInput.value = innerModuleInput.value;
-    }
     const help = {
         quiz: 'Quiz lesson: add written instructions here, then switch to Assessments for questions, choices, answer keys and feedback.',
         exam: 'Exam lesson: add written instructions here, then switch to Assessments for scored questions and explanations.',
@@ -288,17 +286,19 @@ tree.addEventListener('click',event=>{
     const lesson=event.target.closest('[data-cs-select-lesson]');
     const plus=event.target.closest('[data-cs-add-lesson]');
     const toggle=event.target.closest('[data-cs-toggle-unit]');
-    const rename=event.target.closest('[data-cs-rename-module]');
+    const unitAction=event.target.closest('[data-cs-unit-action]');
     if(toggle){
         const mi=Number(toggle.dataset.csToggleUnit);
         if(collapsedUnits.has(mi))collapsedUnits.delete(mi);else collapsedUnits.add(mi);
         sync();
-    }else if(rename){
-        select(Number(rename.dataset.csRenameModule),0);
-        setTab('metadata');
-        const moduleTitleInput=byId('cs-selected-module-title');
-        moduleTitleInput.focus();
-        moduleTitleInput.select();
+    }else if(unitAction){
+        const mi=Number(unitAction.dataset.csUnitIndex);
+        const kind=unitAction.dataset.csUnitAction;
+        if(kind==='edit')openUnitDialog('edit',mi);
+        else if(kind==='delete'){
+            const target=moduleAt(mi)?.querySelector(':scope > .cs-module-body button[data-action="module-remove"]');
+            target?.click();schedule();
+        }
     }else if(plus){
         const mi=Number(plus.dataset.csAddLesson), mod=moduleAt(mi);
         pendingSelection={mi,li:lessons(mod).length};
@@ -378,14 +378,59 @@ byId('cs-add-module').addEventListener('click',()=>{
     pendingSelection={mi:modules().length-1,li:0};schedule();
 });
 byId('cs-campaign-title').addEventListener('input',setActivePanel);
-byId('cs-selected-module-title').addEventListener('input',event=>{
-    const input=moduleAt(activeModule)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
-    if(!input)return;
-    input.value=event.target.value;
-    input.dispatchEvent(new Event('input',{bubbles:true}));
-    byId('cs-current-unit-heading').textContent='Unit '+(activeModule+1)+': '+(event.target.value.trim()||'Untitled unit');
-    byId('cs-save-state').textContent='Unsaved module name. Save draft to keep changes.';
+// Unit management is independent from lesson metadata and assessment editing.
+const unitDialog=byId('cs-unit-dialog');
+const unitName=byId('cs-unit-name');
+const unitError=byId('cs-unit-name-error');
+let unitDialogMode='new', unitDialogIndex=-1, allowingUnitCreation=false;
+function openUnitDialog(mode,index=-1){
+    unitDialogMode=mode;unitDialogIndex=index;
+    byId('cs-unit-dialog-title').textContent=mode==='new'?'Add Unit':'Edit Unit';
+    byId('cs-unit-save').textContent=mode==='new'?'Create unit':'Save changes';
+    unitName.value=mode==='edit'?(moduleAt(index)?.querySelector('[data-field="module-title"]')?.value||''):'';
+    unitError.hidden=true;
+    unitDialog.showModal();
+    unitName.focus();
+    if(mode==='edit')unitName.select();
+}
+byId('cs-unit-cancel').addEventListener('click',()=>unitDialog.close());
+unitDialog.addEventListener('click',event=>{
+    if(event.target===unitDialog)unitDialog.close();
 });
+unitDialog.addEventListener('close',()=>{unitError.hidden=true});
+byId('cs-unit-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    const title=unitName.value.trim();
+    if(!title||title.length>140){
+        unitError.textContent='Enter a unit title (up to 140 characters).';
+        unitError.hidden=false;unitName.focus();return;
+    }
+    let mi=unitDialogIndex;
+    if(unitDialogMode==='new'){
+        allowingUnitCreation=true;
+        try{byId('cs-add-module').click()}
+        finally{allowingUnitCreation=false}
+        mi=modules().length-1;
+        pendingSelection={mi,li:0};
+        collapsedUnits.delete(mi);
+    }
+    const input=moduleAt(mi)?.querySelector(':scope > .cs-module-body > .cs-field-grid [data-field="module-title"]');
+    if(!input){unitError.textContent='Unable to update this unit. Reload and try again.';unitError.hidden=false;return}
+    input.value=title;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    activeModule=mi;activeLesson=0;
+    byId('cs-save-state').textContent='Unit updated. Save draft to keep changes.';
+    unitDialog.close();
+    schedule();
+});
+// Stop the old one-click Add Unit behavior until a valid title is provided.
+root.addEventListener('click',event=>{
+    if(event.target.closest('#cs-add-module')&&!allowingUnitCreation){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openUnitDialog('new');
+    }
+},true);
 
 let mediaPreviewTimer=null;
 function scheduleMediaPreview(){
