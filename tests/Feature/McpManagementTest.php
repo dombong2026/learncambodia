@@ -62,6 +62,24 @@ final class McpManagementTest extends TestCase
         $this->assertSame('MCP Management',$matches[0]['label']);
     }
 
+    public function test_consent_page_fingerprints_assets_and_always_exposes_password_fallback(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $cssHash = substr(hash_file('sha256', public_path('css/mcp-management.css')), 0, 16);
+        $jsHash = substr(hash_file('sha256', public_path('js/mcp-management.js')), 0, 16);
+
+        $this->actingAs($admin)->get('/dashboard/system-settings/mcp?lang=en')
+            ->assertOk()
+            ->assertSee('data-mcp-ui-version="password-reauth-v2"', false)
+            ->assertSee('mcp-management.css?v='.$cssHash, false)
+            ->assertSee('mcp-management.js?v='.$jsHash, false)
+            ->assertSee('Website password confirmation is required.')
+            ->assertSee('confirm your Website Admin password on LearnCambodia')
+            ->assertSee('id="mcp-browser-password"', false)
+            ->assertSee('id="mcp-browser-password-form"', false)
+            ->assertDontSee('?v=bridge-1');
+    }
+
     public function test_student_and_developer_cannot_access_administration(): void
     {
         foreach ([User::ROLE_STUDENT, User::ROLE_DEVELOPER] as $role) {
