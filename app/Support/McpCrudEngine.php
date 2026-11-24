@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Category;
 use App\Models\ContentEntry;
 use App\Models\Course;
+use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\CourseModule;
 use App\Models\CourseQuiz;
@@ -36,7 +37,7 @@ final class McpCrudEngine
                     'operation'=>['type'=>'string','enum'=>['READ','CREATE','UPDATE','UPLOAD','DELETE','PUBLISH','INSTALL','PUSH']],
                     'resource'=>['type'=>'string','enum'=>[
                         'courses','modules','lessons','quizzes','posts','pages','policies',
-                        'help_articles','campaigns','media','users','support_tickets','categories','settings'
+                        'help_articles','campaigns','media','users','support_tickets','categories','settings','analytics','analytics'
                     ]],
                     'payload'=>['type'=>'object'],
                 ],
@@ -131,6 +132,16 @@ final class McpCrudEngine
                 ['id','kind','subject','priority','status','created_at']),
             'users'=>self::listing(User::query(),$id,
                 ['id','name','role','email_verified_at','created_at']),
+            'analytics'=>['items'=>[
+                'courses_total'=>Course::query()->count(),
+                'courses_published'=>Course::query()->where('status','published')->count(),
+                'lessons_total'=>CourseLesson::query()->count(),
+                'quizzes_total'=>CourseQuiz::query()->count(),
+                'enrollments_total'=>CourseEnrollment::query()->count(),
+                'students_total'=>User::query()->where('role',User::ROLE_STUDENT)->count(),
+                'editorial_published'=>ContentEntry::query()->where('status','published')->count(),
+                'campaigns_published'=>HomepageCampaignItem::query()->where('status','published')->count(),
+            ],'note'=>'Aggregate counts only; personal student data is not included.'],
             'settings'=>['items'=>[
                 'gateway_flag_enabled'=>(bool)config('mcp.gateway_enabled'),
                 'write_flag_enabled'=>(bool)config('mcp.remote_writes_enabled'),
