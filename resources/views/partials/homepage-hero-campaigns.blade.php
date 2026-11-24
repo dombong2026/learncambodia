@@ -58,6 +58,21 @@
 #hc-hero .hc-question-option:has(input:checked){border-color:#fcd34d;background:rgba(252,211,77,.12)}
 #hc-hero .hc-question-option input{accent-color:#fbbf24;margin-top:.2rem}
 #hc-hero .hc-prompt{font-size:13px;font-weight:800;line-height:1.6;margin:.5rem 0 1rem}
+#hc-hero .hc-prompt :is(p,ul,ol,pre,blockquote,table){margin:.3rem 0 .65rem}
+#hc-hero .hc-prompt :is(ul,ol){padding-left:1.5rem}
+#hc-hero .hc-prompt :is(h1,h2,h3,h4){font-weight:850;line-height:1.4;margin:.35rem 0}
+#hc-hero .hc-prompt h2{font-size:1.15em}
+#hc-hero .hc-prompt :is(pre,code){font-family:ui-monospace,monospace;white-space:pre-wrap}
+#hc-hero .hc-prompt pre{border:1px solid rgba(255,255,255,.25);padding:10px;overflow:auto;border-radius:8px}
+#hc-hero .hc-prompt table{border-collapse:collapse;width:100%;max-width:100%}
+#hc-hero .hc-prompt :is(th,td){border:1px solid rgba(255,255,255,.25);padding:6px}
+#hc-hero .hc-prompt a{color:#fcd34d;text-decoration:underline}
+#hc-hero .hc-question-media{margin:10px 0 14px}
+#hc-hero .hc-question-media-element:is(img,video,iframe){width:100%;max-height:270px;object-fit:contain;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:#081d37}
+#hc-hero .hc-question-media-element:is(iframe,video){aspect-ratio:16/9}
+#hc-hero .hc-question-media-element:is(audio){width:100%}
+#hc-hero .hc-question-media-element:is(a){color:#fcd34d;text-decoration:underline;font-size:12px}
+
 #hc-hero .hc-instruction{font-size:12px;line-height:1.7;color:#cbdcf1}
 #hc-hero .hc-instruction :is(p,ul,ol,blockquote){margin:.3rem 0}
 #hc-hero .hc-instruction :is(ul,ol){padding-left:1.5rem}
@@ -65,5 +80,5 @@
 #hc-hero .hc-submit:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:850px){#hc-hero{margin-top:0}}
 </style>
-<script defer src="{{ asset('js/homepage-hero-campaigns.js') }}"></script>
+<script defer src="{{ asset('js/homepage-hero-campaigns.js') }}?v=question-elements-20261124"></script>
 @endif
