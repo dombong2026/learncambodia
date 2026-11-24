@@ -105,7 +105,7 @@ final class McpOAuthDiscoveryTest extends TestCase
             ->assertOk();
         $this->assertSame('https://learncambodia.com',
             $response->json('issuer'));
-        $this->assertSame('https://learncambodia.com/__oauth-metadata-test/token',
+        $this->assertSame('https://learncambodia.com/api/mcp/oauth/token',
             $response->json('token_endpoint'));
     }
 
