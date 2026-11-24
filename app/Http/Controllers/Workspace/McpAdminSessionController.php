@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Workspace;
 use App\Models\McpActionAudit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -55,14 +56,17 @@ final class McpAdminSessionController
         $expiry = now()->addMinutes((int) $data['expires_in_minutes']);
         // mcp:use marks these tokens as MCP-specific. Existing developer
         // catalog:read tokens cannot call MCP CRUD endpoints.
-        $issued = $user->createToken($name, ['mcp:use', ...$data['scopes']], $expiry);
-        $receipt=(string)Str::uuid();
-        McpActionAudit::create([
-            'id'=>$receipt,'user_id'=>$user->id,'token_id'=>$issued->accessToken->id,
-            'tool'=>'browser_admin_authorization','operation'=>'CREATE','resource'=>'mcp_session',
-            'resource_id'=>(string)$issued->accessToken->id,'result'=>'success','http_status'=>201,
-            'summary'=>'Website-admin browser issued a scoped, short-lived MCP bearer session.',
-        ]);
+        [$issued,$receipt]=DB::transaction(function() use($user,$name,$data,$expiry){
+            $newToken=$user->createToken($name,['mcp:use',...$data['scopes']],$expiry);
+            $auditId=(string)Str::uuid();
+            McpActionAudit::create([
+                'id'=>$auditId,'user_id'=>$user->id,'token_id'=>$newToken->accessToken->id,
+                'tool'=>'browser_admin_authorization','operation'=>'CREATE','resource'=>'mcp_session',
+                'resource_id'=>(string)$newToken->accessToken->id,'result'=>'success','http_status'=>201,
+                'summary'=>'Website-admin browser issued a scoped, short-lived MCP bearer session.',
+            ]);
+            return [$newToken,$auditId];
+        });
 
         return response()->json([
             'status' => 'issued',
@@ -82,14 +86,17 @@ final class McpAdminSessionController
         $credential = $request->user()->tokens()
             ->where('name', 'like', self::LABEL_PREFIX.'%')
             ->findOrFail($token);
-        $credential->delete();
-        $receipt=(string)Str::uuid();
-        McpActionAudit::create([
-            'id'=>$receipt,'user_id'=>$request->user()->id,'token_id'=>$token,
-            'tool'=>'browser_admin_revoke','operation'=>'DELETE','resource'=>'mcp_session',
-            'resource_id'=>(string)$token,'result'=>'success','http_status'=>200,
-            'summary'=>'Website administrator revoked an MCP session.',
-        ]);
+        $receipt=DB::transaction(function()use($credential,$request,$token){
+            $credential->delete();
+            $auditId=(string)Str::uuid();
+            McpActionAudit::create([
+                'id'=>$auditId,'user_id'=>$request->user()->id,'token_id'=>$token,
+                'tool'=>'browser_admin_revoke','operation'=>'DELETE','resource'=>'mcp_session',
+                'resource_id'=>(string)$token,'result'=>'success','http_status'=>200,
+                'summary'=>'Website administrator revoked an MCP session.',
+            ]);
+            return $auditId;
+        });
 
         return response()->json([
             'status' => 'revoked',
