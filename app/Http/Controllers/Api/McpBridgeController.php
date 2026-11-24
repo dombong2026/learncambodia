@@ -104,7 +104,11 @@ final class McpBridgeController extends Controller
                 $receipt=$this->audit($request,(string)($params['name']??'tools/call'),$operation,$resource,
                     isset($arguments['payload']['id'])?(string)$arguments['payload']['id']:'','failed',$status,
                     'Operation rejected. See validation or permission errors.');
-                $message=$status>=500?'Internal operation error.':Str::limit($error->getMessage(),250);
+                $message=$error instanceof \Illuminate\Validation\ValidationException
+                    ? 'Invalid payload: '.implode('; ',array_slice(array_merge(...array_values($error->errors())),0,3))
+                    : ($error instanceof HttpExceptionInterface
+                        ? Str::limit($error->getMessage(),250)
+                        : 'Operation rejected. Contact the website administrator with the receipt ID.');
                 return response()->json(['jsonrpc'=>'2.0','id'=>$id,'result'=>[
                     'content'=>[['type'=>'text','text'=>$message]],
                     'isError'=>true,
@@ -188,7 +192,7 @@ final class McpBridgeController extends Controller
                 'approval_url'=>route('admin.system-settings.mcp.approvals.show',['approval'=>$approval->id]),
                 'expires_at'=>$approval->expires_at->toIso8601String(),
                 'message'=>'No resource was deleted. Open the website-admin confirmation form, then submit DELETE with the approval_id.'];
-            $this->audit($request,$name,'CONFIRM',$resource,$id,'pending',202,'Awaiting website browser approval.');
+            $data['receipt_id']=$this->audit($request,$name,'CONFIRM',$resource,$id,'pending',202,'Awaiting website browser approval.');
             return self::content($data);
         }
         abort_unless($name==='crud_manage_platform',422,'Unknown MCP tool.');
