@@ -28,6 +28,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureRole::class,
             'developer.token' => EnsureDeveloperToken::class,
+            'mcp.oauth.stage' => EnsureMcpOAuthStagingEnabled::class,
+            'mcp.oauth.admin' => RequireMcpOAuthAdmin::class,
+            'mcp.oauth.read' => RequireMcpOAuthRead::class,
+            'mcp.oauth.params' => ValidateMcpOAuthParameters::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
