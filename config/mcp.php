@@ -8,6 +8,10 @@ return [
      */
     'gateway_enabled' => (bool) env('MCP_GATEWAY_ENABLED', false),
     'remote_writes_enabled' => (bool) env('MCP_REMOTE_WRITES_ENABLED', false),
+    // OAuth discovery is deliberately hidden until a separate, fully tested
+    // authorization-code + S256 PKCE provider is available and approved.
+    'oauth_discovery_enabled' => (bool) env('MCP_OAUTH_DISCOVERY_ENABLED', false),
+    'oauth_provider_accepted' => false,
     'oauth_ready' => false,
     'transport_ready' => false,
 ];
