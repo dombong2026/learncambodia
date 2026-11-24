@@ -59,8 +59,8 @@ final class McpOAuthDiscoveryTest extends TestCase
     {
         $this->readyExceptProvider();
         config()->set('mcp.oauth_provider_accepted', true);
-        $this->assertFalse(Route::has('mcp.oauth.authorize'));
-        $this->assertFalse(Route::has('mcp.oauth.token'));
+        $this->assertTrue(Route::has('mcp.oauth.authorize'));
+        $this->assertTrue(Route::has('mcp.oauth.token'));
         $this->getJson('/.well-known/oauth-protected-resource')->assertNotFound();
         $this->getJson('/.well-known/oauth-authorization-server')->assertNotFound();
     }
