@@ -546,4 +546,108 @@ final class McpOAuthPassportTest extends TestCase
             $this->app->instance('env', 'testing');
         }
     }
+
+    public function test_draft_write_consent_and_signed_token_issuance_are_isolated_from_production(): void
+    {
+        $this->configureEphemeralPassportKeys();
+        $client = $this->setupClient();
+        config()->set('mcp.oauth_draft_writes_accepted', true);
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        config()->set('mcp.oauth_draft_scope_issuance_enabled', true);
+        $policy = \App\Support\McpOAuthDraftScopePolicy::class;
+        $this->assertTrue($policy::issuanceEnabled());
+
+        // A production environment cannot enable issuance even with all three
+        // rehearsal switches set. Restore the isolated test environment.
+        $this->app->instance('env', 'production');
+        try {
+            $this->assertFalse($policy::issuanceEnabled());
+            $this->assertSame(['mcp:read'], array_keys($policy::scopes()));
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+        Passport::tokensCan($policy::scopes());
+
+        try {
+            $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+            $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+            $verifier = str_repeat('V', 48);
+            $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+            $state = str_repeat('w', 32);
+            $url = '/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+                'scope' => 'mcp:read mcp:write', 'code_challenge' => $challenge, 'state' => $state,
+            ]);
+            $this->get($url)->assertBadRequest();
+            $admin->forceFill([
+                'two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'),
+                'two_factor_confirmed_at' => now(),
+            ])->save();
+            $this->actingAs($admin, 'web');
+            $consent = $this->get($url)->assertOk()
+                ->assertSee('Authorize draft WRITE access')
+                ->assertSee('No publishing, deletion, file upload');
+            $this->assertMatchesRegularExpression('/name="auth_token" value="[^"]+"/', $consent->getContent());
+            preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
+            preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
+            $approve = $this->post('/mcp/oauth/authorize', [
+                'state' => $state, 'client_id' => $client,
+                'auth_token' => $matches[1], '_token' => $csrf[1],
+            ])->assertRedirect();
+            parse_str(parse_url($approve->headers->get('Location'), PHP_URL_QUERY) ?? '', $parameters);
+            $this->assertSame($state, $parameters['state'] ?? null);
+            $this->assertNotEmpty($parameters['code'] ?? null);
+            $response = $this->postJson('/api/mcp/oauth/token', [
+                'grant_type' => 'authorization_code', 'client_id' => $client,
+                'code' => $parameters['code'], 'redirect_uri' => $this->callback,
+                'code_verifier' => $verifier, 'resource' => config('mcp.oauth_resource'),
+            ])->assertOk();
+            $token = $response->json('access_token');
+            $refresh = $response->json('refresh_token');
+            $this->assertIsString($token);
+            $this->assertIsString($refresh);
+            $this->assertDatabaseCount('mcp_oauth_token_audiences', 1);
+            $this->assertTrue($policy::exactWriteScopes(json_decode(
+                DB::table('oauth_access_tokens')->where('user_id', $admin->id)->value('scopes'), true
+            )));
+
+            // Test-only route exercises the real Passport guard and adapter.
+            // No application route is added in this release.
+            $this->assertFalse(\Illuminate\Support\Facades\Route::has('mcp.oauth.write'));
+            \Illuminate\Support\Facades\Route::post('/__test/oauth-draft-write', function (\Illuminate\Http\Request $request) {
+                return response()->json(\App\Support\McpOAuthDraftAuthorization::execute(
+                    $request, 'CREATE', 'articles',
+                    ['title' => 'Isolated OAuth draft', 'summary' => 'Fixture', 'body' => 'Fixture'],
+                    '00000000-0000-4000-8000-000000000123'
+                ));
+            })->middleware('auth:mcp_oauth');
+            $this->app['auth']->forgetGuards();
+            $this->withToken($token)->postJson('/__test/oauth-draft-write')
+                ->assertOk()->assertJsonPath('publication_status', 'draft')
+                ->assertJsonPath('replayed', false);
+            $this->assertDatabaseHas('content_entries', ['title' => 'Isolated OAuth draft', 'status' => 'draft']);
+            $this->assertDatabaseCount('mcp_oauth_draft_receipts', 1);
+            $this->app['auth']->forgetGuards();
+            $this->withToken($token)->postJson('/api/mcp/oauth', [
+                'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list',
+            ])->assertForbidden();
+
+            // Closing the issuance switch blocks refresh and revokes the
+            // newly minted disallowed token before it can leave the server.
+            config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
+            $this->app['auth']->forgetGuards();
+            $this->postJson('/api/mcp/oauth/token', [
+                'grant_type' => 'refresh_token', 'client_id' => $client,
+                'refresh_token' => $refresh, 'resource' => config('mcp.oauth_resource'),
+            ])->assertStatus(400)->assertJsonPath('error', 'invalid_grant')
+                ->assertJsonMissingPath('access_token');
+            $this->assertDatabaseCount('mcp_oauth_token_audiences', 1);
+            $this->assertSame(0, DB::table('oauth_access_tokens')
+                ->where('user_id', $admin->id)->where('revoked', false)->count());
+        } finally {
+            config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
+            config()->set('mcp.oauth_draft_writes_enabled', false);
+            config()->set('mcp.oauth_draft_writes_accepted', false);
+            Passport::tokensCan($policy::scopes());
+        }
+    }
 }
