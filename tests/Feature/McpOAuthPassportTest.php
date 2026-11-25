@@ -699,6 +699,12 @@ final class McpOAuthPassportTest extends TestCase
             $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
             $rpc('tools/list')->assertJsonCount(19, 'result.tools');
 
+            // The expanded RPC sequence and token endpoint share a throttle
+            // bucket in this isolated HTTP test. Advance the test clock beyond
+            // its one-minute window, without disabling any middleware or
+            // exceeding the twenty-minute access-token lifetime.
+            $this->travel(61)->seconds();
+
             // Closing the issuance switch blocks refresh and revokes the
             // newly minted disallowed token before it can leave the server.
             config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
