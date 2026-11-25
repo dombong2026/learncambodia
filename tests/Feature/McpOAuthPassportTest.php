@@ -333,6 +333,63 @@ final class McpOAuthPassportTest extends TestCase
         $this->assertDatabaseCount('mcp_oauth_draft_receipts', 0);
         $this->assertDatabaseMissing('content_entries', ['title' => 'Forbidden draft']);
 
+        // Discovery is not execution. An eligible READ credential may learn
+        // the protected tool schemas and receive a step-up challenge only.
+        config()->set('mcp.oauth_draft_writes_accepted', true);
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        config()->set('mcp.oauth_draft_scope_issuance_enabled', true);
+        if ($production) {
+            config()->set('mcp.oauth_draft_production_accepted', true);
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+        }
+        $this->assertTrue(\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled());
+        $list = function () use ($token) {
+            $this->app['auth']->forgetGuards();
+            return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                'jsonrpc' => '2.0', 'id' => 20, 'method' => 'tools/list',
+            ])->assertOk();
+        };
+        $tools = $list()->assertJsonCount(19, 'result.tools')->json('result.tools');
+        foreach ($tools as $tool) {
+            $scopes = str_contains($tool['name'], '_draft_')
+                ? ['mcp:read', 'mcp:write'] : ['mcp:read'];
+            $schemes = [['type' => 'oauth2', 'scopes' => $scopes]];
+            $this->assertSame($schemes, $tool['securitySchemes']);
+            $this->assertSame($schemes, $tool['_meta']['securitySchemes']);
+        }
+        $challenge = 'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", '
+            .'error="insufficient_scope", scope="mcp:read mcp:write", '
+            .'error_description="Fresh administrator draft authorization is required"';
+        foreach (['get_draft_articles', 'create_draft_articles', 'update_draft_articles'] as $name) {
+            $this->app['auth']->forgetGuards();
+            $this->withToken($token)->postJson('/api/mcp/oauth', [
+                'jsonrpc' => '2.0', 'id' => 21, 'method' => 'tools/call',
+                'params' => ['name' => $name, 'arguments' => ['id' => 1]],
+            ])->assertForbidden()->assertHeader('WWW-Authenticate', $challenge)
+                ->assertJsonPath('result.isError', true)
+                ->assertJsonPath('result._meta.mcp/www_authenticate.0', $challenge);
+        }
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 0);
+        $this->assertDatabaseCount('content_entries', 0);
+        $this->assertSame(['mcp:read'], json_decode(
+            DB::table('oauth_access_tokens')->where('user_id', $admin->id)->value('scopes'), true
+        ));
+        if ($production) {
+            config()->set('mcp.oauth_draft_production_admin_id', (string) ($admin->id + 1));
+            $list()->assertJsonCount(10, 'result.tools');
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+        }
+        $admin->forceFill(['two_factor_confirmed_at' => null])->save();
+        $list()->assertJsonCount(10, 'result.tools');
+        $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
+        config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
+        $list()->assertJsonCount(10, 'result.tools');
+        foreach (['oauth_draft_writes_accepted', 'oauth_draft_writes_enabled', 'oauth_draft_production_accepted'] as $gate) {
+            config()->set('mcp.'.$gate, false);
+        }
+        config()->set('mcp.oauth_draft_production_admin_id', '');
+        $this->travel(61)->seconds();
+
         // Public OAuth must not inherit administrator visibility of drafts.
         // Create only the isolated fixture; production-mode Artisan seed
         // commands correctly require a separate confirmation.

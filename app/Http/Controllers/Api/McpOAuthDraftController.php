@@ -16,14 +16,16 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
-/** Draft-only MCP transport. Production is excluded by the issuance policy. */
+/** Draft-only MCP transport. All executions require the independent issuance and authorization policy. */
 final class McpOAuthDraftController
 {
     private const RESOURCES = ['courses', 'articles', 'pages'];
 
-    private static function catalog(): array
+    /** Static tool definitions contain no account or draft data. */
+    public static function catalog(): array
     {
         $tools = [];
+        $schemes = [['type' => 'oauth2', 'scopes' => ['mcp:read', 'mcp:write']]];
         foreach (self::RESOURCES as $resource) {
             foreach (['get', 'create', 'update'] as $action) {
                 $properties = ['id' => ['type' => 'integer', 'minimum' => 1]];
@@ -52,6 +54,8 @@ final class McpOAuthDraftController
                 $tools[] = [
                     'name' => $action.'_draft_'.$resource,
                     'description' => ucfirst($action).' own unpublished plain-text '.$resource.' draft. No publishing or deletion. '.($action === 'update' ? 'Use a version from draft lookup and provide all editable fields.' : ''),
+                    'securitySchemes' => $schemes,
+                    '_meta' => ['securitySchemes' => $schemes],
                     'annotations' => [
                         'readOnlyHint' => $action === 'get',
                         'destructiveHint' => $action === 'update',
