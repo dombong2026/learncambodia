@@ -26,7 +26,8 @@ final class McpOAuthDraftAuthorization
             && config('mcp.oauth_draft_writes_enabled', false) === true
             && EnsureMcpOAuthStagingEnabled::enabled(), 403, 'OAuth draft writes are disabled.');
 
-        abort_unless(is_string($request->bearerToken()) && $request->bearerToken() !== '', 401);
+        abort_unless($request === app('request') && is_string($request->bearerToken())
+            && $request->bearerToken() !== '', 401);
         // Resolve the dedicated Passport guard, not the default web guard
         // or a caller-supplied user ID. This also validates the signed JWT.
         $identity = Auth::guard('mcp_oauth')->user();
