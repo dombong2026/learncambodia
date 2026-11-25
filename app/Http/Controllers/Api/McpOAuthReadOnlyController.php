@@ -23,6 +23,14 @@ final class McpOAuthReadOnlyController extends Controller
 
     public function handle(Request $request): JsonResponse
     {
+        // Only the isolated rehearsal can reach the separate WRITE handler.
+        // It independently verifies the signed token, exact scope and audience.
+        if (\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled()
+            && $request->user() instanceof \App\Models\McpOAuthUser
+            && $request->user()->tokenCan('mcp:write')) {
+            return app(McpOAuthDraftController::class)->handle($request);
+        }
+
         abort_unless($request->isJson(), 415, 'JSON-RPC application/json required.');
         $rpc = $request->json()->all();
         if (! is_array($rpc) || array_is_list($rpc) || ($rpc['jsonrpc'] ?? '') !== '2.0') {
