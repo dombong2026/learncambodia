@@ -291,9 +291,13 @@ final class McpOAuthPassportTest extends TestCase
         ])->assertOk()->assertJsonPath('result.isError', true);
 
         // Public OAuth must not inherit administrator visibility of drafts.
-        $this->seed(\Database\Seeders\CategorySeeder::class);
-        $category = \App\Models\Category::where('code', 'GE')->firstOrFail();
-        $category->forceFill(['is_published' => true])->save();
+        // Create only the isolated fixture; production-mode Artisan seed
+        // commands correctly require a separate confirmation.
+        $category = \App\Models\Category::create([
+            'code' => 'OAUTH', 'slug' => 'oauth-test-category',
+            'name' => 'OAuth test category', 'group' => 'english-courses',
+            'is_published' => true, 'sort_order' => 1,
+        ]);
         $base = [
             'summary' => 'OAuth catalog fixture',
             'category_id' => $category->id,
@@ -332,6 +336,11 @@ final class McpOAuthPassportTest extends TestCase
                 ->assertJsonMissing(['title' => $hidden->title]);
         }
 
+        // The catalog checks and revocation share Laravel's per-user
+        // throttle window. Advance only the isolated test clock, preserving
+        // the real rate limits and keeping the 20-minute access token valid.
+        $this->travel(61)->seconds();
+
         $refreshResponse = $this->postJson('/api/mcp/oauth/token', [
             'grant_type' => 'refresh_token',
             'client_id' => $client,
@@ -363,6 +372,7 @@ final class McpOAuthPassportTest extends TestCase
         $this->withToken($newToken)->postJson('/api/mcp/oauth', [
             'jsonrpc' => '2.0', 'id' => 4, 'method' => 'initialize',
         ])->assertForbidden();
+        $this->travelBack();
     }
 
     public function test_revocation_does_not_modify_sanctum_tokens(): void
