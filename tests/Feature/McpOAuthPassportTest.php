@@ -194,7 +194,31 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_authorization_code_s256_exchange_read_refresh_and_browser_revocation(): void
     {
+        $this->exerciseAuthorizationFlow(false);
+    }
+
+    public function test_production_authorization_code_s256_exchange_read_refresh_and_revocation(): void
+    {
+        try {
+            $this->exerciseAuthorizationFlow(true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseAuthorizationFlow(bool $production): void
+    {
         $this->configureEphemeralPassportKeys();
+        if ($production) {
+            $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+            config()->set('mcp.oauth_redirect_uri', $this->callback);
+            config()->set('mcp.oauth_provider_staging_enabled', false);
+            config()->set('mcp.oauth_production_registration_enabled', false);
+            config()->set('mcp.oauth_production_accepted', true);
+            config()->set('mcp.oauth_production_enabled', true);
+            config()->set('mcp.oauth_discovery_enabled', true);
+            $this->app->instance('env', 'production');
+        }
         $client = $this->setupClient();
         $admin = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
         $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at'=>time()]);
