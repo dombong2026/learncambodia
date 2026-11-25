@@ -44,9 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // The dedicated OAuth resource must stay invisible until both
             // independent security acceptance gates are enabled.
-            if (! config('mcp.oauth_provider_staging_enabled', false)
-                || ! config('mcp.oauth_provider_accepted', false)
-                || ! config('mcp.oauth_ready', false)) {
+            if (! EnsureMcpOAuthStagingEnabled::enabled()) {
                 return response()->json(['error' => 'not_found'], 404)
                     ->header('Cache-Control', 'no-store');
             }
