@@ -194,7 +194,31 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_authorization_code_s256_exchange_read_refresh_and_browser_revocation(): void
     {
+        $this->exerciseAuthorizationFlow(false);
+    }
+
+    public function test_production_authorization_code_s256_exchange_read_refresh_and_revocation(): void
+    {
+        try {
+            $this->exerciseAuthorizationFlow(true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseAuthorizationFlow(bool $production): void
+    {
         $this->configureEphemeralPassportKeys();
+        if ($production) {
+            $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+            config()->set('mcp.oauth_redirect_uri', $this->callback);
+            config()->set('mcp.oauth_provider_staging_enabled', false);
+            config()->set('mcp.oauth_production_registration_enabled', false);
+            config()->set('mcp.oauth_production_accepted', true);
+            config()->set('mcp.oauth_production_enabled', true);
+            config()->set('mcp.oauth_discovery_enabled', true);
+            $this->app->instance('env', 'production');
+        }
         $client = $this->setupClient();
         $admin = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
         $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at'=>time()]);
@@ -213,9 +237,21 @@ final class McpOAuthPassportTest extends TestCase
         preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
         $authToken = $matches[1];
 
+        $this->assertMatchesRegularExpression('/name="_token" value="[^"]+"/', $consent->getContent());
+        preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrfMatches);
+        $csrf = $csrfMatches[1];
+
+        // Production-mode tests must behave like a browser, including CSRF.
+        // Verify a missing token is rejected before submitting the real form.
+        if ($production) {
+            $this->post('/mcp/oauth/authorize', [
+                'state' => $state, 'client_id' => $client, 'auth_token' => $authToken,
+            ])->assertStatus(419);
+        }
+
         $approve = $this->post('/mcp/oauth/authorize', [
             'state' => $state, 'client_id' => $client,
-            'auth_token' => $authToken,
+            'auth_token' => $authToken, '_token' => $csrf,
         ])->assertRedirect();
         $redirect = $approve->headers->get('Location');
         $this->assertStringStartsWith($this->callback, $redirect);
@@ -275,7 +311,9 @@ final class McpOAuthPassportTest extends TestCase
 
         $jti = json_decode(base64_decode(strtr(explode('.', $newToken)[1], '-_', '+/')), true)['jti'];
         $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
-        $this->deleteJson('/dashboard/system-settings/mcp/oauth/tokens/'.$jti)
+        $this->deleteJson('/dashboard/system-settings/mcp/oauth/tokens/'.$jti, [
+            '_token' => $csrf,
+        ])
             ->assertOk()->assertJsonPath('status', 'revoked');
         $this->assertDatabaseHas('oauth_access_tokens', ['id' => $jti, 'revoked' => true]);
         $this->assertDatabaseMissing('mcp_oauth_token_audiences', ['access_token_id' => $jti]);
@@ -299,5 +337,75 @@ final class McpOAuthPassportTest extends TestCase
             'id'=>$sanctum->accessToken->id,
         ]);
         $this->assertSame(1,DB::table('personal_access_tokens')->count());
+    }
+
+    public function test_production_requires_every_independent_gate_and_exact_callback(): void
+    {
+        $client = $this->setupClient();
+        $this->app->instance('env', 'production');
+        try {
+            config()->set('mcp.oauth_provider_staging_enabled', false);
+            config()->set('mcp.oauth_production_registration_enabled', false);
+            config()->set('mcp.oauth_production_accepted', true);
+            config()->set('mcp.oauth_production_enabled', true);
+            config()->set('mcp.oauth_discovery_enabled', true);
+            config()->set('mcp.oauth_redirect_uri', 'https://chatgpt.com/connector/oauth/testcallback123');
+            $policy = \App\Http\Middleware\EnsureMcpOAuthStagingEnabled::class;
+            $this->assertTrue($policy::enabled());
+
+            foreach (['gateway_enabled', 'oauth_production_accepted',
+                'oauth_production_enabled', 'oauth_discovery_enabled'] as $flag) {
+                config()->set('mcp.'.$flag, false);
+                $this->assertFalse($policy::enabled(), $flag);
+                $this->getJson('/.well-known/oauth-protected-resource')->assertNotFound();
+                $this->postJson('/api/mcp/oauth/token', ['grant_type'=>'authorization_code'])->assertNotFound();
+                config()->set('mcp.'.$flag, true);
+            }
+            foreach (['oauth_production_registration_enabled', 'oauth_provider_staging_enabled'] as $flag) {
+                config()->set('mcp.'.$flag, true);
+                $this->assertFalse($policy::enabled(), $flag);
+                config()->set('mcp.'.$flag, false);
+            }
+            config()->set('mcp.oauth_redirect_uri', $this->callback);
+            $this->assertFalse($policy::enabled());
+            config()->set('mcp.oauth_redirect_uri', 'https://chatgpt.com/connector/oauth/testcallback123');
+            config()->set('mcp.oauth_client_id', '');
+            $this->assertFalse($policy::enabled());
+            config()->set('mcp.oauth_client_id', $client);
+            $this->assertTrue($policy::enabled());
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    public function test_production_registration_is_closed_by_default_and_requires_explicit_confirmation(): void
+    {
+        $owner = User::factory()->create(['role'=>User::ROLE_ADMIN, 'email_verified_at'=>now()]);
+        $callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+        $args = ['owner_id'=>$owner->id, 'redirect_uri'=>$callback, '--production'=>true];
+        $this->app->instance('env', 'production');
+        try {
+            config()->set('mcp.oauth_provider_staging_enabled', false);
+            config()->set('mcp.oauth_discovery_enabled', false);
+            config()->set('mcp.oauth_production_enabled', false);
+            config()->set('mcp.oauth_production_accepted', false);
+            config()->set('mcp.oauth_production_registration_enabled', false);
+            $this->artisan('mcp:oauth-register-chatgpt', $args)->assertExitCode(1)->run();
+            config()->set('mcp.oauth_production_registration_enabled', true);
+            $this->artisan('mcp:oauth-register-chatgpt', array_replace($args, ['redirect_uri'=>$this->callback]))->assertExitCode(1)->run();
+            $this->artisan('mcp:oauth-register-chatgpt', $args)->assertExitCode(0)->run();
+            $this->assertDatabaseCount('oauth_clients', 0);
+            config()->set('mcp.oauth_production_enabled', true);
+            $this->artisan('mcp:oauth-register-chatgpt', $args + ['--confirm'=>true])->assertExitCode(1)->run();
+            config()->set('mcp.oauth_production_enabled', false);
+            $this->artisan('mcp:oauth-register-chatgpt', $args + ['--confirm'=>true])->assertExitCode(0)->run();
+            $this->assertDatabaseCount('oauth_clients', 1);
+            $this->assertDatabaseHas('oauth_clients', ['name'=>'LearnCambodia ChatGPT MCP (READ)', 'secret'=>null]);
+            $this->artisan('mcp:oauth-register-chatgpt', $args + ['--confirm'=>true])->assertExitCode(1)->run();
+            $this->assertDatabaseCount('oauth_clients', 1);
+            $this->postJson('/api/mcp/oauth/token', ['grant_type'=>'authorization_code'])->assertNotFound();
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
     }
 }

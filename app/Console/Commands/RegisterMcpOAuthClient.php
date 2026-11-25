@@ -3,12 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\McpOAuthUser;
+use App\Http\Middleware\EnsureMcpOAuthStagingEnabled;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Console\Command;
 use Laravel\Passport\ClientRepository;
 use Laravel\Passport\Passport;
 
 /**
- * Explicit STAGING-ONLY pre-registration; no open DCR endpoint.
+ * Explicit operator-only pre-registration; no open DCR endpoint.
  * Copy the exact redirect from ChatGPT's connector settings. No placeholder.
  */
 final class RegisterMcpOAuthClient extends Command
@@ -16,13 +18,20 @@ final class RegisterMcpOAuthClient extends Command
     protected $signature = 'mcp:oauth-register-chatgpt
         {owner_id : Verified LearnCambodia administrator numeric ID}
         {redirect_uri : Exact ChatGPT OAuth redirect URI}
+        {--production : Explicitly request closed production registration}
         {--confirm : Create only after human review}';
 
-    protected $description = 'Pre-register a public PKCE ChatGPT OAuth client in isolated staging only';
+    protected $description = 'Pre-register a public PKCE ChatGPT OAuth client while production is closed';
 
     public function handle(ClientRepository $repository): int
     {
-        if (! app()->environment(['local', 'testing', 'staging'])
+        $production = app()->environment('production');
+        if ($production) {
+            if (! $this->option('production') || ! EnsureMcpOAuthStagingEnabled::productionRegistrationAllowed()) {
+                $this->error('PRODUCTION_REGISTRATION_REQUIRES_EXPLICIT_CLOSED_GATE');
+                return self::FAILURE;
+            }
+        } elseif ($this->option('production') || ! app()->environment(['local', 'testing', 'staging'])
             || ! config('mcp.oauth_provider_staging_enabled', false)) {
             $this->error('STAGING_ONLY_OAUTH_CLIENT_REGISTRATION');
             return self::FAILURE;
@@ -31,7 +40,7 @@ final class RegisterMcpOAuthClient extends Command
         $redirect = (string) $this->argument('redirect_uri');
         $validRedirect = $redirect === 'https://chatgpt.com/connector_platform_oauth_redirect'
             || (bool) preg_match('~\Ahttps://chatgpt\.com/connector/oauth/[A-Za-z0-9_-]{8,128}\z~D', $redirect);
-        if (! $validRedirect) {
+        if (! $validRedirect || ($production && ! EnsureMcpOAuthStagingEnabled::productionRedirectIsValid($redirect))) {
             $this->error('CHATGPT_EXACT_CALLBACK_REQUIRED');
             return self::FAILURE;
         }
@@ -57,16 +66,33 @@ final class RegisterMcpOAuthClient extends Command
             return self::SUCCESS;
         }
 
-        $client = $repository->createAuthorizationCodeGrantClient(
-            name: $name,
-            redirectUris: [$redirect],
-            confidential: false,
-            user: $owner,
-        );
+        $lock = Cache::lock('mcp-oauth-register-chatgpt', 60);
+        if (! $lock->get()) {
+            $this->error('CLIENT_REGISTRATION_BUSY');
+            return self::FAILURE;
+        }
+        try {
+            if ($production && ! EnsureMcpOAuthStagingEnabled::productionRegistrationAllowed()) {
+                $this->error('PRODUCTION_REGISTRATION_GATE_CLOSED');
+                return self::FAILURE;
+            }
+            if (Passport::client()->newQuery()->where('name', $name)->exists()) {
+                $this->error('CLIENT_ALREADY_EXISTS_REVIEW_AND_REVOKE_OLD_CLIENT');
+                return self::FAILURE;
+            }
+            $client = $repository->createAuthorizationCodeGrantClient(
+                name: $name,
+                redirectUris: [$redirect],
+                confidential: false,
+                user: $owner,
+            );
+        } finally {
+            $lock->release();
+        }
         $this->line('MCP_OAUTH_PUBLIC_CLIENT_REGISTERED=PASS');
         $this->line('MCP_OAUTH_CLIENT_ID='.$client->getKey());
         $this->line('MCP_OAUTH_CLIENT_SECRET=NONE');
-        $this->warn('Configure the client ID and exact redirect in staging environment only, then run full acceptance.');
+        $this->warn('Configure the client ID and exact redirect in the intended environment; close the registration gate before any activation.');
         return self::SUCCESS;
     }
 }

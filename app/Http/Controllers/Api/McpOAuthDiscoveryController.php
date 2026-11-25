@@ -19,6 +19,12 @@ final class McpOAuthDiscoveryController
 
     private static function enabled(): bool
     {
+        if (app()->environment('production')) {
+            return \App\Http\Middleware\EnsureMcpOAuthStagingEnabled::enabled()
+                && Route::has('mcp.oauth.authorize')
+                && Route::has('mcp.oauth.token');
+        }
+
         return config('mcp.gateway_enabled', false)
             && config('mcp.oauth_discovery_enabled', false)
             && config('mcp.oauth_ready', false)
