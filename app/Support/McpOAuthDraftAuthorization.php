@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Http\Middleware\EnsureMcpOAuthStagingEnabled;
 use App\Models\McpOAuthUser;
 use App\Models\User;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,13 @@ use Laravel\Passport\Passport;
 final class McpOAuthDraftAuthorization
 {
     public static function execute(Request $request, string $operation, string $resource, array $payload, string $requestId): array
+    {
+        return self::authorized($request, fn (User $actor): array =>
+            McpOAuthDraftWriter::execute($actor, $operation, $resource, $payload, $requestId));
+    }
+
+    /** Invoke only a trusted, server-defined callback under the authorization locks. */
+    public static function authorized(Request $request, Closure $action): mixed
     {
         abort_unless(config('mcp.oauth_draft_writes_accepted', false) === true
             && config('mcp.oauth_draft_writes_enabled', false) === true
@@ -45,7 +53,7 @@ final class McpOAuthDraftAuthorization
             && $audience === 'https://learncambodia.com/api/mcp/oauth', 403);
 
         // Hold authorization records until the draft transaction commits.
-        return DB::transaction(function () use ($identity, $id, $client, $audience, $operation, $resource, $payload, $requestId): array {
+        return DB::transaction(function () use ($identity, $id, $client, $audience, $action): mixed {
             $registered = Passport::client()->newQuery()->lockForUpdate()->find($client);
             abort_unless($registered !== null && ! $registered->revoked && ! $registered->firstParty()
                 && $registered->getRawOriginal('secret') === null
@@ -71,7 +79,7 @@ final class McpOAuthDraftAuthorization
             $actor = User::query()->lockForUpdate()->findOrFail($identity->getAuthIdentifier());
             abort_unless($actor->isAdministrator() && $actor->hasVerifiedEmail()
                 && $actor->two_factor_confirmed_at !== null && $actor->hasEnabledTwoFactorAuthentication(), 403);
-            return McpOAuthDraftWriter::execute($actor, $operation, $resource, $payload, $requestId);
+            return $action($actor);
         });
     }
 }
