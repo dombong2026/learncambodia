@@ -237,9 +237,21 @@ final class McpOAuthPassportTest extends TestCase
         preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
         $authToken = $matches[1];
 
+        $this->assertMatchesRegularExpression('/name="_token" value="[^"]+"/', $consent->getContent());
+        preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrfMatches);
+        $csrf = $csrfMatches[1];
+
+        // Production-mode tests must behave like a browser, including CSRF.
+        // Verify a missing token is rejected before submitting the real form.
+        if ($production) {
+            $this->post('/mcp/oauth/authorize', [
+                'state' => $state, 'client_id' => $client, 'auth_token' => $authToken,
+            ])->assertStatus(419);
+        }
+
         $approve = $this->post('/mcp/oauth/authorize', [
             'state' => $state, 'client_id' => $client,
-            'auth_token' => $authToken,
+            'auth_token' => $authToken, '_token' => $csrf,
         ])->assertRedirect();
         $redirect = $approve->headers->get('Location');
         $this->assertStringStartsWith($this->callback, $redirect);
@@ -299,7 +311,9 @@ final class McpOAuthPassportTest extends TestCase
 
         $jti = json_decode(base64_decode(strtr(explode('.', $newToken)[1], '-_', '+/')), true)['jti'];
         $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
-        $this->deleteJson('/dashboard/system-settings/mcp/oauth/tokens/'.$jti)
+        $this->deleteJson('/dashboard/system-settings/mcp/oauth/tokens/'.$jti, [
+            '_token' => $csrf,
+        ])
             ->assertOk()->assertJsonPath('status', 'revoked');
         $this->assertDatabaseHas('oauth_access_tokens', ['id' => $jti, 'revoked' => true]);
         $this->assertDatabaseMissing('mcp_oauth_token_audiences', ['access_token_id' => $jti]);
