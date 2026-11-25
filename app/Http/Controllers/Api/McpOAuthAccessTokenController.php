@@ -47,21 +47,39 @@ final class McpOAuthAccessTokenController extends AccessTokenController
 
         $client = (string) config('mcp.oauth_client_id');
         $resource = (string) config('mcp.oauth_resource');
-        $userId = DB::table('oauth_access_tokens')->where('id', $id)
-            ->where('client_id', $client)->where('revoked', false)->value('user_id');
+        // Re-evaluate policy at token issuance, including refresh. A gate
+        // may have closed or the administrator may have lost eligibility
+        // since consent. Never return an unacceptable token to the client.
+        $accepted = DB::transaction(function () use ($id, $client, $resource): bool {
+            $record = DB::table('oauth_access_tokens')->where('id', $id)
+                ->where('client_id', $client)->where('revoked', false)
+                ->lockForUpdate()->first(['user_id', 'scopes']);
+            if ($record === null || ! is_numeric($record->user_id)) {
+                return false;
+            }
+            $scopes = json_decode($record->scopes ?? '[]', true);
+            $actor = \App\Models\User::query()->lockForUpdate()->find($record->user_id);
+            if (! is_array($scopes) || ! \App\Support\McpOAuthDraftScopePolicy::permitsIssuedScopes($scopes, $actor)) {
+                DB::table('oauth_access_tokens')->where('id', $id)->update(['revoked' => true]);
+                DB::table('oauth_refresh_tokens')->where('access_token_id', $id)->update(['revoked' => true]);
+                return false;
+            }
 
-        if (! is_numeric($userId)) {
-            abort(500, 'OAuth access token does not belong to a valid user.');
+            DB::table('mcp_oauth_token_audiences')->insert([
+                'access_token_id' => $id,
+                'user_id' => (int) $record->user_id,
+                'client_id' => $client,
+                'resource' => $resource,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return true;
+        });
+
+        if (! $accepted) {
+            return response()->json(['error' => 'invalid_grant'], 400)
+                ->header('Cache-Control', 'no-store')->header('Pragma', 'no-cache');
         }
-
-        DB::table('mcp_oauth_token_audiences')->insert([
-            'access_token_id' => $id,
-            'user_id' => (int) $userId,
-            'client_id' => $client,
-            'resource' => $resource,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
 
         return $response;
     }
