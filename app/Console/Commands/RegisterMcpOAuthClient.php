@@ -72,14 +72,18 @@ final class RegisterMcpOAuthClient extends Command
             return self::FAILURE;
         }
         try {
+            if ($production && ! EnsureMcpOAuthStagingEnabled::productionRegistrationAllowed()) {
+                $this->error('PRODUCTION_REGISTRATION_GATE_CLOSED');
+                return self::FAILURE;
+            }
             if (Passport::client()->newQuery()->where('name', $name)->exists()) {
                 $this->error('CLIENT_ALREADY_EXISTS_REVIEW_AND_REVOKE_OLD_CLIENT');
                 return self::FAILURE;
             }
             $client = $repository->createAuthorizationCodeGrantClient(
-            name: $name,
-            redirectUris: [$redirect],
-            confidential: false,
+                name: $name,
+                redirectUris: [$redirect],
+                confidential: false,
                 user: $owner,
             );
         } finally {
