@@ -27,7 +27,7 @@ final class RequireMcpOAuthRead
         if (\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled()
             && $user instanceof McpOAuthUser && $token instanceof AccessToken
             && $user->tokenCan('mcp:write')) {
-            return app(\App\Http\Controllers\Api\McpOAuthDraftController::class)->handle($request);
+            return $next($request);
         }
 
 
