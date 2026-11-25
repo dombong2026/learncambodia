@@ -633,8 +633,19 @@ final class McpOAuthPassportTest extends TestCase
                     'jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => $params,
                 ])->assertOk();
             };
-            $rpc('tools/list')->assertJsonCount(9, 'result.tools')
-                ->assertJsonPath('result.tools.0.name', 'get_draft_courses');
+            $discovery = $rpc('tools/list')->assertJsonCount(19, 'result.tools')
+                ->assertJsonPath('result.tools.0.name', 'crud_manage_platform')
+                ->assertJsonPath('result.tools.10.name', 'get_draft_courses');
+            $this->assertCount(19, array_unique(array_column($discovery->json('result.tools'), 'name')));
+            $rpc('tools/call', [
+                'name' => 'get_platform_analytics', 'arguments' => [],
+            ])->assertJsonPath('result.isError', false)
+                ->assertJsonPath('result.structuredContent.http_status', 200);
+            $rpc('tools/call', [
+                'name' => 'crud_manage_platform', 'arguments' => [
+                    'operation' => 'CREATE', 'resource' => 'courses',
+                ],
+            ])->assertJsonPath('result.isError', true);
             $call = fn (string $name, array $arguments) => $rpc('tools/call', [
                 'name' => $name, 'arguments' => $arguments,
             ]);
@@ -660,12 +671,39 @@ final class McpOAuthPassportTest extends TestCase
             ]))->assertJsonPath('result.structuredContent.http_status', 409);
             $call('create_draft_pages', $fields + ['status' => 'published'])
                 ->assertJsonPath('result.isError', true);
-            $call('publish_draft_pages', ['id' => $created['resource_id']])
-                ->assertJsonPath('result.isError', true);
+            $rejected = $call('publish_draft_pages', ['id' => $created['resource_id']])
+                ->assertJsonPath('result.isError', true)->json('result.structuredContent');
+            $this->assertDatabaseHas('mcp_action_audits', [
+                'id' => $rejected['receipt_id'], 'user_id' => $admin->id,
+                'result' => 'failed', 'tool' => 'oauth_draft_transport',
+            ]);
             $this->assertDatabaseHas('content_entries', [
                 'id' => $created['resource_id'], 'title' => 'Updated transport draft', 'status' => 'draft',
             ]);
             $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
+
+            // A missing/mismatched audience, role change or revoked token
+            // must stop both combined discovery and draft calls.
+            $binding = DB::table('mcp_oauth_token_audiences')->where('user_id', $admin->id);
+            $binding->update(['resource' => 'https://example.invalid/mcp']);
+            $denied = function () use ($token) {
+                $this->app['auth']->forgetGuards();
+                return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list',
+                ]);
+            };
+            $denied()->assertForbidden();
+            $binding->update(['resource' => config('mcp.oauth_resource')]);
+            $admin->forceFill(['two_factor_confirmed_at' => null])->save();
+            $denied()->assertForbidden();
+            $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
+            $rpc('tools/list')->assertJsonCount(19, 'result.tools');
+
+            // The expanded RPC sequence and token endpoint share a throttle
+            // bucket in this isolated HTTP test. Advance the test clock beyond
+            // its one-minute window, without disabling any middleware or
+            // exceeding the twenty-minute access-token lifetime.
+            $this->travel(61)->seconds();
 
             // Closing the issuance switch blocks refresh and revokes the
             // newly minted disallowed token before it can leave the server.
@@ -679,6 +717,8 @@ final class McpOAuthPassportTest extends TestCase
             $this->assertDatabaseCount('mcp_oauth_token_audiences', 1);
             $this->assertSame(0, DB::table('oauth_access_tokens')
                 ->where('user_id', $admin->id)->where('revoked', false)->count());
+            $this->assertContains($denied()->getStatusCode(), [401, 403]);
+            $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
         } finally {
             config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
             config()->set('mcp.oauth_draft_writes_enabled', false);

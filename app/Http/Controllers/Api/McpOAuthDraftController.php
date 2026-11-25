@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use App\Models\McpActionAudit;
+use Illuminate\Support\Str;
 use App\Support\McpOAuthDraftAuthorization;
 use App\Support\McpOAuthDraftScopePolicy;
 use App\Support\McpOAuthDraftWriter;
@@ -79,7 +81,7 @@ final class McpOAuthDraftController
         $id = $rpc['id'] ?? null;
         // Discovery and lookup require the same current token and audience
         // checks as mutations, including locked authorization records.
-        return McpOAuthDraftAuthorization::authorized($request, function (User $actor) use ($rpc, $id): JsonResponse {
+        return McpOAuthDraftAuthorization::authorized($request, function (User $actor) use ($request, $rpc, $id): JsonResponse {
             $method = $rpc['method'];
             if ($method === 'notifications/initialized') {
                 return response()->json([], 202)->header('Cache-Control', 'no-store');
@@ -92,7 +94,7 @@ final class McpOAuthDraftController
                     'protocolVersion' => '2025-11-25',
                     'capabilities' => ['tools' => ['listChanged' => false]],
                     'serverInfo' => ['name' => 'learncambodia-oauth-draft-rehearsal', 'version' => '0.1.0'],
-                    'instructions' => 'Own unpublished plain-text drafts only. Production WRITE disabled.',
+                    'instructions' => 'Public catalog READ and own unpublished plain-text draft management only. Production WRITE disabled.',
                 ]);
             }
             if ($method === 'ping') {
@@ -100,7 +102,7 @@ final class McpOAuthDraftController
             }
             $catalog = self::catalog();
             if ($method === 'tools/list') {
-                return $this->success($id, ['tools' => $catalog]);
+                return $this->success($id, ['tools' => [...McpOAuthReadOnlyController::publicCatalog(), ...$catalog]]);
             }
             if ($method !== 'tools/call') {
                 return $this->error($id, -32601, 'Method unavailable.');
@@ -108,11 +110,17 @@ final class McpOAuthDraftController
             $params = $rpc['params'] ?? null;
             $name = is_array($params) ? ($params['name'] ?? null) : null;
             $args = is_array($params) ? ($params['arguments'] ?? null) : null;
+            // Public catalog calls use the existing READ-only implementation
+            // only after full WRITE token authorization. Never dispatch the
+            // legacy write engine, even when its tool name is supplied.
+            if (is_string($name) && in_array($name, array_column(McpOAuthReadOnlyController::publicCatalog(), 'name'), true)) {
+                return app(McpOAuthReadOnlyController::class)->handlePublicRead($request);
+            }
             $tool = is_string($name) ? collect($catalog)->firstWhere('name', $name) : null;
             if ($tool === null || ! is_array($args) || array_is_list($args)
                 || array_diff(array_keys($args), $tool['inputSchema']['required'])
                 || array_diff($tool['inputSchema']['required'], array_keys($args))) {
-                return $this->toolResult($id, ['status' => 'rejected', 'http_status' => 422, 'message' => 'Invalid tool or arguments.'], true);
+                return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
             [$action, $resource] = explode('_draft_', $name, 2);
             try {
@@ -138,8 +146,24 @@ final class McpOAuthDraftController
                 // Do not emit raw exceptions or content in tool responses.
                 $status = 500;
             }
-            return $this->toolResult($id, ['status' => 'rejected', 'http_status' => $status, 'message' => 'Draft operation rejected. Verify ownership, draft status, fields and version.'], true);
+            return $this->rejection($actor, $id, $status, 'Draft operation rejected. Verify ownership, draft status, fields and version.');
         });
+    }
+
+    private function rejection(User $actor, mixed $id, int $status, string $message): JsonResponse
+    {
+        $receipt = (string) Str::uuid();
+        McpActionAudit::create([
+            'id' => $receipt, 'user_id' => $actor->id, 'token_id' => null,
+            'tool' => 'oauth_draft_transport', 'operation' => 'DRAFT',
+            'resource' => 'drafts', 'resource_id' => null,
+            'result' => 'failed', 'http_status' => $status,
+            'summary' => 'Draft tool request rejected; no payload retained.',
+        ]);
+        return $this->toolResult($id, [
+            'status' => 'rejected', 'http_status' => $status,
+            'receipt_id' => $receipt, 'message' => $message,
+        ], true);
     }
 
     private function success(mixed $id, mixed $result): JsonResponse

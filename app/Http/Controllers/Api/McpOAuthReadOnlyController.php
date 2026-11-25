@@ -31,6 +31,12 @@ final class McpOAuthReadOnlyController extends Controller
             return app(McpOAuthDraftController::class)->handle($request);
         }
 
+        return $this->handlePublicRead($request);
+    }
+
+    /** Internal read dispatcher: caller must have completed scoped OAuth authorization. */
+    public function handlePublicRead(Request $request): JsonResponse
+    {
         abort_unless($request->isJson(), 415, 'JSON-RPC application/json required.');
         $rpc = $request->json()->all();
         if (! is_array($rpc) || array_is_list($rpc) || ($rpc['jsonrpc'] ?? '') !== '2.0') {
@@ -59,7 +65,7 @@ final class McpOAuthReadOnlyController extends Controller
             return $this->success($id, (object) []);
         }
         if ($method === 'tools/list') {
-            return $this->success($id, ['tools' => [self::readTool(), ...McpOAuthReadCatalog::tools()]]);
+            return $this->success($id, ['tools' => self::publicCatalog()]);
         }
         if ($method !== 'tools/call') {
             return $this->rpcError($id, -32601, 'Method unavailable on OAuth READ resource.');
@@ -143,6 +149,11 @@ final class McpOAuthReadOnlyController extends Controller
         }
 
         return ['items' => $query->orderByDesc('id')->limit(25)->get($columns)->map($fields)->all(), 'limit' => 25];
+    }
+
+    public static function publicCatalog(): array
+    {
+        return [self::readTool(), ...McpOAuthReadCatalog::tools()];
     }
 
     private static function readTool(): array
