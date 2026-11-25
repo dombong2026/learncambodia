@@ -307,6 +307,32 @@ final class McpOAuthPassportTest extends TestCase
                 'operation' => 'CREATE', 'resource' => 'courses']],
         ])->assertOk()->assertJsonPath('result.isError', true);
 
+        // Even a genuine, consented Passport READ token must never reach
+        // the draft writer, regardless of either write activation gate.
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('mcp.oauth.write'));
+        $admin->forceFill([
+            'two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'),
+            'two_factor_confirmed_at' => now(),
+        ])->save();
+        foreach ([[false, false], [true, false], [false, true], [true, true]] as [$accepted, $enabled]) {
+            config()->set('mcp.oauth_draft_writes_accepted', $accepted);
+            config()->set('mcp.oauth_draft_writes_enabled', $enabled);
+            try {
+                \App\Support\McpOAuthDraftAuthorization::execute(
+                    app('request'), 'CREATE', 'articles',
+                    ['title' => 'Forbidden draft', 'summary' => 'Fixture', 'body' => 'Fixture'],
+                    (string) \Illuminate\Support\Str::uuid()
+                );
+                $this->fail('The READ token must not authorize a draft mutation.');
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $error) {
+                $this->assertSame(403, $error->getStatusCode());
+            }
+        }
+        config()->set('mcp.oauth_draft_writes_accepted', false);
+        config()->set('mcp.oauth_draft_writes_enabled', false);
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 0);
+        $this->assertDatabaseMissing('content_entries', ['title' => 'Forbidden draft']);
+
         // Public OAuth must not inherit administrator visibility of drafts.
         // Create only the isolated fixture; production-mode Artisan seed
         // commands correctly require a separate confirmation.
