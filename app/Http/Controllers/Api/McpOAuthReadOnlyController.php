@@ -81,8 +81,9 @@ final class McpOAuthReadOnlyController extends Controller
         $params = $rpc['params'] ?? null;
         $args = is_array($params) ? ($params['arguments'] ?? null) : null;
         $name = is_array($params) ? ($params['name'] ?? null) : null;
-        if (is_string($name) && $this->mayRequestDraftScope($request)
-            && in_array($name, array_column(McpOAuthDraftController::catalog(), 'name'), true)) {
+        if (is_string($name) && str_contains($name, '_draft_')
+            && in_array($name, array_column(McpOAuthDraftController::catalog(), 'name'), true)
+            && $this->mayRequestDraftScope($request)) {
             // This branch never dispatches a draft lookup or mutation.
             return $this->scopeChallenge($id);
         }
