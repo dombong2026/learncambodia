@@ -12,6 +12,11 @@ return [
     // authorization-code + S256 PKCE provider is available and approved.
     'oauth_discovery_enabled' => (bool) env('MCP_OAUTH_DISCOVERY_ENABLED', false),
     'oauth_provider_accepted' => false,
+    // Production-only promotion gates. All default closed; never use staging
+    // switches to activate a production authorization server.
+    'oauth_production_registration_enabled' => (bool) env('MCP_OAUTH_PRODUCTION_REGISTRATION_ENABLED', false),
+    'oauth_production_accepted' => (bool) env('MCP_OAUTH_PRODUCTION_ACCEPTED', false),
+    'oauth_production_enabled' => (bool) env('MCP_OAUTH_PRODUCTION_ENABLED', false),
     'oauth_provider_staging_enabled' => (bool) env('MCP_OAUTH_PROVIDER_STAGING_ENABLED', false),
     'oauth_resource' => 'https://learncambodia.com/api/mcp/oauth',
     // An administrator must register an exact public client ID and callback.
