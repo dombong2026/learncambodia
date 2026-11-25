@@ -34,7 +34,10 @@ for path in paths:
     base = subprocess.check_output(
         ["git", "show", base_sha + ":" + path], text=True
     )
-    reviewed = (ROOT / path).read_text()
+    # Phase 2B is a historical operator with a fixed reviewed route contract.
+    # Later transport additions are checked separately below.
+    reviewed = (subprocess.check_output(["git", "show", "58f4a45cc67ff6215259157c8c4b77ce44ea1c98:" + path], text=True)
+                if path == "routes/web.php" else (ROOT / path).read_text())
 
     assert patch(base, reviewed, base, path) == reviewed, (
         "Base overlay must reproduce reviewed code byte-for-byte", path
@@ -78,3 +81,29 @@ for path in paths:
     print("MCP_PHASE2B_SYNTHETIC_PRODUCTION_DRIFT_PRESERVED=" + path)
 
 print("MCP_PHASE2B_SEMANTIC_OVERLAY_ACCEPTANCE=PASS")
+
+# Verify the newer transport overlay against the actual current route sources.
+import runpy
+transport = runpy.run_path(str(ROOT / "support/operator/learncambodia-mcp-transport-route-overlay.py"))
+for path in ("routes/web.php", "routes/api.php"):
+    base = subprocess.check_output(["git", "show", "58f4a45cc67ff6215259157c8c4b77ce44ea1c98:" + path], text=True)
+    reviewed = (ROOT / path).read_text()
+    overlay = transport["overlay"]
+    anchor, extra, marker = transport["OPS"][path]
+    assert overlay(path, base, reviewed, base) == reviewed
+    live = base + "\n// Production-only route customization\n"
+    assert overlay(path, base, reviewed, live) == reviewed + "\n// Production-only route customization\n"
+    for bad in (live.replace(anchor, "", 1), live + anchor, reviewed):
+        try:
+            overlay(path, base, reviewed, bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Unsafe transport overlay accepted: " + path)
+    try:
+        overlay(path, base, reviewed + "\n// Unreviewed route change\n", live)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Unreviewed transport diff accepted: " + path)
+    print("MCP_TRANSPORT_OVERLAY_VERIFIED=" + path)
