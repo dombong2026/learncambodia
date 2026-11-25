@@ -106,4 +106,115 @@ final class McpManagementTest extends TestCase
             $this->assertContains($tool['risk'], ['Low', 'Medium', 'High', 'Critical']);
         }
     }
+
+    private function draftActor(string $role = User::ROLE_ADMIN, bool $secondFactor = true): User
+    {
+        $actor = User::factory()->create(['role' => $role, 'email_verified_at' => now()]);
+        if ($secondFactor) {
+            $actor->forceFill([
+                'two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'),
+                'two_factor_confirmed_at' => now(),
+            ])->save();
+        }
+        return $actor;
+    }
+
+    private function draftRejected(callable $action, int $status): void
+    {
+        try {
+            $action();
+            $this->fail('Expected the draft mutation to be rejected.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $error) {
+            $this->assertSame($status, $error->getStatusCode());
+        }
+    }
+
+    public function test_oauth_draft_writer_is_closed_and_does_not_register_a_remote_route(): void
+    {
+        $actor = $this->draftActor();
+        $fields = ['title' => 'Draft test', 'summary' => 'Summary', 'body' => 'Body'];
+        $run = fn (User $user) => \App\Support\McpOAuthDraftWriter::execute(
+            $user, 'CREATE', 'articles', $fields, (string) \Illuminate\Support\Str::uuid()
+        );
+        $this->draftRejected(fn () => $run($actor), 403);
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        $this->draftRejected(fn () => $run($this->draftActor(User::ROLE_STUDENT)), 403);
+        $this->draftRejected(fn () => $run($this->draftActor(User::ROLE_ADMIN, false)), 403);
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 0);
+        $this->assertFalse(Route::has('mcp.oauth.write'));
+    }
+
+    public function test_oauth_draft_writer_replay_ownership_version_and_publication_boundary(): void
+    {
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        $actor = $this->draftActor();
+        $other = $this->draftActor();
+        $uuid = fn () => (string) \Illuminate\Support\Str::uuid();
+        $fields = ['title' => 'Draft test', 'summary' => 'Summary', 'body' => 'Body'];
+        $run = fn (User $user, string $operation, array $payload, string $id) =>
+            \App\Support\McpOAuthDraftWriter::execute($user, $operation, 'articles', $payload, $id);
+        $id = $uuid();
+        $created = $run($actor, 'CREATE', $fields, $id);
+        $this->assertSame('created', $created['status']);
+        $this->assertFalse($created['replayed']);
+        $replay = $run($actor, 'CREATE', $fields, $id);
+        $this->assertTrue($replay['replayed']);
+        $this->assertSame($created['resource_id'], $replay['resource_id']);
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 1);
+        $this->assertDatabaseCount('mcp_action_audits', 1);
+        $this->draftRejected(fn () => $run($actor, 'CREATE', array_replace($fields, ['title' => 'Other']), $id), 409);
+        $this->draftRejected(fn () => $run($other, 'CREATE', $fields, $id), 409);
+        $update = array_replace($fields, ['title' => 'Updated']) + [
+            'id' => $created['resource_id'], 'expected_version' => $created['draft_version'],
+        ];
+        $this->draftRejected(fn () => $run($other, 'UPDATE', $update, $uuid()), 403);
+        $updated = $run($actor, 'UPDATE', $update, $uuid());
+        $this->assertNotSame($created['draft_version'], $updated['draft_version']);
+        $this->draftRejected(fn () => $run($actor, 'UPDATE', $update, $uuid()), 409);
+        $record = \App\Models\ContentEntry::findOrFail($created['resource_id']);
+        $this->assertSame('draft', $record->status);
+        $this->assertNull($record->published_at);
+        $record->forceFill(['status' => 'published', 'published_at' => now()])->save();
+        $this->draftRejected(fn () => $run($actor, 'UPDATE', array_replace($update, [
+            'expected_version' => $updated['draft_version'],
+        ]), $uuid()), 403);
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 2);
+        $this->assertDatabaseCount('mcp_action_audits', 2);
+        $this->assertDatabaseHas('content_entries', ['id' => $record->id, 'title' => 'Updated', 'status' => 'published']);
+    }
+
+    public function test_oauth_draft_writer_rejects_publication_fields(): void
+    {
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        \App\Support\McpOAuthDraftWriter::execute(
+            $this->draftActor(), 'CREATE', 'pages',
+            ['title' => 'Draft page', 'summary' => 'Summary', 'body' => 'Body', 'status' => 'published'],
+            (string) \Illuminate\Support\Str::uuid()
+        );
+    }
+
+    public function test_oauth_draft_writer_creates_course_and_page_without_publishing(): void
+    {
+        config()->set('mcp.oauth_draft_writes_enabled', true);
+        $actor = $this->draftActor();
+        $category = \App\Models\Category::create([
+            'code' => 'DRAFT', 'slug' => 'draft-test-category', 'name' => 'Draft test category',
+            'group' => 'english-courses', 'description' => 'Isolated fixture', 'is_published' => true,
+            'sort_order' => 1,
+        ]);
+        $course = \App\Support\McpOAuthDraftWriter::execute($actor, 'CREATE', 'courses', [
+            'title' => 'Draft course', 'summary' => 'Summary', 'description' => 'Plain text',
+            'category_id' => $category->id, 'delivery_mode' => 'online',
+        ], (string) \Illuminate\Support\Str::uuid());
+        $page = \App\Support\McpOAuthDraftWriter::execute($actor, 'CREATE', 'pages', [
+            'title' => 'Draft page', 'summary' => 'Summary', 'body' => 'Plain text',
+        ], (string) \Illuminate\Support\Str::uuid());
+        $this->assertDatabaseHas('courses', [
+            'id' => $course['resource_id'], 'status' => 'draft', 'published_at' => null,
+        ]);
+        $this->assertDatabaseHas('content_entries', [
+            'id' => $page['resource_id'], 'type' => 'page', 'status' => 'draft', 'published_at' => null,
+        ]);
+    }
 }
