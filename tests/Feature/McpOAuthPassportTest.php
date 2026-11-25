@@ -290,6 +290,58 @@ final class McpOAuthPassportTest extends TestCase
                 'operation' => 'CREATE', 'resource' => 'courses']],
         ])->assertOk()->assertJsonPath('result.isError', true);
 
+        // Public OAuth must not inherit administrator visibility of drafts.
+        // Create only the isolated fixture; production-mode Artisan seed
+        // commands correctly require a separate confirmation.
+        $category = \App\Models\Category::create([
+            'code' => 'OAUTH', 'slug' => 'oauth-test-category',
+            'name' => 'OAuth test category', 'group' => 'english-courses',
+            'description' => 'Isolated OAuth catalog visibility fixture',
+            'is_published' => true, 'sort_order' => 1,
+        ]);
+        $base = [
+            'summary' => 'OAuth catalog fixture',
+            'category_id' => $category->id,
+            'content_language' => 'en',
+            'delivery_mode' => 'online',
+            'created_by' => $admin->id,
+        ];
+        $published = \App\Models\Course::create($base + [
+            'title' => 'Public OAuth fixture', 'slug' => 'public-oauth-fixture',
+            'status' => 'published', 'published_at' => now()->subDay(),
+        ]);
+        $draft = \App\Models\Course::create($base + [
+            'title' => 'Private OAuth draft fixture', 'slug' => 'private-oauth-draft-fixture',
+            'status' => 'draft',
+        ]);
+        $future = \App\Models\Course::create($base + [
+            'title' => 'Future OAuth fixture', 'slug' => 'future-oauth-fixture',
+            'status' => 'published', 'published_at' => now()->addDay(),
+        ]);
+        $rpc = fn (array $payload) => [
+            'jsonrpc' => '2.0', 'id' => 10, 'method' => 'tools/call',
+            'params' => ['name' => 'crud_manage_platform', 'arguments' => [
+                'operation' => 'READ', 'resource' => 'courses', 'payload' => $payload,
+            ]],
+        ];
+        $this->withToken($token)->postJson('/api/mcp/oauth', $rpc([]))
+            ->assertOk()->assertJsonPath('result.isError', false)
+            ->assertJsonFragment(['id' => $published->id])
+            ->assertJsonMissing(['title' => $draft->title])
+            ->assertJsonMissing(['title' => $future->title]);
+        $this->withToken($token)->postJson('/api/mcp/oauth', $rpc(['id' => $published->id]))
+            ->assertOk()->assertJsonPath('result.structuredContent.items.0.id', $published->id);
+        foreach ([$draft, $future] as $hidden) {
+            $this->withToken($token)->postJson('/api/mcp/oauth', $rpc(['id' => $hidden->id]))
+                ->assertOk()->assertJsonPath('result.isError', true)
+                ->assertJsonMissing(['title' => $hidden->title]);
+        }
+
+        // The catalog checks and revocation share Laravel's per-user
+        // throttle window. Advance only the isolated test clock, preserving
+        // the real rate limits and keeping the 20-minute access token valid.
+        $this->travel(61)->seconds();
+
         $refreshResponse = $this->postJson('/api/mcp/oauth/token', [
             'grant_type' => 'refresh_token',
             'client_id' => $client,
@@ -321,6 +373,7 @@ final class McpOAuthPassportTest extends TestCase
         $this->withToken($newToken)->postJson('/api/mcp/oauth', [
             'jsonrpc' => '2.0', 'id' => 4, 'method' => 'initialize',
         ])->assertForbidden();
+        $this->travelBack();
     }
 
     public function test_revocation_does_not_modify_sanctum_tokens(): void

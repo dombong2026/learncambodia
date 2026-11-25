@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\McpActionAudit;
+use App\Models\Course;
 use App\Support\McpCrudEngine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 /**
@@ -73,7 +75,9 @@ final class McpOAuthReadOnlyController extends Controller
         }
 
         try {
-            $data = McpCrudEngine::execute($request, $args);
+            $data = $resource === 'courses'
+                ? $this->publicCourses($args['payload'] ?? [])
+                : McpCrudEngine::execute($request, $args);
             $data['status'] = 'read';
             $data['resource'] = $resource;
             $data['http_status'] = 200;
@@ -88,6 +92,24 @@ final class McpOAuthReadOnlyController extends Controller
                 'message' => 'Read operation rejected. Contact the website administrator with the receipt ID.',
             ], true);
         }
+    }
+
+    private function publicCourses(array $payload): array
+    {
+        $filter = Validator::make($payload, ['id' => ['sometimes', 'integer', 'min:1']])->validate();
+        $columns = ['id', 'title', 'slug', 'summary', 'status', 'category_id', 'content_language', 'updated_at'];
+        // Use the public catalog's visibility scope, including category,
+        // publication date, deactivation and supersession. Never delegate
+        // OAuth course reads to the administrator's unrestricted CRUD engine.
+        $query = Course::query()->discoverable();
+        $fields = static fn (Course $course): array => collect($columns)
+            ->mapWithKeys(fn ($field) => [$field => $course->{$field}])->all();
+
+        if (isset($filter['id'])) {
+            return ['items' => [$fields($query->findOrFail((int) $filter['id'], $columns))], 'total' => 1];
+        }
+
+        return ['items' => $query->orderByDesc('id')->limit(25)->get($columns)->map($fields)->all(), 'limit' => 25];
     }
 
     private static function readTool(): array
