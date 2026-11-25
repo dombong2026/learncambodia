@@ -290,6 +290,48 @@ final class McpOAuthPassportTest extends TestCase
                 'operation' => 'CREATE', 'resource' => 'courses']],
         ])->assertOk()->assertJsonPath('result.isError', true);
 
+        // Public OAuth must not inherit administrator visibility of drafts.
+        $this->seed(\Database\Seeders\CategorySeeder::class);
+        $category = \App\Models\Category::where('code', 'GE')->firstOrFail();
+        $category->forceFill(['is_published' => true])->save();
+        $base = [
+            'summary' => 'OAuth catalog fixture',
+            'category_id' => $category->id,
+            'content_language' => 'en',
+            'delivery_mode' => 'online',
+            'created_by' => $admin->id,
+        ];
+        $published = \App\Models\Course::create($base + [
+            'title' => 'Public OAuth fixture', 'slug' => 'public-oauth-fixture',
+            'status' => 'published', 'published_at' => now()->subDay(),
+        ]);
+        $draft = \App\Models\Course::create($base + [
+            'title' => 'Private OAuth draft fixture', 'slug' => 'private-oauth-draft-fixture',
+            'status' => 'draft',
+        ]);
+        $future = \App\Models\Course::create($base + [
+            'title' => 'Future OAuth fixture', 'slug' => 'future-oauth-fixture',
+            'status' => 'published', 'published_at' => now()->addDay(),
+        ]);
+        $rpc = fn (array $payload) => [
+            'jsonrpc' => '2.0', 'id' => 10, 'method' => 'tools/call',
+            'params' => ['name' => 'crud_manage_platform', 'arguments' => [
+                'operation' => 'READ', 'resource' => 'courses', 'payload' => $payload,
+            ]],
+        ];
+        $this->withToken($token)->postJson('/api/mcp/oauth', $rpc([]))
+            ->assertOk()->assertJsonPath('result.isError', false)
+            ->assertJsonFragment(['id' => $published->id])
+            ->assertJsonMissing(['title' => $draft->title])
+            ->assertJsonMissing(['title' => $future->title]);
+        $this->withToken($token)->postJson('/api/mcp/oauth', $rpc(['id' => $published->id]))
+            ->assertOk()->assertJsonPath('result.structuredContent.items.0.id', $published->id);
+        foreach ([$draft, $future] as $hidden) {
+            $this->withToken($token)->postJson('/api/mcp/oauth', $rpc(['id' => $hidden->id]))
+                ->assertOk()->assertJsonPath('result.isError', true)
+                ->assertJsonMissing(['title' => $hidden->title]);
+        }
+
         $refreshResponse = $this->postJson('/api/mcp/oauth/token', [
             'grant_type' => 'refresh_token',
             'client_id' => $client,
