@@ -14,6 +14,12 @@ Route::post('/mcp/oauth', [\App\Http\Controllers\Api\McpOAuthReadOnlyController:
     ->middleware([\App\Http\Middleware\EnsureMcpOAuthApiEnabled::class, 'auth:mcp_oauth', 'mcp.oauth.read', 'throttle:60,1'])
     ->name('mcp.oauth.rpc');
 
+// Streamable HTTP without a standalone SSE stream. No data is returned.
+Route::get('/mcp/oauth', static fn () => response()->json(
+    ['error' => 'method_not_allowed'], 405, ['Allow' => 'POST', 'Cache-Control' => 'no-store']
+))->middleware([\App\Http\Middleware\EnsureMcpOAuthApiEnabled::class, 'throttle:60,1'])
+    ->name('mcp.oauth.stream.unsupported');
+
 Route::get('/mcp/auth-guide', [McpBridgeController::class, 'authGuide'])
     ->middleware('throttle:20,1')->name('mcp.auth-guide');
 Route::post('/mcp', [McpBridgeController::class, 'handle'])
