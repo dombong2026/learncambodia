@@ -127,6 +127,23 @@ final class McpOAuthPassportTest extends TestCase
         ])->assertNotFound();
     }
 
+    public function test_discovery_alias_and_streamable_http_get_are_fail_closed(): void
+    {
+        $this->setupClient();
+        config()->set('mcp.oauth_discovery_enabled', true);
+        $root = $this->getJson('/.well-known/oauth-protected-resource')->assertOk()->json();
+        $this->getJson('/.well-known/oauth-protected-resource/api/mcp/oauth')
+            ->assertOk()->assertExactJson($root);
+        $this->get('/api/mcp/oauth', ['Accept' => 'text/event-stream'])
+            ->assertStatus(405)->assertHeader('Allow', 'POST')
+            ->assertExactJson(['error' => 'method_not_allowed']);
+
+        config()->set('mcp.oauth_ready', false);
+        $this->getJson('/.well-known/oauth-protected-resource/api/mcp/oauth')->assertNotFound();
+        $this->get('/api/mcp/oauth', ['Accept' => 'text/event-stream'])->assertNotFound();
+        $this->assertDatabaseCount('oauth_access_tokens', 0);
+    }
+
     public function test_only_exact_client_resource_and_pkce_s256_are_accepted(): void
     {
         $client = $this->setupClient();
