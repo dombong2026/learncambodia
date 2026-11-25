@@ -39,7 +39,20 @@ jobs:
           assert "Route::has('mcp.oauth.authorize')" in controller
           assert "private const ISSUER = 'https://learncambodia.com'" in controller
           assert "private const RESOURCE = 'https://learncambodia.com/api/mcp/oauth'" in controller
-          assert "'scopes_supported' => ['mcp:read']" in controller
+          # Both discovery documents must use the same default-closed policy.
+          # The runtime discovery suite below verifies every gate independently.
+          policy=Path("app/Support/McpOAuthDraftScopePolicy.php").read_text()
+          assert controller.count("'scopes_supported' => array_keys(\\App\\Support\\McpOAuthDraftScopePolicy::scopes())") == 2
+          assert "$scopes = ['mcp:read' =>" in policy
+          assert "if (self::issuanceEnabled())" in policy
+          assert "$scopes['mcp:write']" in policy
+          assert "! EnsureMcpOAuthStagingEnabled::enabled()" in policy
+          for gate in ["oauth_draft_writes_accepted", "oauth_draft_writes_enabled", "oauth_draft_scope_issuance_enabled", "oauth_draft_production_accepted"]:
+            assert f"'{gate}' => (bool) env('MCP_{gate.upper()}', false)" in config
+            assert f"config('mcp.{gate}', false)" in policy
+          assert "'oauth_draft_production_admin_id' => (string) env('MCP_OAUTH_DRAFT_PRODUCTION_ADMIN_ID', '')" in config
+          assert "config('mcp.oauth_draft_production_admin_id', '')" in policy
+          assert "test_production_discovery_write_scope_requires_every_independent_gate" in Path("tests/Feature/McpOAuthDiscoveryTest.php").read_text()
           assert "'code_challenge_methods_supported' => ['S256']" in controller
           assert "'grant_types_supported' => ['authorization_code', 'refresh_token']" in controller
           assert "route('mcp.oauth.token', [], false)" in controller
