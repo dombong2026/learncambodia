@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\McpActionAudit;
 use App\Models\Course;
+use App\Models\User;
+use App\Support\McpOAuthDraftScopePolicy;
 use App\Support\McpOAuthReadCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +25,7 @@ final class McpOAuthReadOnlyController extends Controller
 
     public function handle(Request $request): JsonResponse
     {
-        // Only the isolated rehearsal can reach the separate WRITE handler.
+        // Only an enabled, separately authorized WRITE token can reach the draft handler.
         // It independently verifies the signed token, exact scope and audience.
         if (\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled()
             && $request->user() instanceof \App\Models\McpOAuthUser
@@ -65,7 +67,12 @@ final class McpOAuthReadOnlyController extends Controller
             return $this->success($id, (object) []);
         }
         if ($method === 'tools/list') {
-            return $this->success($id, ['tools' => self::publicCatalog()]);
+            $tools = self::publicCatalog();
+            if ($this->mayRequestDraftScope($request)) {
+                // Discover descriptions only. A READ token cannot execute these tools.
+                $tools = [...$tools, ...McpOAuthDraftController::catalog()];
+            }
+            return $this->success($id, ['tools' => $tools]);
         }
         if ($method !== 'tools/call') {
             return $this->rpcError($id, -32601, 'Method unavailable on OAuth READ resource.');
@@ -74,6 +81,11 @@ final class McpOAuthReadOnlyController extends Controller
         $params = $rpc['params'] ?? null;
         $args = is_array($params) ? ($params['arguments'] ?? null) : null;
         $name = is_array($params) ? ($params['name'] ?? null) : null;
+        if (is_string($name) && $this->mayRequestDraftScope($request)
+            && in_array($name, array_column(McpOAuthDraftController::catalog(), 'name'), true)) {
+            // This branch never dispatches a draft lookup or mutation.
+            return $this->scopeChallenge($id);
+        }
         if (is_string($name) && McpOAuthReadCatalog::supports($name)) {
             return $this->dedicatedRead($request, $id, $name, $args);
         }
@@ -153,7 +165,37 @@ final class McpOAuthReadOnlyController extends Controller
 
     public static function publicCatalog(): array
     {
-        return [self::readTool(), ...McpOAuthReadCatalog::tools()];
+        $schemes = [['type' => 'oauth2', 'scopes' => ['mcp:read']]];
+        return array_map(static fn (array $tool): array => $tool + [
+            'securitySchemes' => $schemes,
+            '_meta' => ['securitySchemes' => $schemes],
+        ], [self::readTool(), ...McpOAuthReadCatalog::tools()]);
+    }
+
+    /** Only the selected, currently eligible administrator may discover step-up tools. */
+    private function mayRequestDraftScope(Request $request): bool
+    {
+        $identity = $request->user();
+        return McpOAuthDraftScopePolicy::issuanceEnabled()
+            && $identity instanceof \App\Models\McpOAuthUser
+            && $identity->tokenCan('mcp:read')
+            && ! $identity->tokenCan('mcp:write')
+            && McpOAuthDraftScopePolicy::eligible(User::query()->find($identity->getAuthIdentifier()));
+    }
+
+    private function scopeChallenge(mixed $id): JsonResponse
+    {
+        $challenge = 'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", '
+            .'error="insufficient_scope", scope="mcp:read mcp:write", '
+            .'error_description="Fresh administrator draft authorization is required"';
+        // HTTP 403 is the MCP transport scope-upgrade signal; include the
+        // tool-result challenge too for clients supporting the OpenAI extension.
+        return response()->json(['jsonrpc' => '2.0', 'id' => $id, 'result' => [
+            'content' => [['type' => 'text', 'text' => 'Fresh OAuth consent is required for draft access. No operation was performed.']],
+            'structuredContent' => ['status' => 'rejected', 'http_status' => 403],
+            'isError' => true,
+            '_meta' => ['mcp/www_authenticate' => [$challenge]],
+        ]], 403)->header('WWW-Authenticate', $challenge)->header('Cache-Control', 'no-store');
     }
 
     private static function readTool(): array
