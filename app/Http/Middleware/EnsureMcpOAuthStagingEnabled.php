@@ -39,7 +39,7 @@ class EnsureMcpOAuthStagingEnabled
                 && config('mcp.oauth_discovery_enabled', false)
                 && ! config('mcp.oauth_production_registration_enabled', false)
                 && ! config('mcp.oauth_provider_staging_enabled', false)
-                && is_string($client) && (bool) preg_match('/\A[0-9a-fA-F-]{36}\z/D', $client)
+                && is_string($client) && (bool) preg_match('/\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\z/D', $client)
                 && is_string($redirect) && self::productionRedirectIsValid($redirect)
                 && config('mcp.oauth_resource') === 'https://learncambodia.com/api/mcp/oauth';
         }
