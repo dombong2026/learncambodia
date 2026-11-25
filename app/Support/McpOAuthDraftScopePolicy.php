@@ -6,18 +6,26 @@ use App\Http\Middleware\EnsureMcpOAuthStagingEnabled;
 use App\Models\User;
 
 /**
- * Isolated WRITE consent/issuance rehearsal. Production is deliberately
- * excluded until the dedicated tool transport and activation review pass.
+ * Draft WRITE consent/issuance requires independent gates. Production also
+ * requires release acceptance and an explicitly selected administrator.
  */
 final class McpOAuthDraftScopePolicy
 {
     public static function issuanceEnabled(): bool
     {
-        return app()->environment(['local', 'testing', 'staging'])
-            && config('mcp.oauth_draft_scope_issuance_enabled', false) === true
-            && config('mcp.oauth_draft_writes_accepted', false) === true
-            && config('mcp.oauth_draft_writes_enabled', false) === true
-            && EnsureMcpOAuthStagingEnabled::enabled();
+        if (config('mcp.oauth_draft_scope_issuance_enabled', false) !== true
+            || config('mcp.oauth_draft_writes_accepted', false) !== true
+            || config('mcp.oauth_draft_writes_enabled', false) !== true
+            || ! EnsureMcpOAuthStagingEnabled::enabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            $admin = config('mcp.oauth_draft_production_admin_id', '');
+            return config('mcp.oauth_draft_production_accepted', false) === true
+                && is_string($admin) && preg_match('/\A[1-9][0-9]{0,18}\z/D', $admin) === 1;
+        }
+
+        return app()->environment(['local', 'testing', 'staging']);
     }
 
     public static function scopes(): array
@@ -40,7 +48,9 @@ final class McpOAuthDraftScopePolicy
     public static function eligible(?User $actor): bool
     {
         return $actor !== null && $actor->isAdministrator() && $actor->hasVerifiedEmail()
-            && $actor->two_factor_confirmed_at !== null && $actor->hasEnabledTwoFactorAuthentication();
+            && $actor->two_factor_confirmed_at !== null && $actor->hasEnabledTwoFactorAuthentication()
+            && (! app()->environment('production')
+                || (string) $actor->getAuthIdentifier() === config('mcp.oauth_draft_production_admin_id', ''));
     }
 
     public static function permitsAuthorization(mixed $scope, ?User $actor): bool
