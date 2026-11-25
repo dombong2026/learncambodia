@@ -31,10 +31,17 @@ final class ValidateMcpOAuthParameters
         // Public ChatGPT client is pre-registered on the server. No arbitrary
         // client metadata URL, dynamic registration or confidential grant.
         $passportClient = Passport::client()->newQuery()->find($client);
-        abort_unless($passportClient !== null && ! $passportClient->firstParty()
+        abort_unless($passportClient !== null && ! $passportClient->revoked && ! $passportClient->firstParty()
+            && $passportClient->getRawOriginal('secret') === null
             && $passportClient->hasGrantType('authorization_code')
             && in_array($passportClient->provider, [null, 'mcp_oauth_users'], true), 400,
             'Unregistered or unsupported OAuth client.');
+
+        if (app()->environment('production')) {
+            abort_unless(EnsureMcpOAuthStagingEnabled::productionRedirectIsValid($redirect)
+                && $passportClient->redirect_uris === [$redirect], 400,
+                'Production OAuth requires the exact registered callback.');
+        }
 
         if ($phase === 'authorize') {
             abort_unless($request->isMethod('GET')
