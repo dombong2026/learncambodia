@@ -547,29 +547,60 @@ final class McpOAuthPassportTest extends TestCase
         }
     }
 
-    public function test_draft_write_consent_and_signed_token_issuance_are_isolated_from_production(): void
+    public function test_draft_write_consent_and_signed_token_issuance_in_rehearsal(): void
+    {
+        $this->exerciseDraftAuthorization(false);
+    }
+
+    public function test_production_draft_write_requires_independent_gates_and_selected_admin(): void
+    {
+        try {
+            $this->exerciseDraftAuthorization(true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseDraftAuthorization(bool $production): void
     {
         $this->configureEphemeralPassportKeys();
+        if ($production) {
+            $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+            config()->set('mcp.oauth_redirect_uri', $this->callback);
+            config()->set('mcp.oauth_provider_staging_enabled', false);
+            config()->set('mcp.oauth_production_registration_enabled', false);
+            config()->set('mcp.oauth_production_accepted', true);
+            config()->set('mcp.oauth_production_enabled', true);
+            config()->set('mcp.oauth_discovery_enabled', true);
+            $this->app->instance('env', 'production');
+        }
         $client = $this->setupClient();
         config()->set('mcp.oauth_draft_writes_accepted', true);
         config()->set('mcp.oauth_draft_writes_enabled', true);
         config()->set('mcp.oauth_draft_scope_issuance_enabled', true);
         $policy = \App\Support\McpOAuthDraftScopePolicy::class;
-        $this->assertTrue($policy::issuanceEnabled());
-
-        // A production environment cannot enable issuance even with all three
-        // rehearsal switches set. Restore the isolated test environment.
-        $this->app->instance('env', 'production');
-        try {
-            $this->assertFalse($policy::issuanceEnabled());
-            $this->assertSame(['mcp:read'], array_keys($policy::scopes()));
-        } finally {
-            $this->app->instance('env', 'testing');
-        }
-        Passport::tokensCan($policy::scopes());
-
         try {
             $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+            if ($production) {
+                $this->assertFalse($policy::issuanceEnabled());
+                config()->set('mcp.oauth_draft_production_accepted', true);
+                $this->assertFalse($policy::issuanceEnabled());
+                config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+                foreach (['oauth_draft_writes_accepted', 'oauth_draft_writes_enabled',
+                    'oauth_draft_scope_issuance_enabled', 'oauth_draft_production_accepted'] as $gate) {
+                    config()->set('mcp.'.$gate, false);
+                    $this->assertSame(['mcp:read'], array_keys($policy::scopes()));
+                    config()->set('mcp.'.$gate, true);
+                }
+            }
+            $this->assertTrue($policy::issuanceEnabled());
+            Passport::tokensCan($policy::scopes());
+            config()->set('mcp.oauth_discovery_enabled', true);
+            foreach (['/.well-known/oauth-protected-resource',
+                '/.well-known/oauth-protected-resource/api/mcp/oauth',
+                '/.well-known/oauth-authorization-server'] as $path) {
+                $this->getJson($path)->assertOk()->assertJsonPath('scopes_supported', ['mcp:read', 'mcp:write']);
+            }
             $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
             $verifier = str_repeat('V', 48);
             $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
@@ -583,6 +614,11 @@ final class McpOAuthPassportTest extends TestCase
                 'two_factor_confirmed_at' => now(),
             ])->save();
             $this->actingAs($admin, 'web');
+            if ($production) {
+                config()->set('mcp.oauth_draft_production_admin_id', (string) ($admin->id + 1));
+                $this->get($url)->assertBadRequest();
+                config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            }
             $consent = $this->get($url)->assertOk()
                 ->assertSee('Authorize draft WRITE access')
                 ->assertSee('No publishing, deletion, file upload');
@@ -697,6 +733,11 @@ final class McpOAuthPassportTest extends TestCase
             $admin->forceFill(['two_factor_confirmed_at' => null])->save();
             $denied()->assertForbidden();
             $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
+            if ($production) {
+                config()->set('mcp.oauth_draft_production_admin_id', (string) ($admin->id + 1));
+                $denied()->assertForbidden();
+                config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            }
             $rpc('tools/list')->assertJsonCount(19, 'result.tools');
 
             // The expanded RPC sequence and token endpoint share a throttle
@@ -723,6 +764,8 @@ final class McpOAuthPassportTest extends TestCase
             config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
             config()->set('mcp.oauth_draft_writes_enabled', false);
             config()->set('mcp.oauth_draft_writes_accepted', false);
+            config()->set('mcp.oauth_draft_production_accepted', false);
+            config()->set('mcp.oauth_draft_production_admin_id', '');
             Passport::tokensCan($policy::scopes());
         }
     }
