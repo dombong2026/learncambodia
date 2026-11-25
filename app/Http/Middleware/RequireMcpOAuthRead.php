@@ -21,6 +21,16 @@ final class RequireMcpOAuthRead
         $user = $request->user();
         $token = $user?->currentAccessToken();
 
+        // Only the explicitly enabled nonproduction rehearsal may dispatch
+        // a WRITE-scoped request to its own controller. The original READ
+        // authorization below remains unchanged, including its exact scope.
+        if (\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled()
+            && $user instanceof McpOAuthUser && $token instanceof AccessToken
+            && $user->tokenCan('mcp:write')) {
+            return app(\App\Http\Controllers\Api\McpOAuthDraftController::class)->handle($request);
+        }
+
+
         abort_unless(is_string($request->bearerToken()) && $request->bearerToken() !== ''
             && $user instanceof McpOAuthUser
             && $user->isAdministrator()
