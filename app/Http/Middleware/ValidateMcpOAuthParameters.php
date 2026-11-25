@@ -8,10 +8,10 @@ use Laravel\Passport\Passport;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Preflight for the SINGLE read-only MCP resource and a PRE-REGISTERED client.
+ * Preflight for the SINGLE MCP resource and a PRE-REGISTERED client.
  * Passport subsequently verifies exact redirect_uri / code / PKCE signature.
  *
- * No dynamic client registration, wildcard client IDs, or write scopes.
+ * No dynamic client registration or wildcard client IDs; WRITE is rehearsal-only.
  */
 final class ValidateMcpOAuthParameters
 {
@@ -46,10 +46,13 @@ final class ValidateMcpOAuthParameters
         if ($phase === 'authorize') {
             abort_unless($request->isMethod('GET')
                 && $request->query('response_type') === 'code'
-                && $request->query('scope') === 'mcp:read'
+                && \App\Support\McpOAuthDraftScopePolicy::permitsAuthorization(
+                    $request->query('scope'),
+                    $request->user('web') instanceof \App\Models\User ? $request->user('web') : null
+                )
                 && $request->query('code_challenge_method') === 'S256'
                 && hash_equals($redirect, (string) $request->query('redirect_uri', '')), 400,
-                'Authorization code, READ scope, approved redirect URI and S256 required.');
+                'Authorization code, permitted scope, approved redirect URI and S256 required.');
             $challenge = (string) $request->query('code_challenge', '');
             abort_unless((bool) preg_match('/\A[A-Za-z0-9_-]{43,128}\z/D', $challenge), 400,
                 'Valid S256 code challenge required.');
