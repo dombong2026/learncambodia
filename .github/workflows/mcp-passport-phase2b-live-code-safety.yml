@@ -71,3 +71,34 @@ jobs:
           grep -Fq 'Passport::ignoreRoutes()' app/Providers/AppServiceProvider.php
           grep -Fq 'laravel/passport' composer.lock
           echo MCP_PHASE2B_SOURCE_STILL_FAIL_CLOSED=PASS
+      - name: Check Phase 3A disabled overlay syntax and semantic preservation
+        run: |
+          set -Eeuo pipefail
+          bash -n support/operator/learncambodia-mcp-oauth-phase3a-disabled-promotion-aapanel.sh
+          python3 - <<'PY'
+          import re, subprocess, tempfile
+          from pathlib import Path
+          s=Path("support/operator/learncambodia-mcp-oauth-phase3a-disabled-promotion-aapanel.sh").read_text()
+          for body in re.findall(r"<<'PY'\n(.*?)\nPY",s,re.S):
+              compile(body, "<operator>", "exec")
+          for bad in ("artisan migrate", "artisan passport:keys", "composer update", "artisan optimize:clear", "git reset --hard"):
+              assert bad not in s, bad
+          for good in ("PINNED_CI=PASS","TARGETED_OVERLAYS=PASS","PHASE3A_PREPARE=PASS","PHASE3A_ROLLBACK=RESTORED","ROUTES_PRESERVED=PASS","OAUTH_TOKEN_ISSUANCE=DISABLED"):
+              assert good in s, good
+          body=next(b for b in re.findall(r"<<'PY'\n(.*?)\nPY",s,re.S) if 'live.count(old)' in b)
+          path="bootstrap/app.php"
+          base=subprocess.check_output(["git","show","e7416ea12cc64a427818c6f9da159b89ea22eaef:"+path],text=True)
+          target=Path(path).read_text()
+          live=base.replace("use App\\Console\\Commands\\AssignAccountRole;", "// Live-only customization\nuse App\\Console\\Commands\\AssignAccountRole;",1)
+          with tempfile.TemporaryDirectory() as d:
+              root=Path(d)
+              for label,value in [("base",base),("new",target),("old",live),("ready","")]:
+                  p=root/label/path
+                  p.parent.mkdir(parents=True)
+                  p.write_text(value)
+              subprocess.run(["python3","-c",body,d,path],check=True)
+              result=(root/"ready"/path).read_text()
+              assert "// Live-only customization" in result
+              assert result.replace("// Live-only customization\n","",1)==target
+          print("PHASE3A_OPERATOR_SYNTAX_AND_OVERLAY=PASS")
+          PY
