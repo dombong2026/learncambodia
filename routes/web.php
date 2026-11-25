@@ -98,6 +98,9 @@ Route::middleware(['auth', 'password.confirm', 'mcp.oauth.stage', 'mcp.oauth.adm
 // passes security acceptance. The existing /api/mcp bearer route is untouched.
 Route::get('/.well-known/oauth-protected-resource', [McpOAuthDiscoveryController::class, 'protectedResource'])
     ->middleware('throttle:30,1')->name('mcp.oauth.metadata.resource');
+// RFC 9728 path-aware discovery alias; identical gate and metadata.
+Route::get('/.well-known/oauth-protected-resource/api/mcp/oauth', [McpOAuthDiscoveryController::class, 'protectedResource'])
+    ->middleware('throttle:30,1')->name('mcp.oauth.metadata.resource.path');
 Route::get('/.well-known/oauth-authorization-server', [McpOAuthDiscoveryController::class, 'authorizationServer'])
     ->middleware('throttle:30,1')->name('mcp.oauth.metadata.authorization-server');
 
