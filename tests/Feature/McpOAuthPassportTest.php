@@ -298,7 +298,7 @@ final class McpOAuthPassportTest extends TestCase
 
         $this->withToken($token)->postJson('/api/mcp/oauth', [
             'jsonrpc' => '2.0', 'id' => 2, 'method' => 'tools/list',
-        ])->assertOk()->assertJsonCount(1, 'result.tools')
+        ])->assertOk()->assertJsonCount(10, 'result.tools')
             ->assertJsonPath('result.tools.0.inputSchema.properties.operation.enum.0', 'READ');
 
         $this->withToken($token)->postJson('/api/mcp/oauth', [
@@ -353,6 +353,48 @@ final class McpOAuthPassportTest extends TestCase
                 ->assertOk()->assertJsonPath('result.isError', true)
                 ->assertJsonMissing(['title' => $hidden->title]);
         }
+
+        // Dedicated OAuth tools must remain confined to public metadata.
+        $read = fn (string $name, array $arguments = []) => $this->withToken($token)
+            ->postJson('/api/mcp/oauth', [
+                'jsonrpc' => '2.0', 'id' => 11, 'method' => 'tools/call',
+                'params' => ['name' => $name, 'arguments' => $arguments],
+            ])->assertOk();
+
+        $module = $published->modules()->create(['title' => 'Public module', 'position' => 1]);
+        $privateModule = $draft->modules()->create(['title' => 'Private draft module', 'position' => 1]);
+        $lesson = $module->lessons()->create([
+            'title' => 'Public lesson metadata', 'position' => 1,
+            'content' => 'PRIVATE_LESSON_BODY_FIXTURE', 'duration_minutes' => 5,
+            'quiz_questions' => [['answer' => 'PRIVATE_ANSWER_FIXTURE']],
+        ]);
+        $read('list_courses', ['limit' => 1])->assertJsonPath('result.structuredContent.items.0.id', $published->id)
+            ->assertJsonPath('result.structuredContent.total', 1);
+        $read('list_modules')->assertJsonPath('result.structuredContent.items.0.id', $module->id)
+            ->assertJsonMissing(['title' => $privateModule->title]);
+        $read('list_modules', ['id' => $privateModule->id])->assertJsonPath('result.isError', true);
+        $read('list_lessons', ['id' => $lesson->id])->assertJsonPath('result.isError', false)
+            ->assertJsonMissing(['content' => 'PRIVATE_LESSON_BODY_FIXTURE'])
+            ->assertJsonMissingPath('result.structuredContent.items.0.quiz_questions');
+        $read('list_courses', ['limit' => 51])->assertJsonPath('result.isError', true);
+        $read('list_courses', ['operation' => 'CREATE'])->assertJsonPath('result.isError', true);
+        $read('manage_courses', ['operation' => 'CREATE'])->assertJsonPath('result.isError', true);
+
+        $type = \App\Models\ExamType::create(['name' => 'OAuth standalone quiz type', 'kind' => 'quiz']);
+        $assessment = [
+            'course_id' => null, 'kind' => 'quiz', 'exam_type_id' => $type->id,
+            'questions' => [['answer' => 'PRIVATE_ASSESSMENT_ANSWER']],
+            'time_limit' => 20, 'passing_percent' => 70, 'attempt_limit' => 2,
+        ];
+        $quiz = \App\Models\CourseExam::create($assessment + ['title' => 'Public standalone quiz', 'published' => true]);
+        $privateQuiz = \App\Models\CourseExam::create($assessment + ['title' => 'Private standalone quiz', 'published' => false]);
+        $read('list_quizzes')->assertJsonPath('result.structuredContent.items.0.id', $quiz->id)
+            ->assertJsonMissing(['title' => $privateQuiz->title])
+            ->assertJsonMissingPath('result.structuredContent.items.0.questions');
+        $read('list_quizzes', ['id' => $privateQuiz->id])->assertJsonPath('result.isError', true);
+        $read('get_platform_analytics')->assertJsonPath('result.structuredContent.items.assessment_quizzes_total', 2)
+            ->assertJsonPath('result.structuredContent.items.standalone_quizzes_published', 1)
+            ->assertJsonPath('result.structuredContent.items.quizzes_total', 2);
 
         // The catalog checks and revocation share Laravel's per-user
         // throttle window. Advance only the isolated test clock, preserving
