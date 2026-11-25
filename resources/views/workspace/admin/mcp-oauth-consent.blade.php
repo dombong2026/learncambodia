@@ -23,7 +23,8 @@
 <main>
     <div class="app">LearnCambodia · MCP</div>
     <h1>Authorize access to your account?</h1>
-    <p><strong>{{ $client->name }}</strong> requests permission to read limited LearnCambodia information through ChatGPT.</p>
+    @php($draftWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:write'))
+    <p><strong>{{ $client->name }}</strong> requests permission to {{ $draftWrite ? 'read and manage your own unpublished drafts' : 'read limited LearnCambodia information' }} through ChatGPT.</p>
     <div class="permissions">
         <strong>Requested permissions</strong>
         <ul>
@@ -31,7 +32,11 @@
             <li>{{ $scope->description }}</li>
         @endforeach
         </ul>
-        <small>No course changes, publishing, deletions, file uploads or administrator management permissions are granted.</small>
+        @if($draftWrite)
+            <small>Only your own unpublished course, article and page drafts may be created or updated. No publishing, deletion, file upload, user administration or changes to published content are granted. This permission is for an isolated rehearsal; production WRITE access remains disabled.</small>
+        @else
+            <small>No course changes, publishing, deletions, file uploads or administrator management permissions are granted.</small>
+        @endif
     </div>
     <p><small>Signed in as {{ $user->email }}. Only authorize applications you trust. You can revoke access in your MCP management settings.</small></p>
     <div class="actions">
@@ -48,7 +53,7 @@
             <input type="hidden" name="state" value="{{ $request->state }}">
             <input type="hidden" name="client_id" value="{{ $client->getKey() }}">
             <input type="hidden" name="auth_token" value="{{ $authToken }}">
-            <button class="approve" type="submit">Authorize READ access</button>
+            <button class="approve" type="submit">{{ $draftWrite ? 'Authorize draft WRITE access' : 'Authorize READ access' }}</button>
         </form>
     </div>
 </main>
