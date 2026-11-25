@@ -40,8 +40,8 @@ final class McpOAuthDiscoveryController
         return response()->json([
             'resource' => self::RESOURCE,
             'authorization_servers' => [self::ISSUER],
-            // Limit discovery to the already accepted Phase 1 READ capability.
-            'scopes_supported' => ['mcp:read'],
+            // Advertise WRITE only when the independent activation policy allows it.
+            'scopes_supported' => array_keys(\App\Support\McpOAuthDraftScopePolicy::scopes()),
             'resource_documentation' => self::ISSUER.'/api/mcp/auth-guide',
         ])->header('Cache-Control', 'no-store');
     }
@@ -60,7 +60,7 @@ final class McpOAuthDiscoveryController
             'grant_types_supported' => ['authorization_code', 'refresh_token'],
             'token_endpoint_auth_methods_supported' => ['none'],
             'code_challenge_methods_supported' => ['S256'],
-            'scopes_supported' => ['mcp:read'],
+            'scopes_supported' => array_keys(\App\Support\McpOAuthDraftScopePolicy::scopes()),
         ])->header('Cache-Control', 'no-store');
     }
 }

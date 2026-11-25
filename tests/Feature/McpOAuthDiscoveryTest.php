@@ -96,6 +96,64 @@ final class McpOAuthDiscoveryTest extends TestCase
         $this->assertNotContains('mcp:write', $auth->json('scopes_supported'));
     }
 
+    public function test_production_discovery_write_scope_requires_every_independent_gate(): void
+    {
+        config()->set('mcp.gateway_enabled', true);
+        config()->set('mcp.oauth_production_accepted', true);
+        config()->set('mcp.oauth_production_enabled', true);
+        config()->set('mcp.oauth_discovery_enabled', true);
+        config()->set('mcp.oauth_production_registration_enabled', false);
+        config()->set('mcp.oauth_provider_staging_enabled', false);
+        config()->set('mcp.oauth_client_id', '00000000-0000-4000-8000-000000000001');
+        config()->set('mcp.oauth_redirect_uri', 'https://chatgpt.com/connector/oauth/testcallback123');
+        $gates = [
+            'oauth_draft_writes_accepted',
+            'oauth_draft_writes_enabled',
+            'oauth_draft_scope_issuance_enabled',
+            'oauth_draft_production_accepted',
+        ];
+        $assertScopes = function (array $scopes): void {
+            foreach (['/.well-known/oauth-protected-resource',
+                '/.well-known/oauth-protected-resource/api/mcp/oauth',
+                '/.well-known/oauth-authorization-server'] as $path) {
+                $response = $this->getJson($path)->assertOk()
+                    ->assertJsonPath('scopes_supported', $scopes);
+                $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+            }
+        };
+        $this->app->instance('env', 'production');
+        try {
+            foreach ($gates as $gate) {
+                $this->assertFalse(config('mcp.'.$gate));
+            }
+            $this->assertSame('', config('mcp.oauth_draft_production_admin_id'));
+            $assertScopes(['mcp:read']);
+            foreach ($gates as $gate) {
+                config()->set('mcp.'.$gate, true);
+            }
+            $assertScopes(['mcp:read']);
+            foreach (['0', '-1', 'not-an-id'] as $invalid) {
+                config()->set('mcp.oauth_draft_production_admin_id', $invalid);
+                $this->assertFalse(\App\Support\McpOAuthDraftScopePolicy::issuanceEnabled());
+            }
+            config()->set('mcp.oauth_draft_production_admin_id', '123');
+            $assertScopes(['mcp:read', 'mcp:write']);
+            foreach ($gates as $gate) {
+                config()->set('mcp.'.$gate, false);
+                $assertScopes(['mcp:read']);
+                config()->set('mcp.'.$gate, true);
+            }
+            config()->set('mcp.oauth_draft_production_admin_id', '');
+            $assertScopes(['mcp:read']);
+        } finally {
+            foreach ($gates as $gate) {
+                config()->set('mcp.'.$gate, false);
+            }
+            config()->set('mcp.oauth_draft_production_admin_id', '');
+            $this->app->instance('env', 'testing');
+        }
+    }
+
     public function test_discovery_url_cannot_be_poisoned_by_host_header(): void
     {
         $this->readyExceptProvider();

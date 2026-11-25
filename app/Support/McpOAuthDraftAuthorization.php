@@ -30,6 +30,7 @@ final class McpOAuthDraftAuthorization
     /** Invoke only a trusted, server-defined callback under the authorization locks. */
     public static function authorized(Request $request, Closure $action): mixed
     {
+        abort_unless(! app()->environment('production') || McpOAuthDraftScopePolicy::issuanceEnabled(), 403);
         abort_unless(config('mcp.oauth_draft_writes_accepted', false) === true
             && config('mcp.oauth_draft_writes_enabled', false) === true
             && EnsureMcpOAuthStagingEnabled::enabled(), 403, 'OAuth draft writes are disabled.');
@@ -77,8 +78,7 @@ final class McpOAuthDraftAuthorization
             abort_unless($binding !== null, 403);
 
             $actor = User::query()->lockForUpdate()->findOrFail($identity->getAuthIdentifier());
-            abort_unless($actor->isAdministrator() && $actor->hasVerifiedEmail()
-                && $actor->two_factor_confirmed_at !== null && $actor->hasEnabledTwoFactorAuthentication(), 403);
+            abort_unless(McpOAuthDraftScopePolicy::eligible($actor), 403);
             return $action($actor);
         });
     }

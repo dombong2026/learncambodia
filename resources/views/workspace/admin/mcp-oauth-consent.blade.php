@@ -33,7 +33,7 @@
         @endforeach
         </ul>
         @if($draftWrite)
-            <small>Only your own unpublished course, article and page drafts may be created or updated. No publishing, deletion, file upload, user administration or changes to published content are granted. This permission is for an isolated rehearsal; production WRITE access remains disabled.</small>
+            <small>Only your own unpublished course, article and page drafts may be created or updated. No publishing, deletion, file upload, user administration or changes to published content are granted. @if(app()->environment('production')) This permission grants controlled production draft access. You can revoke it in MCP management settings. @else This permission is for an isolated rehearsal. @endif</small>
         @else
             <small>No course changes, publishing, deletions, file uploads or administrator management permissions are granted.</small>
         @endif

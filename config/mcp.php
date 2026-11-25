@@ -22,6 +22,14 @@ return [
     // An administrator must register an exact public client ID and callback.
     'oauth_client_id' => (string) env('MCP_OAUTH_CLIENT_ID', ''),
     'oauth_redirect_uri' => (string) env('MCP_OAUTH_REDIRECT_URI', ''),
+    // OAuth draft writes are independent of the legacy Sanctum write flag.
+    // Production additionally requires an explicitly accepted release and
+    // one explicitly selected, verified administrator (no implicit default).
+    'oauth_draft_writes_accepted' => (bool) env('MCP_OAUTH_DRAFT_WRITES_ACCEPTED', false),
+    'oauth_draft_writes_enabled' => (bool) env('MCP_OAUTH_DRAFT_WRITES_ENABLED', false),
+    'oauth_draft_scope_issuance_enabled' => (bool) env('MCP_OAUTH_DRAFT_SCOPE_ISSUANCE_ENABLED', false),
+    'oauth_draft_production_accepted' => (bool) env('MCP_OAUTH_DRAFT_PRODUCTION_ACCEPTED', false),
+    'oauth_draft_production_admin_id' => (string) env('MCP_OAUTH_DRAFT_PRODUCTION_ADMIN_ID', ''),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];
