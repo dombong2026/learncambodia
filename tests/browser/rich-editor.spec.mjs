@@ -60,6 +60,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
+    // This journey traverses several server-rendered steps and uploads media.
+    // Keep individual assertion timeouts unchanged; budget the complete journey.
+    test.setTimeout(90_000);
     await page.goto('/dashboard/course-builder/create?lang=en');
     const builder = page.locator('[data-course-builder]');
     const courseTitle = 'Builder Browser Course ' + info.project.name + ' ' + Date.now();
@@ -184,7 +187,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(lessonContent.locator('figure[data-youtube]')).toHaveCount(0);
     await builder.getByRole('button', { name: /Save & continue/ }).click();
     await expect(page).toHaveURL(/step=quizzes/);
+    await expect(builder).toHaveAttribute('data-builder-ready', 'true');
     await builder.getByRole('link', { name: /Continue/ }).click();
+    await expect(page).toHaveURL(/step=review/);
     await expect(builder.getByRole('heading', { name: 'Review & Submit' })).toBeVisible();
     await expect(builder.locator('.course-description-content strong')).toHaveText('aloud');
     await expect(builder.getByRole('button', { name: 'Submit for approval' })).toBeEnabled();
@@ -319,6 +324,8 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('media video preview uses transparent speed and hides controls when inactive', async ({ page }, info) => {
+    // Upload, search, preview, playback settings and the real idle period share this budget.
+    test.setTimeout(60_000);
     await page.goto('/dashboard/media-library?lang=en');
     const file = 'compact-player-' + info.project.name + '-' + Date.now() + '.webm';
     await page.getByRole('button', { name: 'Upload media' }).click();
@@ -341,15 +348,26 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(controls).toHaveCSS('opacity', '1');
     await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-    await speed.click();
+    // A synthetic pointermove does not move the browser's real mouse. The
+    // auto-hide timer can expire during the CSS assertions on slower WebKit.
+    // Wake controls with genuine pointer input immediately before interaction.
+    // Keep normal Playwright hit-testing: no force click or synthetic click.
+    const clickActiveControl = async button => {
+      await button.scrollIntoViewIfNeeded();
+      const bounds = await button.boundingBox();
+      expect(bounds).not.toBeNull();
+      const x = bounds.x + bounds.width / 2;
+      const y = bounds.y + bounds.height / 2;
+      await page.mouse.move(x - 2, y);
+      await page.mouse.move(x, y);
+      await button.click();
+    };
+    await clickActiveControl(speed);
     await dialog.getByRole('button', { name: '1.5×', exact: true }).click();
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);
 
     const volumeButton = dialog.getByRole('button', { name: 'Volume', exact: true });
-    await volumeButton.scrollIntoViewIfNeeded();
-    const volumeButtonBox = await volumeButton.boundingBox();
-    await page.mouse.move(volumeButtonBox.x + volumeButtonBox.width / 2, volumeButtonBox.y + volumeButtonBox.height / 2);
-    await volumeButton.click();
+    await clickActiveControl(volumeButton);
     await expect(volumeButton).toHaveAttribute('aria-expanded', 'true');
     const volume = dialog.getByRole('slider', { name: 'Volume level' });
     if (await volume.isVisible()) {
@@ -369,17 +387,17 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     } else {
       await expect(dialog.getByText('Use your device volume controls.')).toBeVisible();
     }
-    await volumeButton.click();
+    await clickActiveControl(volumeButton);
     await expect(volumeButton).toHaveAttribute('aria-expanded', 'false');
 
     const settings = dialog.getByRole('button', { name: 'Settings', exact: true });
-    await settings.click();
+    await clickActiveControl(settings);
     const loop = dialog.getByRole('checkbox', { name: 'Loop video' });
     await loop.check();
     await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(true);
     await loop.uncheck();
     await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(false);
-    await settings.click();
+    await clickActiveControl(settings);
     await expect(settings).toHaveAttribute('aria-expanded', 'false');
     await expect(player.locator('input[type=file], [download]')).toHaveCount(0);
     await expect(player.getByRole('button', { name: /upload|download/i })).toHaveCount(0);
