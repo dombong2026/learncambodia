@@ -296,6 +296,7 @@ final class McpOAuthPassportTest extends TestCase
         $category = \App\Models\Category::create([
             'code' => 'OAUTH', 'slug' => 'oauth-test-category',
             'name' => 'OAuth test category', 'group' => 'english-courses',
+            'description' => 'Isolated OAuth catalog visibility fixture',
             'is_published' => true, 'sort_order' => 1,
         ]);
         $base = [
