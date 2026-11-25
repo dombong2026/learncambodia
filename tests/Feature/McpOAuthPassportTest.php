@@ -626,10 +626,46 @@ final class McpOAuthPassportTest extends TestCase
                 ->assertJsonPath('replayed', false);
             $this->assertDatabaseHas('content_entries', ['title' => 'Isolated OAuth draft', 'status' => 'draft']);
             $this->assertDatabaseCount('mcp_oauth_draft_receipts', 1);
-            $this->app['auth']->forgetGuards();
-            $this->withToken($token)->postJson('/api/mcp/oauth', [
-                'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/list',
-            ])->assertForbidden();
+            // Use the actual MCP endpoint with the signed WRITE token.
+            $rpc = function (string $method, array $params = []) use ($token) {
+                $this->app['auth']->forgetGuards();
+                return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => $params,
+                ])->assertOk();
+            };
+            $rpc('tools/list')->assertJsonCount(9, 'result.tools')
+                ->assertJsonPath('result.tools.0.name', 'get_draft_courses');
+            $call = fn (string $name, array $arguments) => $rpc('tools/call', [
+                'name' => $name, 'arguments' => $arguments,
+            ]);
+            $fields = [
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'title' => 'Transport draft', 'summary' => 'Summary', 'body' => 'Body',
+            ];
+            $created = $call('create_draft_pages', $fields)
+                ->assertJsonPath('result.isError', false)
+                ->assertJsonPath('result.structuredContent.publication_status', 'draft')
+                ->json('result.structuredContent');
+            $call('create_draft_pages', $fields)->assertJsonPath('result.structuredContent.replayed', true);
+            $lookup = $call('get_draft_pages', ['id' => $created['resource_id']])
+                ->assertJsonPath('result.structuredContent.fields.title', 'Transport draft')
+                ->json('result.structuredContent');
+            $updated = array_replace($fields, [
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'title' => 'Updated transport draft',
+            ]) + ['id' => $created['resource_id'], 'expected_version' => $lookup['draft_version']];
+            $call('update_draft_pages', $updated)->assertJsonPath('result.isError', false);
+            $call('update_draft_pages', array_replace($updated, [
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+            ]))->assertJsonPath('result.structuredContent.http_status', 409);
+            $call('create_draft_pages', $fields + ['status' => 'published'])
+                ->assertJsonPath('result.isError', true);
+            $call('publish_draft_pages', ['id' => $created['resource_id']])
+                ->assertJsonPath('result.isError', true);
+            $this->assertDatabaseHas('content_entries', [
+                'id' => $created['resource_id'], 'title' => 'Updated transport draft', 'status' => 'draft',
+            ]);
+            $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
 
             // Closing the issuance switch blocks refresh and revokes the
             // newly minted disallowed token before it can leave the server.
