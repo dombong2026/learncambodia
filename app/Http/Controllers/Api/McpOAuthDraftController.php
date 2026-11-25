@@ -93,7 +93,7 @@ final class McpOAuthDraftController
                 return $this->success($id, [
                     'protocolVersion' => '2025-11-25',
                     'capabilities' => ['tools' => ['listChanged' => false]],
-                    'serverInfo' => ['name' => 'learncambodia-oauth-draft-rehearsal', 'version' => '0.1.0'],
+                    'serverInfo' => ['name' => 'learncambodia-oauth-draft', 'version' => '0.1.0'],
                     'instructions' => 'Public catalog READ and own unpublished plain-text draft management only. Production WRITE disabled.',
                 ]);
             }
