@@ -127,6 +127,32 @@ final class McpOAuthDraftWriter
         }, 3);
     }
 
+    /** Only callable after locked OAuth authorization. Never return arbitrary model fields. */
+    public static function inspect(User $actor, string $resource, int $id): array
+    {
+        abort_unless(config('mcp.oauth_draft_writes_enabled', false) === true, 403);
+        abort_unless(in_array($resource, ['courses', 'articles', 'pages'], true) && $id > 0, 422);
+        $course = $resource === 'courses';
+        $query = $course ? Course::query()
+            : ContentEntry::query()->where('type', $resource === 'articles' ? 'post' : 'page');
+        $model = $query->where('created_by', $actor->id)->where('status', 'draft')
+            ->whereNull('published_at')->lockForUpdate()->findOrFail($id);
+        if ($course) {
+            abort_unless($model->source_course_id === null && $model->superseded_at === null
+                && $model->deactivated_at === null && blank($model->description_html), 409);
+        } else {
+            abort_unless(blank($model->body_html), 409);
+        }
+
+        return [
+            'status' => 'read', 'resource' => $resource, 'resource_id' => $model->id,
+            'draft_version' => self::version($model), 'publication_status' => 'draft',
+            'fields' => $model->only($course
+                ? ['title', 'summary', 'description', 'category_id', 'delivery_mode']
+                : ['title', 'summary', 'body']),
+        ];
+    }
+
     private static function version(Model $model): string
     {
         $attributes = $model->getRawOriginal();

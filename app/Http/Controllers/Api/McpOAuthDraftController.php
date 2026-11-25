@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Models\User;
+use App\Support\McpOAuthDraftAuthorization;
+use App\Support\McpOAuthDraftScopePolicy;
+use App\Support\McpOAuthDraftWriter;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Throwable;
+
+/** Draft-only MCP transport. Production is excluded by the issuance policy. */
+final class McpOAuthDraftController
+{
+    private const RESOURCES = ['courses', 'articles', 'pages'];
+
+    private static function catalog(): array
+    {
+        $tools = [];
+        foreach (self::RESOURCES as $resource) {
+            foreach (['get', 'create', 'update'] as $action) {
+                $properties = ['id' => ['type' => 'integer', 'minimum' => 1]];
+                if ($action !== 'get') {
+                    $properties = [
+                        'request_id' => ['type' => 'string', 'format' => 'uuid', 'description' => 'Unique UUID; reuse only to retry the identical request.'],
+                        'title' => ['type' => 'string', 'maxLength' => 180],
+                        'summary' => ['type' => 'string', 'maxLength' => $resource === 'courses' ? 1000 : 400],
+                    ];
+                    if ($resource === 'courses') {
+                        $properties += [
+                            'description' => ['type' => 'string', 'maxLength' => 25000],
+                            'category_id' => ['type' => 'integer', 'minimum' => 1],
+                            'delivery_mode' => ['type' => 'string', 'enum' => ['online', 'onsite', 'hybrid']],
+                        ];
+                    } else {
+                        $properties['body'] = ['type' => 'string', 'maxLength' => 25000];
+                    }
+                    if ($action === 'update') {
+                        $properties += [
+                            'id' => ['type' => 'integer', 'minimum' => 1],
+                            'expected_version' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
+                        ];
+                    }
+                }
+                $tools[] = [
+                    'name' => $action.'_draft_'.$resource,
+                    'description' => ucfirst($action).' own unpublished plain-text '.$resource.' draft. No publishing or deletion. '.($action === 'update' ? 'Use a version from draft lookup and provide all editable fields.' : ''),
+                    'annotations' => [
+                        'readOnlyHint' => $action === 'get',
+                        'destructiveHint' => $action === 'update',
+                        'idempotentHint' => true,
+                        'openWorldHint' => false,
+                    ],
+                    'inputSchema' => [
+                        'type' => 'object', 'properties' => $properties,
+                        'required' => array_keys($properties), 'additionalProperties' => false,
+                    ],
+                ];
+            }
+        }
+        return $tools;
+    }
+
+    public function handle(Request $request): JsonResponse
+    {
+        abort_unless(McpOAuthDraftScopePolicy::issuanceEnabled(), 403);
+        abort_unless($request->isJson(), 415);
+        $rpc = $request->json()->all();
+        if (array_is_list($rpc) || ($rpc['jsonrpc'] ?? null) !== '2.0'
+            || ! is_string($rpc['method'] ?? null)
+            || (isset($rpc['id']) && ! is_string($rpc['id']) && ! is_int($rpc['id']))) {
+            return $this->error(null, -32600, 'Invalid JSON-RPC request.');
+        }
+        $id = $rpc['id'] ?? null;
+        // Discovery and lookup require the same current token and audience
+        // checks as mutations, including locked authorization records.
+        return McpOAuthDraftAuthorization::authorized($request, function (User $actor) use ($rpc, $id): JsonResponse {
+            $method = $rpc['method'];
+            if ($method === 'notifications/initialized') {
+                return response()->json([], 202)->header('Cache-Control', 'no-store');
+            }
+            if ($id === null) {
+                return $this->error(null, -32600, 'Request ID required.');
+            }
+            if ($method === 'initialize') {
+                return $this->success($id, [
+                    'protocolVersion' => '2025-11-25',
+                    'capabilities' => ['tools' => ['listChanged' => false]],
+                    'serverInfo' => ['name' => 'learncambodia-oauth-draft-rehearsal', 'version' => '0.1.0'],
+                    'instructions' => 'Own unpublished plain-text drafts only. Production WRITE disabled.',
+                ]);
+            }
+            if ($method === 'ping') {
+                return $this->success($id, (object) []);
+            }
+            $catalog = self::catalog();
+            if ($method === 'tools/list') {
+                return $this->success($id, ['tools' => $catalog]);
+            }
+            if ($method !== 'tools/call') {
+                return $this->error($id, -32601, 'Method unavailable.');
+            }
+            $params = $rpc['params'] ?? null;
+            $name = is_array($params) ? ($params['name'] ?? null) : null;
+            $args = is_array($params) ? ($params['arguments'] ?? null) : null;
+            $tool = is_string($name) ? collect($catalog)->firstWhere('name', $name) : null;
+            if ($tool === null || ! is_array($args) || array_is_list($args)
+                || array_diff(array_keys($args), $tool['inputSchema']['required'])
+                || array_diff($tool['inputSchema']['required'], array_keys($args))) {
+                return $this->toolResult($id, ['status' => 'rejected', 'http_status' => 422, 'message' => 'Invalid tool or arguments.'], true);
+            }
+            [$action, $resource] = explode('_draft_', $name, 2);
+            try {
+                // A nested transaction ensures errors roll back partial
+                // writes even when converted to a normal JSON-RPC result.
+                $result = \Illuminate\Support\Facades\DB::transaction(function () use ($actor, $action, $resource, $args): array {
+                    if ($action === 'get') {
+                        Validator::make($args, ['id' => ['required', 'integer', 'min:1']])->validate();
+                        return McpOAuthDraftWriter::inspect($actor, $resource, (int) $args['id']);
+                    }
+                    $requestId = Validator::make($args, ['request_id' => ['required', 'uuid']])->validate()['request_id'];
+                    unset($args['request_id']);
+                    return McpOAuthDraftWriter::execute($actor, strtoupper($action), $resource, $args, $requestId);
+                });
+                return $this->toolResult($id, $result + ['http_status' => 200], false);
+            } catch (ValidationException $error) {
+                $status = 422;
+            } catch (ModelNotFoundException $error) {
+                $status = 404;
+            } catch (HttpExceptionInterface $error) {
+                $status = $error->getStatusCode();
+            } catch (Throwable $error) {
+                // Do not emit raw exceptions or content in tool responses.
+                $status = 500;
+            }
+            return $this->toolResult($id, ['status' => 'rejected', 'http_status' => $status, 'message' => 'Draft operation rejected. Verify ownership, draft status, fields and version.'], true);
+        });
+    }
+
+    private function success(mixed $id, mixed $result): JsonResponse
+    {
+        return response()->json(['jsonrpc' => '2.0', 'id' => $id, 'result' => $result])
+            ->header('Cache-Control', 'no-store');
+    }
+
+    private function error(mixed $id, int $code, string $message): JsonResponse
+    {
+        return response()->json(['jsonrpc' => '2.0', 'id' => $id, 'error' => ['code' => $code, 'message' => $message]])
+            ->header('Cache-Control', 'no-store');
+    }
+
+    private function toolResult(mixed $id, array $data, bool $error): JsonResponse
+    {
+        return $this->success($id, [
+            'content' => [['type' => 'text', 'text' => json_encode($data, JSON_THROW_ON_ERROR)]],
+            'structuredContent' => $data, 'isError' => $error,
+        ]);
+    }
+}
