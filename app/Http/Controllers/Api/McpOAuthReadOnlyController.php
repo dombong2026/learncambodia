@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\McpActionAudit;
 use App\Models\Course;
-use App\Support\McpCrudEngine;
+use App\Support\McpOAuthReadCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -44,14 +44,14 @@ final class McpOAuthReadOnlyController extends Controller
                 'protocolVersion' => '2025-11-25',
                 'capabilities' => ['tools' => ['listChanged' => false]],
                 'serverInfo' => ['name' => 'learncambodia-oauth-read-only', 'version' => '0.1.0'],
-                'instructions' => 'OAuth resource permits READ of published courses and aggregate analytics only.',
+                'instructions' => 'OAuth resource permits READ of public catalog metadata and aggregate analytics only. No content mutations.',
             ]);
         }
         if ($method === 'ping') {
             return $this->success($id, (object) []);
         }
         if ($method === 'tools/list') {
-            return $this->success($id, ['tools' => [self::readTool()]]);
+            return $this->success($id, ['tools' => [self::readTool(), ...McpOAuthReadCatalog::tools()]]);
         }
         if ($method !== 'tools/call') {
             return $this->rpcError($id, -32601, 'Method unavailable on OAuth READ resource.');
@@ -59,6 +59,10 @@ final class McpOAuthReadOnlyController extends Controller
 
         $params = $rpc['params'] ?? null;
         $args = is_array($params) ? ($params['arguments'] ?? null) : null;
+        $name = is_array($params) ? ($params['name'] ?? null) : null;
+        if (is_string($name) && McpOAuthReadCatalog::supports($name)) {
+            return $this->dedicatedRead($request, $id, $name, $args);
+        }
         $operation = is_array($args) ? ($args['operation'] ?? null) : null;
         $resource = is_array($args) ? ($args['resource'] ?? null) : null;
         $valid = is_array($params) && ($params['name'] ?? null) === 'crud_manage_platform'
@@ -77,7 +81,7 @@ final class McpOAuthReadOnlyController extends Controller
         try {
             $data = $resource === 'courses'
                 ? $this->publicCourses($args['payload'] ?? [])
-                : McpCrudEngine::execute($request, $args);
+                : McpOAuthReadCatalog::read('get_platform_analytics', $args['payload'] ?? []);
             $data['status'] = 'read';
             $data['resource'] = $resource;
             $data['http_status'] = 200;
@@ -89,6 +93,27 @@ final class McpOAuthReadOnlyController extends Controller
                 'status' => 'rejected',
                 'http_status' => 403,
                 'receipt_id' => $receipt,
+                'message' => 'Read operation rejected. Contact the website administrator with the receipt ID.',
+            ], true);
+        }
+    }
+
+    private function dedicatedRead(Request $request, mixed $id, string $name, mixed $args): JsonResponse
+    {
+        try {
+            if (! is_array($args)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['arguments' => 'Expected object.']);
+            }
+            $data = McpOAuthReadCatalog::read($name, $args);
+            $data['status'] = 'read';
+            $data['resource'] = $name;
+            $data['http_status'] = 200;
+            $data['receipt_id'] = $this->audit($request, $name, 'success', 200);
+            return $this->toolResult($id, $data, false);
+        } catch (Throwable $error) {
+            $receipt = $this->audit($request, $name, 'failed', 403);
+            return $this->toolResult($id, [
+                'status' => 'rejected', 'http_status' => 403, 'receipt_id' => $receipt,
                 'message' => 'Read operation rejected. Contact the website administrator with the receipt ID.',
             ], true);
         }
@@ -117,6 +142,7 @@ final class McpOAuthReadOnlyController extends Controller
         return [
             'name' => 'crud_manage_platform',
             'description' => 'Read LearnCambodia public courses or aggregated education metrics. No writes.',
+            'annotations' => ['readOnlyHint' => true, 'destructiveHint' => false, 'openWorldHint' => false],
             'inputSchema' => [
                 'type' => 'object',
                 'properties' => [
