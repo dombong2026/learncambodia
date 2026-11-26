@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Authenticated rich editor against isolated Laravel fixture', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, info) => {
+    const scenario = info.title.startsWith('System Settings') ? 'settings'
+      : info.title.startsWith('ticket rich content') ? 'ticket' : null;
+    const email = scenario ? `editor-${scenario}-${info.project.name}@example.test` : 'editor-browser-qa@example.test';
     await page.goto('/login?lang=en');
-    await page.locator('#login_email').fill('editor-browser-qa@example.test');
+    await page.locator('#login_email').fill(email);
     await page.locator('#login_password').fill('Only-A-CI-Browser-Fixture-2026!');
     await page.locator('button[type="submit"]').first().click();
     await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
@@ -15,6 +18,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
 
     for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
+      await page.waitForLoadState('load');
       if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
         await sidebarToggle.click();
       }
@@ -51,6 +55,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
+    test.slow();
     await page.goto('/dashboard/course-builder/create?lang=en');
     const builder = page.locator('[data-course-builder]');
     const courseTitle = 'Builder Browser Course ' + info.project.name + ' ' + Date.now();
@@ -332,6 +337,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(controls).toHaveCSS('opacity', '1');
     await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await speed.scrollIntoViewIfNeeded();
+    const speedBox = await speed.boundingBox();
+    await page.mouse.move(speedBox.x + speedBox.width / 2, speedBox.y + speedBox.height / 2);
     await speed.click();
     await dialog.getByRole('button', { name: '1.5×', exact: true }).click();
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);

@@ -72,6 +72,7 @@ test('language switcher changes HTML locale from EN to Khmer and Chinese', async
   await expect(page.locator('#locale-menu')).toBeVisible();
   await page.locator('#locale-menu button[name="locale"][value="km"]').click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'km');
+  await page.waitForLoadState('load');
   await page.locator('button[aria-controls="locale-menu"]').click();
   await page.locator('#locale-menu button[name="locale"][value="zh"]').click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh');

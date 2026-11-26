@@ -215,7 +215,7 @@ final class EditorMediaController extends Controller
             $published = $published || Course::published()->where('featured_media_id', $media->id)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
             $published = $published || CourseExam::query()->where('featured_media_id', $media->id)
-                ->where('kind', 'quiz')->whereNull('course_id')->where('published', true)
+                ->whereNull('course_id')->where('published', true)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
             abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'lesson') {

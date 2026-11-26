@@ -106,9 +106,7 @@ final class AdminExaminationController extends Controller
         if (count(array_filter($data['questions'], fn ($question) => $question['format'] === 'speaking')) > 10) {
             throw ValidationException::withMessages(['questions' => 'An assessment can have up to 10 speaking recordings.']);
         }
-        if ($kind === 'quiz') {
-            $data += FeaturedMedia::validate($request);
-        }
+        $data += FeaturedMedia::validate($request);
         $data['kind'] = $kind;
         $data['course_id'] = $kind === 'quiz' ? null : ($data['course_id'] ?? null);
         $data['pricing'] = $data['course_id'] === null && $kind === 'exam'
