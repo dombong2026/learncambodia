@@ -17,6 +17,18 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
+        return $this->renderHome();
+    }
+
+    public function homePreview(string $layout): View
+    {
+        abort_unless(in_array($layout, ['classic', 'sunrise'], true), 404);
+
+        return $this->renderHome($layout);
+    }
+
+    private function renderHome(?string $layout = null): View
+    {
         $featuredCategories = Category::query()->visibleInCatalog()
             ->whereIn('code', ['GE', 'IELTS', 'TOEFL', 'TEFL', 'TESOL', 'CEFR'])
             ->orderBy('sort_order')->get();
@@ -30,6 +42,16 @@ class CatalogController extends Controller
         $publishedCourseCount = Course::discoverable()->count();
         $publishedCategoryCount = Category::visibleInCatalog()->count();
         $publishedArticleCount = ContentEntry::query()->publishedArticles()->count();
+
+        $layout ??= \App\Support\Appearance::value('home', 'home_layout');
+        if ($layout === 'sunrise') {
+            $assessments = \App\Models\CourseExam::query()->whereNull('course_id')->where('published', true);
+            $quizCount = (clone $assessments)->where('kind', 'quiz')->count();
+            $examCount = (clone $assessments)->where('kind', 'exam')->count();
+            $latestQuizzes = (clone $assessments)->where('kind', 'quiz')->latest('id')->limit(3)->get();
+            $latestExams = (clone $assessments)->where('kind', 'exam')->latest('id')->limit(3)->get();
+            return view('home.sunrise', compact('featuredCategories', 'featuredCourses', 'latestArticles', 'featuredInstructors', 'publishedCourseCount', 'publishedArticleCount', 'quizCount', 'examCount', 'latestQuizzes', 'latestExams'));
+        }
 
         return view('home', compact(
             'featuredCategories','featuredCourses','latestArticles',

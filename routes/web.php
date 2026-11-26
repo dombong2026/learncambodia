@@ -332,6 +332,7 @@ Route::middleware('auth')->group(function (): void {
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
             Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');
+            Route::get('/home/preview/{layout}', [CatalogController::class, 'homePreview'])->name('home-preview');
             Route::get('/{section}', [AdminAppearanceController::class, 'edit'])->name('edit');
             Route::post('/{section}', [AdminAppearanceController::class, 'store'])->name('store');
             Route::post('/revisions/{revision}/submit', [AdminAppearanceController::class, 'submit'])->name('submit');
