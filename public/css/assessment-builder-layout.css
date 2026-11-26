@@ -1,0 +1,35 @@
+/* Scoped to the first section of the shared Quiz / Exam Builder. */
+.assessment-builder-details { align-items: start; }
+.assessment-builder-details > *, .assessment-builder-identity > * { min-width: 0; }
+.assessment-builder-identity { align-content: start; }
+.assessment-builder-limits { display: contents; }
+.assessment-builder-metadata { align-items: start; }
+.assessment-builder-details .assessment-builder-switch {
+    position: relative; display: flex; align-items: center; gap: .75rem;
+    min-width: 0; min-height: 3.25rem; cursor: pointer;
+}
+.assessment-builder-switch input[type="checkbox"] {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+}
+.assessment-builder-switch-track {
+    position: relative; display: block; width: 2.5rem; height: 1.5rem;
+    flex: 0 0 2.5rem; border-radius: 999px; background: #64748b;
+    transition: background-color 150ms ease;
+}
+.assessment-builder-switch-track::after {
+    content: ""; position: absolute; top: .1875rem; left: .1875rem;
+    width: 1.125rem; height: 1.125rem; background: #fff;
+    border-radius: 50%; transition: transform 150ms ease;
+}
+.assessment-builder-switch input:checked + .assessment-builder-switch-track { background: #2563eb; }
+.assessment-builder-switch input:checked + .assessment-builder-switch-track::after { transform: translateX(1rem); }
+.assessment-builder-switch input:focus-visible + .assessment-builder-switch-track { outline: 2px solid #60a5fa; outline-offset: 3px; }
+.assessment-builder-switch input:disabled + .assessment-builder-switch-track { opacity: .5; }
+@media (prefers-reduced-motion: reduce) {
+    .assessment-builder-switch-track, .assessment-builder-switch-track::after { transition: none; }
+}
+@media (forced-colors: active) {
+    .assessment-builder-switch-track { border: 1px solid ButtonText; }
+    .assessment-builder-switch input:checked + .assessment-builder-switch-track { background: Highlight; }
+    .assessment-builder-switch-track::after { background: ButtonText; }
+}
