@@ -18,6 +18,9 @@
         @csrf @if($exam->exists)@method('PATCH')@endif
         <fieldset class="workspace-panel grid gap-4 p-5 sm:grid-cols-2">
             <label class="builder-field sm:col-span-2">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+            <div class="sm:col-span-2">
+                @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
+            </div>
             @unless($quiz)
             <label class="builder-field">Course (optional)
                 <select name="course_id" class="rounded-xl border px-3 py-2">
@@ -59,10 +62,6 @@
             @endunless
         </fieldset>
 
-        @if($quiz)
-            @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
-        @endif
-
         <section class="workspace-panel space-y-3 p-5">
             <h2 id="exam-instructions-label" class="font-extrabold">Instructions, activities & resources</h2>
             <p class="text-sm text-slate-600 dark:text-slate-300">Add task instructions and reading passages. Upload video, audio, images, PDF, Word, or Excel files.</p>
@@ -83,7 +82,7 @@
         </section>
         <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Save {{ $assessmentLabel }}</button>
     </form>
-    @if($quiz)@include('workspace.admin.media-picker')@endif
+    @include('workspace.admin.media-picker')
     @if($exam->published && !$exam->course_id)
         <a class="my-5 inline-block text-sm font-semibold underline" href="{{ $exam->publicUrl() }}">Open learner page</a>
     @endif

@@ -22,6 +22,44 @@ final class ExaminationWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_exam_featured_image_can_be_selected_published_and_removed(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin);
+        foreach (['admin.exams', 'admin.quizzes-manager'] as $manager) {
+            $this->get(route($manager.'.create'))->assertOk()
+                ->assertSeeInOrder(['Featured media', 'Select from Media Library', 'Instructions, activities']);
+        }
+        $asset = $this->postJson('/dashboard/media-library', [
+            'file' => UploadedFile::fake()->image('cover.png'),
+        ])->assertCreated()->json();
+        $type = ExamType::create(['name' => 'Progress', 'kind' => 'exam']);
+        $data = [
+            'title' => 'Exam with cover', 'exam_type_id' => $type->id, 'time_limit' => 30,
+            'passing_percent' => 70, 'attempt_limit' => 1,
+            'questions' => [['prompt' => 'Choose A', 'a' => 'A', 'b' => 'B', 'correct' => 'a', 'points' => 1]],
+        ];
+        $this->post(route('admin.exams.store'), $data + [
+            'featured_kind' => 'image', 'featured_media_id' => $asset['id'], 'featured_alt' => 'Study desk',
+        ])->assertSessionHasNoErrors();
+        $exam = CourseExam::sole();
+        $this->get(route('admin.exams.edit', $exam))->assertOk()->assertSee('cover.png')->assertSee('Study desk');
+        $url = route('editor-media.show', $asset['id']);
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+        $this->get($url)->assertForbidden();
+        $this->actingAs($admin)->patch(route('admin.exams.update', $exam), $data + ['published' => true])
+            ->assertSessionHasNoErrors();
+        $this->app['auth']->forgetGuards();
+        $this->flushSession();
+        $this->get($url)->assertOk();
+        $this->get($exam->publicUrl())->assertOk()->assertSee('Study desk');
+        $this->actingAs($admin)->patch(route('admin.exams.update', $exam), $data + ['featured_kind' => 'none'])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($exam->fresh()->featured_media_id);
+    }
+
     public function test_course_review_is_available_to_its_admin_or_superadmin_author(): void
     {
         foreach (['admin' => 'approve', 'superadmin' => 'reject'] as $role => $decision) {
