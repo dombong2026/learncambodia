@@ -89,7 +89,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
 
         function hideControls(): void {
             clearTimeout(idleTimer);
-            if (adjustingVolume || openMenu?.panel.matches(':has(:focus-visible)')) return;
+            if (adjustingVolume || openMenu) return;
             closeMenu();
             delete player.dataset.controlsActive;
         }
@@ -98,7 +98,7 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (player.hidden) return;
             clearTimeout(idleTimer);
             player.dataset.controlsActive = 'true';
-            if (!openMenu) idleTimer = setTimeout(hideControls, 1200);
+            if (!openMenu) idleTimer = setTimeout(hideControls, 1800);
         }
 
         const updateSpeed = () => {
@@ -165,7 +165,16 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             closeMenu(true);
             showControls();
         });
+        player.addEventListener('pointerenter', showControls);
         player.addEventListener('pointermove', showControls);
+        // An open popover remains interactive while the pointer crosses its edge.
+        // A click outside the player dismisses it explicitly.
+        document.addEventListener('pointerdown', event => {
+            if (openMenu && event.target instanceof Node && !player.contains(event.target)) {
+                closeMenu();
+                hideControls();
+            }
+        });
         player.addEventListener('pointerdown', event => {
             if (openMenu && !openMenu.toggle.parentElement?.contains(event.target as Node)) closeMenu();
             showControls();
@@ -174,7 +183,10 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
             if (event.pointerType !== 'touch') hideControls();
         });
         player.addEventListener('pointercancel', hideControls);
-        window.addEventListener('blur', hideControls);
+        window.addEventListener('blur', () => {
+            closeMenu();
+            hideControls();
+        });
         for (const option of rateOptions) {
             option.addEventListener('click', () => {
                 video.playbackRate = Number(option.dataset.videoRate);
@@ -188,7 +200,15 @@ document.querySelectorAll<HTMLElement>('[data-featured-video]').forEach(player =
     }
 
     play.addEventListener('click', togglePlayback);
-    video.addEventListener('click', togglePlayback);
+    if (player.hasAttribute('data-compact-video')) {
+        // Native video hit-testing can obscure overlays on WebKit. The wrapper
+        // owns surface clicks while actual controls keep their own handlers.
+        player.addEventListener('click', event => {
+            if (event.target === player || event.target === video) togglePlayback();
+        });
+    } else {
+        video.addEventListener('click', togglePlayback);
+    }
     mute.addEventListener('click', () => {
         if (volume && video.volume === 0) {
             video.volume = previousVolume;
