@@ -10,7 +10,7 @@
     @if($errors->any())<div class="wsm-message wsm-error" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
     <section class="wsm-panel wsm-summary">
         <div><p class="wsm-eyebrow">Current homepage attraction</p><h2>{{ $current ? ucfirst($current['kind']) : 'Default Image' }}</h2>
-            <p>{{ $current ? $current['media']->original_name : 'Each homepage keeps its original artwork.' }}</p>
+            <p>{{ ($current['kind'] ?? null) === 'playlist' ? count($current['items']).' promotional videos' : ($current ? $current['media']->original_name : 'Each homepage keeps its original artwork.') }}</p>
             <p>One shared selection applies immediately to Sunrise and all nine skins, and to the default Classic hero. Campaign-player settings remain independent.</p>
         </div>
         @if($current)<x-home-hero-media :selection="$current"/>
@@ -38,6 +38,7 @@
             <a class="wsm-link" href="#hero-library">Browse available media ↓</a>
         </section>
     </div>
+    @include('workspace.admin.home-hero-playlist-form')
     <section id="hero-library" class="wsm-panel wsm-schedule">
         <h2>Choose from Media Library</h2><p>Recommended: 1920 × 1080 (16:9), optimized for the web. Videos play on demand with controls.</p>
         <form class="wsm-schedule-form" method="GET" action="{{ route('admin.appearance.home-hero-media.index') }}">

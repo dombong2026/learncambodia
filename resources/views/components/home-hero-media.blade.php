@@ -3,7 +3,9 @@
     <link rel="stylesheet" href="{{ asset('css/home-hero-media.css') }}">
 @endonce
 <div class="home-hero-media" data-home-hero-media="{{ $selection['kind'] }}">
-    @if($selection['kind'] === 'video')
+    @if($selection['kind'] === 'playlist')
+        <x-home-hero-playlist :selection="$selection"/>
+    @elseif($selection['kind'] === 'video')
         <x-featured-video :src="route('editor-media.show', $selection['media'])" :label="$selection['label']"/>
     @else
         <img src="{{ route('editor-media.show', $selection['media']) }}" alt="{{ $selection['label'] }}" fetchpriority="high" decoding="async">

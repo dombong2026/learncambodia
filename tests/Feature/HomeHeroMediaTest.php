@@ -65,6 +65,40 @@ final class HomeHeroMediaTest extends TestCase
         $this->get('/')->assertOk()->assertSee('data-home-hero-media="image"', false)->assertSee('A welcoming classroom');
     }
 
+    public function test_playlist_order_options_and_public_media_protection(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role'=>'admin']);
+        $ids = [];
+        foreach ([1, 2, 3] as $part) {
+            $media = EditorMedia::create([
+                'uploaded_by'=>$admin->id, 'context'=>'library', 'path'=>"editor-media/part{$part}.mp4",
+                'mime'=>'video/mp4', 'original_name'=>"Learn Cambodia part {$part}.mp4", 'size'=>100,
+            ]);
+            Storage::disk('local')->put($media->path, str_repeat('x',100));
+            $ids[] = $media->id;
+        }
+        $this->actingAs($admin)->post('/dashboard/appearance/home-hero-media', [
+            'source'=>'playlist', 'playlist_ids'=>[$ids[1], $ids[0]], 'options'=>['autoplay'=>1,'muted'=>0,'loop'=>1],
+        ])->assertRedirect();
+        $this->assertSame([$ids[1], $ids[0]], HomeHeroMedia::settings()['playlist_ids']);
+        $this->assertTrue(HomeHeroMedia::settings()['options']['muted']);
+        $this->get('/')->assertOk()->assertSee('data-home-hero-media="playlist"', false)
+            ->assertSee('data-hero-playlist', false);
+        $this->get('/dashboard/appearance/home-hero-media')->assertOk()->assertSee('Video Playlist');
+        $this->delete('/dashboard/media-library/'.$ids[1])->assertSessionHasErrors('media');
+        $this->post('/dashboard/appearance/home-hero-media', [
+            'source'=>'playlist', 'playlist_ids'=>[$ids[0],$ids[0]], 'options'=>['autoplay'=>1],
+        ])->assertSessionHasErrors('playlist_ids.0');
+        $this->app['auth']->forgetGuards();
+        $this->get('/editor-media/'.$ids[0])->assertOk();
+        $this->get('/editor-media/'.$ids[1])->assertOk();
+        $this->get('/editor-media/'.$ids[2])->assertForbidden();
+        $this->actingAs($admin)->post('/dashboard/appearance/home-hero-media',['source'=>'default'])->assertRedirect();
+        $this->app['auth']->forgetGuards();
+        $this->get('/editor-media/'.$ids[1])->assertForbidden();
+    }
+
     public function test_guest_and_student_cannot_manage_media(): void
     {
         $this->get('/dashboard/appearance/home-hero-media')->assertRedirect();
