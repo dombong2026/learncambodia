@@ -3,7 +3,11 @@ import { test, expect } from '@playwright/test';
 test.describe('Authenticated rich editor against isolated Laravel fixture', () => {
   test.beforeEach(async ({ page }, info) => {
     const scenario = info.title.startsWith('System Settings') ? 'settings'
-      : info.title.startsWith('ticket rich content') ? 'ticket' : null;
+      : info.title.startsWith('ticket rich content') ? 'ticket'
+      : info.title.startsWith('assessment cover preview') ? 'assessment-cover'
+      : info.title.startsWith('publication sidebar can copy') ? 'editorial-cover'
+      : info.title.startsWith('media grid uploads') ? 'media-image'
+      : info.title.startsWith('media video preview') ? 'media-video' : null;
     const email = scenario ? `editor-${scenario}-${info.project.name}@example.test` : 'editor-browser-qa@example.test';
     await page.goto('/login?lang=en');
     await page.locator('#login_email').fill(email);

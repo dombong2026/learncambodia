@@ -145,7 +145,7 @@ jobs:
             $user->forceFill(["role"=>"admin"])->save();
             $app->make(\Database\Seeders\LearningCategoryArticleSeeder::class)->run($user->id);
             foreach (["desktop-chromium", "mobile-chromium", "tablet-chromium", "desktop-webkit", "mobile-webkit"] as $project) {
-                foreach (["settings", "ticket"] as $scenario) {
+                foreach (["settings", "ticket", "assessment-cover", "editorial-cover", "media-image", "media-video"] as $scenario) {
                     $fixture = $user->replicate();
                     $fixture->email = "editor-{$scenario}-{$project}@example.test";
                     $fixture->save();

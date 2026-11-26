@@ -9,7 +9,7 @@
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=2' }}">
+    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=3' }}">
     <script defer src="{{ asset('js/assessment-featured-preview.js') }}"></script>
 @endpush
 @section('content')
@@ -21,9 +21,9 @@
     <form data-exam-builder data-question-limit="{{ $quiz ? 50 : 200 }}" data-media-upload="{{ route('editor-media.store') }}" method="post" action="{{ $exam->exists ? route($manager.'.update', $exam) : route($manager.'.store') }}" class="space-y-5">
         @csrf @if($exam->exists)@method('PATCH')@endif
         <fieldset class="workspace-panel assessment-builder-details grid gap-4 p-5 sm:grid-cols-2" data-assessment-details>
-            <div class="assessment-builder-identity grid min-w-0 gap-4">
-                <label class="builder-field">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
-                <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
+            <div class="assessment-builder-identity grid min-w-0 gap-3">
+                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} type
                     <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
                         <option value="">Choose a type</option>
                         @foreach($types as $type)
@@ -32,10 +32,6 @@
                     </select>
                     <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
                 </label>
-            </div>
-            <div class="min-w-0">
-                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
-            </div>
             @unless($quiz)
             <label class="builder-field">Course (optional)
                 <select name="course_id" class="rounded-xl border px-3 py-2">
@@ -52,6 +48,10 @@
                         <input name="{{ $field }}" type="number" min="1" max="{{ $maximum }}" value="{{ old($field, $exam->$field ?? $default) }}" required>
                     </label>
                 @endforeach
+            </div>
+            </div>
+            <div class="assessment-builder-media min-w-0">
+                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
             </div>
             <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="assessment-builder-metadata sm:col-span-2 sm:grid-cols-2" />
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
