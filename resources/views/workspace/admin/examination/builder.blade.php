@@ -9,7 +9,7 @@
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=3' }}">
+    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=4' }}">
     <script defer src="{{ asset('js/assessment-featured-preview.js') }}"></script>
 @endpush
 @section('content')
@@ -20,10 +20,16 @@
     @endif
     <form data-exam-builder data-question-limit="{{ $quiz ? 50 : 200 }}" data-media-upload="{{ route('editor-media.store') }}" method="post" action="{{ $exam->exists ? route($manager.'.update', $exam) : route($manager.'.store') }}" class="space-y-5">
         @csrf @if($exam->exists)@method('PATCH')@endif
-        <fieldset class="workspace-panel assessment-builder-details grid gap-4 p-5 sm:grid-cols-2" data-assessment-details>
-            <div class="assessment-builder-identity grid min-w-0 gap-3">
-                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
-                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} type
+        <section class="workspace-panel assessment-builder-cover space-y-4 p-5" data-assessment-cover aria-labelledby="assessment-cover-heading">
+            <h2 id="assessment-cover-heading" class="font-extrabold">Title &amp; featured media</h2>
+            <label class="builder-field">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+            <div class="assessment-builder-media min-w-0">
+                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
+            </div>
+        </section>
+        <fieldset class="workspace-panel assessment-builder-details grid gap-4 p-5 sm:grid-cols-2" data-assessment-details aria-labelledby="assessment-settings-heading">
+            <h2 id="assessment-settings-heading" class="font-extrabold sm:col-span-2">Assessment settings</h2>
+                <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
                     <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
                         <option value="">Choose a type</option>
                         @foreach($types as $type)
@@ -48,10 +54,6 @@
                         <input name="{{ $field }}" type="number" min="1" max="{{ $maximum }}" value="{{ old($field, $exam->$field ?? $default) }}" required>
                     </label>
                 @endforeach
-            </div>
-            </div>
-            <div class="assessment-builder-media min-w-0">
-                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
             </div>
             <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="assessment-builder-metadata sm:col-span-2 sm:grid-cols-2" />
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
