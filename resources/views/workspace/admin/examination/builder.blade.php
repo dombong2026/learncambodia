@@ -8,6 +8,9 @@
 @section('heading_action')
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
+@push('workspace_styles')
+    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css') }}">
+@endpush
 @section('content')
     @if($errors->any())
         <ul role="alert" class="mb-4 list-disc space-y-1 pl-5 text-red-600 dark:text-red-300">
@@ -16,9 +19,20 @@
     @endif
     <form data-exam-builder data-question-limit="{{ $quiz ? 50 : 200 }}" data-media-upload="{{ route('editor-media.store') }}" method="post" action="{{ $exam->exists ? route($manager.'.update', $exam) : route($manager.'.store') }}" class="space-y-5">
         @csrf @if($exam->exists)@method('PATCH')@endif
-        <fieldset class="workspace-panel grid gap-4 p-5 sm:grid-cols-2">
-            <label class="builder-field sm:col-span-2">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
-            <div class="sm:col-span-2">
+        <fieldset class="workspace-panel assessment-builder-details grid gap-4 p-5 sm:grid-cols-2" data-assessment-details>
+            <div class="assessment-builder-identity grid min-w-0 gap-4">
+                <label class="builder-field">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+                <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
+                    <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
+                        <option value="">Choose a type</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type->id }}" @selected((int) old('exam_type_id', $exam->exam_type_id) === $type->id)>{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                    <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
+                </label>
+            </div>
+            <div class="min-w-0">
                 @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
             </div>
             @unless($quiz)
@@ -31,27 +45,20 @@
                 </select>
             </label>
             @endunless
-            <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
-                <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
-                    <option value="">Choose a type</option>
-                    @foreach($types as $type)
-                        <option value="{{ $type->id }}" @selected((int) old('exam_type_id', $exam->exam_type_id) === $type->id)>{{ $type->name }}</option>
-                    @endforeach
-                </select>
-                <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
-            </label>
-            <div class="grid gap-4 sm:col-span-2 sm:grid-cols-3">
+            <div class="assessment-builder-limits">
                 @foreach(['time_limit'=>['Time limit (minutes)',$quiz ? 5 : 60,$quiz ? 30 : 240], 'passing_percent'=>['Pass score (%)',70,100], 'attempt_limit'=>['Attempts allowed',2,10]] as $field=>[$label,$default,$maximum])
                     <label class="builder-field">{{ $label }}
                         <input name="{{ $field }}" type="number" min="1" max="{{ $maximum }}" value="{{ old($field, $exam->$field ?? $default) }}" required>
                     </label>
                 @endforeach
             </div>
-            <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="sm:col-span-2 sm:grid-cols-2" />
+            <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="assessment-builder-metadata sm:col-span-2 sm:grid-cols-2" />
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
-                <label class="flex items-center gap-2 text-sm font-semibold">
+                <label class="assessment-builder-switch rounded-xl border border-slate-200 p-3 text-sm font-semibold dark:border-slate-700">
                     <input type="hidden" name="{{ $key }}" value="0">
-                    <input type="checkbox" name="{{ $key }}" value="1" @checked(old($key,$exam->$key ?? ($quiz && in_array($key, ['gamified', 'live_feedback'], true))))>{{ $label }}
+                    <input type="checkbox" role="switch" name="{{ $key }}" value="1" @checked(old($key,$exam->$key ?? ($quiz && in_array($key, ['gamified', 'live_feedback'], true))))>
+                    <span class="assessment-builder-switch-track" aria-hidden="true"></span>
+                    <span>{{ $label }}</span>
                 </label>
             @endforeach
             <p class="text-xs text-slate-600 dark:text-slate-300 sm:col-span-2">Checking an answer locks that response. Writing and speaking are graded after submission.</p>
