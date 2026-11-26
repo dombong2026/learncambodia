@@ -246,6 +246,53 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(page.locator('.rich-public-content script')).toHaveCount(0);
   });
 
+  test('assessment cover preview reserves space and updates from the media picker', async ({ page }, info) => {
+    test.slow();
+    for (const manager of ['exams', 'quiz-manager']) {
+      await page.goto('/dashboard/' + manager + '/create?lang=en');
+      const panel = page.locator('[data-assessment-media-panel]');
+      const preview = panel.locator('[data-assessment-media-preview]');
+      const limit = page.locator('input[name="time_limit"]');
+      const kind = panel.getByLabel('Media type');
+      await expect(preview).toBeVisible();
+      await expect(panel.getByText('No featured media selected')).toBeVisible();
+      const initial = await panel.boundingBox();
+      const relativeLimitTop = () => limit.evaluate(input => {
+        const mediaPanel = document.querySelector('[data-assessment-media-panel]');
+        return input.getBoundingClientRect().top - mediaPanel.getBoundingClientRect().top;
+      });
+      const initialLimit = await relativeLimitTop();
+      const assertStable = async () => {
+        await expect.poll(async () => Math.abs((await panel.boundingBox()).height - initial.height)).toBeLessThan(2);
+        await expect.poll(async () => Math.abs(await relativeLimitTop() - initialLimit)).toBeLessThan(2);
+      };
+      await panel.getByRole('button', { name: 'Upload / select media' }).click();
+      await expect(kind).toHaveValue('image');
+      const picker = page.getByRole('dialog', { name: 'Media Library' });
+      await expect(picker).toBeVisible();
+      const name = 'assessment-cover-' + manager + '-' + info.project.name + '-' + Date.now() + '.png';
+      await picker.locator('[data-media-upload]').setInputFiles({
+        name,
+        mimeType: 'image/png',
+        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGMQsisEAAEnAMIfy+WiAAAAAElFTkSuQmCC', 'base64'),
+      });
+      await expect(picker).toBeHidden();
+      await expect(panel.locator('[data-featured-name]')).toHaveText(name);
+      await expect(preview.locator('img')).toBeVisible();
+      await expect.poll(() => preview.locator('img').evaluate(image => image.naturalWidth)).toBe(1);
+      await assertStable();
+      await kind.selectOption('color');
+      await expect(preview.locator('[data-assessment-media-swatch]')).toBeVisible();
+      await assertStable();
+      await kind.selectOption('youtube');
+      await expect(panel.getByText('Enter a valid YouTube link to preview')).toBeVisible();
+      await assertStable();
+      await kind.selectOption('none');
+      await expect(panel.getByText('No featured media selected')).toBeVisible();
+      await assertStable();
+    }
+  });
+
   test('publication sidebar can copy the slug, upload and publish a reusable featured image', async ({ page }, info) => {
     await page.goto('/dashboard/editorial/pages/create?lang=en');
     const sidebar = page.getByRole('complementary', { name: 'Document settings' });
