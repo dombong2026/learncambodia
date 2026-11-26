@@ -21,6 +21,11 @@
 <div class="rounded-2xl border border-[#e4d0a4] bg-[#fff8e9] px-6 py-5 text-sm leading-8 text-[#765524] dark:border-[#7e6437] dark:bg-[#413620] dark:text-[#f6d38e]">
     Pages share the existing global header/footer. This manager can edit safe text and presentation settings, but cannot inject HTML, scripts, external integrations, or publish content without a second administrator's approval.
 </div>
+<section class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+    <h2 class="text-xl font-bold">Website Skins</h2>
+    <p class="mt-2 text-sm">Nine visual editions, instant activation, weekly rotation and seasonal schedules. Layout activation is separate from reviewed content.</p>
+    <a class="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#315e48] px-4 py-3 text-sm font-bold text-white" href="{{ route('admin.appearance.website-skins.index') }}"><x-workspace-icon name="palette" class="h-5 w-5"/> Manage Website Skins</a>
+</section>
 <section class="mt-8">
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div><p class="text-xs font-extrabold uppercase tracking-[.14em] text-[#b17b26]">Frontend page layouts</p><h2 class="mt-2 text-2xl font-black text-[#11345c] dark:text-white">Reference-based long pages</h2></div>

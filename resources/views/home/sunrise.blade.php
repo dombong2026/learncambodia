@@ -28,6 +28,9 @@
                 </form>
             </div>
             <div class="sr-landscape" aria-hidden="true">
+                @if($skinArtwork = \App\Support\WebsiteSkinState::active())
+                    <img src="{{ asset('images/website-skins/'.$skinArtwork.'.svg') }}" width="800" height="420" alt="" fetchpriority="high">
+                @else
                 <svg viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" role="presentation">
                     <defs><linearGradient id="sr-sky" x2="0" y2="1"><stop stop-color="#f9d69c"/><stop offset="1" stop-color="#fff5dc"/></linearGradient><linearGradient id="sr-field" x2="0" y2="1"><stop stop-color="#8ca98a"/><stop offset="1" stop-color="#426950"/></linearGradient></defs>
                     <rect width="560" height="420" rx="30" fill="url(#sr-sky)"/>
@@ -40,6 +43,7 @@
                     <g transform="translate(93 244) rotate(-8)"><rect width="122" height="93" rx="8" fill="#fdf8ec"/><path d="M61 13 Q39 1 12 9 V74 Q35 67 61 80 Q87 67 110 74 V9 Q83 1 61 13 V80" stroke="#315c48" stroke-width="3" fill="none"/><path d="M23 26 H46 M23 36 H48 M73 26 H98 M73 36 H95" stroke="#91a78b" stroke-width="3" stroke-linecap="round"/></g>
                     <path d="M463 56 q8 -9 16 0 q8 -9 16 0 M503 81 q6 -7 12 0 q6 -7 12 0" stroke="#976a46" stroke-width="2.5" fill="none" stroke-linecap="round"/>
                 </svg>
+                @endif
             </div>
         </div>
     </section>
