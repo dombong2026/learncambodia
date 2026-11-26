@@ -25,6 +25,7 @@
     <h2 class="text-xl font-bold">Website Skins</h2>
     <p class="mt-2 text-sm">Nine visual editions, instant activation, weekly rotation and seasonal schedules. Layout activation is separate from reviewed content.</p>
     <a class="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#315e48] px-4 py-3 text-sm font-bold text-white" href="{{ route('admin.appearance.website-skins.index') }}"><x-workspace-icon name="palette" class="h-5 w-5"/> Manage Website Skins</a>
+    <a class="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold dark:border-slate-600" href="{{ route('admin.appearance.home-hero-media.index') }}">Homepage Hero Media</a>
 </section>
 <section class="mt-8">
     <div class="flex flex-wrap items-end justify-between gap-3">

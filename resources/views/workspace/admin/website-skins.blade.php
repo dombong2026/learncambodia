@@ -12,6 +12,7 @@
         <div><p class="wsm-eyebrow">Global frontend appearance</p><h2>Website Skins</h2><p>One active skin at a time. Activating a new skin automatically deactivates the previous one.</p></div>
         <div><span class="wsm-eyebrow">Active skin</span><strong data-active-skin="{{ $activeSkin ?? 'legacy' }}">{{ $skins[$activeSkin]['name'] ?? 'Existing website' }}</strong><span>{{ ucfirst($settings['mode'] ?? 'legacy') }} mode</span></div>
         <div class="wsm-actions">
+            <a class="wsm-button wsm-outline" href="{{ route('admin.appearance.home-hero-media.index') }}">Homepage Hero Media</a>
             <form method="POST" action="{{ route('admin.appearance.website-skins.update') }}">@csrf<input type="hidden" name="mode" value="automatic"><button class="wsm-button" type="submit" @disabled(($settings['mode'] ?? 'legacy') === 'automatic')>Automatic rotation</button></form>
             <form method="POST" action="{{ route('admin.appearance.website-skins.update') }}">@csrf<input type="hidden" name="mode" value="legacy"><button class="wsm-button wsm-outline" type="submit" @disabled(($settings['mode'] ?? 'legacy') === 'legacy')>Use existing website</button></form>
         </div>
