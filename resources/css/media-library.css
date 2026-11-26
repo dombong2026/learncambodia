@@ -207,19 +207,23 @@
     --video-thumb: #e6f4ff;
     --video-track: #496480;
     color: var(--video-action);
+    position: relative;
+    isolation: isolate;
 }
 
 .library-preview-stage .featured-video-compact:not([hidden]) { width: 100%; }
 .library-preview-stage .featured-video-compact video {
     position: relative;
     z-index: 0;
+    /* The compact surface is handled by its wrapper, not the native video layer. */
+    pointer-events: none;
     min-height: min(10rem, 48dvh);
 }
 
 .featured-video-compact .featured-video-controls:not([hidden]) {
     position: absolute;
     inset: auto 0 0;
-    z-index: 1;
+    z-index: 2;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) repeat(4, auto);
     gap: 0 clamp(.06rem, 1vw, .3rem);
@@ -230,6 +234,11 @@
     opacity: 0;
     pointer-events: none;
     transition: none;
+    text-shadow: 0 1px 2px #000, 0 0 4px #000;
+}
+
+/* Avoid filtering the interactive overlay as one composited layer in WebKit. */
+.featured-video-compact .featured-video-controls button svg {
     filter: drop-shadow(0 1px 2px #000) drop-shadow(0 0 4px #000);
 }
 
@@ -370,8 +379,9 @@
 .featured-video-compact .featured-video-status {
     position: absolute;
     inset: .5rem .65rem auto;
-    z-index: 2;
+    z-index: 3;
     background: #0a1729;
+    pointer-events: none;
     border-radius: .5rem;
 }
 

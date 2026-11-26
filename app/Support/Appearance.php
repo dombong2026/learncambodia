@@ -12,7 +12,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'text:60', 'show_cefr' => 'bool'],
         'footer' => ['footer_note' => 'text:180'],
         'typography' => ['font_style' => 'font', 'text_scale' => 'scale'],
-        'home' => ['hero_title' => 'text:130', 'hero_intro' => 'text:480'],
+        'home' => ['home_layout' => 'home_layout', 'hero_title' => 'text:130', 'hero_intro' => 'text:480'],
         'about' => [
             'heading'=>'text:100','intro'=>'text:350',
             'mission_heading'=>'text:120','mission_body'=>'text:650',
@@ -121,7 +121,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'All categories', 'show_cefr' => true],
         'footer' => ['footer_note' => 'Independent preparation information. Third-party exams and qualifications belong to their respective organizations.'],
         'typography' => ['font_style' => 'system', 'text_scale' => 'normal'],
-        'home' => ['hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.'],
+        'home' => ['home_layout' => 'classic', 'hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.'],
         'about' => [
             'heading'=>'About Learn Cambodia',
             'intro'=>'Learning pathways built for clarity, accessibility and responsible academic review.',
@@ -260,6 +260,7 @@ final class Appearance
         foreach (self::fields($section) as $key => $kind) {
             $rules[$key] = match (true) {
                 $kind === 'bool' => ['required', 'boolean'],
+                $kind === 'home_layout' => ['sometimes', 'required', 'in:classic,sunrise'],
                 $kind === 'font' => ['required', 'in:system,serif,mono'],
                 $kind === 'scale' => ['required', 'in:compact,normal,large'],
                 default => ['nullable', 'string', 'max:'.explode(':', $kind)[1]],

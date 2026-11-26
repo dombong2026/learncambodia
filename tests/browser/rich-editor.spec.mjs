@@ -388,6 +388,8 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(controls).toHaveCSS('opacity', '1');
     await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(player.locator('video')).toHaveCSS('pointer-events', 'none');
+    await expect(controls).toHaveCSS('pointer-events', 'auto');
     await speed.scrollIntoViewIfNeeded();
     const speedBox = await speed.boundingBox();
     await page.mouse.move(speedBox.x + speedBox.width / 2, speedBox.y + speedBox.height / 2);
@@ -425,6 +427,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     const settings = dialog.getByRole('button', { name: 'Settings', exact: true });
     await settings.click();
     const loop = dialog.getByRole('checkbox', { name: 'Loop video' });
+    await expect(loop).toBeVisible();
     await loop.check();
     await expect.poll(() => player.locator('video').evaluate(video => video.loop)).toBe(true);
     await loop.uncheck();

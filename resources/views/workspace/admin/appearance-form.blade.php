@@ -13,8 +13,31 @@
     </div>
     <form method="POST" action="{{ route('admin.appearance.store', $section) }}" class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         @csrf
+        @if($section === 'home')
+            <div class="mb-7 rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
+                <h2 class="text-lg font-bold">{{ __('sunrise.layout_title') }}</h2>
+                <p class="mt-2 text-sm text-slate-500">{{ __('sunrise.active_layout') }}: <strong>{{ \App\Support\Appearance::value('home','home_layout') === 'sunrise' ? 'Sunrise' : 'Classic' }}</strong></p>
+                <fieldset class="mt-4 grid gap-4 sm:grid-cols-2">
+                    <legend class="sr-only">{{ __('sunrise.layout_title') }}</legend>
+                    @foreach(['classic','sunrise'] as $layout)
+                        <label class="cursor-pointer rounded-2xl border border-slate-300 p-4 dark:border-slate-600">
+                            <input type="radio" name="home_layout" value="{{ $layout }}" @checked(old('home_layout', $settings['home_layout'] ?? 'classic') === $layout) class="mr-2">
+                            <strong>{{ ucfirst($layout) }}</strong>
+                            <div class="my-4 h-20 rounded-xl {{ $layout === 'sunrise' ? 'bg-gradient-to-br from-amber-100 via-orange-100 to-emerald-200' : 'bg-gradient-to-br from-[#09234b] to-[#123962]' }}"></div>
+                            <span class="text-sm text-slate-500">{{ __('sunrise.layout_'.$layout) }}</span>
+                        </label>
+                    @endforeach
+                </fieldset>
+                @error('home_layout')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                <div class="mt-4 flex flex-wrap gap-4 text-sm font-semibold">
+                    <a class="underline" target="_blank" rel="noopener" href="{{ route('admin.appearance.home-preview','classic') }}">{{ __('sunrise.preview') }} Classic</a>
+                    <a class="underline" target="_blank" rel="noopener" href="{{ route('admin.appearance.home-preview','sunrise') }}">{{ __('sunrise.preview') }} Sunrise</a>
+                </div>
+            </div>
+        @endif
         <div class="grid gap-6 lg:grid-cols-2">
             @foreach($fields as $key => $type)
+                @continue($key === 'home_layout')
                 <div>
                     <label class="mb-2 block text-sm font-bold text-[#0e315e] dark:text-white" for="appearance-{{ $key }}">{{ ucwords(str_replace('_', ' ', $key)) }}</label>
                     @if($type === 'bool')

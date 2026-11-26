@@ -37,7 +37,7 @@ class AdminAppearanceController extends Controller
 
         return view('workspace.admin.appearance-form', [
             'role' => 'admin', 'section' => $section, 'revision' => $revision,
-            'settings' => $revision?->settings ?? Appearance::approved($section),
+            'settings' => array_replace(Appearance::approved($section), $revision?->settings ?? []),
             'fields' => Appearance::fields($section),
         ]);
     }
@@ -45,6 +45,9 @@ class AdminAppearanceController extends Controller
     public function store(Request $request, string $section): RedirectResponse
     {
         $data = $request->validate(Appearance::rules($section));
+        if ($section === 'home' && !array_key_exists('home_layout', $data)) {
+            $data['home_layout'] = Appearance::value('home', 'home_layout');
+        }
         foreach (Appearance::fields($section) as $field => $kind) {
             if (str_starts_with($kind, 'text:')) {
                 $data[$field] = (string) ($data[$field] ?? '');
