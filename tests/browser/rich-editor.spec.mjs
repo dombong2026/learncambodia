@@ -260,6 +260,21 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       const kind = panel.getByLabel('Media type');
       await expect(preview).toBeVisible();
       await expect(panel.getByText('No featured media selected')).toBeVisible();
+      const cover = page.locator('[data-assessment-cover]');
+      const settings = page.locator('[data-assessment-details]');
+      await expect(cover.locator('input[name="title"]')).toBeVisible();
+      await expect(cover.locator('[data-assessment-media-panel]')).toHaveCount(1);
+      await expect(settings.locator('input[name="title"]')).toHaveCount(0);
+      await expect(settings.locator('[data-assessment-media-panel]')).toHaveCount(0);
+      const coverBounds = await cover.boundingBox();
+      const settingsBounds = await settings.boundingBox();
+      expect(settingsBounds.y).toBeGreaterThanOrEqual(coverBounds.y + coverBounds.height - 1);
+      const settingsOverflow = await settings.evaluate(section =>
+        Array.from(section.querySelectorAll('select, input:not([type="hidden"]):not([type="checkbox"]), textarea'))
+          .filter(field => field.getClientRects().length > 0)
+          .some(field => field.getBoundingClientRect().right > section.getBoundingClientRect().right + 1)
+      );
+      expect(settingsOverflow).toBe(false);
       const initial = await panel.boundingBox();
       const relativeLimitTop = () => limit.evaluate(input => {
         const mediaPanel = document.querySelector('[data-assessment-media-panel]');
