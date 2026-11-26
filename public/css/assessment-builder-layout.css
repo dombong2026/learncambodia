@@ -55,10 +55,37 @@
 .assessment-media-placeholder[hidden], [data-assessment-media-pick][hidden] { display: none !important; }
 .assessment-media-placeholder button { min-height: 2rem; }
 .assessment-media-controls {
-    height: 11.5rem; min-width: 0; overflow: auto; overscroll-behavior: contain;
+    height: 6.5rem; min-width: 0; overflow: auto; overscroll-behavior: contain;
     scrollbar-gutter: stable; padding: .25rem .125rem .25rem 0;
 }
 .assessment-media-controls > * + * { margin-top: .5rem; }
 .assessment-media-controls [data-featured-name] {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Compact overview: details use the space beside the stable cover preview. */
+.assessment-builder-identity { grid-template-columns: minmax(0, 1fr); }
+.assessment-builder-identity .assessment-builder-wide { grid-column: 1 / -1; }
+.assessment-builder-media { align-self: start; min-width: 0; }
+@media (min-width: 640px) and (max-width: 1023px) {
+    .assessment-builder-details > .assessment-builder-identity,
+    .assessment-builder-details > .assessment-builder-media { grid-column: 1 / -1; }
+}
+@media (min-width: 640px) {
+    .assessment-builder-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+[data-assessment-media-panel] { display: grid; gap: .625rem; padding: .875rem; }
+[data-assessment-media-panel] > * { margin: 0 !important; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-asset]:not([hidden]) {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .375rem .5rem; align-items: center;
+}
+[data-assessment-media-panel] .assessment-media-controls [data-featured-asset] > * { margin: 0 !important; min-width: 0; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-alt] { grid-column: 1 / -1; }
+[data-assessment-media-panel] .assessment-media-controls [data-open-media-library] { max-width: 100%; white-space: normal; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-name] { min-width: 0; }
+@media (max-width: 400px) {
+    [data-assessment-media-panel] .assessment-media-controls [data-featured-asset]:not([hidden]) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    [data-assessment-media-panel] .assessment-media-controls { height: 8rem; }
 }
