@@ -18,7 +18,9 @@
     </section>
     <div class="wsm-grid" aria-label="Available website skins">
         @foreach($skins as $key => $skin)
-            @php($isActive = $key === $activeSkin)
+            @php
+                $isActive = $key === $activeSkin;
+            @endphp
             <article class="wsm-panel wsm-skin" data-skin-card="{{ $key }}" data-active="{{ $isActive ? 'true' : 'false' }}">
                 <img class="wsm-art" src="{{ asset('images/website-skins/'.$key.'.svg') }}" width="800" height="420" alt="" loading="lazy">
                 <div class="wsm-card-content">

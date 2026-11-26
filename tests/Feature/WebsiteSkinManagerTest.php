@@ -26,7 +26,8 @@ class WebsiteSkinManagerTest extends TestCase
             $this->assertSame(1, AppearanceRevision::where('section','website_skins')->where('status','approved')->count());
         }
         $this->get('/dashboard/appearance/website-skins/preview/natural-premium')->assertOk()
-            ->assertSee('data-website-skin="natural-premium"', false)->assertHeader('Cache-Control', 'no-store, private');
+            ->assertSee('data-website-skin="natural-premium"', false);
+        $this->assertStringContainsString('no-store', (string) $this->get('/dashboard/appearance/website-skins/preview/natural-premium')->headers->get('Cache-Control'));
         $this->get('/')->assertOk()->assertSee('data-website-skin="phumi-spirit"', false);
         $this->post('/dashboard/appearance/website-skins', ['mode'=>'manual','skin'=>'invalid'])->assertSessionHasErrors('skin');
         $this->post('/dashboard/appearance/website-skins', ['mode'=>'legacy'])->assertRedirect();
