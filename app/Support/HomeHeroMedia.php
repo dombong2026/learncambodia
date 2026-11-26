@@ -26,6 +26,7 @@ final class HomeHeroMedia
     public const OPTIONS = [
         'autoplay' => true, 'muted' => true, 'advance' => true, 'loop' => true,
         'shuffle' => false, 'controls' => true, 'show_list' => false,
+        'navigation' => false, 'crop_bars' => false,
     ];
 
     public static function uses(EditorMedia $media): bool

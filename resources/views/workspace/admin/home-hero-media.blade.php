@@ -40,7 +40,7 @@
     </div>
     @include('workspace.admin.home-hero-playlist-form')
     <section id="hero-library" class="wsm-panel wsm-schedule">
-        <h2>Choose from Media Library</h2><p>Recommended: 1920 × 1080 (16:9), optimized for the web. Videos play on demand with controls.</p>
+        <h2>Choose from Media Library</h2><p>Recommended: 1920 × 1080 (16:9), optimized for the web. Videos use a cinematic 16:9 player with no native control bar.</p>
         <form class="wsm-schedule-form" method="GET" action="{{ route('admin.appearance.home-hero-media.index') }}">
             <label>Search<input type="search" name="q" maxlength="80" value="{{ $search }}" placeholder="Promo video"></label>
             <label>Media type<select name="kind"><option value="">All media</option><option value="image" @selected($kind==='image')>Images</option><option value="video" @selected($kind==='video')>Videos</option></select></label>

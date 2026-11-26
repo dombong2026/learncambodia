@@ -84,8 +84,21 @@ final class HomeHeroMediaTest extends TestCase
         $this->assertSame([$ids[1], $ids[0]], HomeHeroMedia::settings()['playlist_ids']);
         $this->assertTrue(HomeHeroMedia::settings()['options']['muted']);
         $this->get('/')->assertOk()->assertSee('data-home-hero-media="playlist"', false)
-            ->assertSee('data-hero-playlist', false);
-        $this->get('/dashboard/appearance/home-hero-media')->assertOk()->assertSee('Video Playlist');
+            ->assertSee('data-hero-playlist', false)
+            ->assertDontSee('data-hhp-prev', false)->assertDontSee('hhp-bar', false)
+            ->assertDontSee('<video controls', false);
+        $this->get('/dashboard/appearance/home-hero-media')->assertOk()->assertSee('Video Playlist')
+            ->assertSee('Previous / Next controls')->assertSee('Crop embedded black bars');
+        $this->post('/dashboard/appearance/home-hero-media', [
+            'source'=>'playlist', 'playlist_ids'=>[$ids[1], $ids[0]],
+            'options'=>['autoplay'=>1,'navigation'=>1,'crop_bars'=>1,'controls'=>0],
+        ])->assertRedirect();
+        $this->assertTrue(HomeHeroMedia::settings()['options']['navigation']);
+        $this->assertTrue(HomeHeroMedia::settings()['options']['crop_bars']);
+        $this->get('/dashboard/appearance/website-skins/preview/sorya-sunrise')->assertOk()
+            ->assertSee('data-hhp-prev', false)->assertSee('data-hhp-next', false)
+            ->assertSee('data-crop-bars="true"', false)->assertSee('data-admin-preview="false"', false)
+            ->assertDontSee('<video controls', false);
         $this->delete('/dashboard/media-library/'.$ids[1])->assertSessionHasErrors('media');
         $this->post('/dashboard/appearance/home-hero-media', [
             'source'=>'playlist', 'playlist_ids'=>[$ids[0],$ids[0]], 'options'=>['autoplay'=>1],
