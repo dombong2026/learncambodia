@@ -50,7 +50,7 @@ final class AdminHomeHeroMediaController extends Controller
             'source' => ['required', Rule::in(['default', 'library', 'upload', 'playlist'])],
             'playlist_ids' => ['exclude_unless:source,playlist', 'required', 'array', 'min:2', 'max:20'],
             'playlist_ids.*' => ['integer', 'min:1', 'distinct'],
-            'options' => ['exclude_unless:source,playlist', 'required', 'array:autoplay,muted,advance,loop,shuffle,controls,show_list'],
+            'options' => ['exclude_unless:source,playlist', 'required', 'array:autoplay,muted,advance,loop,shuffle,controls,show_list,navigation,crop_bars'],
             'options.*' => ['required', 'boolean'],
             'media_id' => ['exclude_unless:source,library', 'required', 'integer', 'min:1'],
             'label' => ['exclude_if:source,default', 'nullable', 'string', 'max:200'],
