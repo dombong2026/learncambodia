@@ -9,7 +9,8 @@
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
 @push('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=2' }}">
+    <script defer src="{{ asset('js/assessment-featured-preview.js') }}"></script>
 @endpush
 @section('content')
     @if($errors->any())
@@ -33,7 +34,7 @@
                 </label>
             </div>
             <div class="min-w-0">
-                @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
+                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
             </div>
             @unless($quiz)
             <label class="builder-field">Course (optional)
