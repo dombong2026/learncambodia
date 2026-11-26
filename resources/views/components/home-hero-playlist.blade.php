@@ -10,7 +10,7 @@
     }
 @endphp
 @once
-    <script src="{{ asset('js/home-hero-playlist.js') }}?v=2" defer></script>
+    <script src="{{ asset('js/home-hero-playlist.js') }}?v=3" defer></script>
 @endonce
 <div class="hhp hhp-cinema" data-hero-playlist data-clips="{{ json_encode($clips, JSON_THROW_ON_ERROR) }}" data-options="{{ json_encode($options, JSON_THROW_ON_ERROR) }}" data-admin-preview="{{ request()->routeIs('admin.appearance.home-hero-media.index') ? 'true' : 'false' }}" data-crop-bars="{{ $options['crop_bars'] ? 'true' : 'false' }}" role="region" aria-label="{{ $selection['label'] }}">
     <video playsinline preload="metadata" src="{{ $clips[0]['url'] }}" aria-label="{{ $selection['label'] }}" @if($options['muted']) muted @endif disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback" disableremoteplayback></video>
