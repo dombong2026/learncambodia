@@ -22,6 +22,24 @@ final class ExaminationWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_assessment_details_keep_native_boolean_fields_with_switch_accessibility(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        foreach (['admin.exams', 'admin.quizzes-manager'] as $manager) {
+            $response = $this->get(route($manager.'.create'))->assertOk()
+                ->assertSee('data-assessment-details', false)
+                ->assertSee('assessment-builder-layout.css', false)
+                ->assertSee('name="featured_kind"', false)
+                ->assertSee('name="time_limit"', false)
+                ->assertSee('name="passing_percent"', false)
+                ->assertSee('name="attempt_limit"', false);
+            foreach (['shuffle', 'gamified', 'live_feedback', 'published'] as $key) {
+                $response->assertSee('type="hidden" name="'.$key.'" value="0"', false)
+                    ->assertSee('type="checkbox" role="switch" name="'.$key.'" value="1"', false);
+            }
+        }
+    }
+
     public function test_exam_featured_image_can_be_selected_published_and_removed(): void
     {
         Storage::fake('local');
