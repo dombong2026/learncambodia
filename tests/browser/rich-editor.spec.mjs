@@ -257,10 +257,14 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       await expect(preview).toBeVisible();
       await expect(panel.getByText('No featured media selected')).toBeVisible();
       const initial = await panel.boundingBox();
-      const initialLimit = await limit.boundingBox();
+      const relativeLimitTop = () => limit.evaluate(input => {
+        const mediaPanel = document.querySelector('[data-assessment-media-panel]');
+        return input.getBoundingClientRect().top - mediaPanel.getBoundingClientRect().top;
+      });
+      const initialLimit = await relativeLimitTop();
       const assertStable = async () => {
         await expect.poll(async () => Math.abs((await panel.boundingBox()).height - initial.height)).toBeLessThan(2);
-        await expect.poll(async () => Math.abs((await limit.boundingBox()).y - initialLimit.y)).toBeLessThan(2);
+        await expect.poll(async () => Math.abs(await relativeLimitTop() - initialLimit)).toBeLessThan(2);
       };
       await panel.getByRole('button', { name: 'Upload / select media' }).click();
       await expect(kind).toHaveValue('image');
