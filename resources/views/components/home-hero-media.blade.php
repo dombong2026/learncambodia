@@ -1,6 +1,6 @@
 @props(['selection'])
 @once
-    <link rel="stylesheet" href="{{ asset('css/home-hero-media.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/home-hero-media.css') }}?v=3">
 @endonce
 <div class="home-hero-media" data-home-hero-media="{{ $selection['kind'] }}">
     @if($selection['kind'] === 'playlist')
