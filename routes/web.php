@@ -331,6 +331,11 @@ Route::middleware('auth')->group(function (): void {
         });
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
+            Route::get('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'index'])->name('website-skins.index');
+            Route::post('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'update'])->middleware('throttle:15,1')->name('website-skins.update');
+            Route::get('/website-skins/preview/{skin}', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'preview'])->name('website-skins.preview');
+            Route::post('/website-skins/periods', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'addPeriod'])->middleware('throttle:15,1')->name('website-skins.periods.add');
+            Route::post('/website-skins/periods/remove', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'removePeriod'])->middleware('throttle:15,1')->name('website-skins.periods.remove');
             Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');
             Route::get('/home/preview/{layout}', [CatalogController::class, 'homePreview'])->name('home-preview');
             Route::get('/{section}', [AdminAppearanceController::class, 'edit'])->name('edit');

@@ -1,0 +1,7 @@
+# Website Skins manager and first frontend integration
+
+Admin Appearance → Website Skins. Each card has its own SVG icon and original vector landscape, a preview and a POST-backed switch. Only one resolved skin is rendered per request. The stored manual selection is global, independent of home content revisions. Legacy mode leaves existing homepage selection and visuals unchanged. Automatic resolves the Cambodia-local day; configured date ranges override weekly rotation. No database migration is needed; settings and audit use existing revision records.
+
+This increment implements shared public/auth shell, common course/article cards and detail/learning heroes, and nine responsive visual arrangements of the existing Sunrise content with unique artwork. It is not nine fully separate templates for every frontend page. Remaining page-specific redesigns (catalog filters, assessment catalogs, library, profiles, support, static pages, etc.) need dedicated populated-page browser/contrast testing.
+
+Production baseline diverges from main. Reconcile current production layouts, controllers, navigation and Sunrise instant-switch code before deploying; do not overwrite them. Preserve auth, campaigns and editor assets. Preview is administrator-only and non-cacheable; before production automatic rotation, verify shared/CDN cache policy and invalidate or avoid caching HTML across the daily boundary. No automatic mode is enabled by this commit. 

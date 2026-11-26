@@ -17,7 +17,7 @@ class CatalogController extends Controller
 {
     public function home(): View
     {
-        return $this->renderHome();
+        return $this->renderHome(\App\Support\WebsiteSkinState::active() !== null ? 'sunrise' : null);
     }
 
     public function homePreview(string $layout): View
