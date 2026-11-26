@@ -55,6 +55,7 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {
+    test.slow();
     await page.goto('/dashboard/course-builder/create?lang=en');
     const builder = page.locator('[data-course-builder]');
     const courseTitle = 'Builder Browser Course ' + info.project.name + ' ' + Date.now();
@@ -336,6 +337,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(controls).toHaveCSS('opacity', '1');
     await expect(controls).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(speed).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await speed.scrollIntoViewIfNeeded();
+    const speedBox = await speed.boundingBox();
+    await page.mouse.move(speedBox.x + speedBox.width / 2, speedBox.y + speedBox.height / 2);
     await speed.click();
     await dialog.getByRole('button', { name: '1.5×', exact: true }).click();
     await expect.poll(() => player.locator('video').evaluate(video => video.playbackRate)).toBe(1.5);

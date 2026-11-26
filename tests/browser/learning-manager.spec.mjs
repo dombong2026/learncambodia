@@ -24,6 +24,8 @@ test('course manager search and row actions stay usable at dashboard widths', as
   await expect(table.locator('tbody tr')).toHaveCount(1);
   const trigger = table.getByRole('button', { name: 'Actions for ' + title });
   await expect(trigger).toBeVisible();
+  await trigger.scrollIntoViewIfNeeded();
+  await trigger.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await trigger.click();
   const menu = page.locator('.learning-manager-menu:popover-open');
   await expect(menu).toBeVisible();
