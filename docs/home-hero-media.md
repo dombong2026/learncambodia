@@ -1,0 +1,5 @@
+# Homepage Hero Media
+
+Independent instant administrator setting: default artwork, direct managed-storage upload, or existing library image/video. One shared selection across all nine skins, Sunrise and the standard Classic hero. Original artwork remains when unset or the record is unavailable. Selected library media gain public read access via the existing media route, with active-file deletion protection. Click-to-play existing featured video player. Max direct upload 50 MiB subject to PHP/nginx limits. No schema migration or frontend rebuild.
+
+Production source diverges from main, including Classic and Campaign Builder. Reconcile the standard Classic hero only; retain the campaign-player branch, existing media and storage rules and local skin integration. Add a Home Studio link on production if appropriate. Test before deployment. No separate per-skin override in this release.

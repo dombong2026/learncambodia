@@ -27,8 +27,10 @@
                     <button type="submit">{{ __('pages.search') }}</button>
                 </form>
             </div>
-            <div class="sr-landscape" aria-hidden="true">
-                @if($skinArtwork = \App\Support\WebsiteSkinState::active())
+            <div class="sr-landscape">
+                @if($heroMedia = \App\Support\HomeHeroMedia::current())
+                    <x-home-hero-media :selection="$heroMedia"/>
+                @elseif($skinArtwork = \App\Support\WebsiteSkinState::active())
                     <img src="{{ asset('images/website-skins/'.$skinArtwork.'.svg') }}" width="800" height="420" alt="" fetchpriority="high">
                 @else
                 <svg viewBox="0 0 560 420" xmlns="http://www.w3.org/2000/svg" role="presentation">

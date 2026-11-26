@@ -331,6 +331,8 @@ Route::middleware('auth')->group(function (): void {
         });
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
+            Route::get('/home-hero-media', [\App\Http\Controllers\Workspace\AdminHomeHeroMediaController::class, 'index'])->name('home-hero-media.index');
+            Route::post('/home-hero-media', [\App\Http\Controllers\Workspace\AdminHomeHeroMediaController::class, 'update'])->middleware('throttle:12,1')->name('home-hero-media.update');
             Route::get('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'index'])->name('website-skins.index');
             Route::post('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'update'])->middleware('throttle:15,1')->name('website-skins.update');
             Route::get('/website-skins/preview/{skin}', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'preview'])->name('website-skins.preview');

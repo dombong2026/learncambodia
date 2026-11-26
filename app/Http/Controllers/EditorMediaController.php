@@ -124,10 +124,11 @@ final class EditorMediaController extends Controller
                 $inUse = ContentEntry::withTrashed()->where('featured_media_id', $current->id)->exists()
                     || Course::withTrashed()->where('featured_media_id', $current->id)->exists()
                     || CourseExam::withTrashed()->where('featured_media_id', $current->id)->exists()
-                    || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists();
+                    || PolicyRevision::query()->where('snapshot->featured_media_id', $current->id)->exists()
+                    || \App\Support\HomeHeroMedia::uses($current);
                 if ($inUse) {
                     throw ValidationException::withMessages([
-                        'media' => 'This file is used by a course, quiz, editorial entry or policy revision and cannot be deleted.',
+                        'media' => 'This file is used by published content, a policy revision or the homepage hero and cannot be deleted.',
                     ]);
                 }
 
@@ -217,6 +218,7 @@ final class EditorMediaController extends Controller
             $published = $published || CourseExam::query()->where('featured_media_id', $media->id)
                 ->whereNull('course_id')->where('published', true)
                 ->whereIn('featured_kind', ['image', 'video'])->exists();
+            $published = $published || \App\Support\HomeHeroMedia::uses($media);
             abort_unless($published || $viewer?->isAdministrator(), 403);
         } elseif ($media->context === 'lesson') {
             $enrolled = $viewer?->role === User::ROLE_STUDENT

@@ -19,6 +19,9 @@
                 <a href="{{ route('instructors.index') }}" class="rounded-lg border border-white/30 px-5 py-2.5 text-xs font-bold text-white hover:bg-white/10">{{ __('pages.meet_instructors') }}</a>
             </div>
         </div>
+        @if($heroMedia = \App\Support\HomeHeroMedia::current())
+            <x-home-hero-media :selection="$heroMedia"/>
+        @else
         <div class="grid grid-cols-2 gap-3 sm:gap-4">
             @foreach([
                 ['icon'=>'book-open','value'=>$publishedCourseCount,'label'=>__('pages.published_courses'),'url'=>route('courses.index')],
@@ -33,6 +36,7 @@
                 </a>
             @endforeach
         </div>
+        @endif
     </div>
 </section>
 
