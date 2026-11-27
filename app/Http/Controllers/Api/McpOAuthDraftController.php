@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use App\Support\McpOAuthDraftAuthorization;
 use App\Support\McpOAuthDraftScopePolicy;
 use App\Support\McpOAuthDraftWriter;
+use App\Support\McpOAuthNativeCourseBuilder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -69,7 +70,7 @@ final class McpOAuthDraftController
                 ];
             }
         }
-        return $tools;
+        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog()];
     }
 
     public function handle(Request $request): JsonResponse
@@ -126,8 +127,12 @@ final class McpOAuthDraftController
                 || array_diff($tool['inputSchema']['required'], array_keys($args))) {
                 return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
-            [$action, $resource] = explode('_draft_', $name, 2);
             try {
+                if (McpOAuthNativeCourseBuilder::supports($name)) {
+                    $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
+                    return $this->toolResult($id, $result + ['http_status' => 200], false);
+                }
+                [$action, $resource] = explode('_draft_', $name, 2);
                 // A nested transaction ensures errors roll back partial
                 // writes even when converted to a normal JSON-RPC result.
                 $result = \Illuminate\Support\Facades\DB::transaction(function () use ($actor, $action, $resource, $args): array {
