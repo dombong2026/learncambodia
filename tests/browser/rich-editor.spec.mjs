@@ -17,15 +17,25 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('System Settings opens every administrator page below Analytics', async ({ page }) => {
-    const sidebarToggle = page.getByRole('button', { name: 'Toggle sidebar' });
+    // The visible desktop control is now the floating edge button; mobile keeps the header opener.
+    const shell = page.locator('[data-workspace]');
+    const desktop = await page.evaluate(() => matchMedia('(min-width: 64rem)').matches);
+    const sidebarToggle = desktop
+      ? page.locator('[data-glass-sidebar-toggle]')
+      : page.getByRole('button', { name: 'Toggle sidebar' });
     const nav = page.getByRole('navigation', { name: 'Account navigation' });
     const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
 
     for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
       await page.waitForLoadState('load');
+      await expect(shell).toHaveAttribute('data-glass-sidebar', '');
+      await expect(sidebarToggle).toBeVisible();
+      await expect(sidebarToggle).toHaveAttribute('aria-expanded', /^(true|false)$/);
       if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
         await sidebarToggle.click();
       }
+      await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(nav).toBeVisible();
       await expect(settings.locator('xpath=preceding-sibling::details[1]/summary')).toHaveText('Analytics');
       if (await settings.getAttribute('open') === null) {
         await settings.locator('summary').click();
