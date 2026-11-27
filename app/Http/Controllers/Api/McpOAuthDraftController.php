@@ -10,6 +10,7 @@ use App\Support\McpOAuthDraftScopePolicy;
 use App\Support\McpOAuthDraftWriter;
 use App\Support\McpOAuthNativeCourseBuilder;
 use App\Support\McpOAuthDraftCoverUpload;
+use App\Support\McpOAuthCurriculumEditor;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -71,7 +72,7 @@ final class McpOAuthDraftController
                 ];
             }
         }
-        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog()];
+        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog(), ...McpOAuthCurriculumEditor::catalog()];
     }
 
     public function handle(Request $request): JsonResponse
@@ -131,9 +132,16 @@ final class McpOAuthDraftController
                 return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
             try {
+                if (McpOAuthCurriculumEditor::supports($name)) {
+                    if (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true);
+                    }
+                    $result = McpOAuthCurriculumEditor::execute($actor, $name, $args);
+                    return $this->toolResult($id, $result + ['http_status' => 200], false);
+                }
                 if (McpOAuthDraftCoverUpload::supports($name)) {
-                    if (!McpOAuthDraftScopePolicy::exactMediaScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true);
+                    if (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true));
                     }
                     $result = $upload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);

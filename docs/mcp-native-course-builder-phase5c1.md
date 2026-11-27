@@ -1,0 +1,5 @@
+# Phase 5C.1 — production curriculum editing authorization
+
+The Phase 5C rehearsal source is deployed and disabled. This release adds independently default-closed production acceptance and enablement gates. Rehearsal never enables production. Existing curriculum and media grants remain unchanged. A fresh signed edit grant is required for all nine tools; an expanded token can carry the existing media grant only while its existing gate is enabled. Old tokens cannot edit. Closing the edit gate rejects expanded tokens but retains old four-scope access.
+
+Production-mode isolated signed OAuth tests verify separate gates, selected admin, old-token read/write rejection for editing, real consent and signed five-scope token, versioned update, native curriculum lookup, media tool validation compatibility, duplicate/wildcard scope rejection and rollback of permissions. No live data is modified by these tests. CI must pass before source deployment and a separate operator activation. Use a dedicated draft fixture for live mutation acceptance rather than course 30.

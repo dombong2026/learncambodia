@@ -1,0 +1,7 @@
+# Phase 5C — controlled curriculum editing rehearsal
+
+Based on deployed Phase 5B.1. Adds nine draft-only tools (two READ and seven WRITE), separately consented via mcp:curriculum-edit. Existing exact three/four-scope tokens retain old permissions; edit tokens may also carry the existing media scope only when that gate is enabled. Production explicitly closed. Rehearsal requires curriculum gate and MCP_OAUTH_CURRICULUM_EDIT_REHEARSAL=true.
+
+Inspect module/lesson, edit module title/summary, replace plain-text lesson fields and knowledge checks (1–10 questions), append lesson, reorder modules/lessons, duplicate module/lesson. All mutations require a UUID receipt; version or complete expected ID order protects concurrent changes. Module version includes child versions; lesson version includes content, quiz, preview, linked media and timestamp. Course/user locks and native lesson revisions follow website builder. No deletion, moving between modules, publication, preview changes, rich HTML edits or rich-media copies. Module duplication is limited to ten lessons; native module/lesson count and order limits preserved. Read responses may include owned draft answer keys; audit and receipts omit content. Module summary edits do not rewrite child lessons; copies disable previews.
+
+CI and production release gates must pass before activation. No data migrations or dependencies required. Existing live course 30 is not a test fixture.
