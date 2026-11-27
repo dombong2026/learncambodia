@@ -36,6 +36,8 @@ return [
         'operations' => 'ប្រតិបត្តិការ',
     ],
     'labels' => [
+        'Exams' => 'ការប្រឡង',
+        'Quizzes' => 'កម្រងសំណួរ',
         'Branding' => 'អត្តសញ្ញាណម៉ាក',
         'Social Auth' => 'ការចូលតាមបណ្ដាញសង្គម',
         'Cloud Storage' => 'ទំហំផ្ទុកលើពពក',

@@ -36,6 +36,8 @@ return [
         'operations' => '运营',
     ],
     'labels' => [
+        'Exams' => '考试',
+        'Quizzes' => '测验',
         'Branding' => '品牌',
         'Social Auth' => '社交登录',
         'Cloud Storage' => '云存储',

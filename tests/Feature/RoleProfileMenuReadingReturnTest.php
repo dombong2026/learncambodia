@@ -83,37 +83,78 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
         $this->assertStringContainsString('href="'.route('register').'"', $html);
     }
 
-    public function test_every_role_gets_its_real_workspace_links_with_icons_on_public_and_account_header(): void
+    public function test_every_role_gets_curated_unique_workspace_links_on_public_and_account_header(): void
     {
-        foreach ([
-            'admin' => '/dashboard',
-            'instructor' => '/instructor',
-            'student' => '/account',
-            'developer' => '/developer',
-        ] as $role => $dashboard) {
+        $menus = [
+            'admin' => ['/dashboard', [
+                ['admin.courses.index'], ['admin.exams.index'], ['admin.quizzes-manager.index'],
+                ['admin.reviews.index', ['focus' => 'courses']],
+                ['admin.reviews.index', ['focus' => 'enrollments']],
+                ['admin.homework.reviews'], ['admin.users.index'],
+            ]],
+            'student' => ['/account', [
+                ['account.enrollments.index'], ['account.courses.index'], ['account.saved-courses.index'],
+                ['account.homework.index'], ['account.progress.index'], ['account.practice.index'],
+            ]],
+            'instructor' => ['/instructor', [
+                ['instructor.courses.index'], ['instructor.homework.index'], ['instructor.grading.index'],
+            ]],
+            'developer' => ['/developer', [
+                ['developer.apis'], ['developer.tokens.index'], ['developer.usage'],
+            ]],
+        ];
+        $menus['superadmin'] = $menus['admin'];
+
+        foreach ($menus as $role => [$dashboard, $links]) {
             $user = $this->userWithRole($role);
-            $expected = collect(WorkspaceMenu::groups($role))
-                ->sum(fn (array $group) => count($group['items']));
-            $this->assertGreaterThan(0, $expected);
+            $menuRole = $role === 'superadmin' ? 'admin' : $role;
 
             foreach (['/?lang=en', $dashboard.'?lang=en'] as $url) {
                 $html = $this->actingAs($user)->get($url)->assertOk()
-                    ->assertSee('data-profile-role-menu="'.$role.'"', false)
-                    ->assertSee('data-profile-role-link', false)
+                    ->assertSee('data-profile-role-menu="'.$menuRole.'"', false)
                     ->assertSee('data-profile-dashboard', false)
-                    ->assertSee('data-profile-settings', false)
-                    ->assertSee('data-profile-link-icon', false)
-                    ->assertSee('data-profile-link-icon', false)
+                    ->assertDontSee('data-profile-settings', false)
+                    ->assertDontSee('data-profile-nav-group', false)
                     ->assertSee('action="'.route('logout').'"', false)
                     ->assertSee('data-theme-toggle', false)
-                    ->assertSee('href="'.route($user->homeRouteName()).'"', false)
-                    ->assertSee('href="'.WorkspaceMenu::profile($role).'"', false)
                     ->getContent();
 
-                $this->assertSame($expected, substr_count($html, 'data-profile-role-link'));
+                $document = new \DOMDocument();
+                $document->loadHTML($html, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+                $xpath = new \DOMXPath($document);
+                $menu = $xpath->query('//*[@data-profile-role-menu]')->item(0);
+                $this->assertNotNull($menu);
+                $rows = $xpath->query('.//*[@data-profile-role-link]', $menu);
+                $this->assertCount(count($links), $rows);
+                $actual = [];
+                foreach ($rows as $row) {
+                    $this->assertSame(1, $xpath->query('.//*[local-name()="svg"]', $row)->length);
+                    $actual[] = $row->getAttribute('href');
+                }
+                $this->assertSame(array_map(fn ($link) => route($link[0], $link[1] ?? []), $links), $actual);
+                $this->assertSame(array_values(array_unique($actual)), $actual);
+                $this->assertSame(route($user->homeRouteName()), $xpath->query('.//*[@data-profile-dashboard]', $menu)->item(0)->getAttribute('href'));
+                $this->assertNotContains(WorkspaceMenu::profile($menuRole), $actual);
+
+                if ($url !== '/?lang=en') {
+                    $sidebar = $xpath->query('//*[@data-sidebar]')->item(0);
+                    $this->assertNotNull($sidebar);
+                    $this->assertSame(WorkspaceMenu::profile($menuRole), $xpath->query('.//*[@data-sidebar-settings]', $sidebar)->item(0)->getAttribute('href'));
+                    $this->assertGreaterThan(count($links), $xpath->query('.//*[@data-workspace-link]', $sidebar)->length);
+                }
             }
-            $this->assertSame($role, $user->role);
+            $this->assertSame($role, $user->fresh()->role);
         }
+    }
+
+    public function test_unverified_member_keeps_required_email_verification_action(): void
+    {
+        $user = $this->userWithRole('student');
+        $user->forceFill(['email_verified_at' => null])->save();
+        $this->actingAs($user)->get('/?lang=en')->assertOk()
+            ->assertSee('href="'.route('verification.notice').'"', false)
+            ->assertSee('data-theme-toggle', false)
+            ->assertSee('action="'.route('logout').'"', false);
     }
 
     public function test_successful_login_defaults_to_the_correct_role_dashboard_without_reading_context(): void
