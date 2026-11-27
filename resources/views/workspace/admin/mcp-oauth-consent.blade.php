@@ -43,6 +43,9 @@
             @if($assessmentWrite)
                 <p><strong>Expanded standalone assessment access:</strong> Create, inspect and edit your own MCP-created unpublished standalone quizzes and exams, including answer keys, scoring, timing, attempts and feedback. Attach an existing owned image only when the cover slot is empty. No learner attempts, access approvals, paid pricing, deletion or publication.</p>
             @endif
+            @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:assessment-advanced'))
+                <p><strong>Expanded advanced assessment access:</strong> Append listening, writing, speaking and unscored Likert questions to your own MCP-created unpublished standalone assessments. List your own exam audio metadata and attach existing owned exam audio to listening questions. No uploads, grading learner submissions, publication or deletion.</p>
+            @endif
             @if($assessmentMediaWrite)
                 <p><strong>Expanded assessment cover upload access:</strong> Upload and attach one validated 1920 × 1080 image to your own MCP-created unpublished quiz or exam with an empty cover slot. No replacement, arbitrary file upload, URL retrieval, publication or deletion.</p>
             @endif

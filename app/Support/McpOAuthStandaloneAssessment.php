@@ -264,7 +264,7 @@ final class McpOAuthStandaloneAssessment
     {
         return ['resource' => 'assessments', 'resource_id' => $exam->id, 'kind' => $exam->kind,
             'publication_status' => 'draft', 'title' => $exam->title, 'version' => self::version($exam),
-            'question_count' => count($exam->questions ?? []), 'total_points' => array_sum(array_column($exam->questions ?? [], 'points')),
+            'question_count' => count($exam->questions ?? []), 'total_points' => array_sum(array_column(array_filter($exam->questions ?? [], AssessmentQuestions::scored(...)), 'points')),
             'featured_media_id' => $exam->featured_media_id];
     }
 

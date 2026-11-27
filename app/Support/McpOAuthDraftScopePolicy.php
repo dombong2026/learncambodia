@@ -33,6 +33,7 @@ final class McpOAuthDraftScopePolicy
     public const EDIT_SCOPE = 'mcp:curriculum-edit';
     public const ASSESSMENT_SCOPE = 'mcp:assessment';
     public const ASSESSMENT_MEDIA_SCOPE = 'mcp:assessment-media';
+    public const ASSESSMENT_ADVANCED_SCOPE = 'mcp:assessment-advanced';
 
     public static function curriculumEnabled(): bool
     {
@@ -125,6 +126,35 @@ final class McpOAuthDraftScopePolicy
             && config('mcp.oauth_assessment_media_rehearsal', false) === true;
     }
 
+    public static function assessmentAdvancedEnabled(): bool
+    {
+        if (!self::assessmentEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_advanced_production_accepted', false) === true
+                && config('mcp.oauth_assessment_advanced_production_enabled', false) === true
+                && config('mcp.oauth_assessment_advanced_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_advanced_rehearsal', false) === true;
+    }
+
+    private static function withoutAssessmentAdvanced(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_ADVANCED_SCOPE));
+    }
+
+    public static function hasAssessmentAdvancedScopes(array $scopes): bool
+    {
+        if (!self::assessmentAdvancedEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_ADVANCED_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentAdvanced($scopes);
+        return count($remaining) === count($scopes) - 1 && self::hasAssessmentScopes($remaining);
+    }
+
     private static function withoutAssessmentMedia(array $scopes): array
     {
         return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_MEDIA_SCOPE));
@@ -132,6 +162,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasAssessmentMediaScopes(self::withoutAssessmentAdvanced($scopes));
+        }
         if (!self::assessmentMediaEnabled() || !array_is_list($scopes)
             || !in_array(self::ASSESSMENT_MEDIA_SCOPE, $scopes, true)) {
             return false;
@@ -149,6 +182,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentScopes(array $scopes): bool
     {
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentAdvanced($scopes));
+        }
         if (self::hasAssessmentMediaScopes($scopes)) {
             return self::hasAssessmentScopes(self::withoutAssessmentMedia($scopes));
         }
@@ -162,6 +198,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasEditScopes(array $scopes): bool
     {
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentAdvanced($scopes));
+        }
         if (self::hasAssessmentMediaScopes($scopes)) {
             return self::hasEditScopes(self::withoutAssessmentMedia($scopes));
         }
@@ -180,6 +219,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentAdvanced($scopes));
+        }
         if (self::hasAssessmentMediaScopes($scopes)) {
             return self::hasMediaScopes(self::withoutAssessmentMedia($scopes));
         }
@@ -192,6 +234,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasCurriculumScopes(array $scopes): bool
     {
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentAdvanced($scopes));
+        }
         if (self::hasAssessmentMediaScopes($scopes)) {
             return self::hasCurriculumScopes(self::withoutAssessmentMedia($scopes));
         }
@@ -205,7 +250,7 @@ final class McpOAuthDraftScopePolicy
 
     public static function permittedWriteScopes(array $scopes): bool
     {
-        return self::hasAssessmentMediaScopes($scopes) || self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
+        return self::hasAssessmentAdvancedScopes($scopes) || self::hasAssessmentMediaScopes($scopes) || self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
             || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
@@ -234,6 +279,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::assessmentMediaEnabled()) {
             $scopes[self::ASSESSMENT_MEDIA_SCOPE] = 'Upload one validated cover image to your own MCP-created unpublished standalone quiz or exam with no existing cover';
+        }
+
+        if (self::assessmentAdvancedEnabled()) {
+            $scopes[self::ASSESSMENT_ADVANCED_SCOPE] = 'Append native listening, writing, speaking and unscored Likert questions to your own unpublished MCP-created standalone assessments, and list your own exam audio';
         }
 
         return $scopes;
