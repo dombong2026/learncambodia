@@ -120,6 +120,20 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
       expect(bounds[2].top).toBeGreaterThan(bounds[1].bottom);
     }
   }
+  // Touch-only devices do not have a persistent mouse hover state.
+  // Test all four real review rows on hover-capable browser projects.
+  if (await page.evaluate(()=>matchMedia('(hover: hover)').matches)) {
+    for (const dark of [false,true]) {
+      await page.evaluate(value=>document.documentElement.classList.toggle('dark',value),dark);
+      for (const row of await reviews.all()) {
+        await row.hover();
+        await expect(row).toHaveCSS('background-color',dark?'rgb(37, 70, 105)':'rgb(255, 247, 229)');
+        await expect(row).toHaveCSS('border-top-color',dark?'rgb(98, 141, 191)':'rgb(245, 196, 92)');
+        await expect(row.locator('span').nth(1)).toHaveCSS('color',dark?'rgb(231, 239, 251)':'rgb(32, 53, 82)');
+        await expect(row.locator('[data-dashboard-review-count]')).toHaveCSS('color',dark?'rgb(255, 255, 255)':'rgb(13, 45, 91)');
+      }
+    }
+  }
   await page.goto('/?lang=en');
   await expect(page.locator('link[href*="workspace-unified-glass.css"]')).toHaveCount(0);
 });

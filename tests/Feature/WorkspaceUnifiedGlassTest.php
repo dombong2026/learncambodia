@@ -17,7 +17,7 @@ final class WorkspaceUnifiedGlassTest extends TestCase
             $user->forceFill(['role'=>$role])->save();
 
             $this->actingAs($user)->get($url)->assertOk()
-                ->assertSee('css/workspace-unified-glass.css?v=1', false)
+                ->assertSee('css/workspace-unified-glass.css?v=2', false)
                 ->assertSee('data-dashboard-compact-heading', false)
                 ->assertSee('data-dashboard-showcase', false)
                 ->assertSee('data-saver-toggle', false)
