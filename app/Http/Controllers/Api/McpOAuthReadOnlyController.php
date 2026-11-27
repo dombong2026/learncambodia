@@ -88,9 +88,12 @@ final class McpOAuthReadOnlyController extends Controller
             return self::scopeChallenge($id, \App\Support\McpOAuthNativeCourseBuilder::supports($name)
                 || \App\Support\McpOAuthDraftCoverUpload::supports($name)
                 || \App\Support\McpOAuthCurriculumEditor::supports($name),
-                \App\Support\McpOAuthDraftCoverUpload::supports($name),
+                \App\Support\McpOAuthDraftCoverUpload::supports($name)
+                    || \App\Support\McpOAuthAssessmentCoverUpload::supports($name),
                 \App\Support\McpOAuthCurriculumEditor::supports($name),
-                \App\Support\McpOAuthStandaloneAssessment::supports($name));
+                \App\Support\McpOAuthStandaloneAssessment::supports($name)
+                    || \App\Support\McpOAuthAssessmentCoverUpload::supports($name),
+                \App\Support\McpOAuthAssessmentCoverUpload::supports($name));
         }
         if (is_string($name) && McpOAuthReadCatalog::supports($name)) {
             return $this->dedicatedRead($request, $id, $name, $args);
@@ -189,10 +192,10 @@ final class McpOAuthReadOnlyController extends Controller
             && McpOAuthDraftScopePolicy::eligible(User::query()->find($identity->getAuthIdentifier()));
     }
 
-    public static function scopeChallenge(mixed $id, bool $curriculum = false, bool $media = false, bool $edit = false, bool $assessment = false): JsonResponse
+    public static function scopeChallenge(mixed $id, bool $curriculum = false, bool $media = false, bool $edit = false, bool $assessment = false, bool $assessmentMedia = false): JsonResponse
     {
         $challenge = 'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", '
-            .'error="insufficient_scope", scope="mcp:read mcp:write'.(($curriculum || $media || $edit) ? ' mcp:curriculum' : '').($media ? ' mcp:media' : '').($edit ? ' mcp:curriculum-edit' : '').($assessment ? ' mcp:assessment' : '').'", '
+            .'error="insufficient_scope", scope="mcp:read mcp:write'.(($curriculum || $media || $edit || $assessmentMedia) ? ' mcp:curriculum' : '').(($media || $assessmentMedia) ? ' mcp:media' : '').($edit ? ' mcp:curriculum-edit' : '').(($assessment || $assessmentMedia) ? ' mcp:assessment' : '').($assessmentMedia ? ' mcp:assessment-media' : '').'", '
             .'error_description="Fresh administrator draft authorization is required"';
         // HTTP 403 is the MCP transport scope-upgrade signal; include the
         // tool-result challenge too for clients supporting the OpenAI extension.

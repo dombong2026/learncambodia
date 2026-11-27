@@ -208,7 +208,7 @@ final class McpOAuthStandaloneAssessment
         });
     }
 
-    private static function owned(User $actor, string $kind, int $id): CourseExam
+    public static function owned(User $actor, string $kind, int $id): CourseExam
     {
         $exam = CourseExam::whereKey($id)->where('kind', $kind)->whereNull('course_id')
             ->where('published', false)->whereNull('deactivated_at')
@@ -255,12 +255,12 @@ final class McpOAuthStandaloneAssessment
         return hash('sha256', json_encode($canonical($data), JSON_THROW_ON_ERROR));
     }
 
-    private static function version(CourseExam $exam): string
+    public static function version(CourseExam $exam): string
     {
         return self::digest([$exam->getAttributes(), $exam->media()->allRelatedIds()->sort()->values()->all()]);
     }
 
-    private static function summary(CourseExam $exam): array
+    public static function summary(CourseExam $exam): array
     {
         return ['resource' => 'assessments', 'resource_id' => $exam->id, 'kind' => $exam->kind,
             'publication_status' => 'draft', 'title' => $exam->title, 'version' => self::version($exam),
