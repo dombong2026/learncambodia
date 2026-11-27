@@ -151,6 +151,138 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
         $this->assertSame($media->id, $exam->fresh()->featured_media_id);
     }
 
+    public function test_direct_assessment_cover_upload_validation_and_rollback(): void
+    {
+        config()->set([
+            'mcp.oauth_native_course_builder_rehearsal' => true,
+            'mcp.oauth_draft_media_rehearsal' => true,
+            'mcp.oauth_assessment_media_rehearsal' => true,
+            'filesystems.managed' => 'local',
+        ]);
+        $disk = \Illuminate\Support\Facades\Storage::fake('local');
+        $uploadClass = \App\Support\McpOAuthAssessmentCoverUpload::class;
+        $this->assertCount(1, $uploadClass::catalog());
+        $this->assertCount(7, Builder::catalog());
+        $scope = ['mcp:read', 'mcp:write', 'mcp:curriculum', 'mcp:media', 'mcp:assessment', 'mcp:assessment-media'];
+        $this->assertTrue(Policy::hasAssessmentMediaScopes($scope));
+        $this->assertTrue(Policy::hasMediaScopes($scope));
+        $this->assertTrue(Policy::hasAssessmentScopes($scope));
+        $this->assertFalse(Policy::hasAssessmentMediaScopes(array_slice($scope, 0, -1)));
+        foreach ([
+            [...$scope, '*'],
+            [...$scope, 'mcp:assessment-media'],
+            array_values(array_diff($scope, ['mcp:media'])),
+            array_values(array_diff($scope, ['mcp:assessment'])),
+        ] as $invalidScope) {
+            $this->assertFalse(Policy::permittedWriteScopes($invalidScope));
+        }
+
+        $image = imagecreatetruecolor(1920, 1080);
+        imagefill($image, 0, 0, imagecolorallocate($image, 35, 80, 120));
+        ob_start();
+        imagepng($image);
+        $bytes = ob_get_clean();
+        $encoded = base64_encode($bytes.'QA-TRAILING-METADATA');
+        $smallImage = imagecreatetruecolor(200, 100);
+        ob_start();
+        imagepng($smallImage);
+        $wrongDimensions = base64_encode(ob_get_clean());
+
+        foreach (['quiz', 'exam'] as $kind) {
+            $created = Builder::execute($this->actor, 'create_draft_assessment', $this->fixture($kind, 1));
+            $args = ['kind' => $kind, 'assessment_id' => $created['resource_id'], 'request_id' => (string) Str::uuid(),
+                'expected_version' => $created['version'], 'image_base64' => $encoded, 'alt' => 'QA upload'];
+            $lookup = ['kind' => $kind, 'assessment_id' => $created['resource_id']];
+            $before = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $initialFiles = $disk->allFiles('editor-media');
+            $initialMedia = \App\Models\EditorMedia::count();
+
+            foreach (['data:image/png;base64,'.$encoded, base64_encode('<svg/>'), base64_encode(str_repeat('x', 524289)), '!!!!', $wrongDimensions] as $invalid) {
+                $uploader = new $uploadClass;
+                try {
+                    $uploader->execute($this->actor, array_replace($args, ['image_base64' => $invalid]));
+                    $this->fail('Invalid image accepted.');
+                } catch (ValidationException) {
+                    $this->assertSame($initialMedia, \App\Models\EditorMedia::count());
+                    $this->assertSame($initialFiles, $disk->allFiles('editor-media'));
+                } finally {
+                    $uploader->cleanupUncommitted();
+                }
+            }
+
+            $uploader = new $uploadClass;
+            try {
+                DB::transaction(function () use ($uploader, $args): void {
+                    $uploader->execute($this->actor, $args);
+                    throw new \RuntimeException('Injected outer transaction rollback');
+                });
+                $this->fail('Rollback not triggered.');
+            } catch (\RuntimeException $e) {
+                $this->assertSame('Injected outer transaction rollback', $e->getMessage());
+            } finally {
+                $uploader->cleanupUncommitted();
+            }
+            $this->assertSame($initialFiles, $disk->allFiles('editor-media'));
+            $this->assertSame($initialMedia, \App\Models\EditorMedia::count());
+            $this->assertNull(CourseExam::findOrFail($created['resource_id'])->featured_media_id);
+
+            $uploader = new $uploadClass;
+            $result = $uploader->execute($this->actor, $args);
+            $uploader->cleanupUncommitted();
+            $this->assertSame('draft', $result['publication_status']);
+            $this->assertSame(1920, $result['width']);
+            $this->assertSame(1080, $result['height']);
+            $this->assertSame('image/png', $result['mime']);
+            $media = \App\Models\EditorMedia::findOrFail($result['media_id']);
+            $stored = $disk->get($media->path);
+            $this->assertStringNotContainsString('QA-TRAILING-METADATA', $stored);
+            $this->assertSame([1920, 1080], array_slice(getimagesizefromstring($stored), 0, 2));
+            $this->assertEquals($this->actor->id, $media->uploaded_by);
+            $this->assertTrue((new $uploadClass)->execute($this->actor, $args)['replayed']);
+            $after = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $this->assertSame($before['settings'], $after['settings']);
+            $this->assertSame($before['questions'], $after['questions']);
+            $this->assertEquals($media->id, $after['featured_media_id']);
+            $this->assertNotSame($before['version'], $after['version']);
+
+            foreach ([
+                array_replace($args, ['alt' => 'Changed replay']),
+                array_replace($args, ['request_id' => (string) Str::uuid()]),
+                array_replace($args, ['request_id' => (string) Str::uuid(), 'expected_version' => $after['version']]),
+            ] as $invalid) {
+                try {
+                    (new $uploadClass)->execute($this->actor, $invalid);
+                    $this->fail('Unsafe replacement accepted.');
+                } catch (HttpExceptionInterface $e) {
+                    $this->assertSame(409, $e->getStatusCode());
+                }
+            }
+            $this->assertSame($initialMedia + 1, \App\Models\EditorMedia::count());
+            $this->assertCount(count($initialFiles) + 1, $disk->allFiles('editor-media'));
+
+            try {
+                (new $uploadClass)->execute($this->admin(), $args);
+                $this->fail('Other owner upload accepted.');
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertTrue(true);
+            }
+            CourseExam::findOrFail($created['resource_id'])->update(['published' => true]);
+            try {
+                (new $uploadClass)->execute($this->actor, $args);
+                $this->fail('Published assessment accepted.');
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertTrue(true);
+            }
+        }
+        config()->set('filesystems.managed', 'r2');
+        $this->assertSame([], $uploadClass::catalog());
+        config()->set('filesystems.managed', 'local');
+        config()->set('mcp.oauth_assessment_media_rehearsal', false);
+        $this->assertSame([], $uploadClass::catalog());
+        $this->assertTrue(Policy::permittedWriteScopes(array_slice($scope, 0, -1)));
+        $this->assertFalse(Policy::permittedWriteScopes($scope));
+    }
+
     public function test_invalid_payload_and_production_closed(): void
     {
         $payload = $this->fixture('quiz', 1);
