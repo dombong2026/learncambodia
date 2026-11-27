@@ -19,6 +19,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
     @stack('workspace_styles')
     <link rel="stylesheet" href="{{ asset('css/workspace-glass-sidebar.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('css/workspace-unified-glass.css') }}?v=1">
     <script defer src="{{ asset('js/workspace-glass-sidebar.js') }}?v=2"></script>
 </head>
 @php $role = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role; @endphp
