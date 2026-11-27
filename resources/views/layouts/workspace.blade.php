@@ -18,6 +18,8 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
     @stack('workspace_styles')
+    <link rel="stylesheet" href="{{ asset('css/workspace-glass-sidebar.css') }}?v=2">
+    <script defer src="{{ asset('js/workspace-glass-sidebar.js') }}?v=2"></script>
 </head>
 @php $role = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role; @endphp
 <body data-workspace-body @if(session('category_navigation_changed')) data-category-navigation-changed @endif class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
@@ -27,10 +29,12 @@
         <aside id="workspace-sidebar" data-sidebar class="workspace-sidebar fixed inset-y-0 left-0 z-50 flex w-[266px] flex-col border-r border-[#304f7d] bg-[#0c2d5b] text-white shadow-xl transition-transform duration-200 lg:shadow-none" aria-label="Workspace sidebar">
             <div class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
                 <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 font-extrabold tracking-tight">
-                    <x-brand-logo surface="dark" height="h-8" imageClass="max-w-[186px]" />
+                    <x-brand-logo surface="adaptive" height="h-8" imageClass="max-w-[186px]" data-glass-wordmark/>
+                    <img data-glass-brand-icon hidden src="{{ \App\Support\PlatformBranding::asset('app-icon-192')['url'] }}" width="36" height="36" alt="{{ \App\Support\PlatformBranding::name() }}">
                 </a>
                 <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 lg:hidden"><x-workspace-icon name="close" /></button>
             </div>
+            <button type="button" data-glass-sidebar-toggle hidden aria-controls="workspace-sidebar" aria-expanded="true" aria-label="Toggle navigation width" title="Toggle navigation width"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
             <div class="px-3 pt-3 lg:hidden">
                 <label for="workspace-search-mobile" class="sr-only">{{ __('workspace.search') }}</label>
                 <div class="relative">
@@ -60,8 +64,8 @@
                 <p data-workspace-no-results hidden class="px-4 py-5 text-sm text-white/70">{{ __('workspace.search') }}: 0</p>
             </nav>
             <div class="shrink-0 border-t border-white/15 p-3">
-                <a href="{{ route('home') }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#c3d2e7] transition hover:bg-white/10 hover:text-white"><x-workspace-icon name="home" /> {{ __('workspace.home') }}</a>
-                <a data-sidebar-settings href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="flex items-center gap-3 rounded-xl border-l-[3px] border-[#f4bd4e] bg-white/10 px-3 py-3 workspace-menu-type font-bold text-white transition hover:bg-white/20"><x-workspace-icon name="settings" class="h-5 w-5 text-[#ffca65]" /> {{ __('workspace.settings') }}</a>
+                <a href="{{ route('home') }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#c3d2e7] transition hover:bg-white/10 hover:text-white"><x-workspace-icon name="home" /> <span data-glass-footer-label>{{ __('workspace.home') }}</span></a>
+                <a data-sidebar-settings href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="flex items-center gap-3 rounded-xl border-l-[3px] border-[#f4bd4e] bg-white/10 px-3 py-3 workspace-menu-type font-bold text-white transition hover:bg-white/20"><x-workspace-icon name="settings" class="h-5 w-5 text-[#ffca65]" /> <span data-glass-footer-label>{{ __('workspace.settings') }}</span></a>
             </div>
         </aside>
         <div class="min-w-0" data-workspace-page>

@@ -33,6 +33,10 @@ final class WorkspaceVisualSystemTest extends TestCase
                 ->assertSee('id="workspace-search"', false)
                 ->assertSee('id="workspace-search-mobile"', false)
                 ->assertSee('data-workspace-nav', false)
+                ->assertSee('css/workspace-glass-sidebar.css', false)
+                ->assertSee('js/workspace-glass-sidebar.js', false)
+                ->assertSee('data-glass-sidebar-toggle', false)
+                ->assertSee('data-glass-brand-icon', false)
                 ->assertSee('aria-label="Mobile workspace navigation"', false);
             $this->assertSame(2, substr_count($response->getContent(), 'data-workspace-search type="search"'));
         }
