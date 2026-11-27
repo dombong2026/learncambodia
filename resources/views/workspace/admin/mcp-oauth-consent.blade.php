@@ -46,6 +46,9 @@
             @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:assessment-advanced'))
                 <p><strong>Expanded advanced assessment access:</strong> Append listening, writing, speaking and unscored Likert questions to your own MCP-created unpublished standalone assessments. List your own exam audio metadata and attach existing owned exam audio to listening questions. No uploads, grading learner submissions, publication or deletion.</p>
             @endif
+            @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:assessment-guest'))
+                <p><strong>Expanded guest assessment settings:</strong> Enable or disable guest participation on your own free unpublished standalone assessments. Does not publish, create guest attempts, or access guest responses.</p>
+            @endif
             @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:assessment-audio'))
                 <p><strong>Expanded assessment audio upload access:</strong> Upload one validated PCM WAV recording and append one listening question to your own unpublished MCP-created standalone assessment. Private exam storage only, no arbitrary upload, replacement, external URL, grading or publication.</p>
             @endif

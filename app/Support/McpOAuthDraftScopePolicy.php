@@ -35,6 +35,7 @@ final class McpOAuthDraftScopePolicy
     public const ASSESSMENT_MEDIA_SCOPE = 'mcp:assessment-media';
     public const ASSESSMENT_ADVANCED_SCOPE = 'mcp:assessment-advanced';
     public const ASSESSMENT_AUDIO_SCOPE = 'mcp:assessment-audio';
+    public const ASSESSMENT_GUEST_SCOPE = 'mcp:assessment-guest';
 
     public static function curriculumEnabled(): bool
     {
@@ -157,6 +158,35 @@ final class McpOAuthDraftScopePolicy
             && config('mcp.oauth_assessment_audio_rehearsal', false) === true;
     }
 
+    public static function assessmentGuestEnabled(): bool
+    {
+        if (!self::assessmentEnabled() || !GuestAssessment::enabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_guest_production_accepted', false) === true
+                && config('mcp.oauth_assessment_guest_production_enabled', false) === true
+                && config('mcp.oauth_assessment_guest_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_guest_rehearsal', false) === true;
+    }
+
+    private static function withoutAssessmentGuest(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_GUEST_SCOPE));
+    }
+
+    public static function hasAssessmentGuestScopes(array $scopes): bool
+    {
+        if (!self::assessmentGuestEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_GUEST_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentGuest($scopes);
+        return count($remaining) === count($scopes) - 1 && self::hasAssessmentScopes($remaining);
+    }
+
     private static function withoutAssessmentAudio(array $scopes): array
     {
         return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_AUDIO_SCOPE));
@@ -164,6 +194,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentAudioScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentAudioScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (!self::assessmentAudioEnabled() || !array_is_list($scopes)
             || !in_array(self::ASSESSMENT_AUDIO_SCOPE, $scopes, true)) {
             return false;
@@ -179,6 +212,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentAdvancedScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentAdvancedScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasAssessmentAdvancedScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -197,6 +233,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentMediaScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasAssessmentMediaScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -220,6 +259,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasAssessmentScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasAssessmentScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -239,6 +281,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasEditScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasEditScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -263,6 +308,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasMediaScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -281,6 +329,9 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasCurriculumScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentGuest($scopes));
+        }
         if (self::hasAssessmentAudioScopes($scopes)) {
             return self::hasCurriculumScopes(self::withoutAssessmentAudio($scopes));
         }
@@ -300,7 +351,7 @@ final class McpOAuthDraftScopePolicy
 
     public static function permittedWriteScopes(array $scopes): bool
     {
-        return self::hasAssessmentAudioScopes($scopes) || self::hasAssessmentAdvancedScopes($scopes) || self::hasAssessmentMediaScopes($scopes) || self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
+        return self::hasAssessmentGuestScopes($scopes) || self::hasAssessmentAudioScopes($scopes) || self::hasAssessmentAdvancedScopes($scopes) || self::hasAssessmentMediaScopes($scopes) || self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
             || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
@@ -337,6 +388,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::assessmentAudioEnabled()) {
             $scopes[self::ASSESSMENT_AUDIO_SCOPE] = 'Upload validated PCM WAV audio and append a listening question to your own unpublished MCP-created standalone assessment';
+        }
+
+        if (self::assessmentGuestEnabled()) {
+            $scopes[self::ASSESSMENT_GUEST_SCOPE] = 'Enable or disable guest participation on your own unpublished free standalone assessment; no publication or access to learner responses';
         }
 
         return $scopes;

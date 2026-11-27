@@ -522,6 +522,65 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
         $this->assertFalse(Policy::permittedWriteScopes($scope));
     }
 
+    public function test_guest_settings_are_separately_gated_owned_and_versioned(): void
+    {
+        $class = \App\Support\McpOAuthAssessmentGuest::class;
+        $this->assertSame([], $class::catalog());
+        config()->set(['guest-assessment.rehearsal' => true, 'mcp.oauth_assessment_guest_rehearsal' => true]);
+        $scope = ['mcp:read', 'mcp:write', 'mcp:assessment', 'mcp:assessment-guest'];
+        $this->assertTrue(Policy::hasAssessmentGuestScopes($scope));
+        $this->assertTrue(Policy::hasAssessmentScopes($scope));
+        $this->assertTrue(Policy::permittedWriteScopes(array_slice($scope, 0, -1)));
+        $this->assertFalse(Policy::hasAssessmentGuestScopes(array_slice($scope, 0, -1)));
+        foreach ([[...$scope, '*'], [...$scope, 'mcp:assessment-guest'], array_values(array_diff($scope, ['mcp:assessment']))] as $invalid) {
+            $this->assertFalse(Policy::permittedWriteScopes($invalid));
+        }
+        $this->assertCount(1, $class::catalog());
+        foreach (['quiz', 'exam'] as $kind) {
+            $created = Builder::execute($this->actor, 'create_draft_assessment', $this->fixture($kind, 1));
+            $this->assertFalse($created['guest_enabled']);
+            $lookup = ['kind' => $kind, 'assessment_id' => $created['resource_id']];
+            $before = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $args = $lookup + ['request_id' => (string) Str::uuid(), 'expected_version' => $before['version'], 'guest_enabled' => true];
+            $result = $class::execute($this->actor, $args);
+            $this->assertTrue($result['guest_enabled']);
+            $this->assertNotSame($before['version'], $result['version']);
+            $this->assertTrue($class::execute($this->actor, $args)['replayed']);
+            $after = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $this->assertSame($before['questions'], $after['questions']);
+            $this->assertSame($before['settings'], $after['settings']);
+            $this->assertSame('draft', $after['publication_status']);
+            foreach ([array_replace($args, ['guest_enabled' => false]), array_replace($args, ['request_id' => (string) Str::uuid()])] as $invalid) {
+                try {
+                    $class::execute($this->actor, $invalid);
+                    $this->fail('Unsafe guest setting update accepted.');
+                } catch (HttpExceptionInterface $error) {
+                    $this->assertSame(409, $error->getStatusCode());
+                }
+            }
+            try {
+                $class::execute($this->admin(), $args);
+                $this->fail('Other owner accepted.');
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertTrue(true);
+            }
+            $disabled = $class::execute($this->actor, array_replace($args, ['guest_enabled' => false,
+                'request_id' => (string) Str::uuid(), 'expected_version' => $result['version']]));
+            $this->assertFalse($disabled['guest_enabled']);
+            CourseExam::findOrFail($created['resource_id'])->update(['published' => true]);
+            try {
+                $class::execute($this->actor, $args);
+                $this->fail('Published record accepted.');
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertTrue(true);
+            }
+        }
+        config()->set('mcp.oauth_assessment_guest_rehearsal', false);
+        $this->assertSame([], $class::catalog());
+        $this->assertFalse(Policy::permittedWriteScopes($scope));
+        $this->assertTrue(Policy::permittedWriteScopes(array_slice($scope, 0, -1)));
+    }
+
     public function test_invalid_payload_and_production_closed(): void
     {
         $payload = $this->fixture('quiz', 1);
