@@ -51,7 +51,7 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
 
     private function fixture(string $kind, int $count): array
     {
-        $type = ExamType::create(['kind' => $kind, 'name' => 'QA '.$kind]);
+        $type = ExamType::firstOrCreate(['kind' => $kind, 'name' => 'QA '.$kind]);
         return ['kind' => $kind, 'request_id' => (string) Str::uuid(), 'settings' => [
             'exam_type_id' => $type->id, 'title' => 'QA standalone '.$kind, 'instructions' => 'Choose an answer.',
             'time_limit' => $kind === 'quiz' ? 20 : 120, 'passing_percent' => 80, 'attempt_limit' => 2,
