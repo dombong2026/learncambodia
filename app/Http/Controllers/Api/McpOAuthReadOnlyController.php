@@ -85,7 +85,8 @@ final class McpOAuthReadOnlyController extends Controller
             && in_array($name, array_column(McpOAuthDraftController::catalog(), 'name'), true)
             && $this->mayRequestDraftScope($request)) {
             // This branch never dispatches a draft lookup or mutation.
-            return self::scopeChallenge($id, \App\Support\McpOAuthNativeCourseBuilder::supports($name));
+            return self::scopeChallenge($id, \App\Support\McpOAuthNativeCourseBuilder::supports($name)
+                || \App\Support\McpOAuthDraftCoverUpload::supports($name), \App\Support\McpOAuthDraftCoverUpload::supports($name));
         }
         if (is_string($name) && McpOAuthReadCatalog::supports($name)) {
             return $this->dedicatedRead($request, $id, $name, $args);
@@ -184,10 +185,10 @@ final class McpOAuthReadOnlyController extends Controller
             && McpOAuthDraftScopePolicy::eligible(User::query()->find($identity->getAuthIdentifier()));
     }
 
-    public static function scopeChallenge(mixed $id, bool $curriculum = false): JsonResponse
+    public static function scopeChallenge(mixed $id, bool $curriculum = false, bool $media = false): JsonResponse
     {
         $challenge = 'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", '
-            .'error="insufficient_scope", scope="mcp:read mcp:write'.($curriculum ? ' mcp:curriculum' : '').'", '
+            .'error="insufficient_scope", scope="mcp:read mcp:write'.(($curriculum || $media) ? ' mcp:curriculum' : '').($media ? ' mcp:media' : '').'", '
             .'error_description="Fresh administrator draft authorization is required"';
         // HTTP 403 is the MCP transport scope-upgrade signal; include the
         // tool-result challenge too for clients supporting the OpenAI extension.

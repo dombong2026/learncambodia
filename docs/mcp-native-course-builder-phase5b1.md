@@ -1,0 +1,5 @@
+# Phase 5B.1 — local storage production authorization
+
+Production source Phase 5B was installed disabled. This follow-up allows promotion only when the configured managed driver and underlying local filesystem driver are both local, GD is available, native curriculum authorization is enabled, both independent media production gates are true and the rehearsal flag is false. Both gates default false. R2 and S3 are intentionally closed, including rehearsal, pending separate adapter tests. Existing three-scope tokens keep curriculum access and cannot upload. A signed four-scope token is rejected when the media gate is closed.
+
+Tests exercise the same signed OAuth flow in isolated production mode, test rejection of cloud drivers, inject an exception after native media insertion (after storage write), verify rolled-back receipt, media and cover association plus file cleanup, and retry the same request successfully. CI and real production web runtime readiness and client transfer checks are still required. Crash recovery during process termination cannot be guaranteed by transaction cleanup; operator review is required for uncertain storage failures.

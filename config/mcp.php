@@ -35,6 +35,11 @@ return [
     'oauth_native_course_production_enabled' => (bool) env('MCP_OAUTH_NATIVE_COURSE_PRODUCTION_ENABLED', false),
     // Rehearsal never authorizes production access.
     'oauth_native_course_builder_rehearsal' => (bool) env('MCP_OAUTH_NATIVE_COURSE_BUILDER_REHEARSAL', false),
+    // Local-only production promotion requires independent acceptance and activation.
+    'oauth_draft_media_production_accepted' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_PRODUCTION_ACCEPTED', false),
+    'oauth_draft_media_production_enabled' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_PRODUCTION_ENABLED', false),
+    // The rehearsal switch never authorizes production access.
+    'oauth_draft_media_rehearsal' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_REHEARSAL', false),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];

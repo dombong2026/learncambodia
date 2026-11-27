@@ -9,6 +9,7 @@ use App\Support\McpOAuthDraftAuthorization;
 use App\Support\McpOAuthDraftScopePolicy;
 use App\Support\McpOAuthDraftWriter;
 use App\Support\McpOAuthNativeCourseBuilder;
+use App\Support\McpOAuthDraftCoverUpload;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,7 +71,7 @@ final class McpOAuthDraftController
                 ];
             }
         }
-        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog()];
+        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog()];
     }
 
     public function handle(Request $request): JsonResponse
@@ -86,7 +87,9 @@ final class McpOAuthDraftController
         $id = $rpc['id'] ?? null;
         // Discovery and lookup require the same current token and audience
         // checks as mutations, including locked authorization records.
-        return McpOAuthDraftAuthorization::authorized($request, function (User $actor, array $scopes) use ($request, $rpc, $id): JsonResponse {
+        $upload = new McpOAuthDraftCoverUpload;
+        try {
+            return McpOAuthDraftAuthorization::authorized($request, function (User $actor, array $scopes) use ($request, $rpc, $id, $upload): JsonResponse {
             $method = $rpc['method'];
             if ($method === 'notifications/initialized') {
                 return response()->json([], 202)->header('Cache-Control', 'no-store');
@@ -128,8 +131,15 @@ final class McpOAuthDraftController
                 return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
             try {
+                if (McpOAuthDraftCoverUpload::supports($name)) {
+                    if (!McpOAuthDraftScopePolicy::exactMediaScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true);
+                    }
+                    $result = $upload->execute($actor, $args);
+                    return $this->toolResult($id, $result + ['http_status' => 200], false);
+                }
                 if (McpOAuthNativeCourseBuilder::supports($name)) {
-                    if (!McpOAuthDraftScopePolicy::exactCurriculumScopes($scopes)) {
+                    if (!McpOAuthDraftScopePolicy::hasCurriculumScopes($scopes)) {
                         return McpOAuthReadOnlyController::scopeChallenge($id, true);
                     }
                     $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
@@ -159,7 +169,12 @@ final class McpOAuthDraftController
                 $status = 500;
             }
             return $this->rejection($actor, $id, $status, 'Draft operation rejected. Verify ownership, draft status, fields and version.');
-        });
+            });
+        } finally {
+            // Storage is outside the database transaction. Reconcile only
+            // objects created by this request after the outer transaction ends.
+            $upload->cleanupUncommitted();
+        }
     }
 
     private function rejection(User $actor, mixed $id, int $status, string $message): JsonResponse

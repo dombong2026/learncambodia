@@ -29,6 +29,7 @@ final class McpOAuthDraftScopePolicy
     }
 
     public const CURRICULUM_SCOPE = 'mcp:curriculum';
+    public const MEDIA_SCOPE = 'mcp:media';
 
     public static function curriculumEnabled(): bool
     {
@@ -52,10 +53,43 @@ final class McpOAuthDraftScopePolicy
             && in_array(self::CURRICULUM_SCOPE, $scopes, true);
     }
 
+    public static function mediaEnabled(): bool
+    {
+        if (!self::curriculumEnabled() || !extension_loaded('gd')
+            || config('filesystems.managed') !== 'local'
+            || config('filesystems.disks.local.driver') !== 'local') {
+            return false;
+        }
+        // Only the local driver is accepted in this release. R2/S3 remain
+        // closed until their conditional-create and rollback paths are tested.
+        if (app()->environment('production')) {
+            return config('mcp.oauth_draft_media_production_accepted', false) === true
+                && config('mcp.oauth_draft_media_production_enabled', false) === true
+                && config('mcp.oauth_draft_media_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_draft_media_rehearsal', false) === true;
+    }
+
+    public static function exactMediaScopes(array $scopes): bool
+    {
+        return array_is_list($scopes) && count($scopes) === 4
+            && in_array('mcp:read', $scopes, true)
+            && in_array('mcp:write', $scopes, true)
+            && in_array(self::CURRICULUM_SCOPE, $scopes, true)
+            && in_array(self::MEDIA_SCOPE, $scopes, true);
+    }
+
+    public static function hasCurriculumScopes(array $scopes): bool
+    {
+        return self::exactCurriculumScopes($scopes)
+            || (self::mediaEnabled() && self::exactMediaScopes($scopes));
+    }
+
     public static function permittedWriteScopes(array $scopes): bool
     {
         return self::exactWriteScopes($scopes)
-            || (self::curriculumEnabled() && self::exactCurriculumScopes($scopes));
+            || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
     public static function scopes(): array
@@ -67,6 +101,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::curriculumEnabled()) {
             $scopes[self::CURRICULUM_SCOPE] = 'Append modules, lessons and knowledge checks to your own unpublished courses and attach an existing owned library image';
+        }
+
+        if (self::mediaEnabled()) {
+            $scopes[self::MEDIA_SCOPE] = 'Upload one validated image as the cover of your own unpublished course without replacing existing media';
         }
 
         return $scopes;
