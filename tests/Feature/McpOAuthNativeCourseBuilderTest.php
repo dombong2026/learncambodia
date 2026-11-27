@@ -30,8 +30,8 @@ final class McpOAuthNativeCourseBuilderTest extends TestCase
         config()->set([
             'mcp.gateway_enabled' => true,
             'mcp.oauth_provider_staging_enabled' => true,
-            'mcp.oauth_provider_accepted' => false,
-            'mcp.oauth_ready' => false,
+            'mcp.oauth_provider_accepted' => true,
+            'mcp.oauth_ready' => true,
             'mcp.oauth_draft_scope_issuance_enabled' => true,
             'mcp.oauth_draft_writes_accepted' => true,
             'mcp.oauth_draft_writes_enabled' => true,
