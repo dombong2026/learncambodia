@@ -389,6 +389,139 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
         $this->assertFalse(Policy::permittedWriteScopes($scope));
     }
 
+    public function test_direct_assessment_audio_upload_validation_ownership_and_rollback(): void
+    {
+        config()->set([
+            'mcp.oauth_assessment_advanced_rehearsal' => true,
+            'mcp.oauth_assessment_audio_rehearsal' => true,
+            'filesystems.managed' => 'local',
+        ]);
+        $disk = \Illuminate\Support\Facades\Storage::fake('local');
+        $class = \App\Support\McpOAuthAssessmentAudioUpload::class;
+        $scope = ['mcp:read', 'mcp:write', 'mcp:assessment', 'mcp:assessment-advanced', 'mcp:assessment-audio'];
+        $this->assertCount(1, $class::catalog());
+        $this->assertTrue(Policy::hasAssessmentAudioScopes($scope));
+        $this->assertTrue(Policy::hasAssessmentAdvancedScopes($scope));
+        $this->assertTrue(Policy::hasAssessmentScopes($scope));
+        foreach ([[...$scope, '*'], [...$scope, 'mcp:assessment-audio'],
+            array_values(array_diff($scope, ['mcp:assessment-advanced'])),
+            array_values(array_diff($scope, ['mcp:assessment']))] as $invalid) {
+            $this->assertFalse(Policy::permittedWriteScopes($invalid));
+        }
+        $wav = static function (int $frames = 8000, int $rate = 8000, int $channels = 1): string {
+            $length = $frames * $channels * 2;
+            return 'RIFF'.pack('V', 36 + $length).'WAVEfmt '
+                .pack('VvvVVvv', 16, 1, $channels, $rate, $rate * $channels * 2, $channels * 2, 16)
+                .'data'.pack('V', $length).str_repeat("\0", $length);
+        };
+        $bytes = $wav();
+        $encoded = base64_encode($bytes);
+        $this->assertSame([$bytes, 1000, 8000, 1], $class::sanitize($encoded));
+        $stereo = $wav(4800, 48000, 2);
+        $this->assertSame([$stereo, 100, 48000, 2], $class::sanitize(base64_encode($stereo)));
+        $other = $this->admin();
+        $reject = function (array $args, int $status, ?User $actor = null) use ($class): void {
+            $uploader = new $class;
+            try {
+                $uploader->execute($actor ?? $this->actor, $args);
+                $this->fail('Unsafe audio upload accepted.');
+            } catch (ValidationException) {
+                $this->assertSame(422, $status);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertSame(404, $status);
+            } catch (HttpExceptionInterface $e) {
+                $this->assertSame($status, $e->getStatusCode());
+            } finally {
+                $uploader->cleanupUncommitted();
+            }
+        };
+        foreach (['quiz', 'exam'] as $kind) {
+            $created = Builder::execute($this->actor, 'create_draft_assessment', $this->fixture($kind, 1));
+            $lookup = ['kind' => $kind, 'assessment_id' => $created['resource_id']];
+            $before = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $args = $lookup + ['request_id' => (string) Str::uuid(), 'expected_version' => $before['version'],
+                'audio_base64' => $encoded, 'prompt' => 'Identify the QA tone.', 'a' => 'Tone A', 'b' => 'Tone B',
+                'c' => '', 'd' => '', 'correct' => 'a', 'points' => 3, 'feedback' => 'QA only.'];
+            $files = $disk->allFiles('editor-media');
+            $mediaCount = \App\Models\EditorMedia::count();
+            foreach (['!!!!', 'data:audio/wav;base64,'.$encoded, base64_encode('<svg/>'),
+                base64_encode($bytes.'trailing'), base64_encode(substr($bytes, 0, -1)),
+                base64_encode(substr_replace($bytes, pack('v', 3), 20, 2)),
+                base64_encode(substr_replace($bytes, pack('V', 1), 28, 4)),
+                base64_encode($wav(10)), base64_encode($wav(248000)),
+                base64_encode($wav(270000)), base64_encode($wav(8000, 96000))] as $invalid) {
+                $reject(array_replace($args, ['audio_base64' => $invalid]), 422);
+            }
+            $reject(array_replace($args, ['b' => 'tone a']), 422);
+            $reject(array_replace($args, ['correct' => 'c']), 422);
+            $reject(array_replace($args, ['expected_version' => str_repeat('0', 64)]), 409);
+            $reject($args, 404, $other);
+            $this->assertSame($files, $disk->allFiles('editor-media'));
+            $this->assertSame($mediaCount, \App\Models\EditorMedia::count());
+            $this->assertSame($before['version'], Builder::execute($this->actor, 'get_draft_assessment', $lookup)['version']);
+
+            $uploader = new $class;
+            try {
+                DB::transaction(function () use ($uploader, $args): void {
+                    $uploader->execute($this->actor, $args);
+                    throw new \RuntimeException('Injected outer transaction rollback');
+                });
+                $this->fail('Rollback not triggered.');
+            } catch (\RuntimeException $e) {
+                $this->assertSame('Injected outer transaction rollback', $e->getMessage());
+            } finally {
+                $uploader->cleanupUncommitted();
+            }
+            $this->assertSame($files, $disk->allFiles('editor-media'));
+            $this->assertSame($mediaCount, \App\Models\EditorMedia::count());
+            $this->assertSame($before['version'], Builder::execute($this->actor, 'get_draft_assessment', $lookup)['version']);
+            $uploader = new $class;
+            $result = $uploader->execute($this->actor, $args);
+            $uploader->cleanupUncommitted();
+            $this->assertSame('draft', $result['publication_status']);
+            $this->assertSame('audio/wav', $result['mime']);
+            $this->assertSame(1000, $result['duration_ms']);
+            $this->assertSame(8000, $result['sample_rate']);
+            $this->assertSame(1, $result['channels']);
+            $this->assertSame(2, $result['question_count']);
+            $this->assertSame(5, $result['total_points']);
+            $this->assertSame(1, $result['question_index']);
+            $media = \App\Models\EditorMedia::findOrFail($result['media_id']);
+            $this->assertSame('exam', $media->context);
+            $this->assertEquals($this->actor->id, $media->uploaded_by);
+            $this->assertSame($bytes, $disk->get($media->path));
+            $this->assertTrue((new $class)->execute($this->actor, $args)['replayed']);
+            $after = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $this->assertSame($before['settings'], $after['settings']);
+            $this->assertSame($before['questions'][0], $after['questions'][0]);
+            $this->assertSame($before['featured_media_id'], $after['featured_media_id']);
+            $this->assertSame('listening', $after['questions'][1]['format']);
+            $this->assertSame('a', $after['questions'][1]['correct']);
+            $this->assertEquals($media->id, $after['questions'][1]['media_id']);
+            $this->assertEquals([$media->id], CourseExam::findOrFail($created['resource_id'])->media()->allRelatedIds()->all());
+            $listed = \App\Support\McpOAuthAssessmentAdvanced::execute($this->actor,
+                \App\Support\McpOAuthAssessmentAdvanced::LIST, ['limit' => 100]);
+            $this->assertContains($media->id, array_column($listed['items'], 'id'));
+            $this->assertArrayNotHasKey('path', $listed['items'][0]);
+            $reject(array_replace($args, ['prompt' => 'Changed replay']), 409);
+            $reject(array_replace($args, ['request_id' => (string) Str::uuid()]), 409);
+            $this->assertSame($mediaCount + 1, \App\Models\EditorMedia::count());
+            $this->assertCount(count($files) + 1, $disk->allFiles('editor-media'));
+            $full = Builder::execute($this->actor, 'create_draft_assessment', $this->fixture($kind, $kind === 'quiz' ? 50 : 200));
+            $reject(array_replace($args, ['assessment_id' => $full['resource_id'], 'expected_version' => $full['version'],
+                'request_id' => (string) Str::uuid()]), 422);
+            CourseExam::findOrFail($created['resource_id'])->update(['published' => true]);
+            $reject($args, 404);
+        }
+        config()->set('filesystems.managed', 'r2');
+        $this->assertSame([], $class::catalog());
+        config()->set('filesystems.managed', 'local');
+        config()->set('mcp.oauth_assessment_audio_rehearsal', false);
+        $this->assertSame([], $class::catalog());
+        $this->assertTrue(Policy::permittedWriteScopes(array_slice($scope, 0, -1)));
+        $this->assertFalse(Policy::permittedWriteScopes($scope));
+    }
+
     public function test_invalid_payload_and_production_closed(): void
     {
         $payload = $this->fixture('quiz', 1);

@@ -897,6 +897,9 @@ final class McpOAuthPassportTest extends TestCase
                 if (in_array('mcp:assessment-advanced', $scopes, true)) {
                     $consent->assertSee('Expanded advanced assessment access:');
                 }
+                if (in_array('mcp:assessment-audio', $scopes, true)) {
+                    $consent->assertSee('Expanded assessment audio upload access:');
+                }
                 preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
                 preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
                 $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
@@ -1021,12 +1024,68 @@ final class McpOAuthPassportTest extends TestCase
                 ->assertJsonPath('result.structuredContent.replayed', true);
             $rpc($advancedToken, 'upload_draft_assessment_cover', $args)->assertOk()
                 ->assertJsonPath('result.structuredContent.replayed', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_production_accepted', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_production_enabled', true);
+            config()->set('mcp.oauth_assessment_audio_rehearsal', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_rehearsal', false);
+            $this->assertTrue($policy::assessmentAudioEnabled());
+            $this->assertCount(33, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $nine = [...$eight, 'mcp:assessment-audio'];
+            $this->assertTrue($policy::hasAssessmentAudioScopes($nine));
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($nine));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($nine));
+            $this->assertTrue($policy::hasAssessmentScopes($nine));
+            $this->assertTrue($policy::hasEditScopes($nine));
+            $this->assertTrue($policy::hasMediaScopes($nine));
+            $this->assertTrue($policy::hasCurriculumScopes($nine));
+            $this->assertFalse($policy::hasAssessmentAudioScopes($eight));
+            foreach ([[...$nine, '*'], [...$nine, 'mcp:assessment-audio'],
+                array_values(array_diff($nine, ['mcp:assessment-advanced'])),
+                array_values(array_diff($nine, ['mcp:assessment']))] as $invalid) {
+                $this->assertFalse($policy::permittedWriteScopes($invalid));
+            }
+            $wav = 'RIFF'.pack('V', 16036).'WAVEfmt '.pack('VvvVVvv', 16, 1, 1, 8000, 16000, 2, 16)
+                .'data'.pack('V', 16000).str_repeat("\0", 16000);
+            $audioArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(), 'expected_version' => $advanced['version'],
+                'audio_base64' => base64_encode($wav), 'prompt' => 'QA listening fixture.', 'a' => 'Tone A', 'b' => 'Tone B',
+                'c' => '', 'd' => '', 'correct' => 'a', 'points' => 2, 'feedback' => 'QA only.'];
+            $rpc($advancedToken, 'upload_draft_assessment_audio', $audioArgs)->assertForbidden();
+            $this->assertCount(1, $disk->allFiles('editor-media'));
+            $this->travel(61)->seconds();
+            $audioToken = $issue($nine);
+            $audio = $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->json('result.structuredContent');
+            $this->assertSame(3, $audio['question_count']);
+            $this->assertSame(8, $audio['total_points']);
+            $this->assertSame(1000, $audio['duration_ms']);
+            $this->assertSame('audio/wav', $audio['mime']);
+            $this->assertSame($uploaded['media_id'], $audio['featured_media_id']);
+            $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($audioToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.questions.2.media_id', $audio['media_id']);
+            $rpc($audioToken, 'list_draft_assessment_audio', ['limit' => 10])->assertOk()
+                ->assertJsonPath('result.structuredContent.items.0.id', $audio['media_id']);
+            $rpc($audioToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $this->assertCount(2, $disk->allFiles('editor-media'));
+            config()->set('mcp.oauth_assessment_audio_production_enabled', false);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($eight));
+            $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertForbidden();
+            $rpc($advancedToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 3);
             config()->set('mcp.oauth_assessment_advanced_production_enabled', false);
             $this->assertFalse($policy::assessmentAdvancedEnabled());
             $this->assertTrue($policy::permittedWriteScopes($seven));
             $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertForbidden();
             $rpc($fullToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
-                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 2);
+                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 3);
             config()->set('mcp.oauth_assessment_media_production_enabled', false);
             $this->assertFalse($policy::assessmentMediaEnabled());
             $rpc($fullToken, 'upload_draft_assessment_cover', $args)->assertForbidden();
