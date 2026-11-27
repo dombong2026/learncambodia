@@ -620,20 +620,62 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_cover_upload_rehearsal_requires_separate_signed_media_scope(): void
     {
+        $this->exerciseCoverUpload(false);
+    }
+
+    public function test_production_cover_upload_requires_separate_signed_media_scope(): void
+    {
+        try {
+            $this->exerciseCoverUpload(true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseCoverUpload(bool $production): void
+    {
         $this->configureEphemeralPassportKeys();
+        if ($production) {
+            $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+            config()->set([
+                'mcp.oauth_redirect_uri' => $this->callback,
+                'mcp.oauth_provider_staging_enabled' => false,
+                'mcp.oauth_production_registration_enabled' => false,
+                'mcp.oauth_production_accepted' => true,
+                'mcp.oauth_production_enabled' => true,
+                'mcp.oauth_discovery_enabled' => true,
+                'mcp.oauth_draft_production_accepted' => true,
+                'mcp.oauth_native_course_production_accepted' => true,
+                'mcp.oauth_native_course_production_enabled' => true,
+            ]);
+            $this->app->instance('env', 'production');
+        }
         $client = $this->setupClient();
         config()->set([
             'mcp.oauth_draft_writes_accepted' => true,
             'mcp.oauth_draft_writes_enabled' => true,
             'mcp.oauth_draft_scope_issuance_enabled' => true,
-            'mcp.oauth_native_course_builder_rehearsal' => true,
-            'mcp.oauth_draft_media_rehearsal' => true,
+            'mcp.oauth_native_course_builder_rehearsal' => !$production,
+            'mcp.oauth_draft_media_rehearsal' => !$production,
             'filesystems.managed' => 'local',
         ]);
         $policy = \App\Support\McpOAuthDraftScopePolicy::class;
-        $this->assertTrue($policy::mediaEnabled());
-        Passport::tokensCan($policy::scopes());
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+        if ($production) {
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            $this->assertFalse($policy::mediaEnabled());
+            config()->set('mcp.oauth_draft_media_production_accepted', true);
+            $this->assertFalse($policy::mediaEnabled());
+            config()->set('mcp.oauth_draft_media_production_enabled', true);
+        }
+        $this->assertTrue($policy::mediaEnabled());
+        foreach (['r2', 's3'] as $driver) {
+            config()->set('filesystems.managed', $driver);
+            $this->assertFalse($policy::mediaEnabled());
+            $this->assertSame([], \App\Support\McpOAuthDraftCoverUpload::catalog());
+        }
+        config()->set('filesystems.managed', 'local');
+        Passport::tokensCan($policy::scopes());
         $admin->forceFill(['two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'), 'two_factor_confirmed_at' => now()])->save();
         $category = \App\Models\Category::create([
             'code' => 'MEDIA', 'slug' => 'media-test-category', 'name' => 'Media test category',
@@ -693,6 +735,26 @@ final class McpOAuthPassportTest extends TestCase
         $bad = array_replace($args, ['image_base64' => base64_encode('<svg/>')]);
         $call($token, $bad)->assertOk()->assertJsonPath('result.structuredContent.http_status', 422);
         $this->assertDatabaseCount('editor_media', 0);
+
+        // Simulate failure after the storage object has been written and
+        // the database insert attempted. The inner transaction must roll
+        // back rows and the transport must remove the uncommitted file.
+        $failNextMedia = true;
+        \Illuminate\Support\Facades\Event::listen('eloquent.created: '.\App\Models\EditorMedia::class,
+            function () use (&$failNextMedia): void {
+                if ($failNextMedia) {
+                    $failNextMedia = false;
+                    throw new \RuntimeException('Isolated media insert failure');
+                }
+            });
+        $call($token, $args)->assertOk()->assertJsonPath('result.structuredContent.http_status', 500);
+        $this->assertFalse($failNextMedia);
+        $this->assertDatabaseCount('editor_media', 0);
+        $this->assertDatabaseCount('mcp_oauth_draft_receipts', 0);
+        $this->assertNull($course->fresh()->featured_media_id);
+        $this->assertSame([], \Illuminate\Support\Facades\Storage::disk('local')->allFiles('editor-media'));
+
+        // The same request ID is safe to retry after the failed transaction.
         $created = $call($token, $args)->assertOk()->assertJsonPath('result.isError', false)
             ->assertJsonPath('result.structuredContent.replayed', false)->json('result.structuredContent');
         $call($token, $args)->assertOk()->assertJsonPath('result.structuredContent.replayed', true);
@@ -706,13 +768,23 @@ final class McpOAuthPassportTest extends TestCase
         $this->assertDatabaseCount('mcp_oauth_draft_receipts', 1);
         $rpc($token, 'tools/call', ['name' => 'get_draft_curriculum', 'arguments' => ['course_id' => $course->id]])
             ->assertOk()->assertJsonPath('result.structuredContent.featured_media_id', $media->id);
-        $this->app->instance('env', 'production');
-        try {
+        if ($production) {
+            config()->set('mcp.oauth_draft_media_production_enabled', false);
             $this->assertFalse($policy::mediaEnabled());
-            $this->assertSame([], \App\Support\McpOAuthDraftCoverUpload::catalog());
-        } finally {
-            $this->app->instance('env', 'testing');
+            $this->assertTrue($policy::curriculumEnabled());
+            $this->assertTrue($policy::permittedWriteScopes(['mcp:read', 'mcp:write', 'mcp:curriculum']));
+            $this->assertFalse($policy::permittedWriteScopes(['mcp:read', 'mcp:write', 'mcp:curriculum', 'mcp:media']));
+            $rpc($token, 'tools/list')->assertForbidden();
+            $rpc($old, 'tools/list')->assertOk()->assertJsonCount(22, 'result.tools');
+        } else {
+            $this->app->instance('env', 'production');
+            try {
+                $this->assertFalse($policy::mediaEnabled());
+            } finally {
+                $this->app->instance('env', 'testing');
+            }
         }
+        $this->assertSame([], \App\Support\McpOAuthDraftCoverUpload::catalog());
     }
 
     public function test_production_curriculum_requires_fresh_signed_scope(): void

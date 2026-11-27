@@ -55,11 +55,20 @@ final class McpOAuthDraftScopePolicy
 
     public static function mediaEnabled(): bool
     {
-        // Phase 5B is a rehearsal, never a production activation.
+        if (!self::curriculumEnabled() || !extension_loaded('gd')
+            || config('filesystems.managed') !== 'local'
+            || config('filesystems.disks.local.driver') !== 'local') {
+            return false;
+        }
+        // Only the local driver is accepted in this release. R2/S3 remain
+        // closed until their conditional-create and rollback paths are tested.
+        if (app()->environment('production')) {
+            return config('mcp.oauth_draft_media_production_accepted', false) === true
+                && config('mcp.oauth_draft_media_production_enabled', false) === true
+                && config('mcp.oauth_draft_media_rehearsal', false) === false;
+        }
         return app()->environment(['local', 'testing', 'staging'])
-            && self::curriculumEnabled()
-            && config('mcp.oauth_draft_media_rehearsal', false) === true
-            && extension_loaded('gd');
+            && config('mcp.oauth_draft_media_rehearsal', false) === true;
     }
 
     public static function exactMediaScopes(array $scopes): bool
