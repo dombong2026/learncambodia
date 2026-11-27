@@ -83,6 +83,43 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
   await expect(card).toHaveCSS('animation-name','none');
   await page.locator('[data-saver-toggle]').click();
   await expect(body).toHaveAttribute('data-saver','off');
+  // Verify actual review links and responsive panel alignment in both themes.
+  const cards=page.locator('[data-dashboard-card-grid] > section');
+  const reviews=page.locator('[data-dashboard-review-row]');
+  await expect(cards).toHaveCount(3);
+  await expect(reviews).toHaveCount(4);
+  for (const [index,label] of ['Course reviews','Enrollment reviews','Homework reviews','Appearance reviews'].entries()) {
+    const row=reviews.nth(index);
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(label);
+    await expect(row.locator('svg')).toHaveCount(1);
+    await expect(row.locator('[data-dashboard-review-count]')).toHaveText(/^\d[\d.,]*[KMB]?$/i);
+    // Locale navigation normalizes links to relative URLs in the browser.
+    // Verify the resolved same-origin destination and its actual queue, not
+    // the serialization format of the href attribute.
+    const destination=new URL(await row.evaluate(el=>el.href));
+    expect(destination.origin).toBe(new URL(page.url()).origin);
+    expect(destination.pathname).toBe(index===2?'/dashboard/homework/reviews':'/dashboard/reviews');
+    if (index!==2) {
+      expect(destination.searchParams.get('focus')).toBe(['courses','enrollments',null,'appearance'][index]);
+    }
+    await expect(row).not.toContainText('Across approval queues');
+    const labelBox=await row.locator('span').nth(1).boundingBox();
+    const countBox=await row.locator('[data-dashboard-review-count]').boundingBox();
+    expect(countBox.x).toBeGreaterThan(labelBox.x);
+  }
+  await expect(cards.nth(2)).not.toContainText('Only verified records are shown.');
+  for (const dark of [false,true]) {
+    await page.evaluate(value=>document.documentElement.classList.toggle('dark',value),dark);
+    const bounds=await cards.evaluateAll(nodes=>nodes.map(el=>({top:el.getBoundingClientRect().top,height:el.getBoundingClientRect().height,bottom:el.getBoundingClientRect().bottom})));
+    if (await page.evaluate(()=>matchMedia('(min-width: 80rem)').matches)) {
+      expect(Math.max(...bounds.map(x=>x.top))-Math.min(...bounds.map(x=>x.top))).toBeLessThan(2);
+      expect(Math.max(...bounds.map(x=>x.height))-Math.min(...bounds.map(x=>x.height))).toBeLessThan(2);
+    } else {
+      expect(bounds[1].top).toBeGreaterThan(bounds[0].bottom);
+      expect(bounds[2].top).toBeGreaterThan(bounds[1].bottom);
+    }
+  }
   await page.goto('/?lang=en');
   await expect(page.locator('link[href*="workspace-unified-glass.css"]')).toHaveCount(0);
 });

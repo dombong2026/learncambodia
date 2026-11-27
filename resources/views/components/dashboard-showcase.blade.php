@@ -23,7 +23,7 @@
         </a>
         </div>
     </div>
-    <div class="grid items-stretch gap-5 xl:grid-cols-[1.26fr_1fr_1fr]">
+    <div data-dashboard-card-grid class="grid items-stretch gap-5 xl:grid-cols-[1.26fr_1fr_1fr]">
         <section class="premium-card premium-card-on-navy learning-dashboard-panel learning-dashboard-navy flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['feature_title'] }}">
             <div class="flex items-start justify-between gap-3">
                 <div>
@@ -73,6 +73,30 @@
                 </div>
                 <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon name="calendar" /></span>
             </div>
+            @if($role === 'admin')
+                <ul data-dashboard-review-rows class="mt-6 flex flex-1 flex-col gap-3">
+                    @forelse($showcase['timeline'] as $item)
+                        @php
+                            $reviewIcon = match($item['label']) {
+                                __('dashboard.course_reviews') => 'book-open',
+                                __('dashboard.enrollment_reviews') => 'user-check',
+                                __('dashboard.homework_reviews') => 'clipboard-check',
+                                __('dashboard.appearance_reviews') => 'palette',
+                                default => 'list-check',
+                            };
+                        @endphp
+                        <li>
+                            <a data-dashboard-review-row href="{{ $item['url'] }}" class="group flex items-center gap-3 rounded-2xl border border-[#e6ecf3] bg-[#f5f7fa] p-4 transition hover:border-[#f5c45c] hover:bg-[#fff7e5] focus-visible:outline-2 focus-visible:outline-[#eab147] dark:border-[#294665] dark:bg-[#193658] dark:hover:border-[#f4c45c]">
+                                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff0c9] text-[#ba8021] dark:bg-[#4d3f27] dark:text-[#ffd37b]"><x-workspace-icon :name="$reviewIcon" class="h-5 w-5" /></span>
+                                <span class="min-w-0 flex-1 text-xs font-bold leading-5 text-[#203552] dark:text-[#e7effb]">{{ $item['label'] }}</span>
+                                <span data-dashboard-review-count class="shrink-0 text-xl font-black tabular-nums text-[#0d2d5b] dark:text-white">{{ $item['when'] }}</span>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="rounded-2xl border border-dashed border-slate-200 p-5 text-xs leading-7 text-slate-500 dark:border-[#365274] dark:text-slate-400">{{ $showcase['timeline_empty'] }}</li>
+                    @endforelse
+                </ul>
+            @else
             <ol class="mt-5 flex-1 space-y-1">
                 @forelse($showcase['timeline'] as $item)
                     <li class="relative border-l-2 border-[#e9ecf2] py-2 pl-5 dark:border-[#365274]">
@@ -87,6 +111,7 @@
                     <li class="rounded-2xl border border-dashed border-slate-200 p-5 text-xs leading-7 text-slate-500 dark:border-[#365274] dark:text-slate-400">{{ $showcase['timeline_empty'] }}</li>
                 @endforelse
             </ol>
+            @endif
         </section>
 
         <section class="learning-dashboard-panel flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['actions_title'] }}">
@@ -106,7 +131,6 @@
                     </a>
                 @endforeach
             </div>
-            <p class="mt-5 text-[11px] leading-6 text-slate-500 dark:text-slate-400">{{ __('dashboard.review_note') }}</p>
         </section>
     </div>
 </section>
