@@ -54,6 +54,10 @@
         desktop.addEventListener('change',sync);
         shell.setAttribute('data-glass-sidebar','');
         sync();
+        // Avoid animating the initial hydration from the legacy shell dimensions.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            shell.setAttribute('data-glass-motion', '');
+        }));
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init,{once:true});
     else init();

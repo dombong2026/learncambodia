@@ -18,8 +18,8 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
     @stack('workspace_styles')
-    <link rel="stylesheet" href="{{ asset('css/workspace-glass-sidebar.css') }}?v=1">
-    <script defer src="{{ asset('js/workspace-glass-sidebar.js') }}?v=1"></script>
+    <link rel="stylesheet" href="{{ asset('css/workspace-glass-sidebar.css') }}?v=2">
+    <script defer src="{{ asset('js/workspace-glass-sidebar.js') }}?v=2"></script>
 </head>
 @php $role = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role; @endphp
 <body data-workspace-body @if(session('category_navigation_changed')) data-category-navigation-changed @endif class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">

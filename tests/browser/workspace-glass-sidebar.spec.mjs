@@ -16,6 +16,7 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
   if (desktop) {
     await expect(sidebar).toBeVisible();
     await expect(edge).toBeVisible();
+    await expect(shell).toHaveCSS('padding-inline-start','266px');
     const originalLinks=await sidebar.locator('[data-workspace-link]').evaluateAll(items=>items.map(x=>x.getAttribute('href')));
     await edge.click();
     await expect(edge).toHaveAttribute('aria-expanded','false');
@@ -26,6 +27,7 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
     await expect(edge).toHaveAttribute('aria-expanded','false');
     await group.click();
     await expect(edge).toHaveAttribute('aria-expanded','true');
+    await expect(shell).toHaveCSS('padding-inline-start','266px');
     await expect.poll(async()=>Math.round((await sidebar.boundingBox()).width)).toBe(254);
     expect(await sidebar.locator('[data-workspace-link]').evaluateAll(items=>items.map(x=>x.getAttribute('href')))).toEqual(originalLinks);
   } else {
