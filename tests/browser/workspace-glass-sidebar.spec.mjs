@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test('workspace glass preserves real navigation in expanded, rail and mobile modes', async ({page}) => {
+  // The full navigation, theme, motion and eight hover checks need a complete test budget on WebKit.
+  test.slow();
   await page.goto('/login?lang=en');
   await page.locator('#login_email').fill('editor-browser-qa@example.test');
   await page.locator('#login_password').fill('Only-A-CI-Browser-Fixture-2026!');
@@ -111,11 +113,19 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
   await expect(cards.nth(2)).not.toContainText('Only verified records are shown.');
   for (const dark of [false,true]) {
     await page.evaluate(value=>document.documentElement.classList.toggle('dark',value),dark);
-    const bounds=await cards.evaluateAll(nodes=>nodes.map(el=>({top:el.getBoundingClientRect().top,height:el.getBoundingClientRect().height,bottom:el.getBoundingClientRect().bottom})));
+    // Compare the panels at rest, not while an existing hover transform is active.
+    await page.mouse.move(0,0);
+    const readBounds=()=>cards.evaluateAll(nodes=>nodes.map(el=>({top:el.getBoundingClientRect().top,height:el.getBoundingClientRect().height,bottom:el.getBoundingClientRect().bottom})));
     if (await page.evaluate(()=>matchMedia('(min-width: 80rem)').matches)) {
-      expect(Math.max(...bounds.map(x=>x.top))-Math.min(...bounds.map(x=>x.top))).toBeLessThan(2);
+      await expect.poll(()=>page.locator('[data-dashboard-card-grid]').evaluate(el=>el.matches(':hover'))).toBe(false);
+      await expect.poll(async()=>{
+        const bounds=await readBounds();
+        return Math.max(...bounds.map(x=>x.top))-Math.min(...bounds.map(x=>x.top));
+      }).toBeLessThan(2);
+      const bounds=await readBounds();
       expect(Math.max(...bounds.map(x=>x.height))-Math.min(...bounds.map(x=>x.height))).toBeLessThan(2);
     } else {
+      const bounds=await readBounds();
       expect(bounds[1].top).toBeGreaterThan(bounds[0].bottom);
       expect(bounds[2].top).toBeGreaterThan(bounds[1].bottom);
     }
