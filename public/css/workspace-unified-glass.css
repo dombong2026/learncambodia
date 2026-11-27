@@ -100,3 +100,12 @@
 @media (max-width: 63.999rem) {
     [data-workspace-body], .dark [data-workspace-body] { background-attachment: scroll; }
 }
+
+/* Match the established dark Next actions hover treatment on review rows.
+   Light mode, other hover targets and all existing motion stay unchanged. */
+@media (hover: hover) {
+    .dark [data-workspace-body] [data-dashboard-review-row]:hover {
+        background-color: #254669;
+        border-color: #628dbf;
+    }
+}
