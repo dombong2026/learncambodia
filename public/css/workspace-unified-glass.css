@@ -1,0 +1,102 @@
+/* Unified workspace glass V4. Additive: V3 navigation and all hover rules stay intact.
+   Only dashboard landing cards receive decorative motion; forms and tables are untouched. */
+[data-workspace-body] {
+    --unified-canvas-color: #e7eefb;
+    --unified-canvas: radial-gradient(ellipse at 8% 0%, #ffffffc9 0%, transparent 49%),
+        radial-gradient(ellipse at 88% 13%, #c3d5f08c 0%, transparent 58%),
+        radial-gradient(ellipse at 85% 90%, #d3d6fa88 0%, transparent 58%),
+        linear-gradient(145deg, #f3f6fd 0%, #dce7f8 48%, #edf2fb 100%);
+    --unified-sidebar: radial-gradient(ellipse at 3% 0%, #ffffffc9 0%, transparent 50%),
+        linear-gradient(148deg, #ffffff70, #e2ebfb80 56%, #c8d9f3a6);
+    --unified-header: rgba(241,246,255,.78);
+    --unified-header-edge: #a8bfdf73;
+    --unified-card-fill: rgba(255,255,255,.38);
+    --unified-card-edge: #b4c8e4;
+    --unified-card-shadow: 0 8px 22px #234d8414, inset 0 1px 0 #ffffffeb, inset 0 -1px 0 #b9d2f04d;
+    --unified-reflection: linear-gradient(121deg, transparent 31%, #ffffff8c 45%, #ffffffb3 49%, #e1efff36 54%, transparent 65%);
+    --unified-card-rim: radial-gradient(ellipse at 9% 0%, #ffffffb0, transparent 48%),
+        radial-gradient(ellipse at 96% 100%, #b6c9f855, transparent 60%);
+    --unified-card-wash: linear-gradient(153deg, #ffffff48, #e7efff40 62%, #dce5fa52);
+}
+.dark [data-workspace-body] {
+    --unified-canvas-color: #0b1a36;
+    --unified-canvas: radial-gradient(ellipse at 3% 5%, #28447780 0%, transparent 48%),
+        radial-gradient(ellipse at 88% 5%, #243b8b70 0%, transparent 55%),
+        radial-gradient(ellipse at 92% 94%, #2c468a66 0%, transparent 55%),
+        linear-gradient(145deg, #101f40 0%, #09172f 50%, #102445 100%);
+    --unified-sidebar: radial-gradient(ellipse at 2% 0%, #45669b55, transparent 54%),
+        linear-gradient(148deg, #263e73ab, #14264dbe 56%, #1b3976ac);
+    --unified-header: rgba(13,28,56,.80);
+    --unified-header-edge: #668acb42;
+    --unified-card-fill: rgba(19,37,72,.56);
+    --unified-card-edge: #5475ae9c;
+    --unified-card-shadow: 0 9px 24px #030b223e, inset 0 1px 0 #a9c9ff45, inset 0 -1px 0 #5f8cdf32;
+    --unified-reflection: linear-gradient(121deg, transparent 32%, #7698e321 44%, #a0b9ff42 49%, #6a7ce324 55%, transparent 66%);
+    --unified-card-rim: radial-gradient(ellipse at 9% 0%, #7499eb35, transparent 48%),
+        radial-gradient(ellipse at 96% 100%, #7266d23a, transparent 60%);
+    --unified-card-wash: linear-gradient(153deg, #385b9a40, #10234620 62%, #304a9040);
+}
+[data-workspace-body], .dark [data-workspace-body] {
+    background-color: var(--unified-canvas-color);
+    background-image: var(--unified-canvas);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+}
+[data-workspace-body] [data-glass-sidebar] { --glass-surface: var(--unified-sidebar); }
+[data-workspace-body] [data-workspace-page] > header {
+    background-color: var(--unified-header);
+    border-bottom-color: var(--unified-header-edge);
+}
+[data-workspace-body] [data-workspace-mobile-nav] {
+    background-color: var(--unified-header);
+    border-top-color: var(--unified-header-edge);
+}
+/* The compact landing heading is already emitted exclusively on all four dashboard routes.
+   Scope to known outer cards, not nested buttons, list rows or public cards. */
+[data-workspace-body] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content]
+    :is(.learning-dashboard-panel, .premium-card, section.rounded-3xl.border) {
+    background-color: var(--unified-card-fill);
+    background-image: var(--unified-reflection), var(--unified-card-rim), var(--unified-card-wash);
+    background-size: 250% 250%, 100% 100%, 100% 100%, 100% 100%;
+    background-position: 100% 75%, center, center, center;
+    background-repeat: no-repeat;
+    -webkit-backdrop-filter: blur(12px) saturate(118%);
+    backdrop-filter: blur(12px) saturate(118%);
+    animation: lc-workspace-glass-reflection 4.4s ease-in-out 1 both;
+}
+/* Keep original hover and focus borders, elevation, transitions and corner icons. */
+[data-workspace-body] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content]
+    :is(.learning-dashboard-panel, .premium-card, section.rounded-3xl.border):not(:hover):not(:focus-within) {
+    border-color: var(--unified-card-edge);
+    box-shadow: var(--unified-card-shadow);
+}
+/* The performance hero is always dark with its original white/gold text. */
+[data-workspace-body] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content] .learning-dashboard-navy {
+    --unified-card-fill: rgba(13,42,83,.94);
+    --unified-card-edge: #6187bb;
+    --unified-card-shadow: 0 12px 26px #08234c33, inset 0 1px 0 #b2d4ff72;
+    --unified-reflection: linear-gradient(121deg, transparent 32%, #86b8ff27 44%, #bddbff4d 49%, #739def20 55%, transparent 66%);
+    --unified-card-rim: radial-gradient(ellipse at 9% 0%, #6da9fa52, transparent 48%),
+        radial-gradient(ellipse at 96% 100%, #605bb653, transparent 60%);
+    --unified-card-wash: linear-gradient(153deg, #315d9e55, #10294d36 62%, #183d7740);
+}
+/* A few existing dashboard notes lack a dark utility. Keep them readable on glass. */
+.dark [data-workspace-body] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content]
+    :is(p,span).text-slate-500:not([class*="dark:text-"]):not([class*="hover:"]) {
+    color: #a9bbd7;
+}
+@keyframes lc-workspace-glass-reflection {
+    from { background-position: 0% 25%, center, center, center; }
+    to { background-position: 100% 75%, center, center, center; }
+}
+/* Static fallback for preferences and Data Saver; no extra scripts or assets. */
+@media (prefers-reduced-motion: reduce) {
+    [data-workspace-body] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content]
+        :is(.learning-dashboard-panel, .premium-card, section.rounded-3xl.border) { animation: none; }
+}
+[data-workspace-body][data-saver="on"] [data-workspace-main]:has([data-dashboard-compact-heading]) [data-workspace-content]
+    :is(.learning-dashboard-panel, .premium-card, section.rounded-3xl.border) { animation: none; }
+@media (max-width: 63.999rem) {
+    [data-workspace-body], .dark [data-workspace-body] { background-attachment: scroll; }
+}
