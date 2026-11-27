@@ -794,12 +794,35 @@ final class McpOAuthPassportTest extends TestCase
             ]);
             $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
             if ($native) {
-                $this->seed(\Database\Seeders\CategorySeeder::class);
+                $this->travel(61)->seconds();
+                $category = \App\Models\Category::create([
+                    'code' => 'NATIVE', 'slug' => 'native-scope-category', 'name' => 'Native scope category',
+                    'group' => 'english-courses', 'description' => 'Isolated fixture', 'is_published' => true, 'sort_order' => 1,
+                ]);
                 $course = \App\Models\Course::create(['title' => 'Native scope fixture', 'slug' => 'native-scope-fixture',
                     'summary' => 'Fixture', 'description' => 'Fixture', 'status' => 'draft', 'created_by' => $admin->id,
-                    'delivery_mode' => 'online', 'category_id' => \App\Models\Category::where('code', 'GE')->valueOrFail('id')]);
+                    'delivery_mode' => 'online', 'category_id' => $category->id]);
                 $call('get_draft_curriculum', ['course_id' => $course->id])
                     ->assertJsonPath('result.structuredContent.module_count', 0);
+                $module = ['course_id' => $course->id, 'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                    'expected_module_count' => 0, 'module' => ['title' => 'Fixture module', 'summary' => 'Fixture objective',
+                        'lessons' => [['title' => 'Fixture lesson', 'content' => 'Lesson text', 'duration_minutes' => 20,
+                            'quiz_questions' => [['prompt' => 'Fixture question?', 'choices' => ['a' => 'One', 'b' => 'Two', 'c' => 'Three', 'd' => 'Four'],
+                                'correct' => 'a', 'feedback' => 'Fixture explanation']]]]]];
+                $call('append_draft_module', $module)->assertJsonPath('result.structuredContent.question_count', 1)
+                    ->assertJsonPath('result.structuredContent.replayed', false);
+                $call('append_draft_module', $module)->assertJsonPath('result.structuredContent.replayed', true);
+                $this->assertDatabaseCount('course_lessons', 1);
+                $this->assertDatabaseCount('curriculum_lesson_revisions', 1);
+                config()->set('filesystems.managed', 'local');
+                \Illuminate\Support\Facades\Storage::fake('local');
+                \Illuminate\Support\Facades\Storage::disk('local')->put('editor-media/native-fixture.png', 'fixture');
+                $media = \App\Models\EditorMedia::create(['context' => 'library', 'uploaded_by' => $admin->id,
+                    'path' => 'editor-media/native-fixture.png', 'mime' => 'image/png', 'original_name' => 'native-fixture.png', 'size' => 7]);
+                $call('attach_draft_course_cover', ['course_id' => $course->id, 'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                    'media_id' => $media->id, 'alt' => 'Fixture cover'])->assertJsonPath('result.structuredContent.featured_media_id', $media->id);
+                $this->assertSame('draft', $course->fresh()->status);
+                $this->assertDatabaseCount('mcp_oauth_draft_receipts', 5);
                 config()->set('mcp.oauth_native_course_production_enabled', false);
                 $this->app['auth']->forgetGuards();
                 $this->withToken($token)->postJson('/api/mcp/oauth', [
@@ -862,7 +885,7 @@ final class McpOAuthPassportTest extends TestCase
             $this->assertSame(0, DB::table('oauth_access_tokens')
                 ->where('user_id', $admin->id)->where('revoked', false)->count());
             $this->assertContains($denied()->getStatusCode(), [401, 403]);
-            $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
+            $this->assertDatabaseCount('mcp_oauth_draft_receipts', $native ? 5 : 3);
         } finally {
             config()->set('mcp.oauth_draft_scope_issuance_enabled', false);
             config()->set('mcp.oauth_draft_writes_enabled', false);
