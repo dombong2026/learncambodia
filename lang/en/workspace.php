@@ -35,6 +35,8 @@ return [
         'operations' => 'Operations',
     ],
     'labels' => [
+        'Exams' => 'Exams',
+        'Quizzes' => 'Quizzes',
         'Saved Courses' => 'Saved Courses',
         'Overview' => 'Overview',
         'All Courses' => 'All Courses',
