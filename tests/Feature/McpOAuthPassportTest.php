@@ -894,6 +894,9 @@ final class McpOAuthPassportTest extends TestCase
                 if (in_array('mcp:assessment-media', $scopes, true)) {
                     $consent->assertSee('Expanded assessment cover upload access:');
                 }
+                if (in_array('mcp:assessment-advanced', $scopes, true)) {
+                    $consent->assertSee('Expanded advanced assessment access:');
+                }
                 preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
                 preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
                 $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
@@ -975,6 +978,55 @@ final class McpOAuthPassportTest extends TestCase
             $rpc($fullToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
                 ->assertOk()->assertJsonPath('result.structuredContent.featured_media_id', $uploaded['media_id']);
             $this->assertCount(1, $disk->allFiles('editor-media'));
+            // Verify the new scope without weakening the signed seven-scope token.
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_production_accepted', true);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_production_enabled', true);
+            config()->set('mcp.oauth_assessment_advanced_rehearsal', true);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_rehearsal', false);
+            $this->assertTrue($policy::assessmentAdvancedEnabled());
+            $this->assertCount(32, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $eight = [...$seven, 'mcp:assessment-advanced'];
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($eight));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($eight));
+            $this->assertTrue($policy::hasAssessmentScopes($eight));
+            $this->assertTrue($policy::hasEditScopes($eight));
+            $this->assertTrue($policy::hasMediaScopes($eight));
+            $this->assertTrue($policy::hasCurriculumScopes($eight));
+            $this->assertFalse($policy::hasAssessmentAdvancedScopes($seven));
+            foreach ([ [...$eight, '*'], [...$eight, 'mcp:assessment-advanced'],
+                array_values(array_diff($eight, ['mcp:assessment']))] as $invalidScope) {
+                $this->assertFalse($policy::permittedWriteScopes($invalidScope));
+            }
+            $advancedArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(), 'expected_version' => $uploaded['version'],
+                'questions' => [['format' => 'writing', 'prompt' => 'Write a greeting.', 'a' => '', 'b' => '', 'c' => '',
+                    'd' => '', 'correct' => '', 'points' => 5, 'feedback' => 'Polite greeting.', 'media_id' => 0]]];
+            $rpc($fullToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertForbidden();
+            $rpc($fullToken, 'list_draft_assessment_audio', ['limit' => 10])->assertForbidden();
+            $this->travel(61)->seconds();
+            $advancedToken = $issue($eight);
+            $rpc($advancedToken, 'list_draft_assessment_audio', ['limit' => 10])->assertOk()
+                ->assertJsonPath('result.structuredContent.items', []);
+            $advanced = $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->json('result.structuredContent');
+            $this->assertSame(2, $advanced['question_count']);
+            $this->assertSame(6, $advanced['total_points']);
+            $this->assertSame(1, $advanced['manual_question_count']);
+            $this->assertSame($uploaded['media_id'], $advanced['featured_media_id']);
+            $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($advancedToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            config()->set('mcp.oauth_assessment_advanced_production_enabled', false);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($seven));
+            $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertForbidden();
+            $rpc($fullToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 2);
             config()->set('mcp.oauth_assessment_media_production_enabled', false);
             $this->assertFalse($policy::assessmentMediaEnabled());
             $rpc($fullToken, 'upload_draft_assessment_cover', $args)->assertForbidden();

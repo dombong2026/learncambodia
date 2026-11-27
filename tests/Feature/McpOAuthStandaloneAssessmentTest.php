@@ -60,6 +60,112 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
         ], 'questions' => array_fill(0, $count, $this->question())];
     }
 
+    public function test_advanced_native_append_audio_ownership_and_scoring(): void
+    {
+        config()->set(['mcp.oauth_assessment_advanced_rehearsal' => true, 'filesystems.managed' => 'local']);
+        $advanced = \App\Support\McpOAuthAssessmentAdvanced::class;
+        $scope = ['mcp:read', 'mcp:write', 'mcp:assessment', 'mcp:assessment-advanced'];
+        $this->assertCount(2, $advanced::catalog());
+        $this->assertTrue(Policy::hasAssessmentAdvancedScopes($scope));
+        $this->assertTrue(Policy::hasAssessmentScopes($scope));
+        $this->assertFalse(Policy::hasAssessmentAdvancedScopes(array_slice($scope, 0, -1)));
+        foreach ([ [...$scope, '*'], [...$scope, 'mcp:assessment-advanced'],
+            array_values(array_diff($scope, ['mcp:assessment']))] as $invalid) {
+            $this->assertFalse(Policy::permittedWriteScopes($invalid));
+        }
+        $disk = \Illuminate\Support\Facades\Storage::fake('local');
+        $other = $this->admin();
+        $makeAudio = function (User $owner, string $context, string $mime, string $path, bool $exists = true) use ($disk) {
+            if ($exists) {
+                $disk->put($path, 'RIFF'.pack('V', 36).'WAVEfmt '.pack('VvvVVvv', 16, 1, 1, 8000, 16000, 2, 16).'data'.pack('V', 0));
+            }
+            return \App\Models\EditorMedia::create(['context' => $context, 'uploaded_by' => $owner->id,
+                'path' => $path, 'mime' => $mime, 'original_name' => basename($path), 'size' => 44]);
+        };
+        $audio = $makeAudio($this->actor, 'exam', 'audio/wav', 'editor-media/qa-owned.wav');
+        $foreign = $makeAudio($other, 'exam', 'audio/wav', 'editor-media/qa-other.wav');
+        $wrongContext = $makeAudio($this->actor, 'lesson', 'audio/wav', 'editor-media/qa-lesson.wav');
+        $wrongMime = $makeAudio($this->actor, 'exam', 'image/png', 'editor-media/qa-image.png');
+        $missing = $makeAudio($this->actor, 'exam', 'audio/wav', 'editor-media/qa-missing.wav', false);
+        $listed = $advanced::execute($this->actor, $advanced::LIST, ['limit' => 100]);
+        $this->assertEqualsCanonicalizing([$audio->id, $missing->id], array_column($listed['items'], 'id'));
+        $this->assertArrayNotHasKey('path', $listed['items'][0]);
+        $manual = ['format' => 'writing', 'prompt' => 'Write a greeting.', 'a' => '', 'b' => '', 'c' => '', 'd' => '',
+            'correct' => '', 'points' => 5, 'feedback' => 'Use a polite greeting.', 'media_id' => 0];
+        $speaking = array_replace($manual, ['format' => 'speaking', 'prompt' => 'Say a greeting.']);
+        $likert = array_replace($manual, ['format' => 'likert', 'prompt' => 'I feel confident greeting people.', 'points' => 1]);
+        $listening = array_replace($manual, ['format' => 'listening', 'prompt' => 'Select the greeting.', 'a' => 'Hello',
+            'b' => 'Goodbye', 'correct' => 'a', 'points' => 2, 'media_id' => $audio->id]);
+        $reject = function (array $args, int $status, ?User $actor = null) use ($advanced): void {
+            try {
+                $advanced::execute($actor ?? $this->actor, $advanced::APPEND, $args);
+                $this->fail('Unsafe advanced operation accepted.');
+            } catch (ValidationException) {
+                $this->assertSame(422, $status);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+                $this->assertSame(404, $status);
+            } catch (HttpExceptionInterface $e) {
+                $this->assertSame($status, $e->getStatusCode());
+            }
+        };
+        foreach (['quiz', 'exam'] as $kind) {
+            $created = Builder::execute($this->actor, 'create_draft_assessment', $this->fixture($kind, 1));
+            $lookup = ['kind' => $kind, 'assessment_id' => $created['resource_id']];
+            $before = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $args = $lookup + ['request_id' => (string) Str::uuid(), 'expected_version' => $before['version'],
+                'questions' => [$listening, $manual, $speaking, $likert]];
+            foreach ([$foreign->id, $wrongContext->id, $wrongMime->id, $missing->id] as $id) {
+                $reject(array_replace($args, ['questions' => [array_replace($listening, ['media_id' => $id])]]),
+                    $id === $missing->id ? 422 : 404);
+            }
+            $reject(array_replace($args, ['questions' => [array_replace($manual, ['correct' => 'a'])]]), 422);
+            $reject(array_replace($args, ['questions' => [array_replace($likert, ['points' => 5])]]), 422);
+            $reject(array_replace($args, ['questions' => [array_replace($listening, ['b' => 'hello'])]]), 422);
+            $reject(array_replace($args, ['questions' => array_fill(0, 11, $speaking)]), 422);
+            $reject(array_replace($args, ['questions' => array_fill(0, $kind === 'quiz' ? 50 : 200, $manual)]), 422);
+            $reject(array_replace($args, ['expected_version' => str_repeat('0', 64)]), 409);
+            $reject($args, 404, $other);
+            $this->assertSame($before['version'], Builder::execute($this->actor, 'get_draft_assessment', $lookup)['version']);
+            $this->assertCount(0, CourseExam::findOrFail($created['resource_id'])->media()->get());
+            $result = $advanced::execute($this->actor, $advanced::APPEND, $args);
+            $this->assertSame(5, $result['question_count']);
+            $this->assertSame(14, $result['total_points']);
+            $this->assertSame(2, $result['manual_question_count']);
+            $this->assertSame(1, $result['unscored_question_count']);
+            $this->assertTrue($advanced::execute($this->actor, $advanced::APPEND, $args)['replayed']);
+            $reject(array_replace($args, ['questions' => [$manual]]), 409);
+            $reject(array_replace($args, ['request_id' => (string) Str::uuid()]), 409);
+            $after = Builder::execute($this->actor, 'get_draft_assessment', $lookup);
+            $this->assertSame($before['settings'], $after['settings']);
+            $this->assertSame($before['questions'][0], $after['questions'][0]);
+            $this->assertSame($before['featured_media_id'], $after['featured_media_id']);
+            $this->assertTrue($after['rich_content']);
+            $this->assertEquals($audio->id, $after['questions'][1]['media_id']);
+            $this->assertSame('a', $after['questions'][1]['correct']);
+            foreach ([2, 3, 4] as $i) {
+                $this->assertArrayNotHasKey('correct', $after['questions'][$i]);
+            }
+            $this->assertEquals([$audio->id], CourseExam::findOrFail($created['resource_id'])->media()->allRelatedIds()->all());
+            $snapshot = ['questions' => $after['questions'], 'passing_percent' => 80];
+            $this->assertNull(\App\Support\AssessmentQuestions::result($snapshot, [0 => 'a', 1 => 'a', 4 => '5'])['score']);
+            $this->assertSame(['score' => 100, 'passed' => true], \App\Support\AssessmentQuestions::result(
+                $snapshot, [0 => 'a', 1 => 'a', 4 => '5'], [2 => ['points' => 5], 3 => ['points' => 5]]));
+            try {
+                Builder::execute($this->actor, 'replace_draft_assessment_questions', $lookup + [
+                    'request_id' => (string) Str::uuid(), 'expected_version' => $after['version'], 'questions' => [$this->question()]]);
+                $this->fail('Legacy replacement of advanced content accepted.');
+            } catch (HttpExceptionInterface $e) {
+                $this->assertSame(409, $e->getStatusCode());
+            }
+            CourseExam::findOrFail($created['resource_id'])->update(['published' => true]);
+            $reject($args, 404);
+        }
+        config()->set('mcp.oauth_assessment_advanced_rehearsal', false);
+        $this->assertSame([], $advanced::catalog());
+        $this->assertTrue(Policy::permittedWriteScopes(array_slice($scope, 0, -1)));
+        $this->assertFalse(Policy::permittedWriteScopes($scope));
+    }
+
     public function test_native_limits_versions_replays_and_ownership(): void
     {
         $this->assertCount(7, Builder::catalog());

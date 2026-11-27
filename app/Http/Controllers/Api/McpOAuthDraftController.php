@@ -168,21 +168,21 @@ final class McpOAuthDraftController
                 }
                 if (McpOAuthCurriculumEditor::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthCurriculumEditor::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthDraftCoverUpload::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
                     }
                     $result = $upload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthNativeCourseBuilder::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasCurriculumScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, false, false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, false, false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
