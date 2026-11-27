@@ -780,9 +780,15 @@ final class McpOAuthPassportTest extends TestCase
             $this->app->instance('env', 'production');
             try {
                 $this->assertFalse($policy::mediaEnabled());
+                $this->assertSame([], \App\Support\McpOAuthDraftCoverUpload::catalog());
             } finally {
                 $this->app->instance('env', 'testing');
             }
+            // Rehearsal is intentionally enabled when returning to testing.
+            $this->assertTrue($policy::mediaEnabled());
+            $this->assertCount(1, \App\Support\McpOAuthDraftCoverUpload::catalog());
+            config()->set('mcp.oauth_draft_media_rehearsal', false);
+            $this->assertFalse($policy::mediaEnabled());
         }
         $this->assertSame([], \App\Support\McpOAuthDraftCoverUpload::catalog());
     }
