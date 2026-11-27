@@ -30,7 +30,10 @@ return [
     'oauth_draft_scope_issuance_enabled' => (bool) env('MCP_OAUTH_DRAFT_SCOPE_ISSUANCE_ENABLED', false),
     'oauth_draft_production_accepted' => (bool) env('MCP_OAUTH_DRAFT_PRODUCTION_ACCEPTED', false),
     'oauth_draft_production_admin_id' => (string) env('MCP_OAUTH_DRAFT_PRODUCTION_ADMIN_ID', ''),
-    // Native curriculum tools are deliberately unavailable in production in this release.
+    // Separate production acceptance and activation; both default closed.
+    'oauth_native_course_production_accepted' => (bool) env('MCP_OAUTH_NATIVE_COURSE_PRODUCTION_ACCEPTED', false),
+    'oauth_native_course_production_enabled' => (bool) env('MCP_OAUTH_NATIVE_COURSE_PRODUCTION_ENABLED', false),
+    // Rehearsal never authorizes production access.
     'oauth_native_course_builder_rehearsal' => (bool) env('MCP_OAUTH_NATIVE_COURSE_BUILDER_REHEARSAL', false),
     'oauth_ready' => false,
     'transport_ready' => false,

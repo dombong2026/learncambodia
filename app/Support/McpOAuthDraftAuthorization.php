@@ -68,9 +68,9 @@ final class McpOAuthDraftAuthorization
                 ->lockForUpdate()->first(['id', 'scopes']);
             abort_unless($record !== null, 403);
             $scopes = json_decode($record->scopes ?? '[]', true);
-            abort_unless(is_array($scopes) && array_is_list($scopes)
-                && count($scopes) === 2 && in_array('mcp:read', $scopes, true)
-                && in_array('mcp:write', $scopes, true), 403, 'Exact draft write scopes required.');
+            abort_unless(is_array($scopes) && McpOAuthDraftScopePolicy::permittedWriteScopes($scopes)
+                && (!McpOAuthDraftScopePolicy::exactCurriculumScopes($scopes)
+                    || $identity->tokenCan(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE)), 403, 'Exact draft write scopes required.');
 
             $binding = DB::table('mcp_oauth_token_audiences')->where('access_token_id', $id)
                 ->where('client_id', $client)->where('user_id', $identity->getAuthIdentifier())
@@ -79,7 +79,7 @@ final class McpOAuthDraftAuthorization
 
             $actor = User::query()->lockForUpdate()->findOrFail($identity->getAuthIdentifier());
             abort_unless(McpOAuthDraftScopePolicy::eligible($actor), 403);
-            return $action($actor);
+            return $action($actor, $scopes);
         });
     }
 }

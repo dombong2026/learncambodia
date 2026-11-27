@@ -20,9 +20,7 @@ final class McpOAuthNativeCourseBuilder
 {
     public static function enabled(): bool
     {
-        return app()->environment(['local', 'testing', 'staging'])
-            && config('mcp.oauth_native_course_builder_rehearsal', false) === true
-            && McpOAuthDraftScopePolicy::issuanceEnabled();
+        return McpOAuthDraftScopePolicy::curriculumEnabled();
     }
 
     public static function catalog(): array
@@ -49,7 +47,7 @@ final class McpOAuthNativeCourseBuilder
             ['attach_draft_course_cover', 'Attach an existing image from your own Media Library to a draft with no cover. No upload or replacement.',
                 $request + ['media_id' => $id, 'alt' => $str(200)], false],
         ];
-        $schemes = [['type' => 'oauth2', 'scopes' => ['mcp:read', 'mcp:write']]];
+        $schemes = [['type' => 'oauth2', 'scopes' => ['mcp:read', 'mcp:write', McpOAuthDraftScopePolicy::CURRICULUM_SCOPE]]];
         return array_map(static fn (array $tool): array => [
             'name' => $tool[0], 'description' => $tool[1], 'inputSchema' => $obj($tool[2]),
             'securitySchemes' => $schemes, '_meta' => ['securitySchemes' => $schemes],
@@ -203,7 +201,7 @@ final class McpOAuthNativeCourseBuilder
         McpActionAudit::create([
             'id' => $receipt, 'user_id' => $actor->id, 'token_id' => null, 'tool' => $name,
             'operation' => $operation, 'resource' => 'courses', 'resource_id' => (string) $course->id,
-            'result' => 'success', 'http_status' => 200, 'summary' => 'Native draft curriculum rehearsal; payload not retained in audit.',
+            'result' => 'success', 'http_status' => 200, 'summary' => 'Native draft curriculum; payload not retained in audit.',
         ]);
     }
 }

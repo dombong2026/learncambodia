@@ -33,6 +33,9 @@
         @endforeach
         </ul>
         @if($draftWrite)
+            @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum'))
+                <p><strong>Expanded curriculum access:</strong> Append native modules, lessons and knowledge checks to your own unpublished courses, and attach an existing image from your own Media Library. No direct upload, replacement, publication or deletion.</p>
+            @endif
             <small>Only your own unpublished course, article and page drafts may be created or updated. No publishing, deletion, file upload, user administration or changes to published content are granted. @if(app()->environment('production')) This permission grants controlled production draft access. You can revoke it in MCP management settings. @else This permission is for an isolated rehearsal. @endif</small>
         @else
             <small>No course changes, publishing, deletions, file uploads or administrator management permissions are granted.</small>

@@ -86,7 +86,7 @@ final class McpOAuthDraftController
         $id = $rpc['id'] ?? null;
         // Discovery and lookup require the same current token and audience
         // checks as mutations, including locked authorization records.
-        return McpOAuthDraftAuthorization::authorized($request, function (User $actor) use ($request, $rpc, $id): JsonResponse {
+        return McpOAuthDraftAuthorization::authorized($request, function (User $actor, array $scopes) use ($request, $rpc, $id): JsonResponse {
             $method = $rpc['method'];
             if ($method === 'notifications/initialized') {
                 return response()->json([], 202)->header('Cache-Control', 'no-store');
@@ -99,7 +99,7 @@ final class McpOAuthDraftController
                     'protocolVersion' => '2025-11-25',
                     'capabilities' => ['tools' => ['listChanged' => false]],
                     'serverInfo' => ['name' => 'learncambodia-oauth-draft', 'version' => '0.1.0'],
-                    'instructions' => 'Public catalog READ and own unpublished plain-text draft management only. Publishing and deletion are not permitted.',
+                    'instructions' => 'Public catalog READ and own unpublished draft management; native curriculum requires separate consent. Publishing and deletion are not permitted.',
                 ]);
             }
             if ($method === 'ping') {
@@ -129,6 +129,9 @@ final class McpOAuthDraftController
             }
             try {
                 if (McpOAuthNativeCourseBuilder::supports($name)) {
+                    if (!McpOAuthDraftScopePolicy::exactCurriculumScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true);
+                    }
                     $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }

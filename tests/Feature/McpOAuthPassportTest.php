@@ -618,7 +618,16 @@ final class McpOAuthPassportTest extends TestCase
         }
     }
 
-    private function exerciseDraftAuthorization(bool $production): void
+    public function test_production_curriculum_requires_fresh_signed_scope(): void
+    {
+        try {
+            $this->exerciseDraftAuthorization(true, true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseDraftAuthorization(bool $production, bool $native = false): void
     {
         $this->configureEphemeralPassportKeys();
         if ($production) {
@@ -651,19 +660,26 @@ final class McpOAuthPassportTest extends TestCase
                 }
             }
             $this->assertTrue($policy::issuanceEnabled());
+            if ($native) {
+                config()->set('mcp.oauth_native_course_production_accepted', true);
+                $this->assertFalse($policy::curriculumEnabled());
+                config()->set('mcp.oauth_native_course_production_enabled', true);
+                $this->assertTrue($policy::curriculumEnabled());
+            }
+            $expectedScopes = $native ? ['mcp:read', 'mcp:write', 'mcp:curriculum'] : ['mcp:read', 'mcp:write'];
             Passport::tokensCan($policy::scopes());
             config()->set('mcp.oauth_discovery_enabled', true);
             foreach (['/.well-known/oauth-protected-resource',
                 '/.well-known/oauth-protected-resource/api/mcp/oauth',
                 '/.well-known/oauth-authorization-server'] as $path) {
-                $this->getJson($path)->assertOk()->assertJsonPath('scopes_supported', ['mcp:read', 'mcp:write']);
+                $this->getJson($path)->assertOk()->assertJsonPath('scopes_supported', $expectedScopes);
             }
             $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
             $verifier = str_repeat('V', 48);
             $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
             $state = str_repeat('w', 32);
             $url = '/mcp/oauth/authorize?'.$this->oauthQuery($client, [
-                'scope' => 'mcp:read mcp:write', 'code_challenge' => $challenge, 'state' => $state,
+                'scope' => implode(' ', $expectedScopes), 'code_challenge' => $challenge, 'state' => $state,
             ]);
             $this->get($url)->assertBadRequest();
             $admin->forceFill([
@@ -679,6 +695,9 @@ final class McpOAuthPassportTest extends TestCase
             $consent = $this->get($url)->assertOk()
                 ->assertSee('Authorize draft WRITE access')
                 ->assertSee('No publishing, deletion, file upload');
+            if ($native) {
+                $consent->assertSee('Expanded curriculum access:');
+            }
             $this->assertMatchesRegularExpression('/name="auth_token" value="[^"]+"/', $consent->getContent());
             preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
             preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
@@ -699,7 +718,7 @@ final class McpOAuthPassportTest extends TestCase
             $this->assertIsString($token);
             $this->assertIsString($refresh);
             $this->assertDatabaseCount('mcp_oauth_token_audiences', 1);
-            $this->assertTrue($policy::exactWriteScopes(json_decode(
+            $this->assertTrue($policy::permittedWriteScopes(json_decode(
                 DB::table('oauth_access_tokens')->where('user_id', $admin->id)->value('scopes'), true
             )));
 
@@ -726,10 +745,10 @@ final class McpOAuthPassportTest extends TestCase
                     'jsonrpc' => '2.0', 'id' => 1, 'method' => $method, 'params' => $params,
                 ])->assertOk();
             };
-            $discovery = $rpc('tools/list')->assertJsonCount(19, 'result.tools')
+            $discovery = $rpc('tools/list')->assertJsonCount($native ? 22 : 19, 'result.tools')
                 ->assertJsonPath('result.tools.0.name', 'crud_manage_platform')
                 ->assertJsonPath('result.tools.10.name', 'get_draft_courses');
-            $this->assertCount(19, array_unique(array_column($discovery->json('result.tools'), 'name')));
+            $this->assertCount($native ? 22 : 19, array_unique(array_column($discovery->json('result.tools'), 'name')));
             $rpc('tools/call', [
                 'name' => 'get_platform_analytics', 'arguments' => [],
             ])->assertJsonPath('result.isError', false)
@@ -774,6 +793,33 @@ final class McpOAuthPassportTest extends TestCase
                 'id' => $created['resource_id'], 'title' => 'Updated transport draft', 'status' => 'draft',
             ]);
             $this->assertDatabaseCount('mcp_oauth_draft_receipts', 3);
+            if ($native) {
+                $this->seed(\Database\Seeders\CategorySeeder::class);
+                $course = \App\Models\Course::create(['title' => 'Native scope fixture', 'slug' => 'native-scope-fixture',
+                    'summary' => 'Fixture', 'description' => 'Fixture', 'status' => 'draft', 'created_by' => $admin->id,
+                    'delivery_mode' => 'online', 'category_id' => \App\Models\Category::where('code', 'GE')->valueOrFail('id')]);
+                $call('get_draft_curriculum', ['course_id' => $course->id])
+                    ->assertJsonPath('result.structuredContent.module_count', 0);
+                config()->set('mcp.oauth_native_course_production_enabled', false);
+                $this->app['auth']->forgetGuards();
+                $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/list',
+                ])->assertForbidden();
+                config()->set('mcp.oauth_native_course_production_enabled', true);
+                $this->travel(61)->seconds();
+            } elseif ($production) {
+                config()->set('mcp.oauth_native_course_production_accepted', true);
+                config()->set('mcp.oauth_native_course_production_enabled', true);
+                $this->app['auth']->forgetGuards();
+                $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 7, 'method' => 'tools/call',
+                    'params' => ['name' => 'get_draft_curriculum', 'arguments' => ['course_id' => 1]],
+                ])->assertForbidden()->assertHeader('WWW-Authenticate',
+                    'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", error="insufficient_scope", scope="mcp:read mcp:write mcp:curriculum", error_description="Fresh administrator draft authorization is required"');
+                config()->set('mcp.oauth_native_course_production_enabled', false);
+                config()->set('mcp.oauth_native_course_production_accepted', false);
+                $this->travel(61)->seconds();
+            }
 
             // A missing/mismatched audience, role change or revoked token
             // must stop both combined discovery and draft calls.
@@ -795,7 +841,7 @@ final class McpOAuthPassportTest extends TestCase
                 $denied()->assertForbidden();
                 config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
             }
-            $rpc('tools/list')->assertJsonCount(19, 'result.tools');
+            $rpc('tools/list')->assertJsonCount($native ? 22 : 19, 'result.tools');
 
             // The expanded RPC sequence and token endpoint share a throttle
             // bucket in this isolated HTTP test. Advance the test clock beyond
@@ -823,6 +869,8 @@ final class McpOAuthPassportTest extends TestCase
             config()->set('mcp.oauth_draft_writes_accepted', false);
             config()->set('mcp.oauth_draft_production_accepted', false);
             config()->set('mcp.oauth_draft_production_admin_id', '');
+            config()->set('mcp.oauth_native_course_production_enabled', false);
+            config()->set('mcp.oauth_native_course_production_accepted', false);
             Passport::tokensCan($policy::scopes());
         }
     }
