@@ -121,6 +121,36 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
         $this->assertDatabaseCount('mcp_assessment_owners', 2);
     }
 
+    public function test_owned_cover_attachment_and_rich_content_protection(): void
+    {
+        $payload = $this->fixture('quiz', 1);
+        $created = Builder::execute($this->actor, 'create_draft_assessment', $payload);
+        $args = ['kind' => 'quiz', 'assessment_id' => $created['resource_id']];
+        \Illuminate\Support\Facades\Storage::fake('local');
+        config()->set('filesystems.managed', 'local');
+        \Illuminate\Support\Facades\Storage::disk('local')->put('editor-media/assessment.png', 'fixture');
+        $media = \App\Models\EditorMedia::create(['context' => 'library', 'uploaded_by' => $this->actor->id,
+            'path' => 'editor-media/assessment.png', 'mime' => 'image/png', 'original_name' => 'assessment.png', 'size' => 7]);
+        $cover = $args + ['request_id' => (string) Str::uuid(), 'expected_version' => $created['version'],
+            'media_id' => $media->id, 'alt' => 'Assessment cover'];
+        $attached = Builder::execute($this->actor, 'attach_draft_assessment_cover', $cover);
+        $this->assertSame($media->id, $attached['featured_media_id']);
+        $this->assertTrue(Builder::execute($this->actor, 'attach_draft_assessment_cover', $cover)['replayed']);
+        $exam = CourseExam::findOrFail($created['resource_id']);
+        $exam->update(['instructions_html' => '<p><strong>Keep this rich text.</strong></p>']);
+        $read = Builder::execute($this->actor, 'get_draft_assessment', $args);
+        $this->assertTrue($read['rich_content']);
+        try {
+            Builder::execute($this->actor, 'update_draft_assessment_settings', $args + [
+                'request_id' => (string) Str::uuid(), 'expected_version' => $read['version'], 'settings' => $payload['settings']]);
+            $this->fail('Rich content overwritten.');
+        } catch (HttpExceptionInterface $e) {
+            $this->assertSame(409, $e->getStatusCode());
+        }
+        $this->assertSame('<p><strong>Keep this rich text.</strong></p>', $exam->fresh()->instructions_html);
+        $this->assertSame($media->id, $exam->fresh()->featured_media_id);
+    }
+
     public function test_invalid_payload_and_production_closed(): void
     {
         $payload = $this->fixture('quiz', 1);
