@@ -40,7 +40,10 @@ return [
     'oauth_draft_media_production_enabled' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_PRODUCTION_ENABLED', false),
     // The rehearsal switch never authorizes production access.
     'oauth_draft_media_rehearsal' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_REHEARSAL', false),
-    // Phase 5C rehearsal is never an authorization for production access.
+    // Curriculum editing requires independent production acceptance and activation.
+    'oauth_curriculum_edit_production_accepted' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_PRODUCTION_ACCEPTED', false),
+    'oauth_curriculum_edit_production_enabled' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_PRODUCTION_ENABLED', false),
+    // Rehearsal is never an authorization for production access.
     'oauth_curriculum_edit_rehearsal' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_REHEARSAL', false),
     'oauth_ready' => false,
     'transport_ready' => false,

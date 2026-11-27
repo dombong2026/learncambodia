@@ -620,18 +620,63 @@ final class McpOAuthPassportTest extends TestCase
 
     public function test_curriculum_edit_requires_separate_signed_scope(): void
     {
+        $this->exerciseCurriculumEdit(false);
+    }
+
+    public function test_production_curriculum_edit_preserves_media_and_requires_fresh_signed_scope(): void
+    {
+        try {
+            $this->exerciseCurriculumEdit(true);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    private function exerciseCurriculumEdit(bool $production): void
+    {
         $this->configureEphemeralPassportKeys();
+        if ($production) {
+            $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+            config()->set([
+                'mcp.oauth_redirect_uri' => $this->callback,
+                'mcp.oauth_provider_staging_enabled' => false,
+                'mcp.oauth_production_registration_enabled' => false,
+                'mcp.oauth_production_accepted' => true,
+                'mcp.oauth_production_enabled' => true,
+                'mcp.oauth_discovery_enabled' => true,
+                'mcp.oauth_draft_production_accepted' => true,
+                'mcp.oauth_native_course_production_accepted' => true,
+                'mcp.oauth_native_course_production_enabled' => true,
+                'mcp.oauth_draft_media_production_accepted' => true,
+                'mcp.oauth_draft_media_production_enabled' => true,
+                'mcp.oauth_draft_media_rehearsal' => false,
+                'filesystems.managed' => 'local',
+            ]);
+            $this->app->instance('env', 'production');
+        }
         $client = $this->setupClient();
         config()->set([
             'mcp.oauth_draft_writes_accepted' => true,
             'mcp.oauth_draft_writes_enabled' => true,
             'mcp.oauth_draft_scope_issuance_enabled' => true,
-            'mcp.oauth_native_course_builder_rehearsal' => true,
-            'mcp.oauth_curriculum_edit_rehearsal' => true,
+            'mcp.oauth_native_course_builder_rehearsal' => !$production,
+            'mcp.oauth_curriculum_edit_rehearsal' => !$production,
         ]);
         $policy = \App\Support\McpOAuthDraftScopePolicy::class;
-        Passport::tokensCan($policy::scopes());
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+        if ($production) {
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            $this->assertTrue($policy::mediaEnabled());
+            $this->assertFalse($policy::editEnabled());
+            config()->set('mcp.oauth_curriculum_edit_production_accepted', true);
+            $this->assertFalse($policy::editEnabled());
+            config()->set('mcp.oauth_curriculum_edit_production_enabled', true);
+            config()->set('mcp.oauth_curriculum_edit_rehearsal', true);
+            $this->assertFalse($policy::editEnabled());
+            config()->set('mcp.oauth_curriculum_edit_rehearsal', false);
+        }
+        $this->assertTrue($policy::editEnabled());
+        Passport::tokensCan($policy::scopes());
         $admin->forceFill(['two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'), 'two_factor_confirmed_at' => now()])->save();
         $category = \App\Models\Category::create([
             'code' => 'EDIT', 'slug' => 'edit-test-category', 'name' => 'Edit test category',
@@ -673,10 +718,17 @@ final class McpOAuthPassportTest extends TestCase
             ]);
         };
         $base = ['mcp:read', 'mcp:write', 'mcp:curriculum'];
+        if ($production) {
+            $base[] = 'mcp:media';
+        }
         $args = ['course_id' => $course->id, 'module_id' => $module->id];
         $old = $issue($base);
         $rpc($old, 'get_draft_module', $args)->assertForbidden()->assertHeader('WWW-Authenticate',
-            'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", error="insufficient_scope", scope="mcp:read mcp:write mcp:curriculum mcp:curriculum-edit", error_description="Fresh administrator draft authorization is required"');
+            'Bearer resource_metadata="https://learncambodia.com/.well-known/oauth-protected-resource", error="insufficient_scope", scope="'.implode(' ', [...$base, 'mcp:curriculum-edit']).'", error_description="Fresh administrator draft authorization is required"');
+        $rpc($old, 'update_draft_module', $args + ['request_id' => (string) \Illuminate\Support\Str::uuid(),
+            'expected_version' => str_repeat('a', 64), 'title' => 'Unauthorized edit', 'summary' => 'Unauthorized'])
+            ->assertForbidden();
+        $this->assertSame('Original module', $module->fresh()->title);
         $this->travel(61)->seconds();
         $token = $issue([...$base, 'mcp:curriculum-edit']);
         $read = $rpc($token, 'get_draft_module', $args)->assertOk()->assertJsonPath('result.isError', false)
@@ -687,7 +739,27 @@ final class McpOAuthPassportTest extends TestCase
         $this->assertSame('Updated module', $module->fresh()->title);
         $rpc($token, 'get_draft_curriculum', ['course_id' => $course->id])
             ->assertOk()->assertJsonPath('result.structuredContent.module_count', 1);
-        config()->set('mcp.oauth_curriculum_edit_rehearsal', false);
+        if ($production) {
+            $this->assertTrue($policy::hasMediaScopes([...$base, 'mcp:curriculum-edit']));
+            $this->assertTrue($policy::hasEditScopes([...$base, 'mcp:curriculum-edit']));
+            $this->assertFalse($policy::hasEditScopes([...$base, 'mcp:curriculum-edit', 'mcp:curriculum-edit']));
+            $this->assertFalse($policy::hasEditScopes([...$base, 'mcp:curriculum-edit', '*']));
+            // Exercise the media tool dispatch under the real five-scope JWT.
+            // An invalid image must reach validation, not bypass the scope checks.
+            $rpc($token, 'upload_draft_course_cover', ['course_id' => $course->id,
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'image_base64' => base64_encode('<svg/>'), 'alt' => 'Invalid fixture'])
+                ->assertOk()->assertJsonPath('result.structuredContent.http_status', 422);
+            $this->assertNull($course->fresh()->featured_media_id);
+            config()->set('mcp.oauth_curriculum_edit_production_enabled', false);
+            $this->assertTrue($policy::mediaEnabled());
+            $this->assertTrue($policy::hasMediaScopes($base));
+            $this->assertCount(13, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+        } else {
+            config()->set('mcp.oauth_curriculum_edit_rehearsal', false);
+        }
+        $this->assertFalse($policy::editEnabled());
+        $this->assertSame([], \App\Support\McpOAuthCurriculumEditor::catalog());
         $rpc($token, 'get_draft_curriculum', ['course_id' => $course->id])->assertForbidden();
         $rpc($old, 'get_draft_curriculum', ['course_id' => $course->id])->assertOk();
     }

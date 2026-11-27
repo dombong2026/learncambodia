@@ -83,9 +83,15 @@ final class McpOAuthDraftScopePolicy
 
     public static function editEnabled(): bool
     {
-        // Phase 5C rehearsal only. Production activation is a separate release.
+        if (!self::curriculumEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_curriculum_edit_production_accepted', false) === true
+                && config('mcp.oauth_curriculum_edit_production_enabled', false) === true
+                && config('mcp.oauth_curriculum_edit_rehearsal', false) === false;
+        }
         return app()->environment(['local', 'testing', 'staging'])
-            && self::curriculumEnabled()
             && config('mcp.oauth_curriculum_edit_rehearsal', false) === true;
     }
 
