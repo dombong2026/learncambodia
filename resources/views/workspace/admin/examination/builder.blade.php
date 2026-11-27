@@ -45,6 +45,13 @@
                 @endforeach
             </div>
             <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="sm:col-span-2 sm:grid-cols-2" />
+            @if(\App\Support\GuestAssessment::enabled())
+                <label class="flex items-start gap-2 rounded-lg border p-3">
+                    <input type="hidden" name="guest_enabled" value="0">
+                    <input type="checkbox" name="guest_enabled" value="1" @checked(old('guest_enabled', $exam->guest_enabled))>
+                    <span>Allow guest participation <small class="block">Free standalone assessments only. Attempts are limited per browser session; speaking recordings require a learner account.</small></span>
+                </label>
+            @endif
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
                 <label class="flex items-center gap-2 text-sm font-semibold">
                     <input type="hidden" name="{{ $key }}" value="0">
@@ -113,7 +120,7 @@
             <h2 class="font-extrabold">Submitted attempts</h2>
             @forelse($attempts as $result)
                 <article class="space-y-3 rounded-xl border p-4">
-                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
+                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name ?? ($result->guest_identity_hash ? 'Guest participant #'.$result->id : 'Unknown learner') }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
                     @foreach($result->snapshot['questions'] as $number => $question)
                         @continue(!\App\Support\AssessmentQuestions::manual($question))
                         <details class="space-y-2">

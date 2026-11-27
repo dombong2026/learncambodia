@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 final class ExamAttempt extends Model
 {
-    protected $fillable = ['course_exam_id', 'course_enrollment_id', 'student_id', 'grading', 'snapshot', 'answers', 'score', 'passed', 'expires_at', 'submitted_at'];
+    protected $fillable = ['course_exam_id', 'course_enrollment_id', 'student_id', 'grading', 'snapshot', 'answers', 'score', 'passed', 'expires_at', 'submitted_at', 'guest_identity_hash'];
 
     protected function casts(): array
     {
         return ['grading' => 'array', 'snapshot' => 'array', 'answers' => 'array', 'passed' => 'boolean', 'expires_at' => 'datetime', 'submitted_at' => 'datetime'];
     }
 
-    protected $hidden = ['snapshot', 'answers', 'grading'];
+    protected $hidden = ['snapshot', 'answers', 'grading', 'guest_identity_hash'];
     public function exam(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(CourseExam::class, 'course_exam_id');

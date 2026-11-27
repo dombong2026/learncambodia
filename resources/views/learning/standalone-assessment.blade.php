@@ -25,6 +25,18 @@
         @if(session('status'))<p class="mt-3 text-sm text-[#d1e0ef]" role="status">{{ session('status') }}</p>@endif
         @if($errors->any())<p class="mt-3 text-sm text-red-200" role="alert">{{ $errors->first() }}</p>@endif
         @guest
+            @if(\App\Support\GuestAssessment::allowed($exam))
+                <form method="post" action="{{ route('guest-assessments.start', $exam) }}" class="mt-5">
+                    @csrf
+                    <button class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">Start as guest</button>
+                    <p class="mt-2 text-xs">No account required. Keep this browser session to resume or view results. Attempt limits apply to this session.</p>
+                </form>
+                @if($identity = \App\Support\GuestAssessment::identity(request()))
+                    @foreach(\App\Models\ExamAttempt::where('course_exam_id', $exam->id)->whereNull('student_id')->whereNull('course_enrollment_id')->where('guest_identity_hash', $identity)->latest('id')->limit(10)->get() as $past)
+                        <a class="mt-2 block text-xs font-bold underline" href="{{ route('guest-assessments.show', $past) }}">Guest attempt {{ $loop->iteration }} · {{ $past->submitted_at ? 'Results' : ($past->expires_at->isFuture() ? 'Continue' : 'Expired') }}</a>
+                    @endforeach
+                @endif
+            @endif
             <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}">Sign in as a learner to take this {{ $label }}</a>
         @elseif(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
             @if($active)

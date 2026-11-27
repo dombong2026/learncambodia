@@ -88,6 +88,7 @@ final class AdminExaminationController extends Controller
             'attempt_limit' => ['required', 'integer', 'between:1,10'],
             'shuffle' => ['sometimes', 'boolean'], 'gamified' => ['sometimes', 'boolean'],
             'published' => ['sometimes', 'boolean'], 'live_feedback' => ['sometimes', 'boolean'],
+            'guest_enabled' => ['sometimes', 'boolean'],
             'questions' => ['required', 'array', 'list', 'min:1', $kind === 'quiz' ? 'max:50' : 'max:200'],
             'questions.*' => ['array:format,prompt,a,b,c,d,correct,points,passage,media_id,feedback'],
             'questions.*.format' => ['sometimes', Rule::in(array_keys(AssessmentQuestions::FORMATS))],
@@ -114,6 +115,16 @@ final class AdminExaminationController extends Controller
         $data['pricing'] = $data['course_id'] === null && $kind === 'exam'
             ? (CoursePricing::validate($request) + ['pricing' => $exam?->pricing])['pricing']
             : null;
+        if (\App\Support\GuestAssessment::enabled() && $request->has('guest_enabled')) {
+            $data['guest_enabled'] = $request->boolean('guest_enabled');
+            if ($data['guest_enabled'] && !\App\Support\GuestAssessment::compatible(
+                $data['course_id'], $data['pricing'], $data['questions']
+            )) {
+                throw ValidationException::withMessages(['guest_enabled' => 'Guest access requires a free standalone assessment without speaking recordings.']);
+            }
+        } else {
+            unset($data['guest_enabled']);
+        }
         $data['instructions_html'] = EditorHtml::clean($data['instructions_html']
             ?? nl2br(e($data['instructions'] ?? '')), lesson: true);
         unset($data['instructions']);

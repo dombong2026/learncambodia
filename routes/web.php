@@ -4,6 +4,7 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\Workspace\AdminExaminationController;
 use App\Http\Controllers\Workspace\AssessmentAccessController;
 use App\Http\Controllers\Workspace\StudentExaminationController;
+use App\Http\Controllers\Workspace\GuestAssessmentController;
 use App\Http\Controllers\EditorMediaController;
 use App\Http\Controllers\PublicHelpController;
 use App\Http\Controllers\PublicDocumentController;
@@ -135,6 +136,17 @@ Route::get('/course-watch', [LearningHubController::class,'watch'])->name('learn
 Route::get('/upload-studio', [LearningHubController::class,'studio'])->name('learning.studio');
 Route::get('/authors', [PublicAuthorController::class, 'index'])->name('authors.index');
 Route::get('/authors/{profile}', [PublicAuthorController::class, 'show'])->name('authors.show');
+// Guest assessment routes are deliberately separate from authenticated account routes.
+Route::middleware('guest')->prefix('guest-assessments')->name('guest-assessments.')->group(function (): void {
+    Route::post('/{exam}/start', [GuestAssessmentController::class, 'start'])
+        ->middleware('throttle:6,1,guest-assessment-start')->block(10, 10)->name('start');
+    Route::get('/attempts/{attempt}', [GuestAssessmentController::class, 'show'])
+        ->middleware('throttle:60,1,guest-assessment-show')->whereNumber('attempt')->name('show');
+    Route::post('/attempts/{attempt}', [GuestAssessmentController::class, 'submit'])
+        ->middleware('throttle:6,1,guest-assessment-submit')->block(10, 10)->whereNumber('attempt')->name('submit');
+    Route::get('/attempts/{attempt}/audio/{media}', [GuestAssessmentController::class, 'audio'])
+        ->middleware('throttle:120,1,guest-assessment-audio')->whereNumber('attempt')->whereNumber('media')->name('audio');
+});
 Route::get('/editor-media/{media}', [EditorMediaController::class,'show'])->name('editor-media.show');
 Route::get('/help-center', [PublicHelpController::class,'index'])->name('help.index');
 Route::get('/help-center/{kind}/{entry}', [PublicHelpController::class,'show'])->name('help.show');

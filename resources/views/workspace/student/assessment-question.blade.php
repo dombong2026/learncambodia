@@ -16,7 +16,7 @@
     @if($format === 'reading')
         <p class="whitespace-pre-wrap break-words rounded-lg border p-3">{{ $question['passage'] }}</p>
     @elseif($format === 'listening')
-        <audio controls preload="none" aria-label="Listening audio for question {{ $index + 1 }}" src="{{ route('editor-media.show', $question['media_id']) }}"></audio>
+        <audio controls preload="none" aria-label="Listening audio for question {{ $index + 1 }}" src="{{ ($guestAttempt ?? false) ? route('guest-assessments.audio', [$attempt, $question['media_id']]) : route('editor-media.show', $question['media_id']) }}"></audio>
     @endif
 
     @if($format === 'writing')

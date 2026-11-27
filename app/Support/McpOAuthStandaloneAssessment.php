@@ -257,7 +257,12 @@ final class McpOAuthStandaloneAssessment
 
     public static function version(CourseExam $exam): string
     {
-        return self::digest([$exam->getAttributes(), $exam->media()->allRelatedIds()->sort()->values()->all()]);
+        $attributes = $exam->getAttributes();
+        // Preserve pre-guest versions for unchanged, default-disabled assessments.
+        if (!$exam->guest_enabled) {
+            unset($attributes['guest_enabled']);
+        }
+        return self::digest([$attributes, $exam->media()->allRelatedIds()->sort()->values()->all()]);
     }
 
     public static function summary(CourseExam $exam): array
@@ -265,7 +270,7 @@ final class McpOAuthStandaloneAssessment
         return ['resource' => 'assessments', 'resource_id' => $exam->id, 'kind' => $exam->kind,
             'publication_status' => 'draft', 'title' => $exam->title, 'version' => self::version($exam),
             'question_count' => count($exam->questions ?? []), 'total_points' => array_sum(array_column(array_filter($exam->questions ?? [], AssessmentQuestions::scored(...)), 'points')),
-            'featured_media_id' => $exam->featured_media_id];
+            'featured_media_id' => $exam->featured_media_id, 'guest_enabled' => (bool) $exam->guest_enabled];
     }
 
     private static function audit(User $actor, string $name, string $receipt, ?int $id, string $operation): void
