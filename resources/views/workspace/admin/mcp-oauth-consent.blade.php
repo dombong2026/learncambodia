@@ -25,6 +25,7 @@
     <h1>Authorize access to your account?</h1>
     @php($draftWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:write'))
     @php($mediaWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:media'))
+    @php($editWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum-edit'))
     <p><strong>{{ $client->name }}</strong> requests permission to {{ $draftWrite ? 'read and manage your own unpublished drafts' : 'read limited LearnCambodia information' }} through ChatGPT.</p>
     <div class="permissions">
         <strong>Requested permissions</strong>
@@ -36,6 +37,9 @@
         @if($draftWrite)
             @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum'))
                 <p><strong>Expanded curriculum access:</strong> Append native modules, lessons and knowledge checks to your own unpublished courses, and attach an existing image from your own Media Library. No replacement, publication or deletion. @if(!$mediaWrite) No direct upload. @endif</p>
+            @endif
+            @if($editWrite)
+                <p><strong>Expanded curriculum editing access:</strong> Read your own draft lesson content and answer keys, update module titles and summaries, edit plain-text lessons and knowledge checks, append lessons, reorder and duplicate curriculum items. Existing rich lesson content and files are protected from replacement. No deletion or publication.</p>
             @endif
             @if($mediaWrite)
                 <p><strong>Expanded cover upload access:</strong> Upload one validated cover image for your own unpublished course with no existing featured media. The image is stored in the managed Media Library and attached to the draft. No arbitrary file upload or URL retrieval is granted.</p>

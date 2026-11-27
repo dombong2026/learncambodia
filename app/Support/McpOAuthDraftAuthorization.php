@@ -71,8 +71,10 @@ final class McpOAuthDraftAuthorization
             abort_unless(is_array($scopes) && McpOAuthDraftScopePolicy::permittedWriteScopes($scopes)
                 && (!McpOAuthDraftScopePolicy::hasCurriculumScopes($scopes)
                     || $identity->tokenCan(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE))
-                && (!McpOAuthDraftScopePolicy::exactMediaScopes($scopes)
-                    || $identity->tokenCan(McpOAuthDraftScopePolicy::MEDIA_SCOPE)), 403, 'Exact draft write scopes required.');
+                && (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)
+                    || $identity->tokenCan(McpOAuthDraftScopePolicy::MEDIA_SCOPE))
+                && (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)
+                    || $identity->tokenCan(McpOAuthDraftScopePolicy::EDIT_SCOPE)), 403, 'Exact draft write scopes required.');
 
             $binding = DB::table('mcp_oauth_token_audiences')->where('access_token_id', $id)
                 ->where('client_id', $client)->where('user_id', $identity->getAuthIdentifier())

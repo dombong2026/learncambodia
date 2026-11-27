@@ -30,6 +30,7 @@ final class McpOAuthDraftScopePolicy
 
     public const CURRICULUM_SCOPE = 'mcp:curriculum';
     public const MEDIA_SCOPE = 'mcp:media';
+    public const EDIT_SCOPE = 'mcp:curriculum-edit';
 
     public static function curriculumEnabled(): bool
     {
@@ -80,10 +81,37 @@ final class McpOAuthDraftScopePolicy
             && in_array(self::MEDIA_SCOPE, $scopes, true);
     }
 
+    public static function editEnabled(): bool
+    {
+        // Phase 5C rehearsal only. Production activation is a separate release.
+        return app()->environment(['local', 'testing', 'staging'])
+            && self::curriculumEnabled()
+            && config('mcp.oauth_curriculum_edit_rehearsal', false) === true;
+    }
+
+    public static function hasEditScopes(array $scopes): bool
+    {
+        if (!self::editEnabled() || !array_is_list($scopes)
+            || !in_array(self::EDIT_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = array_values(array_filter($scopes, static fn ($s) => $s !== self::EDIT_SCOPE));
+        return count($remaining) === count($scopes) - 1
+            && (self::exactCurriculumScopes($remaining)
+                || (self::mediaEnabled() && self::exactMediaScopes($remaining)));
+    }
+
+    public static function hasMediaScopes(array $scopes): bool
+    {
+        return self::mediaEnabled() && (self::exactMediaScopes($scopes)
+            || (self::hasEditScopes($scopes) && in_array(self::MEDIA_SCOPE, $scopes, true)));
+    }
+
     public static function hasCurriculumScopes(array $scopes): bool
     {
         return self::exactCurriculumScopes($scopes)
-            || (self::mediaEnabled() && self::exactMediaScopes($scopes));
+            || self::hasMediaScopes($scopes)
+            || self::hasEditScopes($scopes);
     }
 
     public static function permittedWriteScopes(array $scopes): bool
@@ -105,6 +133,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::mediaEnabled()) {
             $scopes[self::MEDIA_SCOPE] = 'Upload one validated image as the cover of your own unpublished course without replacing existing media';
+        }
+
+        if (self::editEnabled()) {
+            $scopes[self::EDIT_SCOPE] = 'Inspect, edit, append, reorder and duplicate native modules and plain-text lessons in your own unpublished courses, including lesson knowledge checks';
         }
 
         return $scopes;
