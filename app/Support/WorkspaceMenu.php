@@ -16,7 +16,7 @@ final class WorkspaceMenu
         $sections = collect(config('workspaces.'.$role, []))->keyBy('key');
         $definitions = match ($role) {
             'admin' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['content','Content','content-folder',['content']],
                 ['appearance','Appearance','palette',['appearance']],
                 ['page-manager','Page Manager','files',['page-manager']],
@@ -32,18 +32,18 @@ final class WorkspaceMenu
                 ['system-settings','System Settings','settings',['system-settings']],
             ],
             'student' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['learning','My Learning','book',['learning']],
                 ['coursework','Assignments & Grades','graduation',['homework','assessments']],
                 ['support','Support','headphones',['support']],
             ],
             'instructor' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['teaching','My Teaching','book',['teaching']],
                 ['grading','Assignments & Grades','graduation',['assessment']],
             ],
             'developer' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['api','API & Credentials','code',['api-center','credentials']],
                 ['operations','Operations','activity',['operations']],
             ],

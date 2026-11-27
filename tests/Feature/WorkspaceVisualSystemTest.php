@@ -29,6 +29,8 @@ final class WorkspaceVisualSystemTest extends TestCase
             $response = $this->actingAs($this->member($role))->get($url)->assertOk()
                 ->assertSee('data-workspace-main', false)
                 ->assertSee('data-workspace-heading', false)
+                ->assertSee('data-dashboard-compact-heading', false)
+                ->assertSee('data-dashboard-actions', false)
                 ->assertSee('data-workspace-content', false)
                 ->assertSee('id="workspace-search"', false)
                 ->assertSee('id="workspace-search-mobile"', false)
@@ -39,6 +41,9 @@ final class WorkspaceVisualSystemTest extends TestCase
                 ->assertSee('data-glass-brand-icon', false)
                 ->assertSee('aria-label="Mobile workspace navigation"', false);
             $this->assertSame(2, substr_count($response->getContent(), 'data-workspace-search type="search"'));
+            $groups = \App\Support\WorkspaceMenu::groups($role);
+            $this->assertSame('Dashboard', $groups[0]['title']);
+            $this->assertSame('Overview', $groups[0]['items'][0]['label']);
         }
     }
 

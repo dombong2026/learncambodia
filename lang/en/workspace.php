@@ -19,7 +19,7 @@ return [
     'sign_out' => 'Sign out',
     'my_account' => 'My account',
     'groups' => [
-        'overview' => 'Overview',
+        'overview' => 'Dashboard',
         'content' => 'Content',
         'appearance' => 'Appearance',
         'programs' => 'Academic Programs',

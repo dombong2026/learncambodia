@@ -20,7 +20,7 @@ return [
     'my_account' => 'គណនីរបស់ខ្ញុំ',
     'groups' => [
         'system-settings' => 'ការកំណត់ប្រព័ន្ធ',
-        'overview' => 'ទិដ្ឋភាពទូទៅ',
+        'overview' => 'ផ្ទាំងគ្រប់គ្រង',
         'content' => 'មាតិកា',
         'appearance' => 'រូបរាង',
         'programs' => 'កម្មវិធីសិក្សា',

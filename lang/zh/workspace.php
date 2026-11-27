@@ -20,7 +20,7 @@ return [
     'my_account' => '我的账户',
     'groups' => [
         'system-settings' => '系统设置',
-        'overview' => '概览',
+        'overview' => '仪表盘',
         'content' => '内容',
         'appearance' => '外观',
         'programs' => '学术课程',
