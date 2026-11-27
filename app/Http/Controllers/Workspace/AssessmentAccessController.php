@@ -41,7 +41,7 @@ final class AssessmentAccessController extends Controller
         ]);
     }
 
-    public function show(Request $request, CourseExam $exam, ?string $kind = null): View
+    public function show(Request $request, CourseExam $exam, ?string $kind = null): View|\Illuminate\Http\Response
     {
         abort_unless($exam->published && $exam->course_id === null && ($kind === null || $exam->kind === $kind), 404);
         $exam->load('type', 'featuredMedia');
@@ -54,7 +54,11 @@ final class AssessmentAccessController extends Controller
         }
         $quote = CoursePricing::quote($exam->pricing);
 
-        return view('learning.standalone-assessment', compact('exam', 'quote', 'access', 'history'));
+        $data = compact('exam', 'quote', 'access', 'history');
+        if (\App\Support\GuestAssessment::allowed($exam)) {
+            return response()->view('learning.standalone-assessment', $data)->header('Cache-Control', 'private, no-store');
+        }
+        return view('learning.standalone-assessment', $data);
     }
 
     public function requestAccess(Request $request, CourseExam $exam): RedirectResponse

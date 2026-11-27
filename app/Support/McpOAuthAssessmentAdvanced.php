@@ -138,6 +138,8 @@ final class McpOAuthAssessmentAdvanced
             $questions = [...($exam->questions ?? []), ...$data['questions']];
             abort_if(count($questions) > ($exam->kind === 'quiz' ? 50 : 200), 422);
             abort_if(count(array_filter($questions, static fn ($q) => ($q['format'] ?? '') === 'speaking')) > 10, 422);
+            abort_if($exam->guest_enabled && !GuestAssessment::compatible($exam->course_id, $exam->pricing, $questions), 422,
+                'Disable guest participation before adding speaking recordings.');
             // Only new audio is authorized here. Existing instructions, question data,
             // and native media relations are never replaced or detached.
             $ids = array_values(array_unique(array_column(array_filter($data['questions'],

@@ -158,7 +158,8 @@ final class McpOAuthDraftController
                             in_array(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE, $scopes, true),
                             in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true),
                             in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), true,
-                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), true, true);
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), true, true,
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_GUEST_SCOPE, $scopes, true));
                     }
                     $result = $audioUpload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
@@ -169,7 +170,8 @@ final class McpOAuthDraftController
                             in_array(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE, $scopes, true),
                             in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true),
                             in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), true,
-                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), true);
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), true, false,
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_GUEST_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthAssessmentAdvanced::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);

@@ -760,6 +760,9 @@ final class McpOAuthPassportTest extends TestCase
                 if (in_array('mcp:assessment', $scopes, true)) {
                     $consent->assertSee('Expanded standalone assessment access:');
                 }
+                if (in_array('mcp:assessment-guest', $scopes, true)) {
+                    $consent->assertSee('Expanded guest assessment settings:');
+                }
                 preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
                 preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
                 $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
@@ -899,6 +902,9 @@ final class McpOAuthPassportTest extends TestCase
                 }
                 if (in_array('mcp:assessment-audio', $scopes, true)) {
                     $consent->assertSee('Expanded assessment audio upload access:');
+                }
+                if (in_array('mcp:assessment-guest', $scopes, true)) {
+                    $consent->assertSee('Expanded guest assessment settings:');
                 }
                 preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
                 preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
@@ -1074,6 +1080,51 @@ final class McpOAuthPassportTest extends TestCase
             $rpc($audioToken, 'upload_draft_assessment_cover', $args)->assertOk()
                 ->assertJsonPath('result.structuredContent.replayed', true);
             $this->assertCount(2, $disk->allFiles('editor-media'));
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            config()->set([
+                'session.driver' => 'file',
+                'guest-assessment.production_accepted' => true,
+                'guest-assessment.production_enabled' => true,
+                'mcp.oauth_assessment_guest_production_accepted' => true,
+            ]);
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            config()->set('mcp.oauth_assessment_guest_production_enabled', true);
+            $this->assertTrue($policy::assessmentGuestEnabled());
+            $this->assertCount(34, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $ten = [...$nine, 'mcp:assessment-guest'];
+            $this->assertTrue($policy::hasAssessmentGuestScopes($ten));
+            $this->assertTrue($policy::hasAssessmentAudioScopes($ten));
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($ten));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($ten));
+            $this->assertTrue($policy::hasAssessmentScopes($ten));
+            $this->assertTrue($policy::hasEditScopes($ten));
+            $this->assertTrue($policy::hasMediaScopes($ten));
+            $this->assertTrue($policy::hasCurriculumScopes($ten));
+            $this->assertFalse($policy::hasAssessmentGuestScopes($nine));
+            $guestArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'expected_version' => $audio['version'], 'guest_enabled' => true];
+            $rpc($audioToken, 'update_draft_assessment_guest_access', $guestArgs)->assertForbidden();
+            $this->travel(61)->seconds();
+            $guestToken = $issue($ten);
+            $guest = $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->assertJsonPath('result.structuredContent.guest_enabled', true)
+                ->assertJsonPath('result.structuredContent.publication_status', 'draft')->json('result.structuredContent');
+            $this->assertSame(3, $guest['question_count']);
+            $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($guestToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.guest_enabled', true);
+            $rpc($guestToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            config()->set('mcp.oauth_assessment_guest_production_enabled', false);
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($nine));
+            $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertForbidden();
+            $rpc($audioToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.guest_enabled', true);
+            config()->set('guest-assessment.production_enabled', false);
             config()->set('mcp.oauth_assessment_audio_production_enabled', false);
             $this->assertFalse($policy::assessmentAudioEnabled());
             $this->assertTrue($policy::permittedWriteScopes($eight));
