@@ -104,11 +104,9 @@
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);
                     $workspaceAction = \App\Support\WorkspaceMenu::topAction($role);
                 @endphp
-                @if(request()->routeIs('admin.overview', 'account.overview', 'instructor.overview', 'developer.overview'))
-                {{-- The visible greeting and role action live in the dashboard showcase. Keep an accessible page title. --}}
-                <h1 data-workspace-heading data-dashboard-compact-heading class="sr-only">@yield('heading', 'Overview')</h1>
-                @elseif(!$__env->hasSection('workspace_compact'))
-                <nav aria-label="Breadcrumb" class="mb-5 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">
+                @php $dashboardLanding = request()->routeIs('admin.overview', 'account.overview', 'instructor.overview', 'developer.overview'); @endphp
+                @if($dashboardLanding || !$__env->hasSection('workspace_compact'))
+                <nav aria-label="Breadcrumb" class="{{ $dashboardLanding ? 'mb-2' : 'mb-5' }} flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">
                     <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="inline-flex items-center rounded-md p-1 transition hover:text-blue-700 dark:hover:text-blue-400" title="{{ __('workspace.overview') }}" aria-label="{{ __('workspace.overview') }}"><x-workspace-icon name="home" class="h-3.5 w-3.5" /></a>
                     @foreach($breadcrumbs as $crumb)
                         @if($crumb['url'])
@@ -120,6 +118,10 @@
                         @endif
                     @endforeach
                 </nav>
+                @if($dashboardLanding)
+                {{-- Keep the accessible title, but do not repeat the visible dashboard introduction. --}}
+                <h1 data-workspace-heading data-dashboard-compact-heading class="sr-only">@yield('heading', 'Overview')</h1>
+                @else
                 <div data-workspace-heading class="mb-7 flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <p class="mb-1 text-[11px] font-bold uppercase tracking-[.15em] text-blue-700 dark:text-blue-400">{{ ucfirst($role) }} {{ __('workspace.workspace') }}</p>
@@ -134,6 +136,7 @@
                         @endif
                     </div>
                 </div>
+                @endif
                 @endif
                 @if(session('status'))
                     <div role="status" aria-live="polite" data-workspace-toast class="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-800 shadow-xl dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300">{{ session('status') }}</div>
