@@ -12,10 +12,15 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
   const header=page.locator('[data-sidebar-toggle]');
   const edge=page.locator('[data-glass-sidebar-toggle]');
   const group=sidebar.locator('[data-nav-group]>summary').first();
+  await expect(group).toHaveText('Dashboard');
+  await expect(group.locator('..').locator('[data-workspace-link]').first()).toHaveText('Overview');
+  await expect(page.locator('[data-dashboard-compact-heading]')).toHaveClass(/sr-only/);
+  await expect(page.locator('[data-dashboard-actions]')).toBeVisible();
   const desktop=await page.evaluate(()=>matchMedia('(min-width: 64rem)').matches);
   if (desktop) {
     await expect(sidebar).toBeVisible();
     await expect(edge).toBeVisible();
+    await expect(header).toBeHidden();
     await expect(shell).toHaveCSS('padding-inline-start','266px');
     const originalLinks=await sidebar.locator('[data-workspace-link]').evaluateAll(items=>items.map(x=>x.getAttribute('href')));
     await edge.click();
@@ -32,6 +37,7 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
     expect(await sidebar.locator('[data-workspace-link]').evaluateAll(items=>items.map(x=>x.getAttribute('href')))).toEqual(originalLinks);
   } else {
     await expect(sidebar).toBeHidden();
+    await expect(header).toBeVisible();
     await header.click();
     await expect(sidebar).toBeVisible();
     await expect(edge).toBeHidden();
@@ -42,9 +48,14 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
   }
   await page.evaluate(()=>document.documentElement.classList.remove('dark'));
   const light=await sidebar.evaluate(el=>getComputedStyle(el).color);
+  const selected=sidebar.locator('[data-workspace-link][aria-current="page"]').first();
+  await expect(selected).toHaveCSS('color','rgb(255, 255, 255)');
+  const lightSurface=await sidebar.evaluate(el=>getComputedStyle(el).backgroundImage);
   await page.evaluate(()=>document.documentElement.classList.add('dark'));
   const dark=await sidebar.evaluate(el=>getComputedStyle(el).color);
   expect(light).not.toBe(dark);
+  expect(await sidebar.evaluate(el=>getComputedStyle(el).backgroundImage)).not.toBe(lightSurface);
+  await expect(selected).toHaveCSS('color','rgb(255, 255, 255)');
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });

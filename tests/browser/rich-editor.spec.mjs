@@ -17,14 +17,31 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('System Settings opens every administrator page below Analytics', async ({ page }) => {
-    const sidebarToggle = page.getByRole('button', { name: 'Toggle sidebar' });
+    // The visible desktop control is now the floating edge button; mobile keeps the header opener.
+    const shell = page.locator('[data-workspace]');
+    const desktop = await page.evaluate(() => matchMedia('(min-width: 64rem)').matches);
+    const sidebarToggle = desktop
+      ? page.locator('[data-glass-sidebar-toggle]')
+      : page.locator('[data-sidebar-toggle]');
     const nav = page.getByRole('navigation', { name: 'Account navigation' });
     const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
 
     for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
       await page.waitForLoadState('load');
+      await expect(shell).toHaveAttribute('data-glass-sidebar', '');
+      await expect(sidebarToggle).toBeVisible();
+      await expect(sidebarToggle).toHaveAttribute('aria-expanded', /^(true|false)$/);
       if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
         await sidebarToggle.click();
+      }
+      // Opening the mobile drawer makes the background header inert. Its DOM
+      // state remains inspectable even though it leaves the accessibility tree.
+      await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(nav).toBeVisible();
+      if (!desktop) {
+        await expect(shell).toHaveAttribute('data-mobile-sidebar', 'open');
+        await expect(page.locator('[data-workspace-page]')).toHaveAttribute('inert', '');
+        await expect(page.locator('[data-sidebar-close]')).toBeVisible();
       }
       await expect(settings.locator('xpath=preceding-sibling::details[1]/summary')).toHaveText('Analytics');
       if (await settings.getAttribute('open') === null) {
@@ -366,6 +383,9 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('media video preview uses transparent speed and hides controls when inactive', async ({ page }, info) => {
+    // Upload, search, two previews and deliberate inactivity checks share one
+    // test budget; slower WebKit runners must still execute every assertion.
+    test.slow();
     await page.goto('/dashboard/media-library?lang=en');
     const file = 'compact-player-' + info.project.name + '-' + Date.now() + '.webm';
     await page.getByRole('button', { name: 'Upload media' }).click();

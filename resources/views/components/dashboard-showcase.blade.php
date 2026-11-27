@@ -1,5 +1,6 @@
 @props(['showcase','role'])
 @php
+    $dashboardAction = \App\Support\WorkspaceMenu::topAction($role);
     $heroIcon = match($role) {
         'admin' => 'chart-column',
         'instructor' => 'presentation',
@@ -14,10 +15,13 @@
             <p class="mb-1 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#b07918] dark:text-[#f5cd71]">{{ __('dashboard.feature_overview') }}</p>
             <h2 class="learning-hero-title text-[1.75rem] font-black text-slate-950 dark:text-slate-50 sm:text-3xl xl:text-[2.05rem]">{{ $showcase['greeting'] }}</h2>
         </div>
+        <div data-dashboard-actions class="flex flex-wrap items-center gap-2">
+        <a href="{{ $dashboardAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-blue-800 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800">{{ $dashboardAction['label'] }}</a>
         <a href="{{ $showcase['feature_url'] }}" class="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#d8e9d9] bg-[#edf8ee] px-4 py-2.5 text-xs font-extrabold text-[#227248] transition hover:border-[#8dc89d] hover:bg-[#def1df] focus-visible:outline-2 focus-visible:outline-[#227248] dark:border-[#356c55] dark:bg-[#1e4938] dark:text-[#aff0c2]">
             <span class="h-2.5 w-2.5 rounded-full bg-[#31a064]" aria-hidden="true"></span>
             <span>{{ $showcase['status'] }}: <span class="tabular-nums">{{ \App\Support\DashboardNumber::compact($showcase['status_count']) }}</span></span>
         </a>
+        </div>
     </div>
     <div class="grid items-stretch gap-5 xl:grid-cols-[1.26fr_1fr_1fr]">
         <section class="premium-card premium-card-on-navy learning-dashboard-panel learning-dashboard-navy flex min-w-0 flex-col p-6 sm:p-7" aria-label="{{ $showcase['feature_title'] }}">
