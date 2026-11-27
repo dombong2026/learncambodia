@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
+use App\Support\McpOAuthAuthorizationFailure;
+use App\Support\McpOAuthDraftScopePolicy;
 use Closure;
 use Illuminate\Http\Request;
 use Laravel\Passport\Passport;
@@ -11,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Preflight for the SINGLE MCP resource and a PRE-REGISTERED client.
  * Passport subsequently verifies exact redirect_uri / code / PKCE signature.
  *
- * No dynamic client registration or wildcard client IDs; WRITE is rehearsal-only.
+ * No dynamic client registration, wildcard client IDs or implicit scope grants.
  */
 final class ValidateMcpOAuthParameters
 {
@@ -23,42 +26,71 @@ final class ValidateMcpOAuthParameters
         abort_unless(is_string($resource) && $resource === 'https://learncambodia.com/api/mcp/oauth', 503);
         abort_unless(is_string($client) && $client !== '' && strlen($client) <= 128, 503);
         abort_unless(is_string($redirect) && str_starts_with($redirect, 'https://chatgpt.com/'), 503);
-        abort_unless(hash_equals($resource, (string) $request->input('resource', ''))
-            && hash_equals($client, (string) $request->input('client_id', '')), 400,
-            'Invalid OAuth resource or client.');
-        abort_unless($request->input('client_secret') === null, 400, 'Public PKCE client only.');
+        $resourceInput = $request->input('resource');
+        $clientInput = $request->input('client_id');
+        if (!is_string($resourceInput) || !hash_equals($resource, $resourceInput)
+            || !is_string($clientInput) || !hash_equals($client, $clientInput)) {
+            return $this->reject($phase, 'client_resource', 400);
+        }
+        if ($request->input('client_secret') !== null) {
+            return $this->reject($phase, 'public_client', 400);
+        }
 
         // Public ChatGPT client is pre-registered on the server. No arbitrary
         // client metadata URL, dynamic registration or confidential grant.
         $passportClient = Passport::client()->newQuery()->find($client);
-        abort_unless($passportClient !== null && ! $passportClient->revoked && ! $passportClient->firstParty()
+        if (!($passportClient !== null && ! $passportClient->revoked && ! $passportClient->firstParty()
             && $passportClient->getRawOriginal('secret') === null
             && $passportClient->hasGrantType('authorization_code')
-            && in_array($passportClient->provider, [null, 'mcp_oauth_users'], true), 400,
-            'Unregistered or unsupported OAuth client.');
+            && in_array($passportClient->provider, [null, 'mcp_oauth_users'], true))) {
+            return $this->reject($phase, 'client_registration', 400);
+        }
 
         if (app()->environment('production')) {
-            abort_unless(EnsureMcpOAuthStagingEnabled::productionRedirectIsValid($redirect)
-                && $passportClient->redirect_uris === [$redirect], 400,
-                'Production OAuth requires the exact registered callback.');
+            if (!EnsureMcpOAuthStagingEnabled::productionRedirectIsValid($redirect)
+                || $passportClient->redirect_uris !== [$redirect]) {
+                return $this->reject($phase, 'callback_registration', 400);
+            }
         }
 
         if ($phase === 'authorize') {
-            abort_unless($request->isMethod('GET')
-                && $request->query('response_type') === 'code'
-                && \App\Support\McpOAuthDraftScopePolicy::permitsAuthorization(
-                    $request->query('scope'),
-                    $request->user('web') instanceof \App\Models\User ? $request->user('web') : null
-                )
-                && $request->query('code_challenge_method') === 'S256'
-                && hash_equals($redirect, (string) $request->query('redirect_uri', '')), 400,
-                'Authorization code, permitted scope, approved redirect URI and S256 required.');
-            $challenge = (string) $request->query('code_challenge', '');
-            abort_unless((bool) preg_match('/\A[A-Za-z0-9_-]{43,128}\z/D', $challenge), 400,
-                'Valid S256 code challenge required.');
-            abort_unless(is_string($request->query('state')) &&
-                strlen($request->query('state')) >= 16 &&
-                strlen($request->query('state')) <= 512, 400, 'OAuth state required.');
+            if (!$request->isMethod('GET') || $request->query('response_type') !== 'code') {
+                return $this->reject($phase, 'response_type', 400);
+            }
+            $callback = $request->query('redirect_uri');
+            if (!is_string($callback) || !hash_equals($redirect, $callback)) {
+                return $this->reject($phase, 'callback_request', 400);
+            }
+            $challenge = $request->query('code_challenge');
+            if ($request->query('code_challenge_method') !== 'S256' || !is_string($challenge)
+                || preg_match('/\\A[A-Za-z0-9_-]{43,128}\\z/D', $challenge) !== 1) {
+                return $this->reject($phase, 'pkce', 400);
+            }
+            $state = $request->query('state');
+            if (!is_string($state) || strlen($state) < 16 || strlen($state) > 512) {
+                return $this->reject($phase, 'state', 400);
+            }
+
+            // Separate requested scope validity from the actual web session.
+            // Never substitute the configured administrator for the signed-in user.
+            $scope = $request->query('scope');
+            if ($scope !== 'mcp:read') {
+                if (!is_string($scope) || !McpOAuthDraftScopePolicy::issuanceEnabled()
+                    || !McpOAuthDraftScopePolicy::permittedWriteScopes(explode(' ', $scope))) {
+                    return $this->reject($phase, 'scope_policy', 400);
+                }
+                $identity = $request->user('web');
+                $actor = $identity instanceof User ? User::query()->find($identity->getAuthIdentifier()) : null;
+                if (!McpOAuthDraftScopePolicy::eligible($actor)) {
+                    return $this->reject($phase, 'administrator_session', 400);
+                }
+                if (!McpOAuthDraftScopePolicy::permitsAuthorization($scope, $actor)) {
+                    return $this->reject($phase, 'scope_policy', 400);
+                }
+            }
+            // Ensure Passport's scope registry agrees with current release gates.
+            // This cannot expand permissions beyond the already validated request.
+            Passport::tokensCan(McpOAuthDraftScopePolicy::scopes());
         } elseif ($phase === 'token') {
             abort_unless($request->isMethod('POST'), 405);
             $grant = $request->input('grant_type');
@@ -81,5 +113,13 @@ final class ValidateMcpOAuthParameters
         }
 
         return $next($request);
+    }
+
+    private function reject(string $phase, string $reason, int $status): Response
+    {
+        if ($phase === 'authorize') {
+            return McpOAuthAuthorizationFailure::respond($reason, $status);
+        }
+        abort($status, 'Invalid OAuth request.');
     }
 }

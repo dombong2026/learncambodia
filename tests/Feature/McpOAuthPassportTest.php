@@ -182,6 +182,27 @@ final class McpOAuthPassportTest extends TestCase
         ])->assertBadRequest();
     }
 
+    public function test_browser_oauth_rejection_is_actionable_and_does_not_echo_query_values(): void
+    {
+        $client = $this->setupClient();
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+        $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+        $state = str_repeat('private-state-', 4);
+        $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+            'scope' => 'mcp:read mcp:write mcp:curriculum', 'state' => $state,
+        ]))->assertBadRequest()
+            ->assertHeader('X-LearnCambodia-OAuth-Error', 'scope_policy')
+            ->assertSee('Authorization not completed')
+            ->assertDontSee($state);
+        $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+            'code_challenge_method' => 'plain', 'state' => $state,
+        ]))->assertBadRequest()
+            ->assertHeader('X-LearnCambodia-OAuth-Error', 'pkce')
+            ->assertDontSee($state);
+        $this->assertDatabaseCount('oauth_access_tokens', 0);
+        $this->assertDatabaseCount('oauth_auth_codes', 0);
+    }
+
     public function test_student_cannot_view_website_admin_oauth_consent(): void
     {
         $client = $this->setupClient();
@@ -681,7 +702,9 @@ final class McpOAuthPassportTest extends TestCase
             $url = '/mcp/oauth/authorize?'.$this->oauthQuery($client, [
                 'scope' => implode(' ', $expectedScopes), 'code_challenge' => $challenge, 'state' => $state,
             ]);
-            $this->get($url)->assertBadRequest();
+            $this->get($url)->assertBadRequest()
+                ->assertHeader('X-LearnCambodia-OAuth-Error', 'administrator_session')
+                ->assertSee('Authorization not completed');
             $admin->forceFill([
                 'two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'),
                 'two_factor_confirmed_at' => now(),
@@ -689,7 +712,8 @@ final class McpOAuthPassportTest extends TestCase
             $this->actingAs($admin, 'web');
             if ($production) {
                 config()->set('mcp.oauth_draft_production_admin_id', (string) ($admin->id + 1));
-                $this->get($url)->assertBadRequest();
+                $this->get($url)->assertBadRequest()
+                    ->assertHeader('X-LearnCambodia-OAuth-Error', 'administrator_session');
                 config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
             }
             $consent = $this->get($url)->assertOk()

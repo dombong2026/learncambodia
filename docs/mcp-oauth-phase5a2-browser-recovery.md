@@ -1,0 +1,3 @@
+# Phase 5A.2 browser authorization recovery
+
+Production CLI validated all requested scopes and the internal Passport authorization engine, but browser requests returned HTTP 400. The exact live rejection remains unconfirmed. This change distinguishes request, scope, administrator-session and Passport validation failures with fixed safe reason codes, rechecks the authenticated session user's current eligibility and synchronizes the scope registry after validation. No authorization gates are relaxed. No raw request parameters or credentials are included in error messages or diagnostic logs. Existing redirects are preserved. CI and a real browser authorization must pass before claiming recovery.
