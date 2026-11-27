@@ -148,7 +148,8 @@ class PremiumDashboardTest extends TestCase
             ->assertRedirect('/account?lang=km');
         $this->get('/account')->assertOk()
             ->assertSee('ផ្ទាំងការសិក្សារបស់ខ្ញុំ')
-            ->assertSee('ប្រវត្តិរូប និងសុវត្ថិភាព')
+            ->assertSee('data-sidebar-settings', false)
+            ->assertSee('ការកំណត់')
             ->assertSee('lang="km"',false)
             ->assertSee('value="en"',false)
             ->assertSee('value="km"',false);
