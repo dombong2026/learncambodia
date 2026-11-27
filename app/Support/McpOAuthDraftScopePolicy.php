@@ -31,6 +31,7 @@ final class McpOAuthDraftScopePolicy
     public const CURRICULUM_SCOPE = 'mcp:curriculum';
     public const MEDIA_SCOPE = 'mcp:media';
     public const EDIT_SCOPE = 'mcp:curriculum-edit';
+    public const ASSESSMENT_SCOPE = 'mcp:assessment';
 
     public static function curriculumEnabled(): bool
     {
@@ -95,8 +96,34 @@ final class McpOAuthDraftScopePolicy
             && config('mcp.oauth_curriculum_edit_rehearsal', false) === true;
     }
 
+    public static function assessmentEnabled(): bool
+    {
+        // Production promotion and schema acceptance are a separate release.
+        return app()->environment(['local', 'testing', 'staging'])
+            && self::issuanceEnabled()
+            && config('mcp.oauth_assessment_rehearsal', false) === true;
+    }
+
+    private static function withoutAssessment(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_SCOPE));
+    }
+
+    public static function hasAssessmentScopes(array $scopes): bool
+    {
+        if (!self::assessmentEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessment($scopes);
+        return count($remaining) === count($scopes) - 1 && self::permittedWriteScopes($remaining);
+    }
+
     public static function hasEditScopes(array $scopes): bool
     {
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessment($scopes));
+        }
         if (!self::editEnabled() || !array_is_list($scopes)
             || !in_array(self::EDIT_SCOPE, $scopes, true)) {
             return false;
@@ -109,12 +136,18 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessment($scopes));
+        }
         return self::mediaEnabled() && (self::exactMediaScopes($scopes)
             || (self::hasEditScopes($scopes) && in_array(self::MEDIA_SCOPE, $scopes, true)));
     }
 
     public static function hasCurriculumScopes(array $scopes): bool
     {
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessment($scopes));
+        }
         return self::exactCurriculumScopes($scopes)
             || self::hasMediaScopes($scopes)
             || self::hasEditScopes($scopes);
@@ -122,7 +155,7 @@ final class McpOAuthDraftScopePolicy
 
     public static function permittedWriteScopes(array $scopes): bool
     {
-        return self::exactWriteScopes($scopes)
+        return self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
             || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
@@ -143,6 +176,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::editEnabled()) {
             $scopes[self::EDIT_SCOPE] = 'Inspect, edit, append, reorder and duplicate native modules and plain-text lessons in your own unpublished courses, including lesson knowledge checks';
+        }
+
+        if (self::assessmentEnabled()) {
+            $scopes[self::ASSESSMENT_SCOPE] = 'Create, inspect and edit your own MCP-created standalone quiz and exam drafts, including answer keys and feedback';
         }
 
         return $scopes;

@@ -45,6 +45,8 @@ return [
     'oauth_curriculum_edit_production_enabled' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_PRODUCTION_ENABLED', false),
     // Rehearsal is never an authorization for production access.
     'oauth_curriculum_edit_rehearsal' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_REHEARSAL', false),
+    // Phase 5D rehearsal is never production authorization.
+    'oauth_assessment_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_REHEARSAL', false),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];

@@ -26,6 +26,7 @@
     @php($draftWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:write'))
     @php($mediaWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:media'))
     @php($editWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum-edit'))
+    @php($assessmentWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:assessment'))
     <p><strong>{{ $client->name }}</strong> requests permission to {{ $draftWrite ? 'read and manage your own unpublished drafts' : 'read limited LearnCambodia information' }} through ChatGPT.</p>
     <div class="permissions">
         <strong>Requested permissions</strong>
@@ -37,6 +38,9 @@
         @if($draftWrite)
             @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum'))
                 <p><strong>Expanded curriculum access:</strong> Append native modules, lessons and knowledge checks to your own unpublished courses, and attach an existing image from your own Media Library. No replacement, publication or deletion. @if(!$mediaWrite) No direct upload. @endif</p>
+            @endif
+            @if($assessmentWrite)
+                <p><strong>Expanded standalone assessment access:</strong> Create, inspect and edit your own MCP-created unpublished standalone quizzes and exams, including answer keys, scoring, timing, attempts and feedback. Attach an existing owned image only when the cover slot is empty. No learner attempts, access approvals, paid pricing, deletion or publication.</p>
             @endif
             @if($editWrite)
                 <p><strong>Expanded curriculum editing access:</strong> Read your own draft lesson content and answer keys, update module titles and summaries, edit plain-text lessons and knowledge checks, append lessons, reorder and duplicate curriculum items. Existing rich lesson content and files are protected from replacement. No deletion or publication.</p>

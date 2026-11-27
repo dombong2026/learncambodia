@@ -74,7 +74,9 @@ final class McpOAuthDraftAuthorization
                 && (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)
                     || $identity->tokenCan(McpOAuthDraftScopePolicy::MEDIA_SCOPE))
                 && (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)
-                    || $identity->tokenCan(McpOAuthDraftScopePolicy::EDIT_SCOPE)), 403, 'Exact draft write scopes required.');
+                    || $identity->tokenCan(McpOAuthDraftScopePolicy::EDIT_SCOPE))
+                && (!McpOAuthDraftScopePolicy::hasAssessmentScopes($scopes)
+                    || $identity->tokenCan(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE)), 403, 'Exact draft write scopes required.');
 
             $binding = DB::table('mcp_oauth_token_audiences')->where('access_token_id', $id)
                 ->where('client_id', $client)->where('user_id', $identity->getAuthIdentifier())

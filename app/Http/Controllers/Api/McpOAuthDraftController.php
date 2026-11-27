@@ -11,6 +11,7 @@ use App\Support\McpOAuthDraftWriter;
 use App\Support\McpOAuthNativeCourseBuilder;
 use App\Support\McpOAuthDraftCoverUpload;
 use App\Support\McpOAuthCurriculumEditor;
+use App\Support\McpOAuthStandaloneAssessment;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ final class McpOAuthDraftController
                 ];
             }
         }
-        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog(), ...McpOAuthCurriculumEditor::catalog()];
+        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog(), ...McpOAuthCurriculumEditor::catalog(), ...McpOAuthStandaloneAssessment::catalog()];
     }
 
     public function handle(Request $request): JsonResponse
@@ -132,23 +133,33 @@ final class McpOAuthDraftController
                 return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
             try {
+                if (McpOAuthStandaloneAssessment::supports($name)) {
+                    if (!McpOAuthDraftScopePolicy::hasAssessmentScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id,
+                            in_array(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE, $scopes, true),
+                            in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true),
+                            in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), true);
+                    }
+                    $result = McpOAuthStandaloneAssessment::execute($actor, $name, $args);
+                    return $this->toolResult($id, $result + ['http_status' => 200], false);
+                }
                 if (McpOAuthCurriculumEditor::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true);
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthCurriculumEditor::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthDraftCoverUpload::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true));
                     }
                     $result = $upload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthNativeCourseBuilder::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasCurriculumScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true);
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, false, false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
