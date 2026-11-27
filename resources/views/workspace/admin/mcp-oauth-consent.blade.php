@@ -24,6 +24,7 @@
     <div class="app">LearnCambodia · MCP</div>
     <h1>Authorize access to your account?</h1>
     @php($draftWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:write'))
+    @php($mediaWrite = collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:media'))
     <p><strong>{{ $client->name }}</strong> requests permission to {{ $draftWrite ? 'read and manage your own unpublished drafts' : 'read limited LearnCambodia information' }} through ChatGPT.</p>
     <div class="permissions">
         <strong>Requested permissions</strong>
@@ -34,9 +35,12 @@
         </ul>
         @if($draftWrite)
             @if(collect($scopes)->contains(fn ($scope) => $scope->id === 'mcp:curriculum'))
-                <p><strong>Expanded curriculum access:</strong> Append native modules, lessons and knowledge checks to your own unpublished courses, and attach an existing image from your own Media Library. No direct upload, replacement, publication or deletion.</p>
+                <p><strong>Expanded curriculum access:</strong> Append native modules, lessons and knowledge checks to your own unpublished courses, and attach an existing image from your own Media Library. No replacement, publication or deletion. @if(!$mediaWrite) No direct upload. @endif</p>
             @endif
-            <small>Only your own unpublished course, article and page drafts may be created or updated. No publishing, deletion, file upload, user administration or changes to published content are granted. @if(app()->environment('production')) This permission grants controlled production draft access. You can revoke it in MCP management settings. @else This permission is for an isolated rehearsal. @endif</small>
+            @if($mediaWrite)
+                <p><strong>Expanded cover upload access:</strong> Upload one validated cover image for your own unpublished course with no existing featured media. The image is stored in the managed Media Library and attached to the draft. No arbitrary file upload or URL retrieval is granted.</p>
+            @endif
+            <small>Only your own unpublished course, article and page drafts may be created or updated. @if($mediaWrite) No publishing, deletion, arbitrary file upload, user administration or changes to published content are granted. @else No publishing, deletion, file upload, user administration or changes to published content are granted. @endif @if(app()->environment('production')) This permission grants controlled production draft access. You can revoke it in MCP management settings. @else This permission is for an isolated rehearsal. @endif</small>
         @else
             <small>No course changes, publishing, deletions, file uploads or administrator management permissions are granted.</small>
         @endif

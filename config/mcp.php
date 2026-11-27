@@ -35,6 +35,8 @@ return [
     'oauth_native_course_production_enabled' => (bool) env('MCP_OAUTH_NATIVE_COURSE_PRODUCTION_ENABLED', false),
     // Rehearsal never authorizes production access.
     'oauth_native_course_builder_rehearsal' => (bool) env('MCP_OAUTH_NATIVE_COURSE_BUILDER_REHEARSAL', false),
+    // Phase 5B upload rehearsal; hard-disabled in production.
+    'oauth_draft_media_rehearsal' => (bool) env('MCP_OAUTH_DRAFT_MEDIA_REHEARSAL', false),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];

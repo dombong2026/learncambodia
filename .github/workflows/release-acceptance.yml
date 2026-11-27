@@ -52,7 +52,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
-          extensions: mbstring, xml, curl, fileinfo, pdo_mysql, dom
+          extensions: mbstring, xml, curl, fileinfo, pdo_mysql, dom, gd
           coverage: none
       - name: MySQL backup client
         run: |
@@ -109,7 +109,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
-          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom
+          extensions: mbstring, xml, curl, fileinfo, pdo_sqlite, sqlite3, dom, gd
           coverage: none
       - uses: actions/setup-node@v4
         with:

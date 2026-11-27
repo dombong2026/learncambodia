@@ -29,6 +29,7 @@ final class McpOAuthDraftScopePolicy
     }
 
     public const CURRICULUM_SCOPE = 'mcp:curriculum';
+    public const MEDIA_SCOPE = 'mcp:media';
 
     public static function curriculumEnabled(): bool
     {
@@ -52,10 +53,34 @@ final class McpOAuthDraftScopePolicy
             && in_array(self::CURRICULUM_SCOPE, $scopes, true);
     }
 
+    public static function mediaEnabled(): bool
+    {
+        // Phase 5B is a rehearsal, never a production activation.
+        return app()->environment(['local', 'testing', 'staging'])
+            && self::curriculumEnabled()
+            && config('mcp.oauth_draft_media_rehearsal', false) === true
+            && extension_loaded('gd');
+    }
+
+    public static function exactMediaScopes(array $scopes): bool
+    {
+        return array_is_list($scopes) && count($scopes) === 4
+            && in_array('mcp:read', $scopes, true)
+            && in_array('mcp:write', $scopes, true)
+            && in_array(self::CURRICULUM_SCOPE, $scopes, true)
+            && in_array(self::MEDIA_SCOPE, $scopes, true);
+    }
+
+    public static function hasCurriculumScopes(array $scopes): bool
+    {
+        return self::exactCurriculumScopes($scopes)
+            || (self::mediaEnabled() && self::exactMediaScopes($scopes));
+    }
+
     public static function permittedWriteScopes(array $scopes): bool
     {
         return self::exactWriteScopes($scopes)
-            || (self::curriculumEnabled() && self::exactCurriculumScopes($scopes));
+            || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
     public static function scopes(): array
@@ -67,6 +92,10 @@ final class McpOAuthDraftScopePolicy
 
         if (self::curriculumEnabled()) {
             $scopes[self::CURRICULUM_SCOPE] = 'Append modules, lessons and knowledge checks to your own unpublished courses and attach an existing owned library image';
+        }
+
+        if (self::mediaEnabled()) {
+            $scopes[self::MEDIA_SCOPE] = 'Upload one validated image as the cover of your own unpublished course without replacing existing media';
         }
 
         return $scopes;
