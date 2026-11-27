@@ -98,9 +98,15 @@ final class McpOAuthDraftScopePolicy
 
     public static function assessmentEnabled(): bool
     {
-        // Production promotion and schema acceptance are a separate release.
+        if (!self::issuanceEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_production_accepted', false) === true
+                && config('mcp.oauth_assessment_production_enabled', false) === true
+                && config('mcp.oauth_assessment_rehearsal', false) === false;
+        }
         return app()->environment(['local', 'testing', 'staging'])
-            && self::issuanceEnabled()
             && config('mcp.oauth_assessment_rehearsal', false) === true;
     }
 
