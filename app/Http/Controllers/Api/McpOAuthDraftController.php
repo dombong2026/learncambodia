@@ -14,6 +14,7 @@ use App\Support\McpOAuthCurriculumEditor;
 use App\Support\McpOAuthStandaloneAssessment;
 use App\Support\McpOAuthAssessmentCoverUpload;
 use App\Support\McpOAuthAssessmentAdvanced;
+use App\Support\McpOAuthAssessmentAudioUpload;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ final class McpOAuthDraftController
                 ];
             }
         }
-        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog(), ...McpOAuthCurriculumEditor::catalog(), ...McpOAuthStandaloneAssessment::catalog(), ...McpOAuthAssessmentCoverUpload::catalog(), ...McpOAuthAssessmentAdvanced::catalog()];
+        return [...$tools, ...McpOAuthNativeCourseBuilder::catalog(), ...McpOAuthDraftCoverUpload::catalog(), ...McpOAuthCurriculumEditor::catalog(), ...McpOAuthStandaloneAssessment::catalog(), ...McpOAuthAssessmentCoverUpload::catalog(), ...McpOAuthAssessmentAdvanced::catalog(), ...McpOAuthAssessmentAudioUpload::catalog()];
     }
 
     public function handle(Request $request): JsonResponse
@@ -93,8 +94,9 @@ final class McpOAuthDraftController
         // checks as mutations, including locked authorization records.
         $upload = new McpOAuthDraftCoverUpload;
         $assessmentUpload = new McpOAuthAssessmentCoverUpload;
+        $audioUpload = new McpOAuthAssessmentAudioUpload;
         try {
-            return McpOAuthDraftAuthorization::authorized($request, function (User $actor, array $scopes) use ($request, $rpc, $id, $upload, $assessmentUpload): JsonResponse {
+            return McpOAuthDraftAuthorization::authorized($request, function (User $actor, array $scopes) use ($request, $rpc, $id, $upload, $assessmentUpload, $audioUpload): JsonResponse {
             $method = $rpc['method'];
             if ($method === 'notifications/initialized') {
                 return response()->json([], 202)->header('Cache-Control', 'no-store');
@@ -136,6 +138,17 @@ final class McpOAuthDraftController
                 return $this->rejection($actor, $id, 422, 'Invalid tool or arguments.');
             }
             try {
+                if (McpOAuthAssessmentAudioUpload::supports($name)) {
+                    if (!McpOAuthDraftScopePolicy::hasAssessmentAudioScopes($scopes)) {
+                        return McpOAuthReadOnlyController::scopeChallenge($id,
+                            in_array(McpOAuthDraftScopePolicy::CURRICULUM_SCOPE, $scopes, true),
+                            in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true),
+                            in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), true,
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), true, true);
+                    }
+                    $result = $audioUpload->execute($actor, $args);
+                    return $this->toolResult($id, $result + ['http_status' => 200], false);
+                }
                 if (McpOAuthAssessmentAdvanced::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasAssessmentAdvancedScopes($scopes)) {
                         return McpOAuthReadOnlyController::scopeChallenge($id,
@@ -151,7 +164,7 @@ final class McpOAuthDraftController
                     if (!McpOAuthDraftScopePolicy::hasAssessmentMediaScopes($scopes)) {
                         return McpOAuthReadOnlyController::scopeChallenge($id, true, true,
                             in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), true, true,
-                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
+                            in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_AUDIO_SCOPE, $scopes, true));
                     }
                     $result = $assessmentUpload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
@@ -168,21 +181,21 @@ final class McpOAuthDraftController
                 }
                 if (McpOAuthCurriculumEditor::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasEditScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, in_array(McpOAuthDraftScopePolicy::MEDIA_SCOPE, $scopes, true), true, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_AUDIO_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthCurriculumEditor::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthDraftCoverUpload::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasMediaScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, true, in_array(McpOAuthDraftScopePolicy::EDIT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_MEDIA_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_AUDIO_SCOPE, $scopes, true));
                     }
                     $result = $upload->execute($actor, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
                 }
                 if (McpOAuthNativeCourseBuilder::supports($name)) {
                     if (!McpOAuthDraftScopePolicy::hasCurriculumScopes($scopes)) {
-                        return McpOAuthReadOnlyController::scopeChallenge($id, true, false, false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true));
+                        return McpOAuthReadOnlyController::scopeChallenge($id, true, false, false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_SCOPE, $scopes, true), false, in_array(McpOAuthDraftScopePolicy::ASSESSMENT_ADVANCED_SCOPE, $scopes, true), in_array(McpOAuthDraftScopePolicy::ASSESSMENT_AUDIO_SCOPE, $scopes, true));
                     }
                     $result = McpOAuthNativeCourseBuilder::execute($actor, $name, $args);
                     return $this->toolResult($id, $result + ['http_status' => 200], false);
@@ -217,6 +230,7 @@ final class McpOAuthDraftController
             // objects created by this request after the outer transaction ends.
             $upload->cleanupUncommitted();
             $assessmentUpload->cleanupUncommitted();
+            $audioUpload->cleanupUncommitted();
         }
     }
 
