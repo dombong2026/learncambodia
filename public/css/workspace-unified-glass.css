@@ -109,3 +109,23 @@
         border-color: #628dbf;
     }
 }
+
+/* V4.1: role-specific timeline cards. The Admin branch is intentionally excluded. */
+[data-workspace-body] [data-dashboard-role-row] :is([data-dashboard-role-label], [data-dashboard-role-detail], [data-dashboard-role-meta]) {
+    overflow-wrap: anywhere;
+}
+[data-workspace-body] [data-dashboard-role-meta] {
+    max-inline-size: 36%;
+    text-align: end;
+}
+[data-workspace-body] [data-dashboard-role-meta][data-dashboard-role-urgency="urgent"] { color: #b42332; }
+[data-workspace-body] [data-dashboard-role-meta][data-dashboard-role-urgency="soon"] { color: #916018; }
+.dark [data-workspace-body] [data-dashboard-role-meta][data-dashboard-role-urgency="urgent"] { color: #fca5a5; }
+.dark [data-workspace-body] [data-dashboard-role-meta][data-dashboard-role-urgency="soon"] { color: #ffd37b; }
+@media (hover: hover) {
+    .dark [data-workspace-body] [data-dashboard-role-row]:hover,
+    .dark [data-workspace-body] [data-dashboard-card-grid]:has([data-dashboard-role-rows]) > section:nth-child(3) a:hover {
+        background-color: #254669;
+        border-color: #628dbf;
+    }
+}

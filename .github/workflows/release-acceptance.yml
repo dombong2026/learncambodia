@@ -152,6 +152,18 @@ jobs:
                 }
             }
           '
+      - name: Seed role dashboard records in disposable browser database
+        run: |
+          test "$APP_ENV" = testing
+          php -r '
+            require "vendor/autoload.php";
+            $app = require "bootstrap/app.php";
+            $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            if (\Illuminate\Support\Facades\DB::connection()->getDriverName() !== "sqlite") {
+                throw new \RuntimeException("Browser fixtures require disposable SQLite");
+            }
+            \Tests\Support\RoleDashboardFixture::create();
+          '
       - name: Install browser engines
         run: |
           npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0

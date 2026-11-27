@@ -97,20 +97,36 @@
                     @endforelse
                 </ul>
             @else
-            <ol class="mt-5 flex-1 space-y-1">
+            <ul data-dashboard-role-rows class="mt-6 flex flex-1 flex-col gap-3">
                 @forelse($showcase['timeline'] as $item)
-                    <li class="relative border-l-2 border-[#e9ecf2] py-2 pl-5 dark:border-[#365274]">
-                        <span class="absolute -left-[6px] top-4 h-2.5 w-2.5 rounded-full border-2 border-white dark:border-[#122849] {{ $item['urgency'] === 'urgent' ? 'bg-red-500' : ($item['urgency'] === 'soon' ? 'bg-[#f4b73d]' : 'bg-[#6d92be]') }}" aria-hidden="true"></span>
-                        <a href="{{ $item['url'] }}" class="group block rounded-xl px-2 py-1 transition hover:bg-[#f5f8fc] focus-visible:outline-2 focus-visible:outline-[#265da8] dark:hover:bg-white/5">
-                            <p class="line-clamp-2 text-sm font-extrabold leading-6 text-slate-900 group-hover:text-[#1e5089] dark:text-white">{{ $item['label'] }}</p>
-                            <p class="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">{{ $item['sub'] }}</p>
-                            <span class="mt-2 inline-block rounded-full bg-[#eff4fb] px-2 py-1 text-[11px] font-bold tabular-nums text-[#365987] dark:bg-[#25466b] dark:text-[#c0d6f0]">{{ $item['when'] }}</span>
+                    @php
+                        $timelineIcon = match($role) {
+                            'student' => 'calendar-check',
+                            'instructor' => 'clipboard-check',
+                            'developer' => match($item['label']) {
+                                __('dashboard.active_tokens') => 'key-round',
+                                __('dashboard.expired_tokens') => 'history',
+                                default => 'terminal',
+                            },
+                            default => 'calendar',
+                        };
+                    @endphp
+                    <li>
+                        <a data-dashboard-role-row href="{{ $item['url'] }}" class="group flex items-center gap-3 rounded-2xl border border-[#e6ecf3] bg-[#f5f7fa] p-4 transition hover:border-[#f5c45c] hover:bg-[#fff7e5] focus-visible:outline-2 focus-visible:outline-[#eab147] dark:border-[#294665] dark:bg-[#193658] dark:hover:border-[#f4c45c]">
+                            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#fff0c9] text-[#ba8021] dark:bg-[#4d3f27] dark:text-[#ffd37b]"><x-workspace-icon :name="$timelineIcon" class="h-5 w-5" /></span>
+                            <span class="min-w-0 flex-1">
+                                <span data-dashboard-role-label class="block text-xs font-bold leading-5 text-[#203552] dark:text-[#e7effb]">{{ $item['label'] }}</span>
+                                @if(filled($item['sub']))
+                                    <span data-dashboard-role-detail class="mt-1 block text-xs text-slate-500 dark:text-slate-400">{{ $item['sub'] }}</span>
+                                @endif
+                            </span>
+                            <span data-dashboard-role-meta data-dashboard-role-urgency="{{ $item['urgency'] }}" class="shrink-0 tabular-nums {{ $role === 'developer' ? 'text-xl font-black text-[#0d2d5b] dark:text-white' : 'text-xs font-bold text-[#0d2d5b] dark:text-[#e7effb]' }}">{{ $item['when'] }}</span>
                         </a>
                     </li>
                 @empty
-                    <li class="rounded-2xl border border-dashed border-slate-200 p-5 text-xs leading-7 text-slate-500 dark:border-[#365274] dark:text-slate-400">{{ $showcase['timeline_empty'] }}</li>
+                    <li data-dashboard-role-empty class="rounded-2xl border border-dashed border-slate-200 p-5 text-xs leading-7 text-slate-500 dark:border-[#365274] dark:text-slate-400">{{ $showcase['timeline_empty'] }}</li>
                 @endforelse
-            </ol>
+            </ul>
             @endif
         </section>
 
