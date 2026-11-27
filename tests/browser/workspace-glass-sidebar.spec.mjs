@@ -94,7 +94,15 @@ test('workspace glass preserves real navigation in expanded, rail and mobile mod
     await expect(row).toContainText(label);
     await expect(row.locator('svg')).toHaveCount(1);
     await expect(row.locator('[data-dashboard-review-count]')).toHaveText(/^\d[\d.,]*[KMB]?$/i);
-    await expect(row).toHaveAttribute('href',/^https?:\/\//);
+    // Locale navigation normalizes links to relative URLs in the browser.
+    // Verify the resolved same-origin destination and its actual queue, not
+    // the serialization format of the href attribute.
+    const destination=new URL(await row.evaluate(el=>el.href));
+    expect(destination.origin).toBe(new URL(page.url()).origin);
+    expect(destination.pathname).toBe(index===2?'/dashboard/homework/reviews':'/dashboard/reviews');
+    if (index!==2) {
+      expect(destination.searchParams.get('focus')).toBe(['courses','enrollments',null,'appearance'][index]);
+    }
     await expect(row).not.toContainText('Across approval queues');
     const labelBox=await row.locator('span').nth(1).boundingBox();
     const countBox=await row.locator('[data-dashboard-review-count]').boundingBox();
