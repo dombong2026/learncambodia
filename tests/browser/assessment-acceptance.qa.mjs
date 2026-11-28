@@ -189,7 +189,20 @@ test('native guest assessment preserves countdown, audio authorization and scori
   const csrf = await form.locator('input[name="_token"]').inputValue();
 
   await form.locator('input[name="answers[0]"][value="a"]').check();
+
+  const submission = page.waitForResponse(response =>
+    response.request().method() === 'POST'
+    && new URL(response.url()).pathname === new URL(attempt).pathname
+  );
+
   await form.getByRole('button', { name: 'Submit attempt' }).click();
+
+  const submitted = await submission;
+
+  expect(
+    submitted.status(),
+    'Guest submission must redirect successfully, not be rate limited'
+  ).toBe(302);
 
   await expect(page.getByRole('heading', {
     name: 'Passed',

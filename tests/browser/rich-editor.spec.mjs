@@ -76,6 +76,51 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
 
       const destination = new URL(await link.getAttribute('href'), page.url());
 
+      if (!desktop) {
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+        // Scroll the existing navigation container, not the
+        // document or an unrelated workspace element.
+        await link.evaluate(element => {
+          const nav = element.closest('[data-workspace-nav]');
+
+          if (!nav) throw new Error('Workspace navigation container missing');
+
+          const bounds = nav.getBoundingClientRect();
+          const target = element.getBoundingClientRect();
+          const top = Math.max(0, bounds.top);
+          const bottom = Math.min(window.innerHeight, bounds.bottom);
+
+          if (bottom <= top) {
+            throw new Error('Navigation viewport is not visible');
+          }
+
+          const center = (top + bottom) / 2;
+          const targetCenter = (target.top + target.bottom) / 2;
+
+          nav.scrollTo({
+            top: nav.scrollTop + targetCenter - center,
+            behavior: 'instant',
+          });
+        });
+
+        // Wait until actual hit-testing reaches the link.
+        // Never bypass an intercepted pointer interaction.
+        await expect.poll(async () => {
+          return await link.evaluate(element => {
+            const rect = element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const hit = document.elementFromPoint(x, y);
+
+            return Boolean(hit && element.contains(hit));
+          });
+        }, {
+          timeout: 10000,
+          message: 'Mobile sidebar link must receive pointer events',
+        }).toBe(true);
+      }
+
       await link.click();
 
       await expect.poll(() => new URL(page.url()).pathname)

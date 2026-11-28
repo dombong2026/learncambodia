@@ -220,8 +220,48 @@ jobs:
 
           test "$ready" = 1
 
-          npx playwright test --config=tests/browser/assessment-acceptance.config.mjs \
-            --output=test-results/assessment-acceptance
+          # The native guest route permits six submissions per minute.
+          # Each browser journey verifies one successful submission and
+          # one rejected duplicate, consuming two requests.
+          #
+          # Preserve the application limiter and all security assertions.
+          # Run three Chromium projects, allow the shared quota to expire,
+          # then execute both WebKit projects.
+
+          chromium_rc=0
+          webkit_rc=0
+
+          if npx playwright test \
+            --config=tests/browser/assessment-acceptance.config.mjs \
+            --project=desktop-chromium \
+            --project=mobile-chromium \
+            --project=tablet-chromium \
+            --output=test-results/assessment-acceptance-chromium; then
+            chromium_rc=0
+          else
+            chromium_rc=$?
+          fi
+
+          echo "CHROMIUM_ASSESSMENT_EXIT=$chromium_rc"
+          echo "GUEST_SUBMISSION_RATE_LIMIT_COOLDOWN=61_SECONDS"
+
+          # Deliberate quota-window boundary, not a test retry.
+          sleep 61
+
+          if npx playwright test \
+            --config=tests/browser/assessment-acceptance.config.mjs \
+            --project=desktop-webkit \
+            --project=mobile-webkit \
+            --output=test-results/assessment-acceptance-webkit; then
+            webkit_rc=0
+          else
+            webkit_rc=$?
+          fi
+
+          echo "WEBKIT_ASSESSMENT_EXIT=$webkit_rc"
+
+          test "$chromium_rc" = 0
+          test "$webkit_rc" = 0
       - if: always()
         uses: actions/upload-artifact@v4
         with:
