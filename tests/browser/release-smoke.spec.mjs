@@ -704,11 +704,41 @@ test('compact public category nav retains full tooltip and accessible names on a
     await expect(tray.locator('[data-category-short]')).toHaveCount(6);
     await expect(tray.locator('[data-category-short="EFL"]')).toHaveCount(0);
     await expect(tray.locator('[data-category-short="BE"]')).toHaveCount(0);
-    await expect(tray.getByRole('link', { name: /Courses/i }).first()).toBeVisible();
+    const trayCourses = tray.locator('a.public-category-courses');
+    const mobileNav = page.locator('nav.public-mobile-nav');
+
+    await expect(trayCourses).toHaveCount(1);
+
+    const mobile = width < 768;
+
+    if (mobile) {
+      await expect(trayCourses).toBeHidden();
+      await expect(mobileNav).toBeVisible();
+    } else {
+      await expect(trayCourses).toBeVisible();
+      await expect(mobileNav).toBeHidden();
+    }
+
+    const courses = mobile
+      ? mobileNav.getByRole('link', { name: 'Courses', exact: true })
+      : trayCourses;
+
+    await expect(courses).toBeVisible();
+
+    const destination = new URL(
+      await courses.getAttribute('href'),
+      page.url()
+    );
+
+    expect(destination.pathname).toBe('/courses');
 
     const next = page.locator('[data-tray-scroll="1"]');
     await next.click();
     await expect(tray).toBeVisible();
+
+    await courses.click();
+    await expect(page).toHaveURL(/\/courses(?:\?|$)/);
+    await expect(page.locator('#main-content')).toBeVisible();
   }
 
   await page.goto('/?lang=en');

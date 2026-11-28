@@ -89,8 +89,33 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       await expect(page.locator('[data-workspace-content]').locator(selector))
         .toBeVisible();
 
-      await expect(settings.locator('a[aria-current="page"]'))
-        .toHaveText(label);
+      const sidebar = page.locator('[data-sidebar]');
+
+      if (!desktop) {
+        // Navigation deliberately closes the mobile drawer.
+        // Verify that contract before reopening it.
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(sidebar).toHaveJSProperty('inert', true);
+
+        await toggle.click();
+
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(sidebar).toHaveJSProperty('inert', false);
+        await expect(settings).toHaveAttribute('open', '');
+      }
+
+      const current = settings.locator('a[aria-current="page"]');
+
+      await expect(current).toHaveCount(1);
+      await expect(current).toHaveText(label);
+      await expect(current).toBeVisible();
+
+      if (!desktop) {
+        await page.locator('[data-sidebar-close]').click();
+
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(sidebar).toHaveJSProperty('inert', true);
+      }
     }
 
     const cssUrl = await page.locator('link[href*="/css/system-settings.css"]').getAttribute('href');

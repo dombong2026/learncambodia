@@ -114,12 +114,31 @@ test('native guest assessment preserves countdown, audio authorization and scori
   await expect(page.locator('[data-exam-countdown]'))
     .toHaveAttribute('data-expires', expiration);
 
-  // Use the native audio element rather than an external URL.
+  // The premium player intentionally hides native controls.
+  // Keep the native element for media and URL verification.
   const player = page.locator(
     'audio[aria-label="Listening audio for question 1"]'
   );
 
-  await expect(player).toBeVisible();
+  await expect(player).toHaveCount(1);
+  await expect(player).toBeAttached();
+  await expect(player).toHaveAttribute('data-lc-audio-ready', '');
+  await expect(player).toBeHidden();
+
+  const premium = page.locator(
+    '.lc-audio[role="group"][aria-label="Listening audio for question 1"]'
+  );
+
+  await expect(premium).toHaveCount(1);
+  await expect(premium).toBeVisible();
+
+  const play = premium.getByRole('button', {
+    name: 'Play',
+    exact: true,
+  });
+
+  await expect(play).toBeVisible();
+  await expect(play).toBeEnabled();
 
   const audioURL = new URL(
     await player.getAttribute('src'),
@@ -135,10 +154,11 @@ test('native guest assessment preserves countdown, audio authorization and scori
   expect(authorized.headers()['content-type']).toContain('audio/wav');
   expect(authorized.headers()['cache-control']).toContain('no-store');
 
-  await player.evaluate(audio => {
-    audio.preload = 'metadata';
-    audio.load();
-  });
+  // Start playback through the real user-facing control.
+  // Do not force-click or invoke audio.play() from the test.
+  expect(await player.evaluate(audio => audio.currentTime)).toBe(0);
+
+  await play.click();
 
   await expect.poll(
     () => player.evaluate(audio => audio.readyState),
@@ -146,6 +166,18 @@ test('native guest assessment preserves countdown, audio authorization and scori
   ).toBeGreaterThanOrEqual(1);
 
   expect(await player.evaluate(audio => audio.error)).toBeNull();
+
+  // The fixture is a short one-second WAV. Checking time
+  // advancement also works if playback has already ended.
+  await expect.poll(
+    () => player.evaluate(audio => audio.currentTime),
+    { timeout: 10000 }
+  ).toBeGreaterThan(0);
+
+  expect(await player.evaluate(audio => audio.duration))
+    .toBeGreaterThan(0);
+
+  await expect(premium.locator('.lc-audio-status')).toBeHidden();
 
   await verifyForeignDenial(browser, baseURL, attempt, audioURL);
 
