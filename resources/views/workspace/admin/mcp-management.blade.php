@@ -4,8 +4,9 @@
 @section('description', 'Prepare secure, role-scoped AI management for LearnCambodia. Remote access is disabled until OAuth and tool-level authorization are implemented and verified.')
 
 @push('workspace_styles')
-<link rel="stylesheet" href="{{ asset('css/mcp-management.css') }}?v=bridge-1">
-<script defer src="{{ asset('js/mcp-management.js') }}?v=bridge-1"></script>
+{{-- Fingerprint each asset so browser/CDN caches cannot reuse an older consent script. --}}
+<link rel="stylesheet" href="{{ asset('css/mcp-management.css') }}?v={{ substr(hash_file('sha256', public_path('css/mcp-management.css')), 0, 16) }}">
+<script defer src="{{ asset('js/mcp-management.js') }}?v={{ substr(hash_file('sha256', public_path('js/mcp-management.js')), 0, 16) }}"></script>
 @endpush
 
 @section('content')
@@ -14,7 +15,7 @@
     $readCount = collect($tools)->where('mode', 'Read')->count();
     $writeCount = count($tools) - $readCount;
 @endphp
-<div class="mcp-manager" data-mcp-manager>
+<div class="mcp-manager" data-mcp-manager data-mcp-ui-version="password-reauth-v2">
     <section class="mcp-hero" aria-label="MCP management overview">
         <div>
             <div class="mcp-eyebrow">AI OPERATIONS · FOUNDATION</div>
@@ -110,6 +111,12 @@
                 </select>
                 <label class="mcp-consent-confirm"><input type="checkbox" id="mcp-consent-accept" required>
                     I understand the requested access and approve issuing a short-lived token.</label>
+                <p class="mcp-password-help" role="note">
+                    <strong>Website password confirmation is required.</strong>
+                    After clicking Approve, this modal will show a secure password field.
+                    If it does not appear, <a href="{{ route('password.confirm') }}" target="_blank" rel="noopener noreferrer">confirm your Website Admin password on LearnCambodia</a>,
+                    then return here and approve the session again.
+                </p>
                 <div class="mcp-dialog-footer">
                     <button class="mcp-primary-close" type="submit" data-mcp-connect-submit>Approve browser session</button>
                 </div>

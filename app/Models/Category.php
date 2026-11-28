@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
+    public const SUBHEADER_CODES = ['ESL', 'GE', 'EAP', 'TOEIC', 'TOEFL', 'IELTS'];
+
     public const GROUPS = [
         'english-courses' => 'English Courses',
         'exam-preparation' => 'Exam Preparation',
@@ -45,7 +47,9 @@ class Category extends Model
 
     public function scopeForNavigation(Builder $query): Builder
     {
-        return $query->visibleInCatalog()->orderBy('sort_order')->orderBy('id')
+        return $query->visibleInCatalog()->whereIn('code', self::SUBHEADER_CODES)
+            ->orderByRaw('case when code = ? then 0 else 1 end', ['ESL'])
+            ->orderBy('sort_order')->orderBy('id')
             ->select(['id', 'slug', 'code', 'name']);
     }
 

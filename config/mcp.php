@@ -45,6 +45,22 @@ return [
     'oauth_curriculum_edit_production_enabled' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_PRODUCTION_ENABLED', false),
     // Rehearsal is never an authorization for production access.
     'oauth_curriculum_edit_rehearsal' => (bool) env('MCP_OAUTH_CURRICULUM_EDIT_REHEARSAL', false),
+    // Phase 5D.1 production promotion is independently accepted and enabled.
+    'oauth_assessment_production_accepted' => (bool) env('MCP_OAUTH_ASSESSMENT_PRODUCTION_ACCEPTED', false),
+    'oauth_assessment_production_enabled' => (bool) env('MCP_OAUTH_ASSESSMENT_PRODUCTION_ENABLED', false),
+    'oauth_assessment_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_REHEARSAL', false),
+    'oauth_assessment_guest_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_GUEST_REHEARSAL', false),
+    'oauth_assessment_guest_production_accepted' => (bool) env('MCP_OAUTH_ASSESSMENT_GUEST_PRODUCTION_ACCEPTED', false),
+    'oauth_assessment_guest_production_enabled' => (bool) env('MCP_OAUTH_ASSESSMENT_GUEST_PRODUCTION_ENABLED', false),
+    'oauth_assessment_audio_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_AUDIO_REHEARSAL', false),
+    'oauth_assessment_audio_production_accepted' => (bool) env('MCP_OAUTH_ASSESSMENT_AUDIO_PRODUCTION_ACCEPTED', false),
+    'oauth_assessment_audio_production_enabled' => (bool) env('MCP_OAUTH_ASSESSMENT_AUDIO_PRODUCTION_ENABLED', false),
+    'oauth_assessment_advanced_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_ADVANCED_REHEARSAL', false),
+    'oauth_assessment_advanced_production_accepted' => (bool) env('MCP_OAUTH_ASSESSMENT_ADVANCED_PRODUCTION_ACCEPTED', false),
+    'oauth_assessment_advanced_production_enabled' => (bool) env('MCP_OAUTH_ASSESSMENT_ADVANCED_PRODUCTION_ENABLED', false),
+    'oauth_assessment_media_rehearsal' => (bool) env('MCP_OAUTH_ASSESSMENT_MEDIA_REHEARSAL', false),
+    'oauth_assessment_media_production_accepted' => (bool) env('MCP_OAUTH_ASSESSMENT_MEDIA_PRODUCTION_ACCEPTED', false),
+    'oauth_assessment_media_production_enabled' => (bool) env('MCP_OAUTH_ASSESSMENT_MEDIA_PRODUCTION_ENABLED', false),
     'oauth_ready' => false,
     'transport_ready' => false,
 ];

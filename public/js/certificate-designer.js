@@ -39,9 +39,14 @@
         const type = form.elements.namedItem('certificate_type_id');
         fields.type.textContent = type.value ? type.selectedOptions[0].textContent.trim() : 'Course completion';
         fields.heading.textContent = value('heading');
-        fields.body.textContent = value('body').replace(/\{learner\}|\{course\}/g, placeholder => (
-            placeholder === '{learner}' ? fields.learner.textContent : 'Sample Course'
-        ));
+        const kind = type.selectedOptions[0]?.dataset.certificateKind;
+        const placeholders = {
+            '{learner}': fields.learner.textContent,
+            '{course}': 'Sample Course',
+            '{assessment}': kind === 'quiz' ? 'Sample Quiz' : 'Sample Exam',
+        };
+        fields.body.textContent = value('body').replace(/\{learner\}|\{course\}|\{assessment\}/g, key => placeholders[key]);
+        form.elements.namedItem('courses[]').disabled = kind === 'exam' || kind === 'quiz';
         fields.issuer.textContent = value('issuer');
         paper.dataset.orientation = value('orientation');
         paper.dataset.font = value('design[font]');

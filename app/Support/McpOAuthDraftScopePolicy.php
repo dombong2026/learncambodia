@@ -31,6 +31,11 @@ final class McpOAuthDraftScopePolicy
     public const CURRICULUM_SCOPE = 'mcp:curriculum';
     public const MEDIA_SCOPE = 'mcp:media';
     public const EDIT_SCOPE = 'mcp:curriculum-edit';
+    public const ASSESSMENT_SCOPE = 'mcp:assessment';
+    public const ASSESSMENT_MEDIA_SCOPE = 'mcp:assessment-media';
+    public const ASSESSMENT_ADVANCED_SCOPE = 'mcp:assessment-advanced';
+    public const ASSESSMENT_AUDIO_SCOPE = 'mcp:assessment-audio';
+    public const ASSESSMENT_GUEST_SCOPE = 'mcp:assessment-guest';
 
     public static function curriculumEnabled(): bool
     {
@@ -95,8 +100,202 @@ final class McpOAuthDraftScopePolicy
             && config('mcp.oauth_curriculum_edit_rehearsal', false) === true;
     }
 
+    public static function assessmentEnabled(): bool
+    {
+        if (!self::issuanceEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_production_accepted', false) === true
+                && config('mcp.oauth_assessment_production_enabled', false) === true
+                && config('mcp.oauth_assessment_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_rehearsal', false) === true;
+    }
+
+    public static function assessmentMediaEnabled(): bool
+    {
+        if (!self::assessmentEnabled() || !self::mediaEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_media_production_accepted', false) === true
+                && config('mcp.oauth_assessment_media_production_enabled', false) === true
+                && config('mcp.oauth_assessment_media_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_media_rehearsal', false) === true;
+    }
+
+    public static function assessmentAdvancedEnabled(): bool
+    {
+        if (!self::assessmentEnabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_advanced_production_accepted', false) === true
+                && config('mcp.oauth_assessment_advanced_production_enabled', false) === true
+                && config('mcp.oauth_assessment_advanced_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_advanced_rehearsal', false) === true;
+    }
+
+    public static function assessmentAudioEnabled(): bool
+    {
+        if (!self::assessmentAdvancedEnabled() || !extension_loaded('fileinfo')
+            || config('filesystems.managed') !== 'local'
+            || config('filesystems.disks.local.driver') !== 'local') {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_audio_production_accepted', false) === true
+                && config('mcp.oauth_assessment_audio_production_enabled', false) === true
+                && config('mcp.oauth_assessment_audio_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_audio_rehearsal', false) === true;
+    }
+
+    public static function assessmentGuestEnabled(): bool
+    {
+        if (!self::assessmentEnabled() || !GuestAssessment::enabled()) {
+            return false;
+        }
+        if (app()->environment('production')) {
+            return config('mcp.oauth_assessment_guest_production_accepted', false) === true
+                && config('mcp.oauth_assessment_guest_production_enabled', false) === true
+                && config('mcp.oauth_assessment_guest_rehearsal', false) === false;
+        }
+        return app()->environment(['local', 'testing', 'staging'])
+            && config('mcp.oauth_assessment_guest_rehearsal', false) === true;
+    }
+
+    private static function withoutAssessmentGuest(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_GUEST_SCOPE));
+    }
+
+    public static function hasAssessmentGuestScopes(array $scopes): bool
+    {
+        if (!self::assessmentGuestEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_GUEST_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentGuest($scopes);
+        return count($remaining) === count($scopes) - 1 && self::hasAssessmentScopes($remaining);
+    }
+
+    private static function withoutAssessmentAudio(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_AUDIO_SCOPE));
+    }
+
+    public static function hasAssessmentAudioScopes(array $scopes): bool
+    {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentAudioScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (!self::assessmentAudioEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_AUDIO_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentAudio($scopes);
+        return count($remaining) === count($scopes) - 1 && self::hasAssessmentAdvancedScopes($remaining);
+    }
+
+    private static function withoutAssessmentAdvanced(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_ADVANCED_SCOPE));
+    }
+
+    public static function hasAssessmentAdvancedScopes(array $scopes): bool
+    {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentAdvancedScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasAssessmentAdvancedScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (!self::assessmentAdvancedEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_ADVANCED_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentAdvanced($scopes);
+        return count($remaining) === count($scopes) - 1 && self::hasAssessmentScopes($remaining);
+    }
+
+    private static function withoutAssessmentMedia(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_MEDIA_SCOPE));
+    }
+
+    public static function hasAssessmentMediaScopes(array $scopes): bool
+    {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentMediaScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasAssessmentMediaScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasAssessmentMediaScopes(self::withoutAssessmentAdvanced($scopes));
+        }
+        if (!self::assessmentMediaEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_MEDIA_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessmentMedia($scopes);
+        return count($remaining) === count($scopes) - 1
+            && self::hasAssessmentScopes($remaining)
+            && self::hasMediaScopes($remaining);
+    }
+
+    private static function withoutAssessment(array $scopes): array
+    {
+        return array_values(array_filter($scopes, static fn ($s) => $s !== self::ASSESSMENT_SCOPE));
+    }
+
+    public static function hasAssessmentScopes(array $scopes): bool
+    {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentAdvanced($scopes));
+        }
+        if (self::hasAssessmentMediaScopes($scopes)) {
+            return self::hasAssessmentScopes(self::withoutAssessmentMedia($scopes));
+        }
+        if (!self::assessmentEnabled() || !array_is_list($scopes)
+            || !in_array(self::ASSESSMENT_SCOPE, $scopes, true)) {
+            return false;
+        }
+        $remaining = self::withoutAssessment($scopes);
+        return count($remaining) === count($scopes) - 1 && self::permittedWriteScopes($remaining);
+    }
+
     public static function hasEditScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentAdvanced($scopes));
+        }
+        if (self::hasAssessmentMediaScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessmentMedia($scopes));
+        }
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasEditScopes(self::withoutAssessment($scopes));
+        }
         if (!self::editEnabled() || !array_is_list($scopes)
             || !in_array(self::EDIT_SCOPE, $scopes, true)) {
             return false;
@@ -109,12 +308,42 @@ final class McpOAuthDraftScopePolicy
 
     public static function hasMediaScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentAdvanced($scopes));
+        }
+        if (self::hasAssessmentMediaScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessmentMedia($scopes));
+        }
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasMediaScopes(self::withoutAssessment($scopes));
+        }
         return self::mediaEnabled() && (self::exactMediaScopes($scopes)
             || (self::hasEditScopes($scopes) && in_array(self::MEDIA_SCOPE, $scopes, true)));
     }
 
     public static function hasCurriculumScopes(array $scopes): bool
     {
+        if (self::hasAssessmentGuestScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentGuest($scopes));
+        }
+        if (self::hasAssessmentAudioScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentAudio($scopes));
+        }
+        if (self::hasAssessmentAdvancedScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentAdvanced($scopes));
+        }
+        if (self::hasAssessmentMediaScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessmentMedia($scopes));
+        }
+        if (self::hasAssessmentScopes($scopes)) {
+            return self::hasCurriculumScopes(self::withoutAssessment($scopes));
+        }
         return self::exactCurriculumScopes($scopes)
             || self::hasMediaScopes($scopes)
             || self::hasEditScopes($scopes);
@@ -122,7 +351,7 @@ final class McpOAuthDraftScopePolicy
 
     public static function permittedWriteScopes(array $scopes): bool
     {
-        return self::exactWriteScopes($scopes)
+        return self::hasAssessmentGuestScopes($scopes) || self::hasAssessmentAudioScopes($scopes) || self::hasAssessmentAdvancedScopes($scopes) || self::hasAssessmentMediaScopes($scopes) || self::hasAssessmentScopes($scopes) || self::exactWriteScopes($scopes)
             || (self::curriculumEnabled() && self::hasCurriculumScopes($scopes));
     }
 
@@ -143,6 +372,26 @@ final class McpOAuthDraftScopePolicy
 
         if (self::editEnabled()) {
             $scopes[self::EDIT_SCOPE] = 'Inspect, edit, append, reorder and duplicate native modules and plain-text lessons in your own unpublished courses, including lesson knowledge checks';
+        }
+
+        if (self::assessmentEnabled()) {
+            $scopes[self::ASSESSMENT_SCOPE] = 'Create, inspect and edit your own MCP-created standalone quiz and exam drafts, including answer keys and feedback';
+        }
+
+        if (self::assessmentMediaEnabled()) {
+            $scopes[self::ASSESSMENT_MEDIA_SCOPE] = 'Upload one validated cover image to your own MCP-created unpublished standalone quiz or exam with no existing cover';
+        }
+
+        if (self::assessmentAdvancedEnabled()) {
+            $scopes[self::ASSESSMENT_ADVANCED_SCOPE] = 'Append native listening, writing, speaking and unscored Likert questions to your own unpublished MCP-created standalone assessments, and list your own exam audio';
+        }
+
+        if (self::assessmentAudioEnabled()) {
+            $scopes[self::ASSESSMENT_AUDIO_SCOPE] = 'Upload validated PCM WAV audio and append a listening question to your own unpublished MCP-created standalone assessment';
+        }
+
+        if (self::assessmentGuestEnabled()) {
+            $scopes[self::ASSESSMENT_GUEST_SCOPE] = 'Enable or disable guest participation on your own unpublished free standalone assessment; no publication or access to learner responses';
         }
 
         return $scopes;

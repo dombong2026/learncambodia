@@ -7,6 +7,7 @@ use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\CourseQuiz;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 final class LearningAccess
 {
@@ -23,6 +24,27 @@ final class LearningAccess
     {
         abort_unless($lesson->module()
             ->where('course_id', $course->id)->exists(), 404);
+    }
+
+    public static function sourceLesson(Request $request, Course $course): ?CourseLesson
+    {
+        if (!$request->has('from_lesson')) {
+            return null;
+        }
+
+        $lesson = CourseLesson::findOrFail($request->integer('from_lesson'));
+        self::lesson($course, $lesson);
+
+        return $lesson;
+    }
+
+    public static function curriculumProgress(Course $course, CourseEnrollment $enrollment): array
+    {
+        $course->load('modules.lessons:id,course_module_id,title,position,duration_minutes,quiz_questions');
+
+        return $enrollment->lessonProgress()->whereNotNull('completed_at')
+            ->whereIn('lesson_id', $course->modules->flatMap(fn ($module) => $module->lessons->modelKeys()))
+            ->pluck('lesson_id')->all();
     }
 
     public static function quiz(Course $course, CourseQuiz $quiz): void

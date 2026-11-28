@@ -10,6 +10,28 @@ final class PremiumHeaderCardMotionTest extends TestCase
 {
     use RefreshDatabase;
 
+
+    private function selectHomepageLayout(string $layout): void
+    {
+        $admin = \App\Models\User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        \App\Models\AppearanceRevision::create([
+            'section' => 'home_layout',
+            'settings' => ['home_layout' => $layout],
+            'status' => 'approved',
+            'created_by' => $admin->id,
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            $layout,
+            \App\Support\Appearance::value('home', 'home_layout')
+        );
+    }
+
     public function test_guest_language_button_is_flag_only_with_three_valid_working_options(): void
     {
         $html = $this->get('/?lang=en')->assertOk()
@@ -50,14 +72,46 @@ final class PremiumHeaderCardMotionTest extends TestCase
 
     public function test_global_card_art_is_decorative_and_home_tiles_are_still_real_links(): void
     {
+        $this->selectHomepageLayout('sunrise');
+
         $html = $this->get('/?lang=en')->assertOk()
-            ->assertSee('premium-card', false)
-            ->assertSee('premium-corner-icon', false)
-            ->assertSee('aria-hidden="true"', false)
-            ->assertSee('href="'.route('courses.index').'"', false)
+            ->assertSee('data-home-layout="sunrise"', false)
             ->getContent();
-        $this->assertGreaterThanOrEqual(4, substr_count($html, 'premium-corner-icon'));
-        $this->assertStringNotContainsString('Browse courses →', $html);
+
+        $document = new \DOMDocument();
+        @$document->loadHTML($html, LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+
+        $tiles = $xpath->query('//a[span[@class="sr-icon"]]');
+        $this->assertCount(4, $tiles);
+
+        $routes = [
+            'courses.index',
+            'assessments.quizzes',
+            'assessments.exams',
+            'articles.index',
+        ];
+
+        foreach ($routes as $index => $route) {
+            $tile = $tiles->item($index);
+
+            $this->assertSame(
+                route($route), $tile->getAttribute('href')
+            );
+
+            $this->assertGreaterThan(
+                0, $xpath->query('.//svg', $tile)->length
+            );
+
+            $this->assertGreaterThan(
+                0,
+                $xpath->query(
+                    './/*[@aria-hidden="true"]', $tile
+                )->length
+            );
+
+            $this->assertNotEmpty(trim($tile->textContent));
+        }
     }
 
     public function test_course_and_profile_titles_are_real_links_without_trailing_arrow_icons(): void

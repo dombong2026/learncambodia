@@ -30,6 +30,7 @@ return [
     'lesson_count' => ':count 节课',
     'no_module_lessons' => '此模块暂无课时。',
     'enroll' => '报名',
+    'start_course' => '开始课程',
     'already_enrolled' => '已报名',
     'learning_progress' => '学习进度',
     'sign_in_to_enroll' => '请使用学生账户登录并报名。',
@@ -46,4 +47,6 @@ return [
     'public_social_note' => '添加你希望审核通过后在公开个人资料和所授课程页面上显示的链接。',
     'instructor_social_links' => ':name 的社交链接',
     'invalid_social_url' => '请输入有效的 :platform HTTPS 链接。',
+    'enroll_free' => '免费报名',
+    'free_enroll_note' => '以学员身份登录即可免费报名并立即开始学习。',
 ];

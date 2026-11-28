@@ -9,35 +9,70 @@ final class HomeFeatureThemeConsistencyTest extends TestCase
 {
     use RefreshDatabase;
 
+
+    private function selectHomepageLayout(string $layout): void
+    {
+        $admin = \App\Models\User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        \App\Models\AppearanceRevision::create([
+            'section' => 'home_layout',
+            'settings' => ['home_layout' => $layout],
+            'status' => 'approved',
+            'created_by' => $admin->id,
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            $layout,
+            \App\Support\Appearance::value('home', 'home_layout')
+        );
+    }
+
     public function test_home_feature_artwork_uses_unboxed_icons_and_consistent_theme_surfaces(): void
     {
-        foreach (['en', 'km', 'zh'] as $lang) {
-            $html = $this->get('/?lang='.$lang)->assertOk()
-                ->assertSee('data-home-pathways-icon', false)
-                ->assertSee('data-home-level-icon', false)
-                ->assertSee('data-home-feature="flexible"', false)
-                ->assertSee('data-home-feature="educator"', false)
-                ->assertSee('data-home-study-corner', false)
-                ->assertSee('dark:bg-[#0d2c57]', false)
-                ->getContent();
+        foreach (['classic', 'sunrise'] as $layout) {
+            $this->selectHomepageLayout($layout);
 
-            $this->assertSame(1, substr_count($html, 'data-home-pathways-icon'));
-            $this->assertSame(1, substr_count($html, 'data-home-level-icon'));
-            $this->assertStringContainsString('bg-transparent', $html);
+            foreach (['en', 'km', 'zh'] as $lang) {
+                $response = $this->get('/?lang='.$lang)
+                    ->assertOk()
+                    ->assertSee('lang="'.$lang.'"', false)
+                    ->assertSee('data-theme-toggle', false);
+
+                if ($layout === 'classic') {
+                    $response
+                        ->assertSee('class="lc-home"', false)
+                        ->assertSee('css/home.css', false)
+                        ->assertSee('id="home-cefr"', false)
+                        ->assertSee('id="home-educators"', false)
+                        ->assertSee('alt=""', false)
+                        ->assertDontSee('data-home-layout="sunrise"', false);
+                } else {
+                    $response
+                        ->assertSee('data-home-layout="sunrise"', false)
+                        ->assertSee('css/home-sunrise.css', false)
+                        ->assertSee('class="sr-icon"', false)
+                        ->assertSee('class="sr-level"', false)
+                        ->assertDontSee('class="lc-home"', false);
+                }
+
+                foreach (['A1','A2','B1','B2','C1','C2'] as $level) {
+                    $response->assertSee(
+                        'href="'.route('cefr.index').'#'.$level.'"',
+                        false
+                    );
+                }
+            }
         }
-
-        $template = file_get_contents(resource_path('views/home.blade.php'));
-        $this->assertIsString($template);
-        $this->assertStringContainsString('data-home-pathways-icon', $template);
-        $this->assertStringContainsString('data-home-level-icon', $template);
-        $this->assertStringNotContainsString('group-hover:bg-[#dceeff]', $template);
-        $this->assertStringNotContainsString('bg-[#eaf3ff] text-[#316ea8]', $template);
-        $this->assertStringContainsString('dark:from-[#123b6b]', $template);
-        $this->assertStringContainsString('dark:bg-[#10345f]', $template);
     }
 
     public function test_cefr_guide_description_is_accurate_and_expanded_in_all_languages(): void
     {
+        $this->selectHomepageLayout('sunrise');
+
         $original = [
             'en' => 'Explore CEFR descriptors from A1 to C2 and choose a pathway appropriate to your goals.',
             'km' => 'ស្វែងយល់កម្រិត CEFR ចាប់ពី A1 ដល់ C2 សម្រាប់កំណត់គោលដៅសិក្សា។',

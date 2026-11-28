@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => '考试类型',
+    'table' => '考试类型表',
+    'number' => '序号',
+    'type' => '类型',
+    'name' => '名称',
+    'description' => '说明',
+    'action' => '操作',
+    'actions_for' => ':name 的操作',
+    'empty' => '暂无考试类型。',
+    'add' => '添加类型',
+    'edit' => '编辑',
+    'delete' => '删除',
+    'save' => '保存更改',
+    'close' => '关闭',
+    'cancel' => '取消',
+    'confirm_delete' => '要删除“:name”考试类型吗？',
+    'in_use' => '已有考试使用此类型。请先为该考试选择其他类型，再删除此类型。',
+    'unavailable' => '所选考试类型已不可用。请另选一个类型。',
+    'created' => '考试类型已添加。',
+    'updated' => '考试类型已更新。',
+    'deleted' => '考试类型已删除。',
+];

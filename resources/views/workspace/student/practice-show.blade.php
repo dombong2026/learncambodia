@@ -1,8 +1,17 @@
-@extends('layouts.workspace')
+@extends(isset($lesson) ? 'layouts.focused-learning' : 'layouts.workspace')
 @section('title', $quiz->title)
 @section('heading', $quiz->title)
-@section('description', 'Private, graded learning exercise. Your responses are checked on the server; this is not an official exam or certificate.')
+@section('description', 'Pass this graded practice quiz to earn a LearnCambodia Quiz certificate.')
+@section('learning-reading', 'enabled')
 @section('content')
+@php
+    $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];
+@endphp
+@isset($lesson)
+    <div class="fl-grid"><div class="fl-main fl-assessment">
+    <a class="fl-back" href="{{ route('account.lessons.watch', [$enrollment, $lesson, 'tab' => 'resources']) }}"><x-workspace-icon name="chevron-right" /> Back to lesson</a>
+    <h1>{{ $quiz->title }}</h1>
+@endisset
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <a href="{{ route('account.practice.index') }}" class="rounded-full border border-slate-300 px-5 py-2.5 text-sm font-bold dark:border-slate-700">← Back to practice quizzes</a>
     <span class="rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{ $attemptsRemaining }} of 5 attempts remaining</span>
@@ -11,7 +20,7 @@
 @if($attemptsRemaining === 0)
     <div class="rounded-3xl border border-amber-200 bg-amber-50 p-8 text-sm font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">You have reached the five-attempt limit for this practice quiz. Your previous results remain available in Practice History.</div>
 @else
-<form method="POST" action="{{ route('account.practice.store',[$enrollment,$quiz]) }}" class="max-w-5xl space-y-5">@csrf
+<form method="POST" action="{{ route('account.practice.store', [$enrollment, $quiz] + $fromLesson) }}" class="max-w-5xl space-y-5">@csrf
     @foreach($questions as $question)
         <fieldset class="rounded-3xl border border-slate-200 bg-white p-7 dark:border-slate-800 dark:bg-slate-900">
             <legend class="px-1 text-sm font-bold text-blue-700 dark:text-blue-400">Question {{ $loop->iteration }} of {{ $questions->count() }}</legend>
@@ -30,4 +39,7 @@
     <div class="flex justify-end"><button type="submit" class="rounded-full bg-blue-700 px-7 py-3 text-sm font-bold text-white hover:bg-blue-800">Submit practice answers</button></div>
 </form>
 @endif
+@isset($lesson)
+    </div>@include('learning.partials.outline')</div>
+@endisset
 @endsection

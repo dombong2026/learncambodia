@@ -618,6 +618,538 @@ final class McpOAuthPassportTest extends TestCase
         }
     }
 
+    public function test_standalone_assessment_requires_separate_signed_scope(): void
+    {
+        $this->configureEphemeralPassportKeys();
+        $client = $this->setupClient();
+        config()->set([
+            'mcp.oauth_draft_writes_accepted' => true,
+            'mcp.oauth_draft_writes_enabled' => true,
+            'mcp.oauth_draft_scope_issuance_enabled' => true,
+            'mcp.oauth_native_course_builder_rehearsal' => true,
+            'mcp.oauth_curriculum_edit_rehearsal' => true,
+            'mcp.oauth_assessment_rehearsal' => true,
+        ]);
+        $policy = \App\Support\McpOAuthDraftScopePolicy::class;
+        Passport::tokensCan($policy::scopes());
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+        $admin->forceFill(['two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'), 'two_factor_confirmed_at' => now()])->save();
+        $type = \App\Models\ExamType::create(['kind' => 'quiz', 'name' => 'OAuth QA quiz']);
+        $issue = function (array $scopes) use ($admin, $client): string {
+            $this->app['auth']->forgetGuards();
+            $this->withHeaders(['Authorization' => '']);
+            $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+            $verifier = str_repeat('E', 48);
+            $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+            $state = bin2hex(random_bytes(16));
+            $consent = $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+                'scope' => implode(' ', $scopes), 'state' => $state, 'code_challenge' => $challenge,
+            ]))->assertOk();
+            if (in_array('mcp:assessment', $scopes, true)) {
+                $consent->assertSee('Expanded standalone assessment access:');
+            }
+            preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
+            preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
+            $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
+                'auth_token' => $matches[1], '_token' => $csrf[1]])->assertRedirect();
+            parse_str(parse_url($approved->headers->get('Location'), PHP_URL_QUERY) ?? '', $parameters);
+            $this->assertSame($state, $parameters['state'] ?? null);
+            return $this->postJson('/api/mcp/oauth/token', [
+                'grant_type' => 'authorization_code', 'client_id' => $client, 'code' => $parameters['code'],
+                'redirect_uri' => $this->callback, 'code_verifier' => $verifier, 'resource' => config('mcp.oauth_resource'),
+            ])->assertOk()->json('access_token');
+        };
+        $rpc = function (string $token, string $name, array $args) {
+            $this->app['auth']->forgetGuards();
+            return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call',
+                'params' => ['name' => $name, 'arguments' => $args],
+            ]);
+        };
+
+        $base = ['mcp:read', 'mcp:write', 'mcp:curriculum', 'mcp:curriculum-edit'];
+        $old = $issue($base);
+        $rpc($old, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertForbidden();
+        $this->travel(61)->seconds();
+        $token = $issue([...$base, 'mcp:assessment']);
+        $rpc($token, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertOk()
+            ->assertJsonPath('result.isError', false);
+        $payload = ['kind' => 'quiz', 'request_id' => (string) \Illuminate\Support\Str::uuid(),
+            'settings' => ['exam_type_id' => $type->id, 'title' => 'Signed quiz fixture', 'instructions' => 'Choose an answer.',
+                'time_limit' => 20, 'passing_percent' => 80, 'attempt_limit' => 2, 'shuffle' => false,
+                'gamified' => false, 'live_feedback' => true, 'content_language' => 'English', 'public_requirement' => 'QA only.'],
+            'questions' => [['format' => 'choice', 'prompt' => 'Choose a greeting.', 'a' => 'Hello', 'b' => 'Run',
+                'c' => 'Jump', 'd' => 'Sleep', 'correct' => 'a', 'points' => 1, 'passage' => '', 'feedback' => 'Hello is a greeting.']]];
+        $rpc($old, 'create_draft_assessment', $payload)->assertForbidden();
+        $this->assertDatabaseCount('mcp_assessment_owners', 0);
+        $created = $rpc($token, 'create_draft_assessment', $payload)->assertOk()->assertJsonPath('result.isError', false)
+            ->json('result.structuredContent');
+        $this->assertSame('draft', $created['publication_status']);
+        $rpc($token, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+            ->assertOk()->assertJsonPath('result.structuredContent.questions.0.correct', 'a');
+        $this->assertTrue($policy::hasEditScopes([...$base, 'mcp:assessment']));
+        $this->assertFalse($policy::hasAssessmentScopes([...$base, 'mcp:assessment', 'mcp:assessment']));
+        config()->set('mcp.oauth_assessment_rehearsal', false);
+        $rpc($token, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertForbidden();
+        $this->assertTrue($policy::permittedWriteScopes($base));
+        $this->assertDatabaseCount('mcp_assessment_owners', 1);
+    }
+
+    public function test_production_standalone_assessment_requires_six_scope_consent(): void
+    {
+        $this->configureEphemeralPassportKeys();
+        $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+        config()->set([
+            'mcp.oauth_redirect_uri' => $this->callback,
+            'mcp.oauth_provider_staging_enabled' => false,
+            'mcp.oauth_production_registration_enabled' => false,
+            'mcp.oauth_production_accepted' => true,
+            'mcp.oauth_production_enabled' => true,
+            'mcp.oauth_discovery_enabled' => true,
+            'mcp.oauth_draft_production_accepted' => true,
+            'mcp.oauth_native_course_production_accepted' => true,
+            'mcp.oauth_native_course_production_enabled' => true,
+            'mcp.oauth_draft_media_production_accepted' => true,
+            'mcp.oauth_draft_media_production_enabled' => true,
+            'mcp.oauth_draft_media_rehearsal' => false,
+            'mcp.oauth_curriculum_edit_production_accepted' => true,
+            'mcp.oauth_curriculum_edit_production_enabled' => true,
+            'filesystems.managed' => 'local',
+        ]);
+        $this->app->instance('env', 'production');
+        try {
+            $client = $this->setupClient();
+            config()->set([
+                'mcp.oauth_draft_writes_accepted' => true,
+                'mcp.oauth_draft_writes_enabled' => true,
+                'mcp.oauth_draft_scope_issuance_enabled' => true,
+                'mcp.oauth_native_course_builder_rehearsal' => false,
+                'mcp.oauth_curriculum_edit_rehearsal' => false,
+                'mcp.oauth_assessment_rehearsal' => false,
+            ]);
+            $policy = \App\Support\McpOAuthDraftScopePolicy::class;
+            $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+            $admin->forceFill(['two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'), 'two_factor_confirmed_at' => now()])->save();
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            $this->assertTrue($policy::mediaEnabled());
+            $this->assertTrue($policy::editEnabled());
+            $this->assertFalse($policy::assessmentEnabled());
+            $this->assertSame([], \App\Support\McpOAuthStandaloneAssessment::catalog());
+            $this->assertCount(22, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            config()->set('mcp.oauth_assessment_production_accepted', true);
+            $this->assertFalse($policy::assessmentEnabled());
+            config()->set('mcp.oauth_assessment_production_enabled', true);
+            config()->set('mcp.oauth_assessment_rehearsal', true);
+            $this->assertFalse($policy::assessmentEnabled());
+            config()->set('mcp.oauth_assessment_rehearsal', false);
+            $this->assertTrue($policy::assessmentEnabled());
+            $this->assertCount(7, \App\Support\McpOAuthStandaloneAssessment::catalog());
+            $this->assertCount(29, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $type = \App\Models\ExamType::create(['kind' => 'quiz', 'name' => 'OAuth QA quiz']);
+            $issue = function (array $scopes) use ($admin, $client): string {
+                $this->app['auth']->forgetGuards();
+                $this->withHeaders(['Authorization' => '']);
+                $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+                $verifier = str_repeat('E', 48);
+                $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+                $state = bin2hex(random_bytes(16));
+                $consent = $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+                    'scope' => implode(' ', $scopes), 'state' => $state, 'code_challenge' => $challenge,
+                ]))->assertOk();
+                if (in_array('mcp:assessment', $scopes, true)) {
+                    $consent->assertSee('Expanded standalone assessment access:');
+                }
+                if (in_array('mcp:assessment-guest', $scopes, true)) {
+                    $consent->assertSee('Expanded guest assessment settings:');
+                }
+                preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
+                preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
+                $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
+                    'auth_token' => $matches[1], '_token' => $csrf[1]])->assertRedirect();
+                parse_str(parse_url($approved->headers->get('Location'), PHP_URL_QUERY) ?? '', $parameters);
+                $this->assertSame($state, $parameters['state'] ?? null);
+                return $this->postJson('/api/mcp/oauth/token', [
+                    'grant_type' => 'authorization_code', 'client_id' => $client, 'code' => $parameters['code'],
+                    'redirect_uri' => $this->callback, 'code_verifier' => $verifier, 'resource' => config('mcp.oauth_resource'),
+                ])->assertOk()->json('access_token');
+            };
+            $rpc = function (string $token, string $name, array $args) {
+                $this->app['auth']->forgetGuards();
+                return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call',
+                    'params' => ['name' => $name, 'arguments' => $args],
+                ]);
+            };
+
+            $base = ['mcp:read', 'mcp:write', 'mcp:curriculum', 'mcp:media', 'mcp:curriculum-edit'];
+            $old = $issue($base);
+            $rpc($old, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertForbidden();
+            $this->travel(61)->seconds();
+            $token = $issue([...$base, 'mcp:assessment']);
+            $rpc($token, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertOk()
+                ->assertJsonPath('result.isError', false);
+            $payload = ['kind' => 'quiz', 'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'settings' => ['exam_type_id' => $type->id, 'title' => 'Signed quiz fixture', 'instructions' => 'Choose an answer.',
+                    'time_limit' => 20, 'passing_percent' => 80, 'attempt_limit' => 2, 'shuffle' => false,
+                    'gamified' => false, 'live_feedback' => true, 'content_language' => 'English', 'public_requirement' => 'QA only.'],
+                'questions' => [['format' => 'choice', 'prompt' => 'Choose a greeting.', 'a' => 'Hello', 'b' => 'Run',
+                    'c' => 'Jump', 'd' => 'Sleep', 'correct' => 'a', 'points' => 1, 'passage' => '', 'feedback' => 'Hello is a greeting.']]];
+            $rpc($old, 'create_draft_assessment', $payload)->assertForbidden();
+            $this->assertDatabaseCount('mcp_assessment_owners', 0);
+            $created = $rpc($token, 'create_draft_assessment', $payload)->assertOk()->assertJsonPath('result.isError', false)
+                ->json('result.structuredContent');
+            $this->assertSame('draft', $created['publication_status']);
+            $rpc($token, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.questions.0.correct', 'a');
+            $this->assertTrue($policy::hasEditScopes([...$base, 'mcp:assessment']));
+            $this->assertFalse($policy::hasAssessmentScopes([...$base, 'mcp:assessment', 'mcp:assessment']));
+            $this->assertTrue($policy::hasMediaScopes([...$base, 'mcp:assessment']));
+            $this->assertTrue($policy::hasCurriculumScopes([...$base, 'mcp:assessment']));
+            $this->assertTrue($policy::permittedWriteScopes(['mcp:read', 'mcp:write', 'mcp:assessment']));
+            $this->assertFalse($policy::permittedWriteScopes([...$base, 'mcp:assessment', '*']));
+            config()->set('mcp.oauth_assessment_production_enabled', false);
+            $this->assertFalse($policy::assessmentEnabled());
+            $rpc($token, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertForbidden();
+            $this->assertTrue($policy::permittedWriteScopes($base));
+            $this->assertTrue($policy::hasMediaScopes($base));
+            $this->assertTrue($policy::hasEditScopes($base));
+            $this->assertDatabaseCount('mcp_assessment_owners', 1);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
+    public function test_production_assessment_cover_upload_requires_seventh_scope(): void
+    {
+        $this->configureEphemeralPassportKeys();
+        $this->callback = 'https://chatgpt.com/connector/oauth/testcallback123';
+        config()->set([
+            'mcp.oauth_redirect_uri' => $this->callback,
+            'mcp.oauth_provider_staging_enabled' => false,
+            'mcp.oauth_production_registration_enabled' => false,
+            'mcp.oauth_production_accepted' => true,
+            'mcp.oauth_production_enabled' => true,
+            'mcp.oauth_discovery_enabled' => true,
+            'mcp.oauth_draft_production_accepted' => true,
+            'mcp.oauth_native_course_production_accepted' => true,
+            'mcp.oauth_native_course_production_enabled' => true,
+            'mcp.oauth_draft_media_production_accepted' => true,
+            'mcp.oauth_draft_media_production_enabled' => true,
+            'mcp.oauth_draft_media_rehearsal' => false,
+            'mcp.oauth_curriculum_edit_production_accepted' => true,
+            'mcp.oauth_curriculum_edit_production_enabled' => true,
+            'filesystems.managed' => 'local',
+        ]);
+        $this->app->instance('env', 'production');
+        try {
+            $client = $this->setupClient();
+            config()->set([
+                'mcp.oauth_draft_writes_accepted' => true,
+                'mcp.oauth_draft_writes_enabled' => true,
+                'mcp.oauth_draft_scope_issuance_enabled' => true,
+                'mcp.oauth_native_course_builder_rehearsal' => false,
+                'mcp.oauth_curriculum_edit_rehearsal' => false,
+                'mcp.oauth_assessment_rehearsal' => false,
+            ]);
+            $policy = \App\Support\McpOAuthDraftScopePolicy::class;
+            $admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email_verified_at' => now()]);
+            $admin->forceFill(['two_factor_secret' => encrypt('TEST-ONLY-BASE32-SECRET'), 'two_factor_confirmed_at' => now()])->save();
+            config()->set('mcp.oauth_draft_production_admin_id', (string) $admin->id);
+            $this->assertTrue($policy::mediaEnabled());
+            $this->assertTrue($policy::editEnabled());
+            $this->assertFalse($policy::assessmentEnabled());
+            $this->assertSame([], \App\Support\McpOAuthStandaloneAssessment::catalog());
+            $this->assertCount(22, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            config()->set('mcp.oauth_assessment_production_accepted', true);
+            $this->assertFalse($policy::assessmentEnabled());
+            config()->set('mcp.oauth_assessment_production_enabled', true);
+            config()->set('mcp.oauth_assessment_rehearsal', true);
+            $this->assertFalse($policy::assessmentEnabled());
+            config()->set('mcp.oauth_assessment_rehearsal', false);
+            $this->assertTrue($policy::assessmentEnabled());
+            $this->assertCount(7, \App\Support\McpOAuthStandaloneAssessment::catalog());
+            $this->assertCount(29, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            $this->assertFalse($policy::assessmentMediaEnabled());
+            config()->set('mcp.oauth_assessment_media_production_accepted', true);
+            $this->assertFalse($policy::assessmentMediaEnabled());
+            config()->set('mcp.oauth_assessment_media_production_enabled', true);
+            config()->set('mcp.oauth_assessment_media_rehearsal', true);
+            $this->assertFalse($policy::assessmentMediaEnabled());
+            config()->set('mcp.oauth_assessment_media_rehearsal', false);
+            $this->assertTrue($policy::assessmentMediaEnabled());
+            $this->assertCount(30, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $type = \App\Models\ExamType::create(['kind' => 'quiz', 'name' => 'OAuth QA quiz']);
+            $issue = function (array $scopes) use ($admin, $client): string {
+                $this->app['auth']->forgetGuards();
+                $this->withHeaders(['Authorization' => '']);
+                $this->actingAs($admin, 'web')->withSession(['auth.password_confirmed_at' => time()]);
+                $verifier = str_repeat('E', 48);
+                $challenge = rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
+                $state = bin2hex(random_bytes(16));
+                $consent = $this->get('/mcp/oauth/authorize?'.$this->oauthQuery($client, [
+                    'scope' => implode(' ', $scopes), 'state' => $state, 'code_challenge' => $challenge,
+                ]))->assertOk();
+                if (in_array('mcp:assessment', $scopes, true)) {
+                    $consent->assertSee('Expanded standalone assessment access:');
+                }
+                if (in_array('mcp:assessment-media', $scopes, true)) {
+                    $consent->assertSee('Expanded assessment cover upload access:');
+                }
+                if (in_array('mcp:assessment-advanced', $scopes, true)) {
+                    $consent->assertSee('Expanded advanced assessment access:');
+                }
+                if (in_array('mcp:assessment-audio', $scopes, true)) {
+                    $consent->assertSee('Expanded assessment audio upload access:');
+                }
+                if (in_array('mcp:assessment-guest', $scopes, true)) {
+                    $consent->assertSee('Expanded guest assessment settings:');
+                }
+                preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
+                preg_match('/name="_token" value="([^"]+)"/', $consent->getContent(), $csrf);
+                $approved = $this->post('/mcp/oauth/authorize', ['state' => $state, 'client_id' => $client,
+                    'auth_token' => $matches[1], '_token' => $csrf[1]])->assertRedirect();
+                parse_str(parse_url($approved->headers->get('Location'), PHP_URL_QUERY) ?? '', $parameters);
+                $this->assertSame($state, $parameters['state'] ?? null);
+                return $this->postJson('/api/mcp/oauth/token', [
+                    'grant_type' => 'authorization_code', 'client_id' => $client, 'code' => $parameters['code'],
+                    'redirect_uri' => $this->callback, 'code_verifier' => $verifier, 'resource' => config('mcp.oauth_resource'),
+                ])->assertOk()->json('access_token');
+            };
+            $rpc = function (string $token, string $name, array $args) {
+                $this->app['auth']->forgetGuards();
+                return $this->withToken($token)->postJson('/api/mcp/oauth', [
+                    'jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call',
+                    'params' => ['name' => $name, 'arguments' => $args],
+                ]);
+            };
+
+            $base = ['mcp:read', 'mcp:write', 'mcp:curriculum', 'mcp:media', 'mcp:curriculum-edit'];
+            $old = $issue($base);
+            $rpc($old, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertForbidden();
+            $this->travel(61)->seconds();
+            $token = $issue([...$base, 'mcp:assessment']);
+            $rpc($token, 'list_draft_assessment_types', ['kind' => 'quiz'])->assertOk()
+                ->assertJsonPath('result.isError', false);
+            $payload = ['kind' => 'quiz', 'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'settings' => ['exam_type_id' => $type->id, 'title' => 'Signed quiz fixture', 'instructions' => 'Choose an answer.',
+                    'time_limit' => 20, 'passing_percent' => 80, 'attempt_limit' => 2, 'shuffle' => false,
+                    'gamified' => false, 'live_feedback' => true, 'content_language' => 'English', 'public_requirement' => 'QA only.'],
+                'questions' => [['format' => 'choice', 'prompt' => 'Choose a greeting.', 'a' => 'Hello', 'b' => 'Run',
+                    'c' => 'Jump', 'd' => 'Sleep', 'correct' => 'a', 'points' => 1, 'passage' => '', 'feedback' => 'Hello is a greeting.']]];
+            $rpc($old, 'create_draft_assessment', $payload)->assertForbidden();
+            $this->assertDatabaseCount('mcp_assessment_owners', 0);
+            $created = $rpc($token, 'create_draft_assessment', $payload)->assertOk()->assertJsonPath('result.isError', false)
+                ->json('result.structuredContent');
+            $this->assertSame('draft', $created['publication_status']);
+            $rpc($token, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.questions.0.correct', 'a');
+            $this->assertTrue($policy::hasEditScopes([...$base, 'mcp:assessment']));
+            $this->assertFalse($policy::hasAssessmentScopes([...$base, 'mcp:assessment', 'mcp:assessment']));
+            $this->assertTrue($policy::hasMediaScopes([...$base, 'mcp:assessment']));
+            $this->assertTrue($policy::hasCurriculumScopes([...$base, 'mcp:assessment']));
+            $this->assertTrue($policy::permittedWriteScopes(['mcp:read', 'mcp:write', 'mcp:assessment']));
+            $this->assertFalse($policy::permittedWriteScopes([...$base, 'mcp:assessment', '*']));
+            $six = [...$base, 'mcp:assessment'];
+            $seven = [...$six, 'mcp:assessment-media'];
+            $this->assertTrue($policy::hasAssessmentMediaScopes($seven));
+            $this->assertTrue($policy::hasEditScopes($seven));
+            $this->assertTrue($policy::hasMediaScopes($seven));
+            $this->assertTrue($policy::hasAssessmentScopes($seven));
+            $this->assertFalse($policy::hasAssessmentMediaScopes($six));
+            foreach ([
+                [...$seven, '*'],
+                [...$seven, 'mcp:assessment-media'],
+                array_values(array_diff($seven, ['mcp:media'])),
+                array_values(array_diff($seven, ['mcp:assessment'])),
+            ] as $invalidScope) {
+                $this->assertFalse($policy::permittedWriteScopes($invalidScope));
+            }
+            $disk = \Illuminate\Support\Facades\Storage::fake('local');
+            $image = imagecreatetruecolor(1920, 1080);
+            ob_start();
+            imagepng($image);
+            $bytes = ob_get_clean();
+            $args = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(), 'expected_version' => $created['version'],
+                'image_base64' => base64_encode($bytes), 'alt' => 'Signed QA cover'];
+            $rpc($token, 'upload_draft_assessment_cover', $args)->assertForbidden();
+            $this->assertSame([], $disk->allFiles('editor-media'));
+            $this->travel(61)->seconds();
+            $fullToken = $issue($seven);
+            $uploaded = $rpc($fullToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.isError', false)->json('result.structuredContent');
+            $this->assertSame('draft', $uploaded['publication_status']);
+            $this->assertSame(1920, $uploaded['width']);
+            $rpc($fullToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($fullToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.featured_media_id', $uploaded['media_id']);
+            $this->assertCount(1, $disk->allFiles('editor-media'));
+            // Verify the new scope without weakening the signed seven-scope token.
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_production_accepted', true);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_production_enabled', true);
+            config()->set('mcp.oauth_assessment_advanced_rehearsal', true);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            config()->set('mcp.oauth_assessment_advanced_rehearsal', false);
+            $this->assertTrue($policy::assessmentAdvancedEnabled());
+            $this->assertCount(32, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $eight = [...$seven, 'mcp:assessment-advanced'];
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($eight));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($eight));
+            $this->assertTrue($policy::hasAssessmentScopes($eight));
+            $this->assertTrue($policy::hasEditScopes($eight));
+            $this->assertTrue($policy::hasMediaScopes($eight));
+            $this->assertTrue($policy::hasCurriculumScopes($eight));
+            $this->assertFalse($policy::hasAssessmentAdvancedScopes($seven));
+            foreach ([ [...$eight, '*'], [...$eight, 'mcp:assessment-advanced'],
+                array_values(array_diff($eight, ['mcp:assessment']))] as $invalidScope) {
+                $this->assertFalse($policy::permittedWriteScopes($invalidScope));
+            }
+            $advancedArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(), 'expected_version' => $uploaded['version'],
+                'questions' => [['format' => 'writing', 'prompt' => 'Write a greeting.', 'a' => '', 'b' => '', 'c' => '',
+                    'd' => '', 'correct' => '', 'points' => 5, 'feedback' => 'Polite greeting.', 'media_id' => 0]]];
+            $rpc($fullToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertForbidden();
+            $rpc($fullToken, 'list_draft_assessment_audio', ['limit' => 10])->assertForbidden();
+            $this->travel(61)->seconds();
+            $advancedToken = $issue($eight);
+            $rpc($advancedToken, 'list_draft_assessment_audio', ['limit' => 10])->assertOk()
+                ->assertJsonPath('result.structuredContent.items', []);
+            $advanced = $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->json('result.structuredContent');
+            $this->assertSame(2, $advanced['question_count']);
+            $this->assertSame(6, $advanced['total_points']);
+            $this->assertSame(1, $advanced['manual_question_count']);
+            $this->assertSame($uploaded['media_id'], $advanced['featured_media_id']);
+            $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($advancedToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_production_accepted', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_production_enabled', true);
+            config()->set('mcp.oauth_assessment_audio_rehearsal', true);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            config()->set('mcp.oauth_assessment_audio_rehearsal', false);
+            $this->assertTrue($policy::assessmentAudioEnabled());
+            $this->assertCount(33, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $nine = [...$eight, 'mcp:assessment-audio'];
+            $this->assertTrue($policy::hasAssessmentAudioScopes($nine));
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($nine));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($nine));
+            $this->assertTrue($policy::hasAssessmentScopes($nine));
+            $this->assertTrue($policy::hasEditScopes($nine));
+            $this->assertTrue($policy::hasMediaScopes($nine));
+            $this->assertTrue($policy::hasCurriculumScopes($nine));
+            $this->assertFalse($policy::hasAssessmentAudioScopes($eight));
+            foreach ([[...$nine, '*'], [...$nine, 'mcp:assessment-audio'],
+                array_values(array_diff($nine, ['mcp:assessment-advanced'])),
+                array_values(array_diff($nine, ['mcp:assessment']))] as $invalid) {
+                $this->assertFalse($policy::permittedWriteScopes($invalid));
+            }
+            $wav = 'RIFF'.pack('V', 16036).'WAVEfmt '.pack('VvvVVvv', 16, 1, 1, 8000, 16000, 2, 16)
+                .'data'.pack('V', 16000).str_repeat("\0", 16000);
+            $audioArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(), 'expected_version' => $advanced['version'],
+                'audio_base64' => base64_encode($wav), 'prompt' => 'QA listening fixture.', 'a' => 'Tone A', 'b' => 'Tone B',
+                'c' => '', 'd' => '', 'correct' => 'a', 'points' => 2, 'feedback' => 'QA only.'];
+            $rpc($advancedToken, 'upload_draft_assessment_audio', $audioArgs)->assertForbidden();
+            $this->assertCount(1, $disk->allFiles('editor-media'));
+            $this->travel(61)->seconds();
+            $audioToken = $issue($nine);
+            $audio = $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->json('result.structuredContent');
+            $this->assertSame(3, $audio['question_count']);
+            $this->assertSame(8, $audio['total_points']);
+            $this->assertSame(1000, $audio['duration_ms']);
+            $this->assertSame('audio/wav', $audio['mime']);
+            $this->assertSame($uploaded['media_id'], $audio['featured_media_id']);
+            $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($audioToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.questions.2.media_id', $audio['media_id']);
+            $rpc($audioToken, 'list_draft_assessment_audio', ['limit' => 10])->assertOk()
+                ->assertJsonPath('result.structuredContent.items.0.id', $audio['media_id']);
+            $rpc($audioToken, 'upload_draft_assessment_cover', $args)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $this->assertCount(2, $disk->allFiles('editor-media'));
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            config()->set([
+                'session.driver' => 'file',
+                'guest-assessment.production_accepted' => true,
+                'guest-assessment.production_enabled' => true,
+                'mcp.oauth_assessment_guest_production_accepted' => true,
+            ]);
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            config()->set('mcp.oauth_assessment_guest_production_enabled', true);
+            $this->assertTrue($policy::assessmentGuestEnabled());
+            $this->assertCount(34, \App\Http\Controllers\Api\McpOAuthDraftController::catalog());
+            Passport::tokensCan($policy::scopes());
+            $ten = [...$nine, 'mcp:assessment-guest'];
+            $this->assertTrue($policy::hasAssessmentGuestScopes($ten));
+            $this->assertTrue($policy::hasAssessmentAudioScopes($ten));
+            $this->assertTrue($policy::hasAssessmentAdvancedScopes($ten));
+            $this->assertTrue($policy::hasAssessmentMediaScopes($ten));
+            $this->assertTrue($policy::hasAssessmentScopes($ten));
+            $this->assertTrue($policy::hasEditScopes($ten));
+            $this->assertTrue($policy::hasMediaScopes($ten));
+            $this->assertTrue($policy::hasCurriculumScopes($ten));
+            $this->assertFalse($policy::hasAssessmentGuestScopes($nine));
+            $guestArgs = ['kind' => 'quiz', 'assessment_id' => $created['resource_id'],
+                'request_id' => (string) \Illuminate\Support\Str::uuid(),
+                'expected_version' => $audio['version'], 'guest_enabled' => true];
+            $rpc($audioToken, 'update_draft_assessment_guest_access', $guestArgs)->assertForbidden();
+            $this->travel(61)->seconds();
+            $guestToken = $issue($ten);
+            $guest = $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertOk()
+                ->assertJsonPath('result.isError', false)->assertJsonPath('result.structuredContent.guest_enabled', true)
+                ->assertJsonPath('result.structuredContent.publication_status', 'draft')->json('result.structuredContent');
+            $this->assertSame(3, $guest['question_count']);
+            $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            $rpc($guestToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.guest_enabled', true);
+            $rpc($guestToken, 'upload_draft_assessment_audio', $audioArgs)->assertOk()
+                ->assertJsonPath('result.structuredContent.replayed', true);
+            config()->set('mcp.oauth_assessment_guest_production_enabled', false);
+            $this->assertFalse($policy::assessmentGuestEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($nine));
+            $rpc($guestToken, 'update_draft_assessment_guest_access', $guestArgs)->assertForbidden();
+            $rpc($audioToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.guest_enabled', true);
+            config()->set('guest-assessment.production_enabled', false);
+            config()->set('mcp.oauth_assessment_audio_production_enabled', false);
+            $this->assertFalse($policy::assessmentAudioEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($eight));
+            $rpc($audioToken, 'upload_draft_assessment_audio', $audioArgs)->assertForbidden();
+            $rpc($advancedToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 3);
+            config()->set('mcp.oauth_assessment_advanced_production_enabled', false);
+            $this->assertFalse($policy::assessmentAdvancedEnabled());
+            $this->assertTrue($policy::permittedWriteScopes($seven));
+            $rpc($advancedToken, 'append_draft_advanced_assessment_questions', $advancedArgs)->assertForbidden();
+            $rpc($fullToken, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])
+                ->assertOk()->assertJsonPath('result.structuredContent.question_count', 3);
+            config()->set('mcp.oauth_assessment_media_production_enabled', false);
+            $this->assertFalse($policy::assessmentMediaEnabled());
+            $rpc($fullToken, 'upload_draft_assessment_cover', $args)->assertForbidden();
+            $this->assertTrue($policy::permittedWriteScopes($six));
+            $this->assertTrue($policy::hasMediaScopes($six));
+            $this->assertTrue($policy::hasEditScopes($six));
+            $rpc($token, 'get_draft_assessment', ['kind' => 'quiz', 'assessment_id' => $created['resource_id']])->assertOk();
+            $this->assertDatabaseCount('mcp_assessment_owners', 1);
+        } finally {
+            $this->app->instance('env', 'testing');
+        }
+    }
+
     public function test_curriculum_edit_requires_separate_signed_scope(): void
     {
         $this->exerciseCurriculumEdit(false);

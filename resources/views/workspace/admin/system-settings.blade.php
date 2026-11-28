@@ -55,8 +55,6 @@
 
         @if($section === 'security')
             @include('workspace.security-methods')
-        @elseif($section === 'social-auth')
-            @include('workspace.google-method')
         @endif
     </div>
 @endsection

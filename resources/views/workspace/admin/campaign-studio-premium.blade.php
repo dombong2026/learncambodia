@@ -3,32 +3,26 @@
 @section('workspace_compact', '1')
 @push('workspace_styles')
 <link rel="stylesheet" href="{{ asset('css/campaign-studio-premium.css') }}">
-<style>
-#cs-builder .cs-editor-toolbar button{display:inline-grid;place-items:center;width:34px;height:34px;padding:6px;border:1px solid transparent;border-radius:8px;transition:background .15s,color .15s}
-#cs-builder .cs-editor-toolbar button:hover{background:rgba(87,134,186,.16);border-color:rgba(116,150,187,.3)}
-#cs-builder .cs-editor-toolbar button svg{display:block;flex:none;width:17px;height:17px;stroke:currentColor}
-#cs-builder .cs-editor-toolbar button:focus-visible{outline:2px solid #f0c36c;outline-offset:2px}
-</style>
 @endpush
 @section('content')
 @php
-    $coverAsset = $campaign && $campaign->draft !== null
-        ? ($campaign->draft_cover_asset ?? '') : ($campaign?->cover_asset ?? '');
-    $coverKind = $campaign?->draft_kind ?? $campaign?->kind ?? 'quiz';
+    $studioCover = \Illuminate\Support\Facades\DB::table('homepage_campaign_cover')->where('id', 1)->first();
+    $coverAsset = $studioCover?->asset ?? '';
+    $coverKind = $studioCover?->kind ?? 'quiz';
 @endphp
 <section class="cs-shell" id="cs-builder"
     data-save-url="{{ route('admin.appearance.campaign.save') }}"
     data-upload-url="{{ route('admin.appearance.campaign.media') }}"
-    data-campaign-id="{{ $campaign?->id ?? '' }}"
+    data-cover-save-url="{{ route('admin.appearance.campaign.cover.save') }}"
     data-asset-base="{{ url('/campaign-media') }}"
     data-version="{{ (int) $version }}"
     data-cover-asset="{{ $coverAsset }}"
     data-cover-kind="{{ $coverKind }}">
     <div class="cs-topbar">
         <div class="cs-topbar-copy">
-            <a class="cs-back" href="{{ route('admin.appearance.edit', 'home') }}">← All campaigns</a>
+            <a class="cs-back" href="{{ route('admin.appearance.edit', 'home') }}">← Home appearance</a>
             <div class="cs-kicker">HOMEPAGE CAMPAIGN</div>
-            <h1>{{ $campaign ? 'Edit campaign' : 'Create a new campaign' }}</h1>
+            <h1>Campaign Builder</h1>
             <p>Build interactive quizzes and exams with modules, lessons, explanations, and feedback.</p>
         </div>
         <div class="cs-topbar-actions">
@@ -39,11 +33,6 @@
     </div>
 
     <div id="cs-alert" class="cs-alert" role="alert" hidden></div>
-    <div class="cs-card" style="margin-bottom:17px">
-        <label class="cs-label" for="cs-campaign-title">Campaign title</label>
-        <input id="cs-campaign-title" class="cs-input" maxlength="180" required value="{{ $campaign?->draft_title ?? $campaign?->title ?? '' }}" placeholder="e.g. English Grammar — 20 Questions">
-        <p class="cs-note">Create as many independent campaigns as you need. Each has its own cover, questions, and publication status.</p>
-    </div>
 
     <div class="cs-layout">
         <div class="cs-main">
@@ -72,7 +61,7 @@
                     <div><span class="cs-kicker">CAMPAIGN MEDIA</span><h2>Featured cover</h2></div>
                     <span class="cs-chip">1920 × 1080</span>
                 </div>
-                <p class="cs-subtext">This cover represents this Quiz or Exam campaign, not an individual lesson.</p>
+                <p class="cs-subtext">This cover represents the whole Quiz or Exam campaign, not an individual lesson.</p>
                 <div id="cs-cover-preview" class="cs-cover-preview" aria-label="Campaign cover preview">
                     <div id="cs-cover-placeholder" class="cs-cover-placeholder">
                         <span aria-hidden="true">▧</span>
@@ -97,7 +86,7 @@
                 <p class="cs-subtext">Save your work privately or publish it directly as administrator. Existing review workflows elsewhere are unchanged.</p>
                 <div class="cs-publication-state">
                     <span class="cs-dot" aria-hidden="true"></span>
-                    <span>{{ $hasDraft ? 'Unpublished changes available' : ($publishedAt ? 'Published campaign' : 'Not published yet') }}</span>
+                    <span>{{ $hasDraft ? 'Unpublished draft available' : ($publishedAt ? 'Published campaign' : 'Not published yet') }}</span>
                 </div>
                 <button class="cs-btn cs-btn-primary cs-full" type="button" id="cs-publish">Publish campaign</button>
                 <button class="cs-btn cs-btn-outline cs-full" type="button" id="cs-save-draft">Save draft</button>
@@ -113,5 +102,5 @@
 
     <script type="application/json" id="cs-initial-rows">@json($rows ?? [])</script>
 </section>
-<script defer src="{{ asset('js/campaign-studio-premium.js') }}?v=multi-20261123"></script>
+<script defer src="{{ asset('js/campaign-studio-premium.js') }}"></script>
 @endsection

@@ -36,6 +36,7 @@
         <x-learning-detail-metadata :record="$article" kind="article" />
     </div>
     <aside class="min-w-0 space-y-5">
+        @include('promo-player.placement', ['placement' => 'sidebar'])
         @if(!$article->body_html && count($paragraphs) > 1)
             <div class="rounded-3xl border border-slate-200 bg-[#f5f7fa] p-6 dark:border-slate-700 dark:bg-[#19395a]">
                 <h2 class="text-lg font-black text-[#10345d] dark:text-white">{{ $a['outline_heading'] }}</h2>

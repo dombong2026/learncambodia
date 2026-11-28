@@ -14,6 +14,18 @@
         @case('tiktok')
             <path d="M16.6 0c.38 3.14 2.17 5.06 5.27 5.26v3.59a9.82 9.82 0 0 1-5.24-1.63v7.82c0 9.93-10.83 13.04-15.15 5.92-2.78-4.58-1.06-12.63 7.92-12.95v3.8c-.67.11-1.38.27-2.04.5-1.98.68-3.1 1.94-2.8 4.18.56 4.28 8.4 5.54 7.75-2.82V0Z" transform="translate(1 1) scale(.91)"/>
             @break
+        @case('telegram')
+            <path d="M22 3 2 11l7.3 2.5L12 21l4-5.4L22 3Z M9.3 13.5 22 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+            @break
+        @case('whatsapp')
+            <path d="M20.4 11.6a8.4 8.4 0 0 1-12.2 7.5L3 21l1.8-5.1a8.4 8.4 0 1 1 15.6-4.3Z M8.8 8c-.3.2-.9 1-.7 1.9.4 2.1 3.6 5 5.7 5.4.8.2 1.7-.3 2-.7l-1.2-.9.9.9-1.9-1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            @break
+        @case('x')
+            <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.64 7.584H.47l8.6-9.835L0 1.154h7.594l5.243 6.932zm-1.29 19.492h2.039L6.488 3.24H4.3z"/>
+            @break
+        @case('link')
+            <path d="m10 13 4-4m-6 7-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m5 0 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            @break
         @case('share')
             <path d="m7.5 10.75 9-5M7.5 13.25l9 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
             <circle cx="5" cy="12" r="2.75" fill="none" stroke="currentColor" stroke-width="1.75"/>

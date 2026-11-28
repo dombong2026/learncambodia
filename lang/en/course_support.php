@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'privacy' => 'Only you and :name can view this private course conversation.',
+    'conversation' => 'Private course conversation',
+    'history' => 'Conversation history',
+    'prompt' => 'Ask a question, request a resource, or describe an issue.',
+    'external_channels' => 'Other support channels',
+    'external_notice' => 'These links open external apps.',
+    'settings' => 'Course support settings',
+    'settings_intro' => 'Private chat is available to enrolled learners. Choose which contact links to share with them for this course.',
+    'show_channel' => 'Show to enrolled learners',
+    'contact_link' => 'Contact link',
+    'invalid_url' => 'Enter a direct :platform contact link such as :example.',
+    'saved' => 'Course support settings saved.',
+    'save' => 'Save support settings',
+    'sent' => 'Message sent.',
+    'notification_reply' => 'Your instructor replied to a private course message.',
+    'notification_message' => 'New private course support message.',
+    'assigned_courses' => 'My Assigned Courses',
+    'back_course' => 'Back to course',
+    'inbox' => 'Course support inbox',
+    'empty_inbox' => 'No private course conversations yet.',
+    'open' => 'Open',
+    'reply' => 'Your reply',
+    'send_reply' => 'Send reply',
+];

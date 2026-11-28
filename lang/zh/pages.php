@@ -1,6 +1,17 @@
 <?php
 
 return [
+    'practice_exams' => '模拟考试',
+    'practice_quizzes' => '练习测验',
+    'view_all_quizzes' => '查看全部测验',
+    'view_all_courses' => '查看全部课程',
+    'view_all_articles' => '查看全部文章',
+    'home_hero_title' => '英语课程与考试练习',
+    'home_hero_intro' => '找到适合自己的英语水平，按自己的节奏提升英语能力。',
+    'browse_exams' => '浏览考试',
+    'view_all_exams' => '查看全部考试',
+    'view_exam' => '查看考试',
+    'cefr_guide' => 'CEFR 等级指南',
     'home_title' => '探索学习 | Learn Cambodia',
     'home_intro' => '探索已发布的课程、学习路径与独立审核的教师资料。',
     'home_eyebrow' => 'Learn Cambodia · 让学习触手可及',

@@ -129,7 +129,13 @@ class CourseRevisionWorkflowTest extends TestCase
 
         $this->actingAs($student)
             ->get('/account/enrollments/'.$originalEnrollment->id)
-            ->assertOk()->assertSee('Learn greetings');
+            ->assertRedirect(route('account.lessons.watch', [
+                $originalEnrollment, $original->lessons()->sole()
+            ]));
+
+        $this->get(route('account.lessons.watch', [
+            $originalEnrollment, $original->lessons()->sole()
+        ]))->assertOk()->assertSee('Learn greetings');
 
         $this->post('/account/courses/'.$original->id.'/enroll')
             ->assertNotFound();

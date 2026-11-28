@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 final class IssuedCertificate extends Model
 {
-    protected $fillable = ['course_enrollment_id', 'certificate_template_id', 'issued_by', 'code', 'snapshot', 'revoked_at'];
+    protected $fillable = ['course_enrollment_id', 'certificate_template_id', 'student_id', 'award_key', 'issued_by', 'code', 'snapshot', 'revoked_at'];
 
     protected function casts(): array
     {

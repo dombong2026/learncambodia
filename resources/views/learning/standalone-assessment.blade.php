@@ -1,6 +1,11 @@
 @extends('layouts.public')
+@include('partials.assessment-social-image')
 @section('canonical', e($exam->publicUrl()))
 @section('title', $exam->title)
+@section('learning-reading', 'enabled')
+@section('learning-share')
+    <x-public-share :url="$exam->publicUrl()" :title="$exam->title" class="public-share--toolbar" />
+@endsection
 @section('content')
 @php
     $isQuiz = $exam->kind === 'quiz';
@@ -13,7 +18,8 @@
     $canStart = $quote['model'] === 'free' || ($access?->status === 'approved' && $access->matches($quote));
     $active = $history?->first(fn ($attempt) => !$attempt->submitted_at && $attempt->expires_at->isFuture());
 @endphp
-<x-detail-hero :title="$exam->title" :entry="$isQuiz ? $exam : null" :icon="$isQuiz ? 'list-check' : 'clipboard-check'" :label="__('detail.'.$label)">
+@section('study_catalog', $isQuiz ? 'assessments.quizzes' : 'assessments.exams')
+<x-detail-hero :title="$exam->title" :entry="$exam" :icon="null" :label="__('detail.'.$label)">
     <x-slot:meta>
         @if($exam->type)<li>{{ $exam->type->name }}</li>@endif
         <li>{{ trans_choice('detail.minutes', $exam->time_limit) }}</li>
@@ -25,10 +31,22 @@
         @if(session('status'))<p class="mt-3 text-sm text-[#d1e0ef]" role="status">{{ session('status') }}</p>@endif
         @if($errors->any())<p class="mt-3 text-sm text-red-200" role="alert">{{ $errors->first() }}</p>@endif
         @guest
+            @if(\App\Support\GuestAssessment::allowed($exam))
+                <form method="post" action="{{ route('guest-assessments.start', $exam) }}" class="mt-5">
+                    @csrf
+                    <button class="w-full rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]">Start as guest</button>
+                    <p class="mt-2 text-xs">No account required. Keep this browser session to resume or view results. Attempt limits apply to this session.</p>
+                </form>
+                @if($identity = \App\Support\GuestAssessment::identity(request()))
+                    @foreach(\App\Models\ExamAttempt::where('course_exam_id', $exam->id)->whereNull('student_id')->whereNull('course_enrollment_id')->where('guest_identity_hash', $identity)->latest('id')->limit(10)->get() as $past)
+                        <a class="mt-2 block text-xs font-bold underline" href="{{ route('guest-assessments.show', $past) }}">Guest attempt {{ $loop->iteration }} · {{ $past->submitted_at ? 'Results' : ($past->expires_at->isFuture() ? 'Continue' : 'Expired') }}</a>
+                    @endforeach
+                @endif
+            @endif
             <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ \App\Support\ReadingReturn::authUrl(request(), 'login') }}">Sign in as a learner to take this {{ $label }}</a>
         @elseif(auth()->user()->role === \App\Models\User::ROLE_STUDENT)
             @if($active)
-                <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route('account.assessment-attempts.show', $active) }}">Continue {{ $label }}</a>
+                <a class="mt-5 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route($active->resultRoute(), $active) }}">Continue {{ $label }}</a>
             @elseif($canStart && $history->count() < $exam->attempt_limit)
                 <form method="post" action="{{ route('account.assessment-attempts.start', $exam) }}" class="mt-5">
                     @csrf
@@ -49,7 +67,11 @@
         @else
             <p class="mt-4 text-sm leading-6 text-[#d1e0ef]">Students take assessments from their learner accounts.</p>
         @endguest
-        <x-detail-share :url="$exam->publicUrl()" :title="$exam->title" />
+
+        <section class="mt-5 border-t border-white/20 pt-4" aria-labelledby="assessment-getting-started">
+            <h3 id="assessment-getting-started" class="text-base font-bold">{{ __('pages.study_process') }}</h3>
+            <p class="mt-2 text-sm leading-6 text-[#d1e0ef]">{{ __('detail.assessment_getting_started') }}</p>
+        </section>
     </x-slot:rail>
 </x-detail-hero>
 
@@ -65,7 +87,7 @@
                 <h2 class="text-xl font-black text-[#12355e] dark:text-white">Your attempts</h2>
                 <ul class="mt-3 space-y-2 text-sm">
                     @foreach($history as $past)
-                        <li><a class="font-bold underline" href="{{ route('account.assessment-attempts.show', $past) }}">Attempt {{ $history->count() - $loop->index }}</a>
+                        <li><a class="font-bold underline" href="{{ route($past->resultRoute(), $past) }}">Attempt {{ $history->count() - $loop->index }}</a>
                             · {{ $past->submitted_at ? ($past->score === null ? 'Submitted' : $past->score.'%') : ($past->expires_at->isFuture() ? 'In progress' : 'Expired') }}</li>
                     @endforeach
                 </ul>
@@ -73,10 +95,6 @@
         @endif
     </div>
     <aside class="min-w-0 space-y-5">
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-[#152e50]">
-            <h2 class="text-xl font-black text-[#12355e] dark:text-white">{{ __('pages.study_process') }}</h2>
-            <p class="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-200">{{ __('detail.assessment_getting_started') }}</p>
-        </section>
         <section class="rounded-3xl bg-[#0c305e] p-6 text-white">
             <h2 class="text-lg font-black">{{ __('pages.explore_related') }}</h2>
             <a class="mt-4 block rounded-xl bg-[#efbe62] px-5 py-3 text-center text-xs font-black text-[#0b2f5c] hover:bg-[#ffdc91]" href="{{ route($isQuiz ? 'assessments.quizzes' : 'assessments.exams') }}">{{ __($isQuiz ? 'detail.browse_quizzes' : 'detail.browse_exams') }}</a>

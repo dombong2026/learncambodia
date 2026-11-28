@@ -84,23 +84,140 @@ final class LessonQuizAndCurriculumOrderTest extends TestCase
         $study = route('account.enrollments.show', $enrollment);
         $this->actingAs(User::factory()->create(['role' => 'student']))->post($attempt, ['answers' => ['b']])->assertNotFound();
         $this->actingAs($student);
-        $this->get($watch)->assertOk()->assertSeeInOrder(['Read this before answering.', 'Lesson quiz', $question['prompt']])
-            ->assertDontSee('Correct answer')->assertDontSee($question['feedback']);
-        $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()->assertDontSee('Lesson quiz');
-        $this->post($attempt, ['answers' => ['c']])->assertRedirect($watch.'#lesson-quiz-'.$lesson->id);
-        $this->get($watch)->assertSee('Choose one answer for each question.');
-        $this->followingRedirects()->post($attempt, ['answers' => ['b'], 'view' => 'curriculum'])
-            ->assertOk()->assertSee('1 of 1 correct.')->assertSee($question['feedback']);
-        $this->post($attempt, ['answers' => ['a'], 'view' => 'curriculum'])
-            ->assertRedirect($study.'#lesson-quiz-'.$lesson->id);
-        $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))->assertOk()
-            ->assertDontSee('0 of 1 correct.');
-        $this->get($study)->assertSee('0 of 1 correct.');
+
+        $quizStart = route('account.lessons.watch', [
+            $enrollment, $lesson, 'viewer' => 'quiz', 'start' => 1,
+        ]);
+
+        $this->get($watch)->assertOk()
+            ->assertSee('Read this before answering.')
+            ->assertDontSee($question['feedback']);
+
+        $this->get($quizStart)->assertOk()
+            ->assertSee(__('focused_learning.quiz'))
+            ->assertSee($question['prompt'])
+            ->assertDontSee('Correct answer')
+            ->assertDontSee($question['feedback']);
+
+        $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))
+            ->assertOk()
+            ->assertDontSee($question['prompt'])
+            ->assertDontSee($question['feedback']);
+
+        $this->post(
+            route('account.lessons.quiz', [$enrollment, $duplicate]),
+            ['answers' => ['b']]
+        )->assertNotFound();
+
+        $invalidResponse = $this->post($attempt, ['answers' => ['c']]);
+
+        $invalidResponse
+            ->assertRedirect($quizStart.'#lesson-quiz-'.$lesson->id)
+            ->assertSessionHasErrors([
+                'answers' => __('focused_learning.answer_every_question'),
+            ]);
+
+        $sessionCookieName = config('session.cookie');
+
+        $sessionCookie = $invalidResponse->getCookie(
+            $sessionCookieName, false
+        );
+
+        $this->assertNotNull(
+            $sessionCookie, 'The quiz redirect must retain a browser session.'
+        );
+
+        $this->withUnencryptedCookie(
+            $sessionCookieName, $sessionCookie->getValue()
+        );
+
+        $this->assertSame(
+            0, $enrollment->lessonQuizAttempts()->count()
+        );
+
+        $this->get($quizStart)
+            ->assertOk()
+            ->assertSee('role="alert"', false)
+            ->assertSee(__('focused_learning.answer_every_question'))
+            ->assertDontSee($question['feedback']);
+
+        $correctResponse = $this->post($attempt, ['answers' => ['b']]);
+
+        $correctAttempt = $enrollment->lessonQuizAttempts()
+            ->where('lesson_id', $lesson->id)->sole();
+
+        $this->assertSame(1, (int) $correctAttempt->correct_count);
+
+        $correctUrl = route('account.lessons.watch', [
+            $enrollment, $lesson, 'viewer' => 'quiz',
+            'attempt' => $correctAttempt->id,
+        ]);
+
+        $correctResponse->assertRedirect(
+            $correctUrl.'#lesson-quiz-'.$lesson->id
+        );
+
+        $this->get($correctUrl)->assertOk()
+            ->assertSee(__('focused_learning.quiz_score', [
+                'score' => 1, 'total' => 1,
+            ]))
+            ->assertSee($question['feedback']);
+
+        $incorrectResponse = $this->post($attempt, ['answers' => ['a']]);
+
+        $incorrectAttempt = $enrollment->lessonQuizAttempts()
+            ->where('lesson_id', $lesson->id)
+            ->whereKeyNot($correctAttempt->id)->sole();
+
+        $this->assertSame(0, (int) $incorrectAttempt->correct_count);
+
+        $incorrectUrl = route('account.lessons.watch', [
+            $enrollment, $lesson, 'viewer' => 'quiz',
+            'attempt' => $incorrectAttempt->id,
+        ]);
+
+        $incorrectResponse->assertRedirect(
+            $incorrectUrl.'#lesson-quiz-'.$lesson->id
+        );
+
+        $this->get($incorrectUrl)->assertOk()
+            ->assertSee(__('focused_learning.quiz_score', [
+                'score' => 0, 'total' => 1,
+            ]));
+
+        $this->get(route('account.lessons.watch', [$enrollment, $duplicate]))
+            ->assertOk()
+            ->assertDontSee(__('focused_learning.quiz_score', [
+                'score' => 0, 'total' => 1,
+            ]))
+            ->assertDontSee($question['feedback']);
+
         $otherLearner = User::factory()->create(['role' => 'student']);
         $otherEnrollment = CourseEnrollment::create(['course_id' => $course->id,
             'student_id' => $otherLearner->id, 'status' => 'approved']);
-        $this->actingAs($otherLearner)->get(route('account.lessons.watch', [$otherEnrollment, $lesson]))
+        $this->actingAs($otherLearner)->get(route('account.lessons.watch', [
+            $otherEnrollment, $lesson, 'viewer' => 'quiz', 'start' => 1,
+        ]))
             ->assertOk()->assertDontSee($question['feedback'])->assertDontSee('0 of 1 correct.');
+        $this->get(route('account.lessons.watch', [
+            $otherEnrollment, $lesson, 'viewer' => 'quiz',
+            'attempt' => $correctAttempt->id,
+        ]))->assertNotFound();
+
+        $this->get(route('account.lessons.watch', [
+            $otherEnrollment, $lesson, 'viewer' => 'quiz',
+            'retry' => $incorrectAttempt->id,
+        ]))->assertNotFound();
+
+        $this->post(
+            route('account.lessons.quiz', [$otherEnrollment, $lesson]),
+            ['answers' => ['b'], 'retry' => $incorrectAttempt->id]
+        )->assertNotFound();
+
+        $this->assertSame(
+            0, $otherEnrollment->lessonQuizAttempts()->count()
+        );
+
         $this->actingAs($student);
         $enrollment->update(['status' => 'rejected']);
         $this->post($attempt, ['answers' => ['b']])->assertForbidden();

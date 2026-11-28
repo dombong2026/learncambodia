@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 final class WorkspaceMenu
@@ -11,12 +12,12 @@ final class WorkspaceMenu
      * retain their configuration for future releases but do not appear as
      * clickable promises in the production workspace.
      */
-    public static function groups(string $role): array
+    public static function groups(string $role, ?User $viewer = null): array
     {
         $sections = collect(config('workspaces.'.$role, []))->keyBy('key');
         $definitions = match ($role) {
             'admin' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['content','Content','content-folder',['content']],
                 ['appearance','Appearance','palette',['appearance']],
                 ['page-manager','Page Manager','files',['page-manager']],
@@ -32,18 +33,18 @@ final class WorkspaceMenu
                 ['system-settings','System Settings','settings',['system-settings']],
             ],
             'student' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['learning','My Learning','book',['learning']],
                 ['coursework','Assignments & Grades','graduation',['homework','assessments']],
                 ['support','Support','headphones',['support']],
             ],
             'instructor' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['teaching','My Teaching','book',['teaching']],
                 ['grading','Assignments & Grades','graduation',['assessment']],
             ],
             'developer' => [
-                ['overview','Overview','layout',['dashboard']],
+                ['overview','Dashboard','layout',['dashboard']],
                 ['api','API & Credentials','code',['api-center','credentials']],
                 ['operations','Operations','activity',['operations']],
             ],
@@ -76,10 +77,27 @@ final class WorkspaceMenu
                     'icon'=>'id-card','section_title'=>'People & Accounts',
                 ];
             }
-            // Keep the admin MCP entry visible even when the live server
-            // has an older cached workspaces config. Never duplicate it.
+            if ($role === 'admin' && $key === 'content' && Route::has('admin.library.index')) {
+                $items[] = [
+                    'key' => 'student-library', 'label' => 'Library Manager',
+                    'route' => 'admin.library.index', 'icon' => 'library-big', 'section_title' => 'Content',
+                ];
+            }
+            if ($role === 'student' && $key === 'learning' && Route::has('account.library.index')) {
+                $items[] = [
+                    'key' => 'my-library', 'label' => 'My Library',
+                    'route' => 'account.library.index', 'icon' => 'library', 'section_title' => 'My Learning',
+                ];
+            }
+            if ($role === 'admin' && $viewer !== null) {
+                $items = array_values(array_filter($items, fn (array $item) => AdminAccess::allowsRoute($viewer, $item['route'])));
+            }
+            // Preserve the MCP link when production caches an older workspaces config.
             if ($role === 'admin' && $key === 'system-settings'
                 && Route::has('admin.system-settings.mcp')
+                && ($viewer === null || AdminAccess::allowsRoute(
+                    $viewer, 'admin.system-settings.mcp'
+                ))
                 && !collect($items)->contains(fn (array $item): bool =>
                     ($item['route'] ?? null) === 'admin.system-settings.mcp')) {
                 $items[] = [
@@ -159,13 +177,17 @@ final class WorkspaceMenu
             'system-settings/branding' => 'brand-identity',
             'system-settings/security' => 'shield-check',
             'system-settings/social-auth' => 'log-in',
-            'system-settings/cloud-storage' => 'cloud-storage',
             'system-settings/mcp' => 'terminal',
+            'system-settings/openai' => 'braces',
+            'system-settings/smtp' => 'smtp-envelope',
+            'system-settings/cloud-storage' => 'cloud-storage',
+            'system-settings/player' => 'headphones',
             'academic-quality/gradebook' => 'chart-line',
             'academic-quality/evidence' => 'badge-check',
             'learning/categories' => 'compass',
             'learning/courses' => 'library-big',
             'learning/progress' => 'chart-pie',
+            'learning/certificates' => 'certificate-issued',
             'learning/cefr' => 'award',
             'learning/course-catalog' => 'book-marked',
             'learning/saved-courses' => 'bookmark-check',
@@ -241,17 +263,28 @@ final class WorkspaceMenu
         };
     }
 
-    public static function topAction(string $role): array
+    public static function topAction(string $role): ?array
     {
+        if ($role === 'admin') {
+            $action = match (Route::currentRouteName()) {
+                'admin.users.index' => ['Add User', 'admin.users.create'],
+                'admin.courses.index' => [__('workspace.create_course'), 'admin.course-builder.create'],
+                'admin.categories.index' => ['Create Category', 'admin.categories.create'],
+                'admin.instructors.index' => ['Assign instructor', 'admin.instructors.index', '#assign-instructor'],
+                default => null,
+            };
+
+            return $action === null ? null : ['label' => $action[0], 'url' => route($action[1]).($action[2] ?? '')];
+        }
+
         return match ($role) {
-            'admin' => ['label' => __('workspace.create_course'), 'url' => route('admin.course-builder.create')],
             'instructor' => ['label' => __('workspace.my_courses'), 'url' => route('instructor.courses.index')],
             'developer' => ['label' => __('workspace.access_tokens'), 'url' => route('developer.tokens.index')],
             default => ['label' => __('workspace.my_learning'), 'url' => route('account.enrollments.index')],
         };
     }
 
-    public static function mobileItems(string $role): array
+    public static function mobileItems(string $role, ?User $viewer = null): array
     {
         $links = match ($role) {
             'admin' => [
@@ -289,7 +322,8 @@ final class WorkspaceMenu
             'url' => route($item[0]),
             'icon' => $item[2],
             'active' => Route::currentRouteName() === $item[0],
-        ], array_filter($links, fn ($item) => Route::has($item[0])));
+        ], array_filter($links, fn ($item) => Route::has($item[0])
+            && ($role !== 'admin' || $viewer === null || AdminAccess::allowsRoute($viewer, $item[0]))));
     }
 
     public static function trail(string $role, string $heading): array

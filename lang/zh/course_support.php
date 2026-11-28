@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'privacy' => '只有您和 :name 可以查看这段课程私聊。',
+    'conversation' => '课程私聊',
+    'history' => '对话记录',
+    'prompt' => '提出问题、申请学习资料或描述遇到的困难。',
+    'external_channels' => '其他支持渠道',
+    'external_notice' => '这些链接会打开外部应用。',
+    'settings' => '课程支持设置',
+    'settings_intro' => '已报名的学员可以使用私聊。请选择要向本课程学员显示的联系链接。',
+    'show_channel' => '向已报名的学员显示',
+    'contact_link' => '联系链接',
+    'invalid_url' => '请输入 :platform 的直接联系链接，例如 :example。',
+    'saved' => '课程支持设置已保存。',
+    'save' => '保存支持设置',
+    'sent' => '消息已发送。',
+    'notification_reply' => '您的教师回复了一条课程私信。',
+    'notification_message' => '您收到一条新的课程支持私信。',
+    'assigned_courses' => '我负责的课程',
+    'back_course' => '返回课程',
+    'inbox' => '课程支持收件箱',
+    'empty_inbox' => '暂无课程私聊。',
+    'open' => '打开',
+    'reply' => '您的回复',
+    'send_reply' => '发送回复',
+];

@@ -19,7 +19,7 @@ return [
     'sign_out' => 'Sign out',
     'my_account' => 'My account',
     'groups' => [
-        'overview' => 'Overview',
+        'overview' => 'Dashboard',
         'content' => 'Content',
         'appearance' => 'Appearance',
         'programs' => 'Academic Programs',
@@ -35,6 +35,8 @@ return [
         'operations' => 'Operations',
     ],
     'labels' => [
+        'Exams' => 'Exams',
+        'Quizzes' => 'Quizzes',
         'Saved Courses' => 'Saved Courses',
         'Overview' => 'Overview',
         'All Courses' => 'All Courses',

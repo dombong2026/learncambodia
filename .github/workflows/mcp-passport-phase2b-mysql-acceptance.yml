@@ -65,6 +65,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           php artisan test --filter=McpOAuthPassportTest
+          php artisan test --filter=McpOAuthStandaloneAssessmentTest
           php artisan test --filter=McpOAuthDiscoveryTest
           php artisan test --filter=McpBrowserBridgeTest
           php artisan test --filter=McpManagementTest

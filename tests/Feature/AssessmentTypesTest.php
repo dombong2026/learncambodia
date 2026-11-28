@@ -6,12 +6,50 @@ use App\Models\CourseExam;
 use App\Models\ExamType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 final class AssessmentTypesTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase {
+        refreshDatabase as private refreshTransactionalDatabase;
+    }
+
+    public function refreshDatabase(): void
+    {
+        if (
+            $this->name() !==
+                'test_migration_preserves_existing_exam_and_quiz_assignments'
+            || DB::getDriverName() !== 'mysql'
+        ) {
+            $this->refreshTransactionalDatabase();
+
+            return;
+        }
+
+        // MySQL DDL implicitly commits transactions.
+        // This migration test therefore requires a fresh
+        // schema without RefreshDatabase's transaction.
+        $this->assertTrue(app()->environment('testing'));
+        $this->assertSame(
+            0, DB::connection()->transactionLevel()
+        );
+
+        // Force the following transactional test to
+        // rebuild the schema rather than reuse our data.
+        RefreshDatabaseState::$migrated = false;
+
+        $this->assertSame(
+            0,
+            Artisan::call('migrate:fresh', ['--force' => true])
+        );
+
+        $this->assertSame(
+            0, DB::connection()->transactionLevel()
+        );
+    }
 
     public function test_exam_and_quiz_types_have_separate_pages_and_builders(): void
     {
@@ -48,8 +86,14 @@ final class AssessmentTypesTest extends TestCase
 
     public function test_migration_preserves_existing_exam_and_quiz_assignments(): void
     {
-        if (DB::getDriverName() !== 'sqlite') {
-            $this->markTestSkipped('This test changes the SQLite test schema inside a transaction.');
+        $this->assertContains(
+            DB::getDriverName(), ['sqlite', 'mysql']
+        );
+
+        if (DB::getDriverName() === 'mysql') {
+            $this->assertSame(
+                0, DB::connection()->transactionLevel()
+            );
         }
         $migration = require database_path('migrations/2026_11_17_000040_separate_assessment_types.php');
         $migration->down();

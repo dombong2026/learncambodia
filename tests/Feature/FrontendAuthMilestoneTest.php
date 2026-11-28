@@ -131,57 +131,192 @@ class FrontendAuthMilestoneTest extends TestCase
     public function test_public_course_actions_follow_enrollment_and_learning_progress(): void
     {
         $course = $this->publishedCourse();
-        $student = User::factory()->create(['password' => 'CourseTestPassword123!']);
+
+        $course->forceFill([
+            'pricing' => [
+                'model' => 'paid',
+                'strategy' => 'fixed',
+                'currency' => 'USD',
+                'base_minor' => 1000,
+            ],
+        ])->save();
+
+        $student = User::factory()->create([
+            'role' => 'student',
+            'password' => 'CourseTestPassword123!',
+        ]);
+
         $path = '/courses/'.$course->slug.'?lang=en';
         $signIn = route('login', ['next' => $path]);
 
-        $this->get($path)->assertOk()
+        $guest = $this->get($path)->assertOk()
             ->assertSee('href="'.e($signIn).'"', false)
-            ->assertSee('>Enroll</a>', false)
-            ->assertSee('data-share-url="'.route('courses.show', $course->getRouteKey()).'"', false)
+            ->assertSee(trans('detail.enroll', [], 'en'))
+            ->assertSee('data-public-share-url', false)
             ->assertDontSee('line-clamp-2 text-sm leading-6', false);
 
+        $document = new \DOMDocument();
+        @$document->loadHTML($guest->getContent(), LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+
+        $share = $xpath->query('//input[@data-public-share-url]');
+
+        $this->assertCount(1, $share);
+        $this->assertTrue($share->item(0)->hasAttribute('readonly'));
+        $this->assertSame('url', $share->item(0)->getAttribute('type'));
+        $this->assertSame(
+            route('courses.show', [
+                $course->getRouteKey(), 'lang' => 'en',
+            ]),
+            $share->item(0)->getAttribute('value')
+        );
+        $this->assertSame(
+            $course->title,
+            $share->item(0)->getAttribute('data-title')
+        );
+
+        foreach (['km', 'zh'] as $locale) {
+            $localized = $this->get(
+                '/courses/'.$course->slug.'?lang='.$locale
+            )->assertOk()
+                ->assertSee('lang="'.$locale.'"', false);
+
+            $localizedDocument = new \DOMDocument();
+            @$localizedDocument->loadHTML(
+                $localized->getContent(), LIBXML_NONET
+            );
+
+            $localizedXPath = new \DOMXPath($localizedDocument);
+            $localizedShare = $localizedXPath->query(
+                '//input[@data-public-share-url]'
+            );
+
+            $this->assertCount(1, $localizedShare);
+            $this->assertTrue(
+                $localizedShare->item(0)->hasAttribute('readonly')
+            );
+
+            $this->assertSame(
+                route('courses.show', [
+                    $course->getRouteKey(), 'lang' => $locale,
+                ]),
+                $localizedShare->item(0)->getAttribute('value'),
+                'The shared course URL must preserve '.$locale
+            );
+
+            $this->assertSame(
+                $course->title,
+                $localizedShare->item(0)->getAttribute('data-title')
+            );
+        }
+
+        // Restore the original English enrollment journey.
+        $this->get($path)->assertOk()
+            ->assertSee('lang="en"', false);
+
         $this->get($signIn)->assertOk();
+
         $this->post('/login', [
             'email' => $student->email,
             'password' => 'CourseTestPassword123!',
         ])->assertRedirect($path);
-        $this->get($path)->assertOk()
-            ->assertSee('>Enroll</button>', false)
-            ->assertSee('action="'.route('account.enrollments.store',$course).'"',false);
 
-        $this->post('/account/courses/'.$course->id.'/enroll')->assertRedirect('/account/enrollments');
-        $this->assertDatabaseHas('course_enrollments', [
-            'student_id'=>$student->id, 'course_id'=>$course->id, 'status'=>'pending',
+        $enroll = route('account.enrollments.store', $course);
+
+        $this->get($path)->assertOk()
+            ->assertSee(trans('detail.enroll', [], 'en'))
+            ->assertSee('action="'.$enroll.'"', false)
+            ->assertSee('name="pricing_quote"', false);
+
+        $quote = json_encode(
+            \App\Support\CoursePricing::quote($course->pricing),
+            JSON_THROW_ON_ERROR
+        );
+
+        $this->post($enroll, [
+            'pricing_quote' => $quote,
+        ])->assertRedirect(route('account.enrollments.index'));
+
+        $enrollment = \App\Models\CourseEnrollment::query()
+            ->where('student_id', $student->id)
+            ->where('course_id', $course->id)->sole();
+
+        $this->assertSame('pending', $enrollment->status);
+
+        $this->get($path)->assertOk()
+            ->assertSee(trans('detail.enrollment_pending', [], 'en'))
+            ->assertDontSee('action="'.$enroll.'"', false);
+
+        $this->get(route('account.enrollments.show', $enrollment))
+            ->assertForbidden();
+
+        $this->post($enroll, [
+            'pricing_quote' => $quote,
+        ])->assertStatus(409);
+
+        $reviewer = User::factory()->create(['role' => 'admin']);
+
+        $reviewUrl = '/dashboard/reviews/enrollments/'.$enrollment->id;
+
+        $this->actingAs($reviewer)
+            ->postJson($reviewUrl, ['decision' => 'approve'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('pricing_reference');
+
+        $this->assertSame(
+            'pending', $enrollment->fresh()->status
+        );
+
+        $this->post($reviewUrl, [
+            'decision' => 'approve',
+            'pricing_reference' => 'QA-PAID-COURSE-001',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(
+            'approved', $enrollment->fresh()->status
+        );
+
+        $this->actingAs($student);
+
+        $study = route('account.enrollments.show', [
+            $enrollment, 'lang' => 'en',
         ]);
 
-        $this->get('/courses/'.$course->slug)->assertOk()
-            ->assertSee('Enrollment pending')
-            ->assertDontSee('action="'.route('account.enrollments.store',$course).'"',false);
+        $progress = route('account.progress.index', [
+            'enrollment' => $enrollment->id,
+        ]);
 
-        $enrollment=\App\Models\CourseEnrollment::firstOrFail();
-        $enrollment->update(['status'=>'approved']);
-
-        $study = route('account.enrollments.show', $enrollment);
-        $progress = route('account.progress.index', ['enrollment' => $enrollment->id]);
         $this->get($path)->assertOk()
-            ->assertSee('Already enrolled')
-            ->assertSee('href="'.$study.'"', false)
+            ->assertSee(trans('detail.start_course', [], 'en'))
+            ->assertSee('href="'.e($study).'"', false)
+            ->assertDontSee('action="'.$enroll.'"', false)
             ->assertDontSee($progress);
 
         $this->get($study)->assertOk();
+
         $this->assertNotNull($enrollment->fresh()->started_at);
         $this->assertDatabaseCount('lesson_progress', 0);
-        $this->get($path)->assertOk()
-            ->assertSee('Learning Progress')
-            ->assertSee('Resume learning')
-            ->assertSee('href="'.$progress.'"', false)
-            ->assertSee('href="'.$study.'"', false);
-        $this->get($progress)->assertOk()->assertSee($course->title);
 
-        $other = User::factory()->create();
-        $this->actingAs($other)->get($progress)->assertOk()->assertDontSee($course->title);
-        $this->get($path)->assertOk()->assertDontSee('Already enrolled')->assertSee('>Enroll</button>', false);
+        $this->get($path)->assertOk()
+            ->assertSee(trans('detail.learning_progress', [], 'en'))
+            ->assertSee('href="'.e($progress).'"', false)
+            ->assertSee('href="'.e($study).'"', false);
+
+        $this->get($progress)->assertOk()
+            ->assertSee($course->title);
+
+        $other = User::factory()->create(['role' => 'student']);
+
+        $this->actingAs($other)->get($progress)->assertOk()
+            ->assertDontSee($course->title);
+
+        $this->get($study)->assertNotFound();
+
+        $this->get($path)->assertOk()
+            ->assertSee('action="'.$enroll.'"', false)
+            ->assertSee('name="pricing_quote"', false);
+
+        $this->assertDatabaseCount('course_enrollments', 1);
     }
 
     public function test_existing_signup_still_creates_student_only(): void

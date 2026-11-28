@@ -49,6 +49,28 @@ final class SevenPublicPagesTest extends TestCase
         return $profile;
     }
 
+
+    private function selectHomepageLayout(string $layout): void
+    {
+        $admin = \App\Models\User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        \App\Models\AppearanceRevision::create([
+            'section' => 'home_layout',
+            'settings' => ['home_layout' => $layout],
+            'status' => 'approved',
+            'created_by' => $admin->id,
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            $layout,
+            \App\Support\Appearance::value('home', 'home_layout')
+        );
+    }
+
     public function test_all_seven_public_pages_render_with_existing_global_chrome(): void
     {
         $this->seed([CategorySeeder::class,CefrLevelSeeder::class]);
@@ -65,7 +87,7 @@ final class SevenPublicPagesTest extends TestCase
         config()->set('public_profiles.students_enabled',true);
 
         foreach([
-            ['/', 'Study corner'],
+            ['/', trans('pages.cefr_guide', [], 'en')],
             ['/courses','Explore courses and study subjects'],
             ['/courses/'.$course->slug,'Learning Seven Pages'],
             ['/instructors','Meet our instructors'],
@@ -93,7 +115,10 @@ final class SevenPublicPagesTest extends TestCase
             'status'=>'published','created_by'=>$owner->id,
         ]);
 
-        $this->get('/')->assertOk()
+        $this->selectHomepageLayout('sunrise');
+
+        $response = $this->get('/?lang=en')->assertOk()
+            ->assertSee('data-home-layout="sunrise"', false)
             ->assertSee('Approved Real Course')
             ->assertSee('Actual Published Article')
             ->assertSee('Published courses')
@@ -101,6 +126,40 @@ final class SevenPublicPagesTest extends TestCase
             ->assertDontSee('500+ Educators')
             ->assertDontSee('50K+');
         $this->assertDatabaseCount('courses',1);
+
+        $document = new \DOMDocument();
+        @$document->loadHTML($response->getContent(), LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+
+        $stats = $xpath->query(
+            '//div[@class="sr-wrap sr-stats"]/a'
+        );
+
+        $this->assertCount(4, $stats);
+
+        $expectedRoutes = [
+            'courses.index',
+            'assessments.quizzes',
+            'assessments.exams',
+            'articles.index',
+        ];
+
+        foreach ($expectedRoutes as $index => $route) {
+            $this->assertSame(
+                route($route),
+                $stats->item($index)->getAttribute('href')
+            );
+        }
+
+        $this->assertSame('1', trim(
+            $stats->item(0)->getElementsByTagName('strong')
+                ->item(0)->textContent
+        ));
+
+        $this->assertSame('1', trim(
+            $stats->item(3)->getElementsByTagName('strong')
+                ->item(0)->textContent
+        ));
     }
 
     public function test_catalog_search_and_subject_group_and_mode_filters_use_real_courses(): void
@@ -179,15 +238,29 @@ final class SevenPublicPagesTest extends TestCase
     {
         $this->seed(CategorySeeder::class);
         $this->post('/language',['locale'=>'zh'])->assertRedirect('/?lang=zh');
-        $this->get('/')->assertOk()->assertSee('学习角与 CEFR 等级');
+        $this->get('/')->assertOk()
+            ->assertSee(trans('pages.cefr_guide', [], 'zh'))
+            ->assertSee('lang="zh"', false);
         $this->get('/courses')->assertOk()->assertSee('探索课程和学习科目');
         $this->get('/instructors')->assertOk()->assertSee('认识我们的教师');
         $this->get('/students')->assertOk()->assertSee('学生生活与学习历程');
 
         $this->post('/language',['locale'=>'km'])->assertRedirect('/?lang=km');
-        $this->get('/')->assertOk()->assertSee('មគ្គុទ្ទេសក៍សិក្សា');
+        $this->get('/')->assertOk()
+            ->assertSee(trans('pages.cefr_guide', [], 'km'))
+            ->assertSee('lang="km"', false);
         $this->get('/courses')->assertOk()->assertSee('ស្វែងរកវគ្គសិក្សា និងមុខវិជ្ជា');
         $this->get('/instructors')->assertOk()->assertSee('ស្គាល់គ្រូបង្រៀនរបស់យើង');
         $this->get('/students')->assertOk()->assertSee('ជីវិតសិស្ស និងដំណើរសិក្សា');
+
+        $this->selectHomepageLayout('sunrise');
+
+        foreach (['en', 'km', 'zh'] as $lang) {
+            $this->get('/?lang='.$lang)->assertOk()
+                ->assertSee('data-home-layout="sunrise"', false)
+                ->assertSee(trans('sunrise.hero_title', [], $lang))
+                ->assertSee(trans('pages.level_guidance_desc', [], $lang))
+                ->assertSee('lang="'.$lang.'"', false);
+        }
     }
 }

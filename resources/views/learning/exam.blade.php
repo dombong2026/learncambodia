@@ -2,6 +2,7 @@
 @section('canonical', e(route('learning.exam.show', $course->getRouteKey())))
 @section('title',$course->title.' · Course Assessments')
 @section('meta_description',$course->summary)
+@section('learning-reading', 'enabled')
 @section('content')
 @php $a=\App\Support\Appearance::approved('single_course_exam'); @endphp
 <x-learning-hero :title="$course->title" :subtitle="$course->summary" eyebrow="Course assessments" icon="clipboard-check" :action-url="$exams->isNotEmpty() ? '#course-exams' : '#practice-quiz-list'" action-label="View assessments"

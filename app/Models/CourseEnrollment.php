@@ -30,6 +30,11 @@ class CourseEnrollment extends Model
         return $this->hasMany(PracticeAttempt::class, 'enrollment_id');
     }
 
+    public function lessonQuizAttempts(): HasMany
+    {
+        return $this->hasMany(LessonQuizAttempt::class, 'enrollment_id');
+    }
+
     public function examAttempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class, 'course_enrollment_id');
@@ -41,6 +46,14 @@ class CourseEnrollment extends Model
 
         self::whereKey($this->id)->where('status', 'approved')->whereNull('started_at')
             ->update(['started_at' => now()]);
+    }
+
+    public function rememberLesson(CourseLesson $lesson): void
+    {
+        self::whereKey($this->id)->where('status', 'approved')
+            ->where(fn ($query) => $query->whereNull('last_opened_lesson_id')
+                ->orWhere('last_opened_lesson_id', '!=', $lesson->id))
+            ->update(['last_opened_lesson_id' => $lesson->id]);
     }
 
     public function homeworkSubmissions(): HasMany

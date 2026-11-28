@@ -11,9 +11,34 @@
             <div class="flex items-center justify-between"><span class="text-3xl font-black text-blue-700 dark:text-blue-400">{{ $level->code }}</span><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ $level->category }}</span></div>
             <h2 class="mt-5 text-xl font-extrabold">{{ $level->name }}</h2>
             <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $level->description }}</p>
+            <a href="{{ route('cefr.index', ['lang' => app()->getLocale(), 'practice' => $level->code]) }}#practice-quizzes"
+                class="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50 dark:border-slate-700 dark:text-blue-300 dark:hover:bg-slate-800"
+                @if($practiceLevel === $level->code) aria-current="true" @endif>
+                Browse {{ $level->code }} quizzes <span aria-hidden="true">→</span>
+            </a>
         </article>
         @endforeach
     </div>
+    @if($practiceLevel !== null)
+        <section id="practice-quizzes" aria-labelledby="practice-heading" class="mt-10 scroll-mt-48">
+            <h2 id="practice-heading" class="text-2xl font-extrabold">{{ $practiceLevel }} practice quizzes</h2>
+            @if($quizzes->isNotEmpty())
+                <p class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">20 questions per quiz · Free · No sign-in required</p>
+                <ol class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="{{ $practiceLevel }} practice quizzes">
+                    @foreach($quizzes as $quiz)
+                        <li>
+                            <a href="{{ route('public.quizzes.show', ['exam' => $quiz, 'lang' => app()->getLocale()]) }}"
+                                class="flex h-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm font-bold text-blue-700 hover:bg-blue-50 dark:border-slate-700 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800">
+                                <span>{{ $quiz->title }}</span><span aria-hidden="true">→</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ol>
+            @else
+                <p class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">There are no published quizzes for this level.</p>
+            @endif
+        </section>
+    @endif
     <div class="mt-10 rounded-3xl border border-blue-200 bg-blue-50 p-6 text-sm leading-7 text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
         <strong>Assessment note:</strong> A CEFR descriptor helps guide study choices. Official test scores, certificate awards and level equivalences must come from the relevant authorized assessment provider.
     </div>

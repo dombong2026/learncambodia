@@ -31,7 +31,7 @@
                 <form method="post" action="{{ route('account.enrollments.store', $course) }}">
                     @csrf
                     @if($quote['model'] !== 'free')<input type="hidden" name="pricing_quote" value="{{ json_encode($quote, JSON_THROW_ON_ERROR) }}">@endif
-                    <button type="submit">Request enrollment</button>
+                    <button type="submit">{{ $quote['model'] === 'free' ? __('detail.enroll') : __('frontend.request_enrollment') }}</button>
                 </form>
             @endif
             <form method="post" action="{{ route($saved ? 'account.saved-courses.destroy' : 'account.saved-courses.store', $course) }}">

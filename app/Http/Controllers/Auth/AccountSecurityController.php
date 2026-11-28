@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Support\AdminAccess;
+
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\AccountSignIn;
@@ -24,6 +26,9 @@ final class AccountSecurityController extends Controller
         return view('workspace.account-security', [
             'account' => $request->user(),
             'passkeys' => $request->user()->passkeys()->latest()->get(),
+            'socialAccounts' => DB::table('social_identities')->where('user_id', $request->user()->getKey())->pluck('client', 'provider'),
+            'passwordConfirmed' => time() - (int) $request->session()->get('auth.password_confirmed_at', 0)
+                < config('auth.password_timeout', 10800),
         ]);
     }
 
@@ -37,7 +42,7 @@ final class AccountSecurityController extends Controller
         $request->validate(['password' => ['required', 'current_password']]);
         $request->session()->passwordConfirmed();
 
-        $route = $request->user()->isAdministrator() ? 'admin.system-settings.security' : 'security.methods';
+        $route = AdminAccess::can($request->user(), 'settings') ? 'admin.system-settings.security' : 'security.methods';
 
         return redirect()->intended(route($route));
     }

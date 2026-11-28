@@ -1,5 +1,5 @@
 @php($publishedExams = $course->exams->where('published', true))
-@if($publishedExams->isNotEmpty() || $certificates->isNotEmpty())
+@if($publishedExams->isNotEmpty() || $certificates->isNotEmpty() || $canClaimCertificate)
     <section class="workspace-panel mt-6 space-y-4 p-5">
         @if($publishedExams->isNotEmpty())
             <h2 id="course-exams" class="text-lg font-extrabold">Course Exams</h2>
@@ -22,8 +22,11 @@
                 </article>
             @endforeach
         @endif
-        @if($certificates->isNotEmpty())
-            <h2 class="text-lg font-extrabold">Certificates</h2>
+        @if($certificates->isNotEmpty() || $canClaimCertificate)
+            <h2 class="text-lg font-extrabold">{{ __('certificate_verification.kind_course') }} · {{ __('certificate_verification.certificates') }}</h2>
+            @if($canClaimCertificate)
+                <x-certificate-award :claim="route('account.certificates.claim-course', [$enrollment, 'lang' => app()->getLocale()])" />
+            @endif
             @foreach($certificates as $certificate)
                 <a class="block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('certificates.show',$certificate->code) }}">{{ $certificate->snapshot['heading'] }}</a>
             @endforeach

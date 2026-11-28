@@ -5,11 +5,22 @@
 @if($document->featured_kind === 'image' && $document->featuredMedia)
     @section('og_image', route('editor-media.show', $document->featuredMedia))
 @endif
+@isset($policyNavigation)
+    @push('public_styles')
+        <link rel="stylesheet" href="{{ asset('css/public-policies.css') }}">
+    @endpush
+@endisset
 @section('content')
-<article class="mx-auto max-w-4xl px-4 py-12 sm:px-8 sm:py-16" data-public-document="{{ $document->type }}">
-    @if($document->type === 'policy')
-        <a href="{{ route('policies.index') }}" class="text-sm font-bold text-blue-700 dark:text-blue-300">Policy Center</a>
-    @endif
+@isset($policyNavigation)
+<div class="policy-document-layout">
+@endisset
+<article class="{{ isset($policyNavigation) ? 'policy-document' : 'mx-auto max-w-4xl px-4 py-12 sm:px-8 sm:py-16' }}" data-public-document="{{ $document->type }}">
+    @isset($policyNavigation)
+        <div class="policy-document-links print:hidden">
+            <a href="{{ route('policies.index', ['lang' => app()->getLocale()]) }}" class="text-sm font-bold text-blue-700 dark:text-blue-300">Policy Center</a>
+            <a href="#all-policies" class="policy-sidebar-jump text-sm font-bold text-blue-700 dark:text-blue-300">All policies</a>
+        </div>
+    @endisset
     <h1 class="mt-3 text-3xl font-black tracking-tight sm:text-5xl">{{ $document->title }}</h1>
     @if($document->summary)<p class="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">{{ $document->summary }}</p>@endif
     @if($document->type === 'policy' && ($document->policy_version || $document->policy_effective_on || $document->published_at))
@@ -35,4 +46,24 @@
         </div>
     @endif
 </article>
+@isset($policyNavigation)
+    <aside class="policy-sidebar" id="all-policies" aria-labelledby="all-policies-title">
+        <h2 class="policy-sidebar-title" id="all-policies-title">All policies</h2>
+        <nav aria-labelledby="all-policies-title">
+            <ol class="policy-sidebar-list" role="list">
+                @foreach($policyNavigation as $policy)
+                    <li>
+                        <a class="policy-sidebar-link"
+                           href="{{ url()->query($policy->publicUrl(), ['lang' => app()->getLocale()]) }}"
+                           @if($policy->is($document)) aria-current="page" @endif>
+                            <span class="policy-sidebar-number" aria-hidden="true">{{ sprintf('%02d', $loop->iteration) }}</span>
+                            <span>{{ $policy->title }}</span>
+                        </a>
+                    </li>
+                @endforeach
+            </ol>
+        </nav>
+    </aside>
+</div>
+@endisset
 @endsection

@@ -2,7 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Authenticated rich editor against isolated Laravel fixture', () => {
   test.beforeEach(async ({ page }, info) => {
-    const scenario = info.title === 'System Settings opens every administrator page below Analytics'
+    const scenario = [
+      'System Settings opens every administrator page below Analytics',
+      'Classic and Sunrise homepage previews retain independent responsive layouts',
+    ].includes(info.title)
       ? 'settings'
       : info.title === 'ticket rich content is saved to a private conversation' ? 'ticket' : null;
     const email = scenario
@@ -16,22 +19,215 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
   });
 
   test('System Settings opens every administrator page below Analytics', async ({ page }) => {
-    const sidebarToggle = page.getByRole('button', { name: 'Toggle sidebar' });
-    const nav = page.getByRole('navigation', { name: 'Account navigation' });
-    const settings = nav.locator('[data-nav-group]').filter({ has: page.locator('summary').getByText('System Settings', { exact: true }) });
 
-    for (const label of ['Branding', 'Security', 'Social Auth', 'Cloud Storage']) {
-      if (await sidebarToggle.getAttribute('aria-expanded') === 'false') {
-        await sidebarToggle.click();
+    test.setTimeout(90_000);
+
+    const nav = page.getByRole('navigation', { name: 'Account navigation' });
+
+    const settings = nav.locator('[data-nav-group]').filter({
+      has: page.locator('summary').getByText('System Settings', { exact: true }),
+    });
+
+    // Cloud Storage is last so the original protected
+    // provider configuration journey remains intact.
+    const pages = [
+      ['Branding', '#platform-branding-form'],
+      ['Security', '.system-settings-row:first-of-type'],
+      ['Social Auth', '#social-providers'],
+      ['SMTP', '#smtp-unlock-heading, #smtp-heading'],
+      ['MCP Management', '[data-mcp-manager]'],
+      ['OpenAI API', '#openai-settings-heading'],
+      ['Player Settings', '#audio-settings-heading'],
+      ['Cloud Storage', '#storage-providers-title'],
+    ];
+
+    for (const [label, selector] of pages) {
+      await expect(page.locator('[data-glass-sidebar]')).toBeVisible();
+
+      const desktop = await page.evaluate(() =>
+        matchMedia('(min-width: 64rem)').matches
+      );
+
+      const toggle = desktop
+        ? page.locator('[data-glass-sidebar-toggle]')
+        : page.locator('[data-sidebar-toggle]');
+
+      await expect(toggle).toBeVisible();
+
+      if (await toggle.getAttribute('aria-expanded') === 'false') {
+        await toggle.click();
       }
-      await expect(settings.locator('xpath=preceding-sibling::details[1]/summary')).toHaveText('Analytics');
+
+      await expect(settings.locator(
+        'xpath=preceding-sibling::details[1]/summary'
+      )).toHaveText('Analytics');
+
       if (await settings.getAttribute('open') === null) {
         await settings.locator('summary').click();
       }
-      await settings.getByRole('link', { name: label, exact: true }).click();
-      await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
-      const main = page.locator('[data-workspace-content]');
-      await expect(main.locator('.system-settings-row').first()).toBeVisible();
+
+      await expect(settings.locator('a[data-workspace-link]')).toHaveText([
+        'Branding', 'Security', 'Social Auth', 'SMTP',
+        'Cloud Storage', 'MCP Management', 'OpenAI API', 'Player Settings',
+      ]);
+
+      const link = settings.getByRole('link', { name: label, exact: true });
+      await expect(link).toBeVisible();
+
+      const destination = new URL(await link.getAttribute('href'), page.url());
+
+      if (!desktop) {
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+        // Scroll the existing navigation container, not the
+        // document or an unrelated workspace element.
+        await link.evaluate(element => {
+          const nav = element.closest('[data-workspace-nav]');
+
+          if (!nav) throw new Error('Workspace navigation container missing');
+
+          const bounds = nav.getBoundingClientRect();
+          const target = element.getBoundingClientRect();
+          const top = Math.max(0, bounds.top);
+          const bottom = Math.min(window.innerHeight, bounds.bottom);
+
+          if (bottom <= top) {
+            throw new Error('Navigation viewport is not visible');
+          }
+
+          const center = (top + bottom) / 2;
+          const targetCenter = (target.top + target.bottom) / 2;
+
+          nav.scrollTo({
+            top: nav.scrollTop + targetCenter - center,
+            behavior: 'instant',
+          });
+        });
+
+        // Wait until actual hit-testing reaches the link.
+        // Never bypass an intercepted pointer interaction.
+        await expect.poll(async () => {
+          return await link.evaluate(element => {
+            const rect = element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            const hit = document.elementFromPoint(x, y);
+
+            return Boolean(hit && element.contains(hit));
+          });
+        }, {
+          timeout: 10000,
+          message: 'Mobile sidebar link must receive pointer events',
+        }).toBe(true);
+      }
+
+      await link.click();
+
+      await expect.poll(() => new URL(page.url()).pathname)
+        .toBe(destination.pathname);
+
+      await expect(page.getByRole('heading', {
+        name: label,
+        exact: true,
+      })).toBeVisible();
+
+      await expect(page.locator('[data-workspace-content]').locator(selector))
+        .toBeVisible();
+
+      if (label === 'MCP Management') {
+        const viewport = page.viewportSize();
+
+        expect(viewport).not.toBeNull();
+
+        // The accessible Actions label must not escape
+        // the table scroll container and widen the page.
+        await expect.poll(async () => {
+          return page.evaluate(expectedWidth => {
+            const root = document.documentElement;
+
+            return window.innerWidth <= expectedWidth + 1
+              && root.scrollWidth <= root.clientWidth + 1;
+          }, viewport.width);
+        }, {
+          timeout: 10000,
+          message: 'MCP Management must not expand the document viewport',
+        }).toBe(true);
+
+        const tools = page.locator(
+          'section[aria-labelledby="mcp-tools-heading"]'
+        );
+
+        const tableScroll = tools.locator('.mcp-table-scroll');
+
+        await expect(tableScroll).toBeVisible();
+        await expect(tableScroll).toHaveCSS('position', 'relative');
+        await expect(tableScroll).toHaveCSS('overflow-x', 'auto');
+
+        await expect(tools.getByRole('columnheader', {
+          name: 'Actions',
+          exact: true,
+        })).toHaveCount(1);
+
+        const contained = await tableScroll.evaluate(container => {
+          const label = container.querySelector('.mcp-visually-hidden');
+
+          return Boolean(label && label.offsetParent === container);
+        });
+
+        expect(contained).toBe(true);
+
+        // The table must remain horizontally scrollable
+        // at mobile and tablet widths.
+        if (viewport.width <= 768) {
+          const scrollDistance = await tableScroll.evaluate(container => {
+            const original = container.scrollLeft;
+
+            container.scrollTo({
+              left: container.scrollWidth,
+              behavior: 'instant',
+            });
+
+            const distance = container.scrollLeft;
+
+            container.scrollTo({
+              left: original,
+              behavior: 'instant',
+            });
+
+            return distance;
+          });
+
+          expect(scrollDistance).toBeGreaterThan(0);
+        }
+      }
+
+      const sidebar = page.locator('[data-sidebar]');
+
+      if (!desktop) {
+        // Navigation deliberately closes the mobile drawer.
+        // Verify that contract before reopening it.
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(sidebar).toHaveJSProperty('inert', true);
+
+        await toggle.click();
+
+        await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        await expect(sidebar).toHaveJSProperty('inert', false);
+        await expect(settings).toHaveAttribute('open', '');
+      }
+
+      const current = settings.locator('a[aria-current="page"]');
+
+      await expect(current).toHaveCount(1);
+      await expect(current).toHaveText(label);
+      await expect(current).toBeVisible();
+
+      if (!desktop) {
+        await page.locator('[data-sidebar-close]').click();
+
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        await expect(sidebar).toHaveJSProperty('inert', true);
+      }
     }
 
     const cssUrl = await page.locator('link[href*="/css/system-settings.css"]').getAttribute('href');
@@ -57,6 +253,102 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
     await expect(r2.getByLabel('S3 API endpoint')).toBeVisible();
     await r2.getByRole('link', { name: 'Close configuration' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+
+  test('Classic and Sunrise homepage previews retain independent responsive layouts', async ({ page }) => {
+    test.setTimeout(90_000);
+
+    for (const [width, classicColumns, sunriseColumns] of [
+      [390,1,1], [820,1,2], [1440,2,4],
+    ]) {
+      await page.setViewportSize({ width, height: 900 });
+
+      const classic = await page.goto('/dashboard/appearance/home/preview/classic?lang=en');
+      expect(classic.status()).toBe(200);
+
+      await expect(page.locator('.lc-home')).toBeVisible();
+      await expect(page.locator('[data-home-levels] a')).toHaveCount(6);
+
+      const classicSection = page.locator('#home-cefr');
+
+      expect(await classicSection.evaluate(el =>
+        getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
+      )).toBe(classicColumns);
+
+      const sunrise = await page.goto('/dashboard/appearance/home/preview/sunrise?lang=en');
+      expect(sunrise.status()).toBe(200);
+
+      const home = page.locator('[data-home-layout="sunrise"]');
+
+      await expect(home).toBeVisible();
+      await expect(home.locator('.sr-level')).toHaveCount(6);
+      await expect(home.locator('.sr-stats > a')).toHaveCount(4);
+
+      const steps = home.locator('.sr-tile').filter({
+        has: page.locator('.sr-step'),
+      });
+
+      await expect(steps).toHaveCount(4);
+
+      const grid = steps.first().locator('..');
+
+      expect(await grid.evaluate(el =>
+        getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
+      )).toBe(sunriseColumns);
+
+      for (const [index, step] of (await steps.all()).entries()) {
+        await expect(step.locator('.sr-step')).toHaveText(
+          String(index + 1).padStart(2, '0')
+        );
+        await expect(step.locator('h3')).toBeVisible();
+        await expect(step).toHaveAttribute('href', /.+/);
+      }
+
+      const tiles = home.locator('.sr-tile').filter({
+        has: page.locator('.sr-icon'),
+      });
+
+      await expect(tiles).toHaveCount(4);
+
+      for (const tile of await tiles.all()) {
+        await expect(tile.locator('.sr-icon svg')).toBeVisible();
+        await expect(tile.locator('h3')).toBeVisible();
+      }
+
+      for (const [index, level] of ['A1','A2','B1','B2','C1','C2'].entries()) {
+        const link = home.locator('.sr-level').nth(index);
+        const url = new URL(await link.getAttribute('href'), page.url());
+
+        expect(url.pathname).toBe('/cefr');
+        expect(url.hash).toBe('#' + level);
+      }
+
+      const tile = tiles.first();
+
+      for (const scheme of ['light', 'dark']) {
+        await page.evaluate(scheme =>
+          document.documentElement.classList.toggle('dark', scheme === 'dark'),
+          scheme
+        );
+
+        if (scheme === 'light') {
+          const background = await tile.evaluate(el =>
+            getComputedStyle(el).backgroundColor
+          );
+          expect(background).not.toBe('rgba(0, 0, 0, 0)');
+        } else {
+          await expect(tile).toHaveCSS('background-color', 'rgb(34, 51, 43)');
+        }
+      }
+
+      const dimensions = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+
+      expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.viewport + 2);
+    }
   });
 
   test('Course Builder saves forward, protects edits and opens one lesson editor', async ({ page }, info) => {

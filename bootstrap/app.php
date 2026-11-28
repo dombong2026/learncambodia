@@ -4,6 +4,7 @@ use App\Console\Commands\AssignAccountRole;
 use App\Console\Commands\RegisterMcpOAuthClient;
 use App\Http\Middleware\EnsureDeveloperToken;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnforceAccountSession;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\EnsureMcpOAuthStagingEnabled;
@@ -25,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([AssignAccountRole::class, RegisterMcpOAuthClient::class])
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [SetLocale::class]);
+        $middleware->web(append: [SetLocale::class, EnforceAccountSession::class]);
         $middleware->append(SecurityHeaders::class);
         $middleware->alias([
             'role' => EnsureRole::class,

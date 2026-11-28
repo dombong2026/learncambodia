@@ -2,7 +2,7 @@
 <a href="{{ $href }}" {{ $attributes->class(['premium-card group flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#d4aa60] hover:shadow-xl dark:border-slate-700 dark:bg-[#19395b]']) }}>
     @if($image)
         <img src="{{ $image }}" alt="{{ $imageAlt }}" width="960" height="540" loading="lazy" decoding="async" class="premium-card-content aspect-video w-full rounded-2xl object-cover">
-    @else
+    @elseif($icon)
         <span class="premium-corner-icon" aria-hidden="true"><x-workspace-icon :name="$icon" /></span>
     @endif
     @if($eyebrow)<p class="premium-card-content mt-5 text-[11px] font-black uppercase tracking-[.12em] text-[#b0802a]">{{ $eyebrow }}</p>@endif

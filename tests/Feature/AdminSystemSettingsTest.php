@@ -28,11 +28,16 @@ final class AdminSystemSettingsTest extends TestCase
 
         $this->assertSame(['reporting', 'system-settings'], $groups->pluck('key')->slice(-2)->values()->all());
         $this->assertSame(
-            ['Branding', 'Security', 'Social Auth', 'Cloud Storage', 'MCP Management'],
+            ['Branding', 'Security', 'Social Auth', 'SMTP', 'Cloud Storage', 'MCP Management', 'OpenAI API', 'Player Settings'],
             array_column($groups->last()['items'], 'label')
         );
 
-        foreach (['branding', 'security', 'social-auth', 'cloud-storage', 'mcp'] as $section) {
+        $this->withSession(['auth.password_confirmed_at' => time()]);
+
+        foreach ([
+            'branding', 'security', 'social-auth', 'smtp',
+            'cloud-storage', 'mcp', 'openai.edit', 'player.edit',
+        ] as $section) {
             $url = route('admin.system-settings.'.$section);
             $response = $this->get($url)->assertOk();
             $this->assertMatchesRegularExpression(
@@ -147,4 +152,64 @@ final class AdminSystemSettingsTest extends TestCase
         $this->assertSame([], $r2->allFiles());
         $this->assertSame('local', config('filesystems.managed'));
     }
+
+    public function test_mcp_menu_fallback_respects_restricted_admin_permissions(): void
+    {
+        $restricted = User::factory()->create(['role' => 'admin']);
+        $restricted->forceFill([
+            'admin_permissions' => ['learning'],
+        ])->save();
+
+        $authorized = User::factory()->create(['role' => 'admin']);
+        $authorized->forceFill([
+            'admin_permissions' => ['settings'],
+        ])->save();
+
+        $routes = static function (User $viewer): array {
+            return collect(WorkspaceMenu::groups('admin', $viewer))
+                ->flatMap(fn (array $group) => $group['items'])
+                ->pluck('route')->all();
+        };
+
+        $route = 'admin.system-settings.mcp';
+
+        $this->assertNotContains($route, $routes($restricted));
+        $this->assertContains($route, $routes($authorized));
+
+        $this->actingAs($restricted)
+            ->get(route('admin.overview'))->assertOk()
+            ->assertDontSee('href="'.route($route).'"', false);
+
+        $this->get(route($route))->assertForbidden();
+
+        $original = config('workspaces.admin');
+        $legacy = $original;
+
+        foreach ($legacy as &$section) {
+            if ($section['key'] !== 'system-settings') {
+                continue;
+            }
+
+            $section['items'] = array_values(array_filter(
+                $section['items'],
+                fn (array $item) => ($item['route'] ?? null) !== $route
+            ));
+        }
+        unset($section);
+
+        try {
+            config(['workspaces.admin' => $legacy]);
+
+            $this->assertNotContains($route, $routes($restricted));
+            $this->assertContains($route, $routes($authorized));
+
+            $this->get(route('admin.overview'))->assertOk()
+                ->assertDontSee('href="'.route($route).'"', false);
+
+            $this->get(route($route))->assertForbidden();
+        } finally {
+            config(['workspaces.admin' => $original]);
+        }
+    }
+
 }

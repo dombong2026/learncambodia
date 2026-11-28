@@ -150,7 +150,8 @@ final class McpOAuthDraftCoverUpload
         }
     }
 
-    private static function sanitize(string $encoded): array
+    /** Shared bounded image decoder for native course and assessment covers. */
+    public static function sanitize(string $encoded): array
     {
         $bytes = base64_decode($encoded, true);
         if ($bytes === false || $bytes === '' || strlen($bytes) > self::MAX_INPUT_BYTES

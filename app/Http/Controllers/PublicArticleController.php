@@ -25,13 +25,11 @@ class PublicArticleController extends Controller
             ->when($search !== '',fn($query)=>$query
                 ->where(fn($inner)=>$inner->where('title','like','%'.$search.'%')
                     ->orWhere('summary','like','%'.$search.'%')))
-            ->orderByDesc('id')->paginate(10)->withQueryString();
+            ->orderByDesc('id')->paginate(12)->withQueryString();
 
-
-        $featured = (clone $published)->with('featuredMedia')->orderByDesc('id')->first();
         $publishedCount = $published->count();
 
-        return view('articles.index',compact('articles','search','featured','publishedCount','category'));
+        return view('articles.index',compact('articles','search','publishedCount','category'));
     }
 
     public function show(string $article): View

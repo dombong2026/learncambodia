@@ -4,6 +4,9 @@
 @section('description', 'Manage your own homework drafts for this assigned course. Administrators review assignments independently before students can submit work.')
 @section('content')
 <a href="{{ route('instructor.courses.index') }}" class="inline-block rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold dark:border-slate-700">← My Assigned Courses</a>
+@unless(session()->has(\App\Support\AccountPreview::KEY))
+    <a href="{{ route('instructor.courses.support.edit', [$course, 'lang' => app()->getLocale()]) }}" class="learning-manager-control">{{ __('course_support.settings') }}</a>
+@endunless
 <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-7 shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <h2 class="text-xl font-extrabold">Create a course assignment</h2>
     <form method="POST" action="{{ route('instructor.homework.store',$course) }}" class="mt-5 space-y-4">@csrf

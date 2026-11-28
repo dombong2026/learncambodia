@@ -1,0 +1,68 @@
+/* Learn Cambodia — independent 16:9 Course Player hero.
+   Loaded only on the homepage when the approved Course Player mode is active.
+   No Vite rebuild required on the aaPanel server. */
+.lc-cph {
+    color: #f4f8ff;
+    background: radial-gradient(circle at 14% 0%, #23527b 0, transparent 42%), linear-gradient(120deg, #081d38 0%, #123c66 100%);
+    padding-block: clamp(2rem, 4vw, 3.7rem);
+}
+.lc-cph, .lc-cph * { box-sizing: border-box; }
+.lc-cph [hidden] { display: none !important; }
+.lc-cph a, .lc-cph button { -webkit-tap-highlight-color: transparent; }
+.lc-cph :is(a, button, summary):focus-visible { outline: 3px solid #ffda92; outline-offset: 3px; }
+.lc-cph-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.4rem; margin-bottom: 1.75rem; }
+.lc-cph-heading > div { min-width: 0; }
+.lc-cph-eyebrow { color: #f8d18f; font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 850; }
+.lc-cph-heading h1 { font-size: clamp(1.65rem, 3.5vw, 2.65rem); font-weight: 850; line-height: 1.17; margin-top: .55rem; letter-spacing: -.025em; text-wrap: balance; }
+.lc-cph-intro { font-size: .93rem; max-width: 65ch; color: #c7dbf0; line-height: 1.65; margin-top: .6rem; }
+.lc-cph-outline-button { display: inline-flex; justify-content: center; align-items: center; text-align: center; padding: .72rem 1rem; min-height: 2.6rem; border: 1px solid #e8bd71; border-radius: .65rem; color: #ffe0a0; font-size: .8rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.lc-cph-outline-button:hover { background: #ffffff15; }
+.lc-cph-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, .79fr); gap: 1rem; align-items: stretch; min-width: 0; }
+.lc-cph-stage, .lc-cph-sidebar { border: 1px solid #ffffff2c; border-radius: 1rem; min-width: 0; overflow: hidden; box-shadow: 0 24px 55px #00000021; }
+.lc-cph-stage { background: #07192f; }
+.lc-cph-screen { min-width: 0; }
+.lc-cph-media-frame { position: relative; aspect-ratio: 16/9; width: 100%; background: #091526; overflow: hidden; }
+.lc-cph-media { position: absolute; inset: 0; width: 100%; height: 100%; display: grid; place-items: center; }
+.lc-cph-media :is(video,iframe,img) { display: block; width: 100%; height: 100%; border: 0; object-fit: contain; }
+.lc-cph-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.1rem; padding: 1.4rem; width: 100%; height: 100%; text-align: center; background: linear-gradient(125deg,#163a65,#102442); }
+.lc-cph-placeholder-mark { font-size: clamp(2rem, 6vw, 4.5rem); color: #edbd67; line-height: 1; }
+.lc-cph-placeholder strong { display: block; max-width: 25ch; font-size: clamp(1rem, 2vw, 1.75rem); font-weight: 850; overflow-wrap: anywhere; }
+.lc-cph-course-meta { border-top: 1px solid #ffffff20; padding: clamp(.85rem,2vw,1.2rem); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.lc-cph-course-meta > div { min-width: 0; }
+.lc-cph-course-meta h2 { font-size: clamp(.98rem, 1.5vw, 1.15rem); font-weight: 820; line-height: 1.4; overflow-wrap: anywhere; }
+.lc-cph-course-meta p { margin-top: .4rem; color: #b9d0e9; font-size: .78rem; line-height: 1.5; max-width: 58ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lc-cph-primary-button { display: inline-flex; align-items: center; justify-content: center; border-radius: .63rem; min-height: 2.7rem; padding: .65rem .9rem; background: #f2c576; color: #102c50; font-size: .78rem; font-weight: 850; text-align: center; white-space: nowrap; text-decoration: none; }
+.lc-cph-primary-button:hover { background: #ffdc95; }
+.lc-cph-sidebar { background: #112d4d; display: block; }
+.lc-cph-sidebar-header { padding: 1.1rem 1.2rem; border-bottom: 1px solid #ffffff20; }
+.lc-cph-sidebar-header h2 { font-size: 1rem; line-height: 1.45; font-weight: 800; overflow-wrap: anywhere; }
+.lc-cph-sidebar-header p { color: #b8cee3; font-size: .78rem; line-height: 1.5; margin-top: .35rem; }
+.lc-cph-course-list { display: flex; flex-direction: column; gap: .3rem; padding: .7rem; overflow-y: auto; max-height: min(27rem, 65vh); }
+.lc-cph-course-list a { display: flex; align-items: baseline; justify-content: space-between; gap: .65rem; padding: .78rem .9rem; border-radius: .7rem; color: #e6f1ff; font-size: .84rem; font-weight: 720; line-height: 1.5; text-decoration: none; overflow-wrap: anywhere; border: 1px solid transparent; }
+.lc-cph-course-list a:hover { background: #275279; }
+.lc-cph-course-list a[aria-current="true"] { border-color: #d8b674; background: #21476c; }
+.lc-cph-course-list small { flex: none; color: #ffdb99; font-size: .67rem; }
+.lc-cph-back { border: 0; background: none; padding: .35rem 0 .8rem; display: inline-flex; color: #ffdb96; font-size: .74rem; font-weight: 800; cursor: pointer; text-align: left; }
+.lc-cph-back:hover { text-decoration: underline; }
+.lc-cph-outline { padding: .7rem; max-height: min(27rem, 65vh); overflow-y: auto; }
+.lc-cph-module { margin-bottom: .48rem; border: 1px solid #ffffff1b; border-radius: .65rem; overflow: hidden; background: #0b243f; }
+.lc-cph-module summary { cursor: pointer; padding: .85rem; font-size: .84rem; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+.lc-cph-module ul { margin: 0; padding: .4rem; list-style: none; border-top: 1px solid #ffffff1f; }
+.lc-cph-module li a { display: block; padding: .68rem .72rem; border-radius: .45rem; color: #dcebf9; font-size: .77rem; line-height: 1.4; text-decoration: none; overflow-wrap: anywhere; }
+.lc-cph-module li a:hover, .lc-cph-module li a[aria-current="true"] { background: #235178; }
+.lc-cph-module li a small { display: block; color: #ffdb9c; font-size: .69rem; margin-top: .25rem; }
+.lc-cph-empty { padding: .9rem; font-size: .85rem; color: #cbdbed; }
+.lc-cph-preview { position: absolute; inset: 0; padding: clamp(1rem, 2.5vw, 2.2rem); overflow-y: auto; background: #09223d; color: #f4f8ff; }
+.lc-cph-preview-label { display: inline-block; text-transform: uppercase; color: #f8d18f; letter-spacing: .08em; font-size: .68rem; font-weight: 850; }
+.lc-cph-preview h3 { font-size: clamp(1.15rem, 2vw, 1.75rem); line-height: 1.35; margin-top: .75rem; font-weight: 850; overflow-wrap: anywhere; }
+.lc-cph-preview-module { margin-top: .3rem; color: #b6cde2; font-size: .75rem; }
+.lc-cph-preview-body { font-size: .88rem; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 1.25rem; margin-bottom: 1.4rem; }
+@media (max-width: 55rem) { .lc-cph-grid { grid-template-columns: minmax(0,1fr); } .lc-cph-course-list, .lc-cph-outline { max-height: min(20rem, 55vh); } }
+@media (max-width: 38rem) {
+    .lc-cph-heading { flex-direction: column; align-items: start; }
+    .lc-cph-outline-button { white-space: normal; }
+    .lc-cph-course-meta { align-items: start; flex-direction: column; }
+    .lc-cph-course-meta .lc-cph-primary-button { align-self: stretch; }
+    .lc-cph-course-list a { font-size: .82rem; }
+}
+@media (prefers-reduced-motion: reduce) { .lc-cph * { scroll-behavior: auto !important; } }

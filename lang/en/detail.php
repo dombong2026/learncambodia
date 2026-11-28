@@ -30,6 +30,7 @@ return [
     'lesson_count' => ':count lesson|:count lessons',
     'no_module_lessons' => 'No lessons in this module yet.',
     'enroll' => 'Enroll',
+    'start_course' => 'Start Course',
     'already_enrolled' => 'Already enrolled',
     'learning_progress' => 'Learning Progress',
     'sign_in_to_enroll' => 'Sign in with a student account to enroll.',
@@ -46,4 +47,6 @@ return [
     'public_social_note' => 'Add the links you want to display on your public profile and assigned course pages after approval.',
     'instructor_social_links' => 'Social links for :name',
     'invalid_social_url' => 'Enter a valid HTTPS link for :platform.',
+    'enroll_free' => 'Enroll for free',
+    'free_enroll_note' => 'Sign in as a student to enroll for free and start learning immediately.',
 ];

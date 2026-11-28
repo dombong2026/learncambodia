@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'send' => '发送邀请',
+    'manual' => '手动创建',
+    'delivery_unavailable' => '当前无法发送邀请。请配置外发邮件服务，或手动创建账户。',
+    'delivery_failed' => '邀请已保存，但邮件发送失败。请使用「重新发送邀请」重试。',
+    'sent' => '邀请已提交给邮件服务。',
+    'revoked' => '邀请已撤销。',
+    'resend' => '重新发送邀请',
+    'revoke' => '撤销邀请',
+    'invited' => '已邀请',
+    'expired' => '邀请已过期',
+    'revoked_status' => '邀请已撤销',
+    'unsent' => '邮件未发送',
+    'verification' => '验证状态',
+    'all_verification' => '所有验证状态',
+    'email_verified' => '邮箱已验证',
+    'email_unverified' => '邮箱未验证',
+    'phone_verified' => '手机已验证',
+    'phone_unverified' => '手机未验证',
+    'accept' => '接受邀请',
+    'accept_intro' => '设置密码以激活账户。此链接也会验证您的电子邮箱。',
+    'accepted' => '您的账户已激活。请使用刚设置的密码登录。',
+    'password_bytes' => '密码不得超过 72 字节，且不能包含空字符。',
+    'mail_subject' => '您受邀加入 :brand',
+    'mail_body' => '您受邀加入 :brand。请在三天内使用此一次性链接激活账户并设置密码：
+
+:url',
+    'language' => '邀请语言',
+    'expires_at' => '邀请过期时间',
+    'email_sent_at' => '邀请邮件发送时间',
+    'by' => '验证人：:name',
+    'via_invite' => '通过邀请验证',
+];

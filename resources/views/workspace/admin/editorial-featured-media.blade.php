@@ -3,7 +3,7 @@
     $selectedAsset = old('featured_media_id', $entry->featured_media_id);
     $storedAsset = (string) $selectedAsset === (string) $entry->featured_media_id ? $entry->featuredMedia : null;
 @endphp
-<section data-featured-editor class="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="featured-heading">
+<section data-featured-editor @if($assessmentPreview ?? false) data-assessment-media-panel data-media-url-template="{{ route('editor-media.show', ['media' => '__MEDIA__'], false) }}" @endif class="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700" aria-labelledby="featured-heading">
     <h2 id="featured-heading" class="text-sm font-extrabold">Featured media</h2>
     <label for="featured_kind" class="block text-xs font-semibold">Media type</label>
     <select id="featured_kind" name="featured_kind" data-featured-kind class="w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
@@ -11,6 +11,17 @@
             <option value="{{ $value }}" @selected($selectedKind === $value)>{{ $text }}</option>
         @endforeach
     </select>
+    @if($assessmentPreview ?? false)
+        <div class="assessment-media-preview" data-assessment-media-preview aria-label="Featured media preview">
+            <div class="assessment-media-placeholder" data-assessment-media-placeholder>
+                <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                <span data-assessment-media-message>No featured media selected</span>
+                <button type="button" data-assessment-media-pick class="rounded-lg border border-slate-400 px-3 py-2 text-xs font-semibold">Upload / select media</button>
+                <small>Recommended: 1920 × 1080 px</small>
+            </div>
+        </div>
+        <div class="assessment-media-controls" data-assessment-media-controls>
+    @endif
     <div data-featured-asset class="space-y-3" @if(!in_array($selectedKind, ['image', 'video'], true)) hidden @endif>
         <input type="hidden" name="featured_media_id" data-featured-id value="{{ $selectedAsset }}">
         <p data-featured-name class="break-words text-xs" aria-live="polite">{{ $storedAsset?->original_name ?: ($selectedAsset ? 'Media #'.$selectedAsset : 'Choose a file') }}</p>
@@ -31,4 +42,5 @@
     @foreach(['featured_kind', 'featured_media_id', 'featured_alt', 'featured_youtube', 'featured_color'] as $field)
         @error($field)<p class="text-xs text-red-700 dark:text-red-300">{{ $message }}</p>@enderror
     @endforeach
+    @if($assessmentPreview ?? false)</div>@endif
 </section>

@@ -23,7 +23,7 @@ final class CompactCategorySubheaderTest extends TestCase
             $html = $this->get($url)->assertOk()
                 ->assertSee('data-category-tray', false)
                 ->assertSee('data-category-short="ESL"', false)
-                ->assertSee('data-category-short="EFL"', false)
+                ->assertSee('data-category-short="GE"', false)
                 ->assertSee('data-category-short="EAP"', false)
                 ->getContent();
 
@@ -34,7 +34,11 @@ final class CompactCategorySubheaderTest extends TestCase
                 PREG_SET_ORDER
             );
 
-            $this->assertCount(23, $matches);
+            $this->assertCount(6, $matches);
+            $this->assertEqualsCanonicalizing(
+                ['ESL', 'GE', 'EAP', 'TOEIC', 'TOEFL', 'IELTS'],
+                array_column($matches, 1)
+            );
             foreach ($matches as $match) {
                 $code = $match[1];
                 $category = Category::where('code', $code)->firstOrFail();
@@ -66,8 +70,16 @@ final class CompactCategorySubheaderTest extends TestCase
             ->assertRedirect($edit)->assertSessionHas('category_navigation_changed', true);
         $this->get($edit)->assertOk()->assertSee('data-category-navigation-changed', false);
         $this->get('/cefr?lang=en')->assertOk()->assertDontSee('data-category-short="ESL"', false)
-            ->assertSee('data-category-short="EFL"', false);
-        $fragment = $this->get($feed)->assertOk()->assertDontSee('data-category-short="ESL"', false);
+            ->assertSee('data-category-short="GE"', false);
+        $fragment = $this->get($feed)->assertOk()
+            ->assertDontSee('data-category-short="ESL"', false)
+            ->assertDontSee('data-category-short="EFL"', false);
+
+        foreach (['GE', 'EAP', 'TOEIC', 'TOEFL', 'IELTS'] as $code) {
+            $fragment->assertSee(
+                'data-category-short="'.$code.'"', false
+            );
+        }
         $this->assertStringContainsString('no-store', $fragment->headers->get('Cache-Control'));
         $this->get(route('categories.show', $category))->assertNotFound();
 

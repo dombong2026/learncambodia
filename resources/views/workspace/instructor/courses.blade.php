@@ -3,6 +3,7 @@
 @section('heading', 'My Assigned Courses')
 @section('content')
 <div class="mb-5 flex flex-wrap gap-2">
+    <a href="{{ route('instructor.lesson-support.index') }}" class="learning-manager-control">{{ __('course_support.inbox') }}</a>
     <a href="{{ route('instructor.insights.index') }}" class="learning-manager-control">Teaching insights</a>
     <a href="{{ route('instructor.feedback-templates.index') }}" class="learning-manager-control">Feedback templates</a>
 </div>

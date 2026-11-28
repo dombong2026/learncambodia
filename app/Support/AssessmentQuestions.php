@@ -92,6 +92,36 @@ final class AssessmentQuestions
         return ['score' => $score, 'passed' => $score !== null && $score >= $snapshot['passing_percent']];
     }
 
+    public static function reviewStatus(array $question, string $answer, ?array $award): string
+    {
+        if (blank($answer) && $award === null) {
+            return 'unanswered';
+        }
+        if (!self::scored($question)) {
+            return 'unscored';
+        }
+        if (!self::manual($question)) {
+            return self::correct($question, $answer) ? 'correct' : 'incorrect';
+        }
+        if ($award === null) {
+            return 'pending';
+        }
+
+        return match (true) {
+            $award['points'] >= $question['points'] => 'correct',
+            $award['points'] > 0 => 'partial',
+            default => 'incorrect',
+        };
+    }
+
+    public static function aiListeningMedia(array $questions): array
+    {
+        $ids = array_filter(array_column($questions, 'media_id'));
+
+        return $ids === [] ? [] : \App\Models\EditorMedia::whereIn('id', $ids)
+            ->where('original_name', 'openai-listening.wav')->pluck('id')->map(static fn ($id) => (int) $id)->all();
+    }
+
     public static function mediaIds(array $snapshot): array
     {
         return array_values(array_unique([

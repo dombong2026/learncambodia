@@ -20,7 +20,7 @@ final class SecurityHeaders
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Frame-Options', $request->attributes->getBoolean('lessonPdfPreview') ? 'SAMEORIGIN' : 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $microphone = $request->attributes->getBoolean('assessmentMicrophone') ? '(self)' : '()';
         $certificateVerification = $request->routeIs('certificates.verify');
@@ -33,7 +33,7 @@ final class SecurityHeaders
             $response->headers->set('Strict-Transport-Security', 'max-age=86400');
         }
 
-        if ($certificateVerification) {
+        if ($certificateVerification || $request->is('invite/*', 'specialized-exams/*')) {
             $response->headers->set('Referrer-Policy', 'no-referrer');
         }
 
@@ -41,7 +41,7 @@ final class SecurityHeaders
         // the one-time installer against intermediary caching.
         if ($request->user() !== null
             || $request->is('install', 'install/*', 'login', 'register',
-                'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
+                'invite/*', 'specialized-exams/*', 'dashboard', 'dashboard/*', 'account', 'account/*', 'sign-in/*', 'security/*', 'passkeys/*',
                 'instructor', 'instructor/*', 'developer', 'developer/*')) {
             $response->headers->set('Cache-Control', 'private, no-store, max-age=0');
         }

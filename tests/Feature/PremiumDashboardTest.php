@@ -71,7 +71,7 @@ class PremiumDashboardTest extends TestCase
     public function test_admin_sidebar_separates_page_content_from_appearance_controls(): void
     {
         $groups = collect(WorkspaceMenu::groups('admin'))->keyBy('key');
-        $this->assertSame(['Home', 'About', 'Contact', 'Media Library'], array_column($groups['content']['items'], 'label'));
+        $this->assertSame(['Home', 'About', 'Contact', 'Media Library', 'Library Manager'], array_column($groups['content']['items'], 'label'));
         $this->assertSame(['Appearance Overview', 'Header', 'Menu', 'Footer', 'Typography', 'Authentication'],
             array_column($groups['appearance']['items'], 'label'));
         $this->assertSame('admin.appearance.edit', WorkspaceMenu::find('admin', 'appearance', 'home')['route']);
@@ -86,22 +86,61 @@ class PremiumDashboardTest extends TestCase
     public function test_all_roles_have_a_real_contextual_action_mobile_tabs_and_breadcrumb_outside_header(): void
     {
         $routes = [
-            'admin'=>['/dashboard','Create course','/dashboard/course-builder/create'],
-            'student'=>['/account','My learning','/account/enrollments'],
-            'instructor'=>['/instructor','My courses','/instructor/courses'],
-            'developer'=>['/developer','Access tokens','/developer/tokens'],
+            'admin' => [
+                '/dashboard', null, null,
+            ],
+            'student' => [
+                '/account', 'My learning', '/account/enrollments',
+            ],
+            'instructor' => [
+                '/instructor', 'My courses', '/instructor/courses',
+            ],
+            'developer' => [
+                '/developer', 'Access tokens', '/developer/tokens',
+            ],
         ];
-        foreach($routes as $role=>[$landing,$label,$action]){
-            $response = $this->actingAs($this->user($role))->get($landing)
+
+        foreach ($routes as $role => [$landing, $label, $action]) {
+            $response = $this->actingAs($this->user($role))
+                ->get($landing)
                 ->assertOk()
-                ->assertSee($label)
-                ->assertSee('aria-label="Breadcrumb"',false)
-                ->assertSee('aria-label="Mobile workspace navigation"',false)
-                ->assertSee('data-saver-toggle',false)
-                ->assertSee('href="'.url($action).'"',false)
+                ->assertSee('aria-label="Breadcrumb"', false)
+                ->assertSee(
+                    'aria-label="Mobile workspace navigation"', false
+                )
+                ->assertSee('data-saver-toggle', false)
                 ->assertDontSee('Google Ads');
+
+            if ($role === 'admin') {
+                $this->assertNull(
+                    \App\Support\WorkspaceMenu::topAction('admin')
+                );
+
+                $management = $this->get(
+                    route('admin.courses.index')
+                )->assertOk()
+                    ->assertSee(__('workspace.create_course'))
+                    ->assertSee(
+                        'href="'.route(
+                            'admin.course-builder.create'
+                        ).'"', false
+                    );
+
+                $this->assertSame(
+                    route('admin.course-builder.create'),
+                    \App\Support\WorkspaceMenu::topAction('admin')['url']
+                );
+            } else {
+                $response->assertSee($label)
+                    ->assertSee('href="'.url($action).'"', false);
+            }
+
             $html = $response->getContent();
-            $this->assertGreaterThan(strpos($html,'</header>'),strpos($html,'aria-label="Breadcrumb"'));
+
+            $this->assertGreaterThan(
+                strpos($html, '</header>'),
+                strpos($html, 'aria-label="Breadcrumb"')
+            );
         }
     }
 
@@ -148,7 +187,11 @@ class PremiumDashboardTest extends TestCase
             ->assertRedirect('/account?lang=km');
         $this->get('/account')->assertOk()
             ->assertSee('ផ្ទាំងការសិក្សារបស់ខ្ញុំ')
-            ->assertSee('ប្រវត្តិរូប និងសុវត្ថិភាព')
+            ->assertSee('ការកំណត់')
+            ->assertSee('data-sidebar-settings', false)
+            ->assertSee(
+                'href="'.route('account.profile.edit').'"', false
+            )
             ->assertSee('lang="km"',false)
             ->assertSee('value="en"',false)
             ->assertSee('value="km"',false);

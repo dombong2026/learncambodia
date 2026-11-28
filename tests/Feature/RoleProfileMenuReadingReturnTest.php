@@ -85,34 +85,118 @@ final class RoleProfileMenuReadingReturnTest extends TestCase
 
     public function test_every_role_gets_its_real_workspace_links_with_icons_on_public_and_account_header(): void
     {
-        foreach ([
-            'admin' => '/dashboard',
-            'instructor' => '/instructor',
-            'student' => '/account',
-            'developer' => '/developer',
-        ] as $role => $dashboard) {
+        $roles = [
+            'admin' => ['/dashboard', [
+                ['courses', 'all'],
+                ['examination', 'exams'],
+                ['quiz-manager', 'quizzes'],
+                ['approvals', 'course-reviews'],
+                ['approvals', 'enrollment-reviews'],
+                ['courses', 'homework'],
+                ['user-manager', 'all'],
+            ]],
+            'student' => ['/account', [
+                ['learning', 'courses'],
+                ['learning', 'course-catalog'],
+                ['learning', 'saved-courses'],
+                ['homework', 'available'],
+                ['learning', 'progress'],
+                ['assessments', 'practice'],
+            ]],
+            'instructor' => ['/instructor', [
+                ['teaching', 'courses'],
+                ['teaching', 'assignments'],
+                ['assessment', 'submissions'],
+            ]],
+            'developer' => ['/developer', [
+                ['api-center', 'endpoints'],
+                ['credentials', 'tokens'],
+                ['operations', 'usage'],
+            ]],
+        ];
+
+        foreach ($roles as $role => [$dashboard, $shortcuts]) {
             $user = $this->userWithRole($role);
-            $expected = collect(WorkspaceMenu::groups($role))
-                ->sum(fn (array $group) => count($group['items']));
-            $this->assertGreaterThan(0, $expected);
+            $expected = [];
+
+            foreach ($shortcuts as [$section, $key]) {
+                $item = WorkspaceMenu::find($role, $section, $key);
+
+                $this->assertNotNull($item);
+                $this->assertTrue(
+                    \Illuminate\Support\Facades\Route::has($item['route'])
+                );
+
+                $expected[] = route(
+                    $item['route'], $item['parameters'] ?? []
+                );
+            }
+
+            $this->assertCount(
+                count($shortcuts), array_unique($expected)
+            );
 
             foreach (['/?lang=en', $dashboard.'?lang=en'] as $url) {
                 $html = $this->actingAs($user)->get($url)->assertOk()
-                    ->assertSee('data-profile-role-menu="'.$role.'"', false)
-                    ->assertSee('data-profile-role-link', false)
                     ->assertSee('data-profile-dashboard', false)
-                    ->assertSee('data-profile-settings', false)
-                    ->assertSee('data-profile-link-icon', false)
                     ->assertSee('data-profile-link-icon', false)
                     ->assertSee('action="'.route('logout').'"', false)
                     ->assertSee('data-theme-toggle', false)
-                    ->assertSee('href="'.route($user->homeRouteName()).'"', false)
-                    ->assertSee('href="'.WorkspaceMenu::profile($role).'"', false)
                     ->getContent();
 
-                $this->assertSame($expected, substr_count($html, 'data-profile-role-link'));
+                $document = new \DOMDocument();
+                @$document->loadHTML($html, LIBXML_NONET);
+                $xpath = new \DOMXPath($document);
+
+                $menus = $xpath->query(
+                    '//nav[@data-profile-role-menu="'.$role.'"]'
+                );
+
+                $this->assertGreaterThan(0, $menus->length);
+
+                foreach ($menus as $menu) {
+                    $links = $xpath->query(
+                        './/a[@data-profile-role-link]', $menu
+                    );
+
+                    $this->assertCount(count($expected), $links);
+
+                    $actual = [];
+
+                    foreach ($links as $link) {
+                        $actual[] = $link->getAttribute('href');
+
+                        $this->assertGreaterThan(
+                            0,
+                            $xpath->query(
+                                './/*[@data-profile-link-icon]', $link
+                            )->length
+                        );
+                    }
+
+                    $this->assertSame($expected, $actual);
+                }
+
+                $this->assertStringContainsString(
+                    'href="'.route($user->homeRouteName()).'"',
+                    $html
+                );
+
+                if (str_starts_with($url, $dashboard)) {
+                    $settings = $xpath->query(
+                        '//a[@data-sidebar-settings]'
+                    );
+
+                    $this->assertCount(1, $settings);
+                    $this->assertSame(
+                        WorkspaceMenu::profile($role),
+                        $settings->item(0)->getAttribute('href')
+                    );
+                }
             }
-            $this->assertSame($role, $user->role);
+
+            $this->get(WorkspaceMenu::profile($role))->assertOk();
+            $this->assertSame($role, $user->fresh()->role);
         }
     }
 

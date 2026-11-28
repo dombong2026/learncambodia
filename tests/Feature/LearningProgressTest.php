@@ -47,7 +47,7 @@ class LearningProgressTest extends TestCase
 
     public function test_student_can_mark_owned_lesson_complete_and_undo(): void
     {
-        ['student' => $student, 'enrollment' => $enrollment, 'first' => $first] =
+        ['student' => $student, 'enrollment' => $enrollment, 'first' => $first, 'second' => $second] =
             $this->enrolledCourse();
 
         $this->actingAs($student)->post('/account/enrollments/'.$enrollment->id.'/lessons/'.$first->id.'/progress', [
@@ -57,7 +57,66 @@ class LearningProgressTest extends TestCase
         $this->assertNotNull(LessonProgress::firstOrFail()->completed_at);
         $this->get('/account/progress')->assertOk()->assertSee('1 of 2 lessons');
         $this->get('/account/enrollments/'.$enrollment->id)
-            ->assertOk()->assertSee('Completed · Mark for review');
+            ->assertRedirect(route('account.lessons.watch', [
+                $enrollment, $second
+            ]));
+
+        $curriculum = $this->get(
+            '/account/enrollments/'.$enrollment->id.'?view=curriculum'
+        )->assertOk()
+            ->assertSee('Completed')
+            ->assertSee('Not completed')
+            ->assertSee('Mark for review')
+            ->assertSee('Mark complete');
+
+        $document = new \DOMDocument();
+        $this->assertTrue($document->loadHTML(
+            $curriculum->getContent(),
+            LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING
+        ));
+
+        $xpath = new \DOMXPath($document);
+
+        foreach ([
+            [$first, '0', 'Mark for review'],
+            [$second, '1', 'Mark complete'],
+        ] as [$lesson, $value, $label]) {
+            $path = '/account/enrollments/'.$enrollment->id
+                .'/lessons/'.$lesson->id.'/progress';
+
+            $forms = [];
+
+            foreach ($xpath->query('//form[@action]') as $form) {
+                if (parse_url(
+                    $form->getAttribute('action'),
+                    PHP_URL_PATH
+                ) === $path) {
+                    $forms[] = $form;
+                }
+            }
+
+            $this->assertNotEmpty($forms);
+
+            foreach ($forms as $form) {
+                $this->assertSame(
+                    'post',
+                    strtolower($form->getAttribute('method'))
+                );
+
+                $this->assertSame(
+                    $value,
+                    $xpath->evaluate(
+                        'string(.//input[@name="complete"]/@value)',
+                        $form
+                    )
+                );
+
+                $this->assertStringContainsString(
+                    $label,
+                    trim($form->textContent)
+                );
+            }
+        }
 
         $this->post('/account/enrollments/'.$enrollment->id.'/lessons/'.$first->id.'/progress', [
             'complete' => '1',

@@ -20,7 +20,7 @@ return [
     'my_account' => 'គណនីរបស់ខ្ញុំ',
     'groups' => [
         'system-settings' => 'ការកំណត់ប្រព័ន្ធ',
-        'overview' => 'ទិដ្ឋភាពទូទៅ',
+        'overview' => 'ផ្ទាំងគ្រប់គ្រង',
         'content' => 'មាតិកា',
         'appearance' => 'រូបរាង',
         'programs' => 'កម្មវិធីសិក្សា',
@@ -36,6 +36,8 @@ return [
         'operations' => 'ប្រតិបត្តិការ',
     ],
     'labels' => [
+        'Exams' => 'ការប្រឡង',
+        'Quizzes' => 'កម្រងសំណួរ',
         'Branding' => 'អត្តសញ្ញាណម៉ាក',
         'Social Auth' => 'ការចូលតាមបណ្ដាញសង្គម',
         'Cloud Storage' => 'ទំហំផ្ទុកលើពពក',
@@ -48,6 +50,7 @@ return [
         'All Policies' => 'គោលការណ៍ទាំងអស់',
         'All Users' => 'គណនីទាំងអស់',
         'Learning Progress' => 'វឌ្ឍនភាពសិក្សា',
+        'My Certificates' => 'វិញ្ញាបនបត្ររបស់ខ្ញុំ',
         'My Enrollments' => 'ការចុះឈ្មោះរបស់ខ្ញុំ',
         'Available Courses' => 'វគ្គសិក្សាដែលមាន',
         'My Assignments' => 'កិច្ចការរបស់ខ្ញុំ',

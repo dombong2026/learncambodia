@@ -1,0 +1,74 @@
+body[data-public-frame] {
+    --public-frame-width: 1440px;
+    --public-frame-gutter: 16px;
+}
+
+@media (min-width: 640px) {
+    body[data-public-frame] {
+        --public-frame-gutter: 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    body[data-public-frame] {
+        --public-frame-gutter: 32px;
+    }
+}
+
+/* Public shells share one width. Nested grids, forms and reading columns retain their own sizing. */
+body[data-public-frame] > .sticky.top-0 > header,
+body[data-public-frame] > .sticky.top-0 > nav > .mx-auto,
+body[data-public-frame] > footer > :is([data-footer-columns], [data-footer-bottom]),
+[data-public-frame] #main-content :is(
+    .lc-home-wrap,
+    .course-catalog-container,
+    .assessment-catalog-hero__inner,
+    .specialized-exam-shell,
+    .detail-grid,
+    .article-frame,
+    .lc-lib-frame,
+    .cv-container,
+    .mx-auto[class~="max-w-[1600px]"],
+    .mx-auto[class~="max-w-[1280px]"]
+),
+[data-public-frame] #main-content > :is(.max-w-7xl, .max-w-6xl, section.max-w-5xl, article.max-w-4xl),
+[data-public-frame] #main-content > :is(section, div, article) > .mx-auto:is(.max-w-7xl, .max-w-6xl) {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: var(--public-frame-width);
+    margin-inline: auto;
+    padding-inline: var(--public-frame-gutter);
+}
+
+[data-public-frame] #main-content :is(.rich-public-content, .lc-lib-reader-text, .specialized-exam-shell p) {
+    max-inline-size: 72ch;
+    overflow-wrap: anywhere;
+}
+
+[data-public-frame] #main-content :is(
+    .lc-home-hero-grid,
+    .detail-grid,
+    .course-catalog-layout,
+    .assessment-catalog-hero__inner,
+    .article-hero .article-frame,
+    .cv-container
+) > * {
+    min-inline-size: 0;
+}
+
+[data-public-frame] #main-content :is(h1, h2, h3) {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+    body[data-public-frame] > .sticky.top-0 > header > a {
+        min-inline-size: 0;
+        flex-shrink: 1;
+    }
+
+    body[data-public-frame] > .sticky.top-0 > header > a img,
+    body[data-public-frame] > footer [data-footer-columns] img {
+        max-inline-size: 100%;
+        object-fit: contain;
+    }
+}

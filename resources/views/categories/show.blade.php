@@ -1,6 +1,9 @@
 @extends('layouts.public')
 @section('title', $category->name)
 @section('meta_description', $category->description)
+@push('public_styles')
+    <link rel="stylesheet" href="{{ asset('css/category-articles.css?v=20261121-4') }}">
+@endpush
 @section('content')
 @php $appearance=\App\Support\Appearance::approved('single_category'); @endphp
 <section class="relative overflow-hidden bg-gradient-to-br from-[#08244b] via-[#143b6c] to-[#0d2d58] text-white">
@@ -51,7 +54,7 @@
         </div>
         <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @forelse($courses as $course)
-                <x-public-course-card :course="$course"/>
+                <x-public-course-card :course="$course" :show-summary="false"/>
             @empty
                 <x-public-empty-state icon="book-open" :title="__('longpage.no_approved_courses')" :description="__('longpage.no_approved_courses_note')" :href="route('courses.index')" :action="__('longpage.browse_course_catalog')" />
             @endforelse
@@ -124,12 +127,12 @@
     <div class="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12">
         <div class="flex flex-wrap items-end justify-between gap-5"><h2 class="text-3xl font-black text-[#10325a] dark:text-white">{{ __('longpage.latest_articles') }}</h2>
             <a href="{{ route('articles.index', ['category' => $category->slug]) }}" class="text-sm font-black text-[#b17b22]">{{ __('longpage.view_resources') }}</a></div>
-        <div class="mt-8 grid gap-5 md:grid-cols-3">
+        <div class="mt-8 category-article-grid">
             @foreach($articles as $article)
                 <x-public-article-card :article="$article"/>
             @endforeach
         </div>
-        <div class="mt-8">{{ $articles->withQueryString()->fragment('category-articles')->links() }}</div>
+        <div class="category-article-pagination mt-8">{{ $articles->withQueryString()->fragment('category-articles')->links() }}</div>
     </div>
 </section>
 @endif

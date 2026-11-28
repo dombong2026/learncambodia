@@ -7,13 +7,19 @@ use App\Models\ContentEntry;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseInstructorAssignment;
+use App\Models\CourseHomeworkAssignment;
 use App\Models\CourseLesson;
 use App\Models\LessonProgress;
 use App\Models\LessonNote;
+use App\Models\LessonComment;
+use App\Models\LessonSupportMessage;
 use App\Models\PracticeAttempt;
 use App\Models\PublicProfile;
 use App\Models\User;
+use App\Support\AccountPreview;
+use App\Support\CourseSupportChannels;
 use App\Support\LearningAccess;
+use App\Support\LessonMaterials;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -149,22 +155,109 @@ final class LearningHubController extends Controller
         return view('learning.watch',compact('student','enrollments','courses'));
     }
 
-    public function lesson(Request $request,CourseEnrollment $enrollment,CourseLesson $lesson): View
+    public function lesson(Request $request, CourseEnrollment $enrollment, CourseLesson $lesson): View
     {
-        $course=LearningAccess::course($request->user(),$enrollment);
-        LearningAccess::lesson($course,$lesson);
-        if ($request->isMethod('GET')) $enrollment->markStarted();
-        $course->load('modules.lessons','quizzes');
-        $completedIds=$enrollment->lessonProgress()->whereNotNull('completed_at')
-            ->pluck('lesson_id')->all();
-        $lessons=$course->modules->flatMap(fn($m)=>$m->lessons)->values();
-        $position=$lessons->search(fn($entry)=>$entry->id===$lesson->id);
-        $previous=$position!==false && $position>0 ? $lessons[$position-1] : null;
-        $next=$position!==false && $position+1<$lessons->count() ? $lessons[$position+1] : null;
-        $studyNote=LessonNote::query()->where('student_id',$request->user()->id)
-            ->where('enrollment_id',$enrollment->id)->where('lesson_id',$lesson->id)->first();
-        return view('learning.lesson',compact(
-            'course','lesson','enrollment','completedIds','previous','next','studyNote'
+        $student = $request->user();
+        $course = LearningAccess::course($student, $enrollment);
+        LearningAccess::lesson($course, $lesson);
+        $tab = $request->query('tab', 'details');
+        if (!in_array($tab, ['details', 'comment', 'resources', 'support'], true)) {
+            $tab = 'details';
+        }
+
+        $messages = $instructors = collect();
+        $instructor = null;
+        $supportChannels = [];
+        if ($tab === 'support') {
+            $assigned = $course->instructorAssignments()->where('status', 'active');
+            $instructors = User::where('role', User::ROLE_INSTRUCTOR)->where('account_status', 'active')
+                ->whereIn('id', (clone $assigned)->select('instructor_id'))
+                ->orderBy('name')->orderBy('id')->get(['id', 'name']);
+            $id = $request->integer('instructor');
+            $instructor = $id ? $instructors->firstWhere('id', $id) : $instructors->first();
+            abort_if($id && !$instructor, 404);
+            if ($instructor) {
+                $messages = LessonSupportMessage::thread($enrollment, $instructor)
+                    ->with(['author:id,name', 'lesson:id,title'])->latest('id')->simplePaginate(30, ['*'], 'messages')
+                    ->appends($request->except('fragment'));
+            }
+            if ($instructor && $request->boolean('fragment')) {
+                return view('learning.partials.support-messages', compact('messages'));
+            }
+            if ($instructor) {
+                $supportChannels = CourseSupportChannels::enabled($assigned
+                    ->where('instructor_id', $instructor->id)->first()?->support_channels);
+            }
+        }
+
+        $comments = null;
+        if ($tab === 'comment') {
+            $comments = LessonComment::where('lesson_id', $lesson->id)->whereNull('parent_id')
+                ->withDiscussionState($student)
+                ->with(['replies' => fn ($replies) => $replies->withDiscussionState($student)->orderBy('id')])
+                ->when($request->integer('thread'), fn ($query, $id) => $query->orderByRaw('CASE WHEN lesson_comments.id = ? THEN 0 ELSE 1 END', [$id]))
+                ->latest('id')->paginate(15, ['*'], 'discussion')->withQueryString();
+        }
+
+        if ($request->isMethod('GET')) {
+            $enrollment->markStarted();
+        }
+        $completedIds = LearningAccess::curriculumProgress($course, $enrollment);
+        $lessons = $course->modules->flatMap(fn ($module) => $module->lessons)->values();
+        $position = $lessons->search(fn ($entry) => $entry->id === $lesson->id);
+        $previous = $position > 0 ? $lessons->get($position - 1) : null;
+        $next = $lessons->get($position + 1);
+
+        $materials = LessonMaterials::for($lesson);
+        if (filled($lesson->quiz_questions)) {
+            $materials['viewers']['quiz'] = ['type' => 'quiz', 'label' => 'Lesson quiz'];
+        }
+        $exams = $course->exams()->where('published', true)->orderBy('title')
+            ->get(['id', 'public_id', 'course_id', 'kind', 'title', 'attempt_limit', 'time_limit', 'instructions_html']);
+        foreach ($exams as $exam) {
+            $materials['viewers']['exam-'.$exam->id] = ['type' => 'exam', 'label' => $exam->title, 'exam' => $exam];
+        }
+
+        $viewerKey = $request->query('viewer', $materials['defaultViewer']);
+        abort_unless(is_string($viewerKey) && isset($materials['viewers'][$viewerKey]), 404);
+        $viewer = $materials['viewers'][$viewerKey];
+        $quizCompletedIds = $enrollment->lessonQuizAttempts()->distinct()->pluck('lesson_id')->all();
+        $quizHistory = $quizAttempt = $quizRetry = null;
+        if ($viewerKey === 'quiz') {
+            $query = $request->validate([
+                'attempt' => ['nullable', 'integer', 'min:1'],
+                'retry' => ['nullable', 'integer', 'min:1'],
+            ]);
+            $quizAttempts = $enrollment->lessonQuizAttempts()->where('lesson_id', $lesson->id)->latest('id');
+            $quizHistory = (clone $quizAttempts)->simplePaginate(8, ['*'], 'quiz_page')->withQueryString();
+            if (isset($query['retry'])) {
+                $quizRetry = $quizAttempts->findOrFail($query['retry']);
+                abort_if($quizRetry->missedQuestions() === [], 404);
+            } elseif (isset($query['attempt'])) {
+                $quizAttempt = $quizAttempts->findOrFail($query['attempt']);
+            } elseif (!$request->boolean('start')) {
+                $quizAttempt = $quizAttempts->first();
+            }
+        }
+        $canSavePlace = ! $request->session()->has(AccountPreview::KEY);
+        if ($canSavePlace && $request->isMethod('GET') && ! $request->boolean('fragment')) {
+            $enrollment->rememberLesson($lesson);
+        }
+        $document = $viewer['type'] === 'document' ? LessonMaterials::document($viewer['file']) : [];
+        $attempts = $viewer['type'] === 'exam' ? $enrollment->examAttempts()
+            ->where('course_exam_id', $viewer['exam']->id)->latest('id')->get(['id', 'score', 'submitted_at', 'expires_at']) : collect();
+        $courseResources = $tab === 'resources' ? $course->resources()->with('media')->get() : collect();
+        $quizzes = $tab === 'resources' ? $course->quizzes()->has('questions')->get(['id', 'title']) : collect();
+        $assignments = $tab === 'resources' ? CourseHomeworkAssignment::published()
+            ->where('course_id', $course->id)->orderBy('due_at')->get(['id', 'title']) : collect();
+        $studyNote = $tab === 'details' ? LessonNote::where('student_id', $student->id)->where('enrollment_id', $enrollment->id)
+            ->where('lesson_id', $lesson->id)->first() : null;
+
+        return view('learning.lesson', compact(
+            'course', 'lesson', 'enrollment', 'completedIds', 'previous', 'next', 'position',
+            'materials', 'viewerKey', 'viewer', 'tab', 'document', 'attempts', 'quizzes', 'assignments',
+            'studyNote', 'comments', 'instructors', 'instructor', 'messages', 'supportChannels', 'canSavePlace',
+            'quizAttempt', 'quizRetry', 'quizHistory', 'quizCompletedIds', 'courseResources'
         ));
     }
 

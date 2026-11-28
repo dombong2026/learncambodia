@@ -26,7 +26,7 @@
                 <div class="detail-cover mt-4">
                     <x-editorial-featured-media :entry="$entry"/>
                 </div>
-            @else
+            @elseif($icon)
                 <div class="detail-cover-placeholder mt-4 rounded-2xl px-5 text-center text-white">
                     <x-workspace-icon :name="$icon" class="h-11 w-11 text-[#f2c674] sm:h-14 sm:w-14"/>
                     <span class="text-sm font-bold">{{ $label }}</span>

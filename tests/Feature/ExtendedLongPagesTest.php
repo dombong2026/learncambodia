@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\AppearanceRevision;
 use App\Models\Category;
 use App\Models\ContentEntry;
+use App\Models\EditorMedia;
+use App\Models\LibraryItem;
+use Illuminate\Support\Str;
 use App\Models\Course;
 use App\Models\CourseEnrollment;
 use App\Models\CourseInstructorAssignment;
@@ -77,17 +80,76 @@ final class ExtendedLongPagesTest extends TestCase
         return $quiz;
     }
 
+
+    private function libraryFixture(
+        User $admin,
+        string $title,
+        string $status,
+        string $access = 'open'
+    ): LibraryItem {
+        $file = EditorMedia::create([
+            'uploaded_by' => $admin->id,
+            'context' => 'library',
+            'path' => 'qa-only/'.Str::ulid().'.txt',
+            'mime' => 'text/plain',
+            'original_name' => 'qa-resource.txt',
+            'size' => 32,
+        ]);
+
+        $item = new LibraryItem([
+            'title' => $title,
+            'author' => 'QA Educational Author',
+            'topic' => 'Learning resources',
+            'description' => 'Synthetic educational resource.',
+            'kind' => 'resource',
+            'access' => $access,
+            'status' => $status,
+            'allow_download' => false,
+            'loan_days' => 14,
+            'copies' => 1,
+        ]);
+
+        $item->forceFill([
+            'public_id' => (string) Str::ulid(),
+            'file_id' => $file->id,
+        ])->save();
+
+        return $item;
+    }
+
     public function test_all_ten_public_page_types_render_as_full_width_continuous_pages(): void
     {
-        foreach ([
-            '/articles','/recommendations','/leaderboard',
-            '/exam-catalog','/course-watch','/reading',
-            '/library','/upload-studio',
-        ] as $url) {
-            $this->get($url)->assertOk()
-                ->assertSee('max-w-[1600px]',false)
+        $pages = [
+            '/articles' => 'id="article-directory"',
+            '/recommendations' => 'max-w-[1600px]',
+            '/leaderboard' => 'max-w-[1600px]',
+            '/exam-catalog' => 'max-w-[1600px]',
+            '/course-watch' => 'max-w-[1600px]',
+            '/reading' => 'id="reading-library"',
+            '/library' => 'id="collection"',
+            '/upload-studio' => 'max-w-[1600px]',
+        ];
+
+        foreach ($pages as $url => $contract) {
+            $html = $this->get($url)->assertOk()
+                ->assertSee($contract, false)
                 ->assertSee('Learn Cambodia home')
-                ->assertDontSee('50,000+');
+                ->assertDontSee('50,000+')
+                ->getContent();
+
+            $document = new \DOMDocument();
+            @$document->loadHTML($html, LIBXML_NONET);
+            $xpath = new \DOMXPath($document);
+
+            $this->assertSame(
+                1, $xpath->query('//main[@id="main-content"]')->length,
+                $url
+            );
+
+            $this->assertGreaterThan(
+                0, $xpath->query('//main//h1')->length,
+                $url
+            );
         }
     }
 
@@ -111,11 +173,13 @@ final class ExtendedLongPagesTest extends TestCase
         $this->get('/articles')->assertOk()
             ->assertSee('Published Reading Resource')
             ->assertDontSee('Unapproved Content Draft')
-            ->assertSee('max-w-[1600px]',false);
+            ->assertSee('id="article-directory"', false)
+            ->assertSee('id="article-directory-heading"', false);
         $this->get('/articles/safe-reading-article')->assertOk()
             ->assertSee('Public educational paragraph.')
             ->assertSee('Second approved paragraph.')
-            ->assertSee('Article overview')
+            ->assertSee('id="article-part-1"', false)
+            ->assertSee('id="article-part-2"', false)
             ->assertDontSee('Unapproved Content Draft')
             ->assertDontSee($admin->email);
         $this->get('/articles/secret-reading-article')->assertNotFound();
@@ -139,12 +203,66 @@ final class ExtendedLongPagesTest extends TestCase
             'status'=>'draft','created_by'=>$admin->id,
         ]);
 
-        foreach (['/library','/reading'] as $page) {
-            $this->get($page)->assertOk()
-                ->assertSee('Approved Resource Guide')
-                ->assertDontSee('Secret Library Draft')
-                ->assertSee('max-w-[1600px]',false);
+        $public = $this->libraryFixture(
+            $admin, 'Published Library Document', 'published'
+        );
+
+        $draft = $this->libraryFixture(
+            $admin, 'Private Library Document', 'draft'
+        );
+
+        $archived = $this->libraryFixture(
+            $admin, 'Archived Library Document', 'archived'
+        );
+
+        $students = $this->libraryFixture(
+            $admin, 'Student Library Document', 'published', 'students'
+        );
+
+        $loan = $this->libraryFixture(
+            $admin, 'Loan Library Document', 'published', 'loan'
+        );
+
+        $this->get('/library')->assertOk()
+            ->assertSee('Published Library Document')
+            ->assertSee('Student Library Document')
+            ->assertSee('Loan Library Document')
+            ->assertDontSee('Private Library Document')
+            ->assertDontSee('Archived Library Document')
+            ->assertSee('id="collection"', false);
+
+        $this->get(route('library.show', $public))
+            ->assertOk()->assertSee($public->title);
+
+        foreach ([$draft, $archived] as $hidden) {
+            $this->get(route('library.show', $hidden))
+                ->assertNotFound();
+
+            $this->get(route('library.content', $hidden))
+                ->assertNotFound();
         }
+
+        // Published metadata is public, but restricted
+        // document content must not be available to guests.
+        $this->get(route('library.content', $students))
+            ->assertForbidden();
+
+        $this->get(route('library.content', $loan))
+            ->assertForbidden();
+
+        $this->get('/reading')->assertOk()
+            ->assertSee('Approved Resource Guide')
+            ->assertDontSee('Secret Library Draft')
+            ->assertSee('id="reading-library"', false);
+
+        $this->get('/articles/private-learning-library')
+            ->assertNotFound();
+
+        // A signed-in student without an active loan
+        // must also be denied access to borrowed content.
+        $this->actingAs($this->role('student'))
+            ->get(route('library.content', $loan))
+            ->assertForbidden();
     }
 
     public function test_exam_directory_and_single_exam_list_only_safe_quiz_metadata(): void
