@@ -1,5 +1,9 @@
 @extends('layouts.public')
 @section('title', 'Guest assessment')
+
+@push('public_styles')
+    @vite('resources/js/workspace.ts')
+@endpush
 @section('content')
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
     <a class="text-sm font-semibold underline" href="{{ $exam->publicUrl() }}">Return to assessment</a>

@@ -244,21 +244,29 @@ test('premium flag-only language and profile menus animate while preserving exis
   await expect(page.locator('#profile-menu')).toBeHidden();
 });
 
-test('card corner SVGs are large and decorative; card names and actions stay usable', async ({ page }) => {
-  await page.goto('/?lang=en');
-  const cards = page.locator('.premium-card');
+test('category card corner SVGs are decorative and real card links stay usable', async ({ page }) => {
+  await page.goto('/categories?lang=en');
+
+  const cards = page.locator('#category-directory a.premium-card');
   expect(await cards.count()).toBeGreaterThanOrEqual(6);
-  const icon = cards.locator('.premium-corner-icon svg').first();
+
+  const card = cards.first();
+  const icon = card.locator('.premium-corner-icon svg');
+
+  await expect(card.locator('h3')).toBeVisible();
   await expect(icon).toBeVisible();
+  await expect(icon.locator('..')).toHaveAttribute('aria-hidden', 'true');
+
   const size = await icon.boundingBox();
   expect(size).not.toBeNull();
   expect(size.width).toBeGreaterThanOrEqual(39);
   expect(size.height).toBeGreaterThanOrEqual(39);
-  await expect(icon.locator('xpath=..')).toHaveAttribute('aria-hidden', 'true');
 
-  const homeCard = page.locator('a.premium-card[href]').first();
-  await expect(homeCard).toHaveAttribute('href', /\/courses|\/categories|\/articles|\/cefr/);
-  await homeCard.click();
+  const href = await card.getAttribute('href');
+  expect(new URL(href, page.url()).pathname).toMatch(/^\/categories\/[^/]+$/);
+
+  await card.click();
+  await expect(page).toHaveURL(/\/categories\/[^/?]+/);
   await expect(page.locator('#main-content')).toBeVisible();
 });
 
@@ -410,7 +418,7 @@ test('informational pages keep legal drafts visible and match the theme switch',
   await expect(section.locator('[role="note"]')).toContainText('preliminary draft');
 });
 
-test('CEFR information cards have consistent pointer motion and do not pretend to be links', async ({ page }) => {
+test('CEFR information cards preserve motion and expose valid practice links', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
   await page.goto('/cefr?lang=en#A1');
   const cards = page.locator('[data-cefr-level-card]');
@@ -418,7 +426,21 @@ test('CEFR information cards have consistent pointer motion and do not pretend t
   const a1 = page.locator('article#A1[data-cefr-level-card]');
   await expect(a1).toBeVisible();
   await expect(a1).toHaveCSS('cursor', 'auto');
-  await expect(a1.locator('a[href]')).toHaveCount(0);
+  const levels = ['A1','A2','B1','B2','C1','C2'];
+  for (const level of levels) {
+    const card = page.locator('article#' + level + '[data-cefr-level-card]');
+    const link = card.getByRole('link', { name: 'Browse ' + level + ' quizzes' });
+
+    await expect(card.locator('a[href]')).toHaveCount(1);
+    await expect(link).toBeVisible();
+
+    const href = new URL(await link.getAttribute('href'), page.url());
+
+    expect(href.pathname).toBe('/cefr');
+    expect(href.searchParams.get('practice')).toBe(level);
+    expect(href.searchParams.get('lang')).toBe('en');
+    expect(href.hash).toBe('#practice-quizzes');
+  }
 
   const pointerHover = await page.evaluate(() =>
     matchMedia('(hover: hover) and (pointer: fine)').matches
@@ -438,6 +460,15 @@ test('CEFR information cards have consistent pointer motion and do not pretend t
   await a1.hover();
   await expect(a1).toHaveCSS('transform', 'none');
   await expect(a1).toHaveCSS('translate', 'none');
+
+  await a1.getByRole('link', { name: 'Browse A1 quizzes' }).click();
+
+  await expect(page).toHaveURL(/practice=A1/);
+  await expect(page.locator('#practice-quizzes')).toBeVisible();
+  await expect(page.getByRole('heading', {
+    name: 'A1 practice quizzes',
+    exact: true,
+  })).toBeVisible();
 });
 
 test('public guidance and featured metric cards share the premium motion class', async ({ page }) => {
@@ -467,55 +498,54 @@ test('public guidance and featured metric cards share the premium motion class',
   await expect(linked).toHaveCSS('cursor', 'pointer');
 });
 
-test('homepage learning steps display compact 2–4 responsive cards with visible icons', async ({ page }) => {
-  for (const [width, columns] of [[390, 2], [820, 2], [1440, 4]]) {
+test('Classic homepage sections remain responsive and CEFR links stay usable', async ({ page }) => {
+  for (const [width, columns] of [[390,1],[820,1],[1440,2]]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/?lang=en');
 
-    const grid = page.locator('[data-home-learning-steps]');
-    const cards = grid.locator('[data-home-step-card]');
-    await expect(cards).toHaveCount(4);
+    const response = await page.goto('/?lang=en');
+    expect(response.status()).toBe(200);
 
-    const count = await grid.evaluate(el => getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length);
-    expect(count, `homepage grid at ${width}px`).toBe(columns);
+    await expect(page.locator('.lc-home')).toBeVisible();
 
-    for (const card of await cards.all()) {
-      const icon = card.locator('[data-home-step-icon] svg');
-      const title = card.locator('h3');
-      await expect(icon).toBeVisible();
-      await expect(title).toBeVisible();
-      const [cardBox, iconBox, titleBox] = await Promise.all(
-        [card, icon, title].map(el => el.boundingBox())
+    const sections = page.locator('.lc-home-sections > .lc-home-section');
+    expect(await sections.count()).toBeGreaterThanOrEqual(2);
+
+    for (const section of await sections.all()) {
+      await expect(section.locator('.lc-home-section-media img')).toBeVisible();
+      await expect(section.locator('.lc-home-section-body h2')).toBeVisible();
+
+      const count = await section.evaluate(el =>
+        getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
       );
-      expect(cardBox && iconBox && titleBox).toBeTruthy();
-      expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(titleBox.y + 2);
-      expect(iconBox.x).toBeGreaterThanOrEqual(cardBox.x);
-      expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+
+      expect(count, `Classic section columns at ${width}px`).toBe(columns);
     }
 
-    const level = page.locator('[data-home-level-guidance]');
-    const icon = level.locator('svg');
-    const heading = level.locator('h2');
-    await expect(level).toBeVisible();
-    await expect(icon).toBeVisible();
-    const [svg, h2, cardBox] = await Promise.all([icon.boundingBox(), heading.boundingBox(), level.boundingBox()]);
-    expect(svg && h2 && cardBox).toBeTruthy();
-    expect(svg.x).toBeGreaterThan(cardBox.x + cardBox.width * 0.55);
-    expect(svg.y).toBeLessThan(cardBox.y + 70);
-    expect(h2.y).toBeGreaterThan(cardBox.y + 25);
+    const levels = page.locator('#home-cefr [data-home-levels] a');
 
-    const pathways = page.locator('[data-home-pathways]');
-    const header = pathways.locator('h2').first();
-    const action = pathways.getByRole('link', { name: /view all/i });
-    await expect(action).toBeVisible();
-    const [headingBox, actionBox] = await Promise.all([header.boundingBox(), action.boundingBox()]);
-    expect(headingBox && actionBox).toBeTruthy();
-    const overlaps = headingBox.x < actionBox.x + actionBox.width &&
-      headingBox.x + headingBox.width > actionBox.x &&
-      headingBox.y < actionBox.y + actionBox.height &&
-      headingBox.y + headingBox.height > actionBox.y;
-    expect(overlaps, 'pathways title and View all must not overlap').toBe(false);
+    await expect(levels).toHaveCount(6);
+
+    for (const [index, level] of ['A1','A2','B1','B2','C1','C2'].entries()) {
+      const link = levels.nth(index);
+      await expect(link).toHaveText(level);
+      await expect(link).toBeVisible();
+
+      const href = new URL(await link.getAttribute('href'), page.url());
+      expect(href.pathname).toBe('/cefr');
+      expect(href.hash).toBe('#' + level);
+    }
+
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.viewport + 2);
   }
+
+  await page.locator('#home-cefr [data-home-levels] a').first().click();
+  await expect(page).toHaveURL(/\/cefr.*#A1$/);
+  await expect(page.locator('article#A1[data-cefr-level-card]')).toBeVisible();
 });
 
 test('footer uses two phone columns, four tablet/desktop columns and accessible social icons', async ({ page }) => {
@@ -657,11 +687,11 @@ test('compact public category nav retains full tooltip and accessible names on a
     const tray = page.locator('[data-category-tray]');
     await expect(tray).toBeVisible();
     for (const [code, full] of [
-      ['GE', 'General English'],
       ['ESL', 'English as a Second Language'],
-      ['EFL', 'English as a Foreign Language'],
-      ['BE', 'Business English'],
+      ['GE', 'General English'],
       ['EAP', 'English for Academic Purposes'],
+      ['TOEIC', 'Test of English for International Communication'],
+      ['TOEFL', 'Test of English as a Foreign Language'],
       ['IELTS', 'International English Language Testing System'],
     ]) {
       const link = tray.locator('[data-category-short="' + code + '"]');
@@ -671,6 +701,9 @@ test('compact public category nav retains full tooltip and accessible names on a
       await expect(link).toHaveAttribute('aria-label', code + ' — ' + full);
       await expect(link).toHaveAttribute('href', /\/categories\/[a-z0-9-]+/);
     }
+    await expect(tray.locator('[data-category-short]')).toHaveCount(6);
+    await expect(tray.locator('[data-category-short="EFL"]')).toHaveCount(0);
+    await expect(tray.locator('[data-category-short="BE"]')).toHaveCount(0);
     await expect(tray.getByRole('link', { name: /Courses/i }).first()).toBeVisible();
 
     const next = page.locator('[data-tray-scroll="1"]');
@@ -713,10 +746,12 @@ test('an open public tab refreshes category links and keeps fixed navigation int
   })));
   await expect(category).toHaveCount(0);
   await expect(directory).toBeFocused();
-  await expect(tray.locator('[data-category-short="EFL"]')).toHaveCount(1);
+  await expect(tray.locator('[data-category-short="GE"]')).toHaveCount(1);
+  await expect(tray.locator('[data-category-short]')).toHaveCount(5);
 
   categoryIsActive = true;
   await expect(category).toHaveCount(1, { timeout: 10000 });
+  await expect(tray.locator('[data-category-short]')).toHaveCount(6);
   await expect(category).toHaveAttribute('href', /lang=km/);
   await expect(category).toHaveAttribute('title', 'English as a Second Language');
 });
@@ -727,60 +762,46 @@ test('short category navigation does not shorten catalog cards or full search te
   await expect(page.locator('#main-content')).toContainText('English as a Second Language');
 });
 
-test('homepage feature icons stay unboxed and cards follow light/dark appearance', async ({ page }) => {
-  const rgb = (s) => [...s.matchAll(/[0-9.]+/g)].slice(0, 3).map(m => Number(m[0]));
-  const brightness = (s) => {
-    const [r, g, b] = rgb(s);
-    return (r * 299 + g * 587 + b * 114) / 1000;
-  };
-
+test('Classic homepage surfaces and links preserve light and dark contrast', async ({ page }) => {
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
+
     for (const scheme of ['light', 'dark']) {
+      await page.emulateMedia({ colorScheme: scheme });
       await page.goto('/?lang=en');
-      await page.evaluate(scheme => document.documentElement.classList.toggle('dark', scheme === 'dark'), scheme);
 
-      const pathways = page.locator('[data-home-pathways-icon]');
-      const level = page.locator('[data-home-level-guidance]');
-      const levelArt = level.locator('[data-home-level-icon]');
-      await expect(pathways.locator('svg')).toBeVisible();
-      await expect(levelArt.locator('svg')).toBeVisible();
-      await expect(pathways).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-      await expect(levelArt).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await page.evaluate(scheme =>
+        document.documentElement.classList.toggle('dark', scheme === 'dark'),
+        scheme
+      );
 
-      const [card, art] = await Promise.all([level.boundingBox(), levelArt.boundingBox()]);
-      expect(card && art).toBeTruthy();
-      expect(art.x).toBeGreaterThan(card.x + card.width * 0.6);
-      expect(art.y).toBeLessThan(card.y + 30);
+      const home = page.locator('.lc-home');
+      const sections = home.locator('.lc-home-section');
 
-      for (const selector of [
-        '[data-home-pathways]',
-        '[data-home-feature="flexible"]',
-        '[data-home-feature="level"]',
-        '[data-home-feature="educator"]',
-        '[data-home-study-corner]',
-      ]) {
-        const surface = page.locator(selector);
-        await expect(surface).toBeVisible();
-        const background = await surface.evaluate(el => getComputedStyle(el).backgroundColor);
-        if (selector !== '[data-home-feature="flexible"]') {
-          if (scheme === 'light') expect(brightness(background)).toBeGreaterThan(180);
-          else expect(brightness(background)).toBeLessThan(110);
-        } else {
-          const cardText = await surface.evaluate(el => getComputedStyle(el).color);
-          if (scheme === 'light') expect(brightness(cardText)).toBeLessThan(120);
-          else expect(brightness(cardText)).toBeGreaterThan(200);
-        }
+      await expect(home).toBeVisible();
+      expect(await sections.count()).toBeGreaterThanOrEqual(2);
+
+      const surface = scheme === 'light'
+        ? 'rgb(255, 255, 255)'
+        : 'rgb(20, 39, 62)';
+
+      const ink = scheme === 'light'
+        ? 'rgb(16, 45, 82)'
+        : 'rgb(244, 247, 251)';
+
+      for (const section of await sections.all()) {
+        await expect(section).toHaveCSS('background-color', surface);
+        await expect(section.locator('h2')).toBeVisible();
+
+        const link = section.locator('.lc-home-title-list a').first();
+        await expect(link).toBeVisible();
+        await expect(link).toHaveCSS('color', ink);
+        await expect(link).toHaveAttribute('href', /.+/);
       }
 
-      const paragraph = level.locator('p');
-      await expect(paragraph).toContainText('CEFR');
-      await expect(paragraph).toContainText('current ability');
-      const lines = await paragraph.evaluate(el => {
-        const style = getComputedStyle(el);
-        return el.getBoundingClientRect().height / parseFloat(style.lineHeight);
-      });
-      expect(lines).toBeGreaterThanOrEqual(3);
+      const levels = home.locator('[data-home-levels] a');
+      await expect(levels).toHaveCount(6);
+      await expect(home.locator('#home-educators')).toBeVisible();
     }
   }
 });

@@ -164,7 +164,64 @@ jobs:
           npm install --no-save --package-lock=false --no-audit --no-fund @playwright/test@1.55.0
           npx playwright install --with-deps chromium webkit
       - name: Chromium desktop/mobile/tablet and WebKit browser acceptance
+        id: full_browser_acceptance
         run: npx playwright test --config=tests/browser/playwright.config.mjs
+
+      - name: Repeat desktop WebKit video interaction acceptance
+        if: ${{ !cancelled() && (steps.full_browser_acceptance.outcome == 'success' || steps.full_browser_acceptance.outcome == 'failure') }}
+        run: |
+          npx playwright test --config=tests/browser/playwright.config.mjs \
+            --project=desktop-webkit \
+            --grep "media video preview uses transparent speed and hides controls when inactive" \
+            --repeat-each=3 --workers=1 \
+            --output=test-results/video-stability
+
+      - name: Specialized and native guest browser acceptance
+        if: ${{ !cancelled() && (steps.full_browser_acceptance.outcome == 'success' || steps.full_browser_acceptance.outcome == 'failure') }}
+        env:
+          APP_ENV: testing
+          APP_DEBUG: "false"
+          APP_URL: http://127.0.0.1:8001
+          BROWSER_BASE_URL: http://127.0.0.1:8001
+          DB_CONNECTION: sqlite
+          ASSESSMENT_GUEST_REHEARSAL: "true"
+          MANAGED_STORAGE_DISK: local
+          DB_URL: ""
+          FILESYSTEM_DISK: local
+          SESSION_DRIVER: file
+          MAIL_MAILER: array
+          QUEUE_CONNECTION: sync
+        run: |
+          set -Eeuo pipefail
+
+          export DB_DATABASE="$PWD/database/browser-assessment-qa.sqlite"
+
+          test ! -e "$DB_DATABASE"
+          touch "$DB_DATABASE"
+
+          php artisan migrate --seed --force --no-interaction
+          php tests/browser/seed-assessment-fixtures.php
+
+          php artisan serve --host=127.0.0.1 --port=8001 \
+            > /tmp/lc-assessment-browser.log 2>&1 &
+
+          qa_pid=$!
+          trap 'kill "$qa_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+
+          for attempt in $(seq 1 40); do
+            if curl -fsS --max-time 3 http://127.0.0.1:8001/up >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          test "$ready" = 1
+
+          npx playwright test --config=tests/browser/assessment-acceptance.config.mjs \
+            --output=test-results/assessment-acceptance
       - if: always()
         uses: actions/upload-artifact@v4
         with:
