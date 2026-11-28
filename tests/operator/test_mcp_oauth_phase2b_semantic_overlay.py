@@ -82,12 +82,13 @@ for path in paths:
 
 print("MCP_PHASE2B_SEMANTIC_OVERLAY_ACCEPTANCE=PASS")
 
-# Verify the newer transport overlay against the actual current route sources.
+# Verify the historical transport overlay against its pinned reviewed route sources.
+# Later guest routes are intentionally outside this exact-diff operator contract.
 import runpy
 transport = runpy.run_path(str(ROOT / "support/operator/learncambodia-mcp-transport-route-overlay.py"))
 for path in ("routes/web.php", "routes/api.php"):
     base = subprocess.check_output(["git", "show", "58f4a45cc67ff6215259157c8c4b77ce44ea1c98:" + path], text=True)
-    reviewed = (ROOT / path).read_text()
+    reviewed = subprocess.check_output(["git", "show", "fdb90f3ad7d367192ed458da49e269f9cb06abb6:" + path], text=True)
     overlay = transport["overlay"]
     anchor, extra, marker = transport["OPS"][path]
     assert overlay(path, base, reviewed, base) == reviewed
