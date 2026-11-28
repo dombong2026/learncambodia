@@ -134,6 +134,73 @@ test.describe('Authenticated rich editor against isolated Laravel fixture', () =
       await expect(page.locator('[data-workspace-content]').locator(selector))
         .toBeVisible();
 
+      if (label === 'MCP Management') {
+        const viewport = page.viewportSize();
+
+        expect(viewport).not.toBeNull();
+
+        // The accessible Actions label must not escape
+        // the table scroll container and widen the page.
+        await expect.poll(async () => {
+          return page.evaluate(expectedWidth => {
+            const root = document.documentElement;
+
+            return window.innerWidth <= expectedWidth + 1
+              && root.scrollWidth <= root.clientWidth + 1;
+          }, viewport.width);
+        }, {
+          timeout: 10000,
+          message: 'MCP Management must not expand the document viewport',
+        }).toBe(true);
+
+        const tools = page.locator(
+          'section[aria-labelledby="mcp-tools-heading"]'
+        );
+
+        const tableScroll = tools.locator('.mcp-table-scroll');
+
+        await expect(tableScroll).toBeVisible();
+        await expect(tableScroll).toHaveCSS('position', 'relative');
+        await expect(tableScroll).toHaveCSS('overflow-x', 'auto');
+
+        await expect(tools.getByRole('columnheader', {
+          name: 'Actions',
+          exact: true,
+        })).toHaveCount(1);
+
+        const contained = await tableScroll.evaluate(container => {
+          const label = container.querySelector('.mcp-visually-hidden');
+
+          return Boolean(label && label.offsetParent === container);
+        });
+
+        expect(contained).toBe(true);
+
+        // The table must remain horizontally scrollable
+        // at mobile and tablet widths.
+        if (viewport.width <= 768) {
+          const scrollDistance = await tableScroll.evaluate(container => {
+            const original = container.scrollLeft;
+
+            container.scrollTo({
+              left: container.scrollWidth,
+              behavior: 'instant',
+            });
+
+            const distance = container.scrollLeft;
+
+            container.scrollTo({
+              left: original,
+              behavior: 'instant',
+            });
+
+            return distance;
+          });
+
+          expect(scrollDistance).toBeGreaterThan(0);
+        }
+      }
+
       const sidebar = page.locator('[data-sidebar]');
 
       if (!desktop) {

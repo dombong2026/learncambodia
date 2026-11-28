@@ -52,7 +52,7 @@
 .dark .mcp-manager .mcp-capability-list p{color:#94a3b8}
 .mcp-manager .mcp-regular-link{display:inline-flex;color:#0f766e;font-weight:800;font-size:12px;text-decoration:none;margin:7px 20px 20px}
 .dark .mcp-manager .mcp-regular-link{color:#5eead4}
-.mcp-manager .mcp-table-scroll{max-width:100%;overflow-x:auto}
+.mcp-manager .mcp-table-scroll{position:relative;max-width:100%;overflow-x:auto}
 .mcp-manager .mcp-table{width:100%;min-width:890px;border-collapse:collapse;text-align:left}
 .mcp-manager .mcp-table th{color:#64748b;background:#f8fafc;font-size:10px;font-weight:850;letter-spacing:.03em;padding:11px 15px;border-bottom:1px solid #e2e8f0}
 .dark .mcp-manager .mcp-table th{background:#111e32;color:#94a3b8;border-color:#334155}
