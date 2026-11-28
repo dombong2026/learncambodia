@@ -1,0 +1,108 @@
+.category-article-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.6rem, 2vw, 1.25rem);
+}
+
+.category-article-grid > a {
+    min-width: 0;
+}
+
+.category-article-grid h3 {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+    .category-article-grid > a {
+        border-radius: 1rem;
+    }
+
+    .category-article-grid > a > div:last-child {
+        padding: 0.8rem;
+    }
+
+    .category-article-grid h3 {
+        font-size: 0.95rem;
+        line-height: 1.35;
+    }
+
+    .category-article-grid p {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (min-width: 720px) {
+    .category-article-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .category-article-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.category-article-pagination {
+    --pagination-text: #18365a;
+    --pagination-bg: #fff;
+    --pagination-border: #acbbce;
+    --pagination-hover: #e7eef7;
+    --pagination-muted: #50627a;
+    --pagination-disabled: #e9eef5;
+    --pagination-current: #d8e6f6;
+}
+
+.dark .category-article-pagination {
+    --pagination-text: #f4f7fc;
+    --pagination-bg: #173757;
+    --pagination-border: #547798;
+    --pagination-hover: #244c72;
+    --pagination-muted: #b1c2d6;
+    --pagination-disabled: #102840;
+    --pagination-current: #30597e;
+}
+
+.category-article-pagination nav :where(a, .cursor-not-allowed, [aria-current="page"] > span) {
+    color: var(--pagination-text);
+    background-color: var(--pagination-bg);
+    border-color: var(--pagination-border);
+}
+
+.category-article-pagination nav a:hover {
+    background-color: var(--pagination-hover);
+}
+
+.category-article-pagination nav a:focus-visible {
+    outline: 2px solid var(--platform-focus, currentColor);
+    outline-offset: 2px;
+}
+
+.category-article-pagination nav .cursor-not-allowed {
+    color: var(--pagination-muted);
+    background-color: var(--pagination-disabled);
+}
+
+.category-article-pagination nav [aria-current="page"] > span {
+    background-color: var(--pagination-current);
+}
+
+.category-article-pagination nav p {
+    color: var(--pagination-muted);
+}
+
+/* Laravel renders the numbered desktop row after the compact mobile row. */
+@media (min-width: 40rem) {
+    .category-article-pagination nav > div:nth-child(2) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+}

@@ -19,8 +19,9 @@ class CatalogTest extends TestCase
         $this->seed(CategorySeeder::class);
         $this->publishLearningCategoryFixtures();
 
-        $this->get('/')->assertOk()
-            ->assertSee('Explore English learning for every ambition.')
+        $this->get('/?lang=en')->assertOk()
+            ->assertSee(trans('pages.home_hero_title', [], 'en'))
+            ->assertSee('id="home-title"', false)
             ->assertSee('IELTS');
     }
 
@@ -28,7 +29,21 @@ class CatalogTest extends TestCase
     {
         $this->seed(CategorySeeder::class);
         $this->publishLearningCategoryFixtures();
-        $this->get('/')->assertOk()->assertSee('CELPIP')->assertSee('TEYL');
+        foreach (['/', route('navigation.categories')] as $url) {
+            $response = $this->get($url)->assertOk();
+
+            foreach (['ESL', 'GE', 'EAP', 'TOEIC', 'TOEFL', 'IELTS'] as $code) {
+                $response->assertSee(
+                    'data-category-short="'.$code.'"', false
+                );
+            }
+
+            foreach (['EFL', 'CELPIP', 'TEYL'] as $code) {
+                $response->assertDontSee(
+                    'data-category-short="'.$code.'"', false
+                );
+            }
+        }
     }
 
     public function test_search_returns_matching_category(): void

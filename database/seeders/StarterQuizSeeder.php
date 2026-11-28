@@ -15,6 +15,47 @@ use Throwable;
 
 final class StarterQuizSeeder
 {
+    private const PUBLIC_PRACTICE = [
+        'a1-present', 'a1-reading',
+        'a2-past', 'a2-travel',
+        'b1-perfect', 'b1-work',
+        'b2-connectors', 'b2-reading',
+        'c1-editing', 'c1-reading',
+    ];
+
+    public function publishPractice(): int
+    {
+        return DB::transaction(function (): int {
+            $quizzes = CourseExam::withTrashed()
+                ->whereIn('starter_key', self::PUBLIC_PRACTICE)->orderBy('id')->lockForUpdate()->get()
+                ->keyBy('starter_key');
+
+            foreach (self::PUBLIC_PRACTICE as $key) {
+                $quiz = $quizzes->get($key);
+                if (!$quiz || $quiz->trashed() || $quiz->deactivated_at || $quiz->kind !== 'quiz' || $quiz->course_id !== null) {
+                    throw new RuntimeException("The practice quiz is missing or unavailable: $key.");
+                }
+
+                $questions = AssessmentQuestions::validate($quiz->questions ?? []);
+                if (count($questions) !== 20 || collect($questions)->contains(fn (array $item): bool =>
+                    !AssessmentQuestions::scored($item) || AssessmentQuestions::manual($item) || blank($item['feedback'] ?? null))) {
+                    throw new RuntimeException("The practice quiz needs 20 auto-graded questions with feedback: $key.");
+                }
+
+                $quiz->update([
+                    'time_limit' => 20,
+                    'attempt_limit' => 2,
+                    'live_feedback' => true,
+                    'viewer_mode' => 'specialized',
+                    'pricing' => null,
+                    'published' => true,
+                ]);
+            }
+
+            return $quizzes->count();
+        });
+    }
+
     public function run(?int $authorId = null): int
     {
         $bank = $this->bank();
@@ -94,7 +135,12 @@ final class StarterQuizSeeder
         }
     }
 
-    private function bank(): array
+    public function questionsByStarterKey(): array
+    {
+        return array_map(fn (array $entry): array => $entry['questions'], $this->bank(includeCovers: false));
+    }
+
+    private function bank(bool $includeCovers = true): array
     {
         $directory = base_path('support/editorial/quiz-starter');
         $bank = [];
@@ -116,16 +162,20 @@ final class StarterQuizSeeder
                     throw new RuntimeException("Invalid quiz header: $key.");
                 }
 
-                $filepath = "$directory/covers/$key.webp";
-                $image = is_file($filepath) ? getimagesize($filepath) : false;
-                if (!$image || $image[2] !== IMAGETYPE_WEBP || $image[0] !== 960 || $image[1] !== 540) {
-                    throw new RuntimeException("Invalid featured image: $key.");
-                }
+                $cover = null;
+                if ($includeCovers) {
+                    $filepath = "$directory/covers/$key.webp";
+                    $image = is_file($filepath) ? getimagesize($filepath) : false;
+                    if (!$image || $image[2] !== IMAGETYPE_WEBP || $image[0] !== 960 || $image[1] !== 540) {
+                        throw new RuntimeException("Invalid featured image: $key.");
+                    }
 
-                $cover = file_get_contents($filepath);
-                $hash = hash('sha256', $cover);
-                if (isset($coverHashes[$hash])) {
-                    throw new RuntimeException("Duplicate featured image: $key.");
+                    $cover = file_get_contents($filepath);
+                    $hash = hash('sha256', $cover);
+                    if (isset($coverHashes[$hash])) {
+                        throw new RuntimeException("Duplicate featured image: $key.");
+                    }
+                    $coverHashes[$hash] = true;
                 }
 
                 $bank[$key] = [
@@ -136,7 +186,6 @@ final class StarterQuizSeeder
                     'questions' => $this->questions($key, $skill, $lines),
                 ];
                 $titles[$title] = true;
-                $coverHashes[$hash] = true;
             }
         }
 

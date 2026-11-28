@@ -18,6 +18,12 @@
                 <x-course-description :course="$course" class="text-sm leading-7" />
             @endif
         </div>
+        @if($editable)
+            @include('workspace.admin.openai.panel', [
+                'openAiContext' => 'course', 'openAiLevel' => $course->cefr_level, 'openAiClass' => 'sm:col-span-2',
+                'openAiTasks' => ['summary' => 'Draft summary', 'description' => 'Draft full description'],
+            ])
+        @endif
         <x-learning-detail-fields :record="$course" kind="course" class="sm:col-span-2 sm:grid-cols-2" />
         @include('workspace.admin.course-builder.pricing')
     </fieldset>

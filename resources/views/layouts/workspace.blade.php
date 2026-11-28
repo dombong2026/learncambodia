@@ -9,6 +9,7 @@
     <title>@yield('title', 'Overview') · {{ \App\Support\PlatformBranding::name() }}</title>
     @include('partials.brand-head')
     @include('partials.theme-boot')
+    @include('partials.audio-player-head')
     <script>
         try {
             if (localStorage.getItem('learncambodia.workspace.sidebar') === 'closed') {
@@ -18,6 +19,9 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.ts', 'resources/js/workspace.ts'])
     @stack('workspace_styles')
+    <link rel="stylesheet" href="{{ asset('css/workspace-glass-sidebar.css') }}?v=3">
+    <link rel="stylesheet" href="{{ asset('css/workspace-unified-glass.css') }}?v=3">
+    <script defer src="{{ asset('js/workspace-glass-sidebar.js') }}?v=2"></script>
 </head>
 @php $role = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role; @endphp
 <body data-workspace-body @if(session('category_navigation_changed')) data-category-navigation-changed @endif class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
@@ -27,10 +31,12 @@
         <aside id="workspace-sidebar" data-sidebar class="workspace-sidebar fixed inset-y-0 left-0 z-50 flex w-[266px] flex-col border-r border-[#304f7d] bg-[#0c2d5b] text-white shadow-xl transition-transform duration-200 lg:shadow-none" aria-label="Workspace sidebar">
             <div class="flex h-16 shrink-0 items-center gap-3 border-b border-white/10 px-5">
                 <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 font-extrabold tracking-tight">
-                    <x-brand-logo surface="dark" height="h-8" imageClass="max-w-[186px]" />
+                    <x-brand-logo surface="adaptive" height="h-8" imageClass="max-w-[186px]" data-glass-wordmark/>
+                    <img data-glass-brand-icon hidden src="{{ \App\Support\PlatformBranding::asset('app-icon-192')['url'] }}" width="36" height="36" alt="{{ \App\Support\PlatformBranding::name() }}">
                 </a>
                 <button type="button" data-sidebar-close aria-label="Close navigation" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-white/10 lg:hidden"><x-workspace-icon name="close" /></button>
             </div>
+            <button type="button" data-glass-sidebar-toggle hidden aria-controls="workspace-sidebar" aria-expanded="true" aria-label="Toggle navigation width" title="Toggle navigation width"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
             <div class="px-3 pt-3 lg:hidden">
                 <label for="workspace-search-mobile" class="sr-only">{{ __('workspace.search') }}</label>
                 <div class="relative">
@@ -39,7 +45,7 @@
                 </div>
             </div>
             <nav data-workspace-nav class="workspace-nav scrollbar-hide min-h-0 flex-1 overflow-y-auto px-3 py-4" aria-label="Account navigation">
-                @foreach(\App\Support\WorkspaceMenu::groups($role) as $group)
+                @foreach(\App\Support\WorkspaceMenu::groups($role, auth()->user()) as $group)
                     <details data-nav-group class="mb-2 rounded-xl" {{ $loop->first ? 'open' : '' }}>
                         <summary class="group flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#e9eef8] transition hover:bg-white/10">
                             <x-workspace-icon :name="$group['icon']" />
@@ -60,8 +66,8 @@
                 <p data-workspace-no-results hidden class="px-4 py-5 text-sm text-white/70">{{ __('workspace.search') }}: 0</p>
             </nav>
             <div class="shrink-0 border-t border-white/15 p-3">
-                <a href="{{ route('home') }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#c3d2e7] transition hover:bg-white/10 hover:text-white"><x-workspace-icon name="home" /> {{ __('workspace.home') }}</a>
-                <a data-sidebar-settings href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="flex items-center gap-3 rounded-xl border-l-[3px] border-[#f4bd4e] bg-white/10 px-3 py-3 workspace-menu-type font-bold text-white transition hover:bg-white/20"><x-workspace-icon name="settings" class="h-5 w-5 text-[#ffca65]" /> {{ __('workspace.settings') }}</a>
+                <a href="{{ route('home') }}" class="mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 workspace-menu-type text-[#c3d2e7] transition hover:bg-white/10 hover:text-white"><x-workspace-icon name="home" /> <span data-glass-footer-label>{{ __('workspace.home') }}</span></a>
+                <a data-sidebar-settings href="{{ \App\Support\WorkspaceMenu::profile($role) }}" class="flex items-center gap-3 rounded-xl border-l-[3px] border-[#f4bd4e] bg-white/10 px-3 py-3 workspace-menu-type font-bold text-white transition hover:bg-white/20"><x-workspace-icon name="settings" class="h-5 w-5 text-[#ffca65]" /> <span data-glass-footer-label>{{ __('workspace.settings') }}</span></a>
             </div>
         </aside>
         <div class="min-w-0" data-workspace-page>
@@ -94,14 +100,18 @@
                     </div>
                 </div>
             </header>
-            <main data-workspace-main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
+            <main @hasSection('learning-reading') data-learning-reader @endif data-workspace-main id="workspace-main" class="mx-auto w-full max-w-[1500px] px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-10">
+@hasSection('learning-reading') @include('partials.learning-reader-toolbar') @endif
+
+                @include('partials.account-preview')
                 @php
                     $workspaceHeading = html_entity_decode(trim($__env->yieldContent('heading', __('workspace.overview'))), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $breadcrumbs = \App\Support\WorkspaceMenu::trail($role, $workspaceHeading);
                     $workspaceAction = \App\Support\WorkspaceMenu::topAction($role);
                 @endphp
-                @unless($__env->hasSection('workspace_compact'))
-                <nav aria-label="Breadcrumb" class="mb-5 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">
+                @php $dashboardLanding = request()->routeIs('admin.overview', 'account.overview', 'instructor.overview', 'developer.overview'); @endphp
+                @if($dashboardLanding || !$__env->hasSection('workspace_compact'))
+                <nav aria-label="Breadcrumb" class="{{ $dashboardLanding ? 'mb-2' : 'mb-5' }} flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">
                     <a href="{{ \App\Support\WorkspaceMenu::landing($role) }}" class="inline-flex items-center rounded-md p-1 transition hover:text-blue-700 dark:hover:text-blue-400" title="{{ __('workspace.overview') }}" aria-label="{{ __('workspace.overview') }}"><x-workspace-icon name="home" class="h-3.5 w-3.5" /></a>
                     @foreach($breadcrumbs as $crumb)
                         @if($crumb['url'])
@@ -113,21 +123,26 @@
                         @endif
                     @endforeach
                 </nav>
+                @if($dashboardLanding)
+                {{-- Keep the accessible title, but do not repeat the visible dashboard introduction. --}}
+                <h1 data-workspace-heading data-dashboard-compact-heading class="sr-only">@yield('heading', 'Overview')</h1>
+                @else
                 <div data-workspace-heading class="mb-7 flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <p class="mb-1 text-[11px] font-bold uppercase tracking-[.15em] text-blue-700 dark:text-blue-400">{{ ucfirst($role) }} {{ __('workspace.workspace') }}</p>
                         <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl">@yield('heading', 'Overview')</h1>
                         @hasSection('description')<p class="mt-2 max-w-3xl text-sm leading-7 text-slate-500 dark:text-slate-400">@yield('description')</p>@endif
                     </div>
-                    <div class="flex shrink-0 items-center gap-2">
+                    <div data-workspace-heading-actions class="flex shrink-0 items-center gap-2">
                         @hasSection('heading_action')
                             @yield('heading_action')
-                        @elseif(!request()->routeIs('admin.system-settings.*', 'admin.profile.edit', 'security.methods'))
-                            <a href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
+                        @elseif($workspaceAction !== null && !request()->routeIs('security.methods'))
+                            <a data-workspace-primary-action href="{{ $workspaceAction['url'] }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-sm">{{ $workspaceAction['label'] }}</a>
                         @endif
                     </div>
                 </div>
-                @endunless
+                @endif
+                @endif
                 @if(session('status'))
                     <div role="status" aria-live="polite" data-workspace-toast class="fixed right-4 top-20 z-[80] max-w-sm rounded-2xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-800 shadow-xl dark:border-emerald-900 dark:bg-slate-900 dark:text-emerald-300">{{ session('status') }}</div>
                 @endif
@@ -135,10 +150,11 @@
             </main>
         </div>
         <nav data-workspace-mobile-nav class="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(15,23,42,.08)] backdrop-blur-xl lg:hidden dark:border-slate-800 dark:bg-slate-900/95" aria-label="Mobile workspace navigation">
-            @foreach(\App\Support\WorkspaceMenu::mobileItems($role) as $mobileItem)
+            @foreach(\App\Support\WorkspaceMenu::mobileItems($role, auth()->user()) as $mobileItem)
                 <a href="{{ $mobileItem['url'] }}" @if($mobileItem['active']) aria-current="page" @endif class="flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-[10px] font-semibold transition {{ $mobileItem['active'] ? 'text-blue-700 dark:text-blue-400' : 'text-slate-500 hover:text-blue-700 dark:text-slate-400' }}"><x-workspace-icon :name="$mobileItem['icon']" class="h-5 w-5" /><span class="max-w-full truncate">{{ $mobileItem['label'] }}</span></a>
             @endforeach
         </nav>
     </div>
+    @yield('workspace_feedback')
 </body>
 </html>

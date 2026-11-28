@@ -30,7 +30,8 @@ final class GuestAssessment
 
     public static function allowed(CourseExam $exam): bool
     {
-        return self::enabled() && $exam->guest_enabled && $exam->published
+        return self::enabled() && $exam->viewer_mode === 'default'
+            && $exam->guest_enabled && $exam->published
             && !$exam->deactivated_at && in_array($exam->kind, ['quiz', 'exam'], true)
             && self::compatible($exam->course_id, $exam->pricing, $exam->questions ?? []);
     }

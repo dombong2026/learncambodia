@@ -40,21 +40,80 @@ final class WorkspaceVisualSystemTest extends TestCase
 
     public function test_public_information_pages_share_chrome_and_keep_unapproved_claims_out(): void
     {
-        foreach (['faq', 'partners', 'placement', 'scores', 'careers', 'terms', 'privacy'] as $page) {
-            $this->get(route('information.show', $page))->assertOk()
+        foreach (['faq', 'partners', 'scores', 'careers'] as $page) {
+            $this->get(route('information.show', $page).'?lang=en')
+                ->assertOk()
                 ->assertSee('data-information-page="'.$page.'"', false)
                 ->assertSee('class="information-page', false)
-                ->assertSee('Explore categories')
-                ->assertSee('View CEFR levels')
+                ->assertSee('href="'.route('categories.index').'"', false)
+                ->assertSee('href="'.route('cefr.index').'"', false)
+                ->assertSee('Learn Cambodia')
+                ->assertDontSee(trans('ui.draft_legal_notice', [], 'en'));
+        }
+
+        // Placement now has a dedicated public module.
+        $this->assertSame(
+            route('information.show', 'placement'),
+            route('placement.index')
+        );
+
+        $this->get(route('placement.index').'?lang=en')
+            ->assertOk()
+            ->assertSee('English Placement Tests')
+            ->assertSee('id="main-content"', false)
+            ->assertSee('Learn Cambodia')
+            ->assertDontSee(
+                trans('ui.draft_legal_notice', [], 'en')
+            );
+
+        $this->assertSame(
+            'placement.index',
+            \Illuminate\Support\Facades\Route::currentRouteName()
+        );
+
+        foreach (['about', 'contact'] as $page) {
+            $this->get(route('information.show', $page).'?lang=en')
+                ->assertOk()
+                ->assertSee('id="main-content"', false)
+                ->assertSee('aria-label="Breadcrumb"', false)
+                ->assertSee(\App\Support\Appearance::value($page, 'heading'))
                 ->assertSee('Learn Cambodia');
         }
 
-        $this->get(route('information.show','terms'))->assertOk()
-            ->assertSee('preliminary draft and requires legal review');
-        $this->get(route('information.show','privacy'))->assertOk()
-            ->assertSee('preliminary draft and requires legal review');
-        $this->get(route('information.show','faq'))->assertDontSee('preliminary draft and requires legal review');
-        $this->get(route('information.show','invalid-page'))->assertNotFound();
+        // Synthetic fixtures in the isolated test database.
+        $admin = $this->member('admin');
+
+        foreach (['terms', 'privacy'] as $page) {
+            $policy = \App\Models\ContentEntry::query()
+                ->firstOrNew(['type' => 'policy', 'slug' => $page]);
+
+            $policy->forceFill([
+                'title' => 'QA reviewed '.$page.' policy',
+                'body' => 'Synthetic reviewed policy text.',
+                'status' => 'draft',
+                'created_by' => $admin->id,
+            ])->save();
+
+            $url = route('information.show', $page);
+
+            $this->get($url)->assertOk()
+                ->assertSee(trans('ui.draft_legal_notice', [], 'en'))
+                ->assertDontSee($policy->title)
+                ->assertDontSee('Synthetic reviewed policy text.');
+
+            $this->get($policy->publicUrl())->assertNotFound();
+
+            $policy->forceFill(['status' => 'published'])->save();
+
+            $this->get($url)->assertRedirect($policy->publicUrl());
+
+            $this->get($policy->publicUrl())->assertOk()
+                ->assertSee($policy->title)
+                ->assertSee('Synthetic reviewed policy text.');
+        }
+
+        $this->get(route('information.show', 'invalid-page'))
+            ->assertNotFound();
     }
 
     public function test_empty_course_workspaces_offer_only_real_authorized_actions(): void

@@ -1,5 +1,6 @@
 @extends('layouts.public')
 @section('title',\App\Support\Appearance::value('course_exam_catalog','hero_heading'))
+@section('learning-reading', 'enabled')
 @section('content')
 @php $a=\App\Support\Appearance::approved('course_exam_catalog'); @endphp
 <x-learning-hero :title="$a['hero_heading']" :subtitle="$a['hero_intro']" eyebrow="Exam & practice preparation" icon="clipboard-check" :action-url="'#exam-courses'" action-label="Browse assessments"
@@ -9,7 +10,7 @@
     ]"/>
 <x-learning-section id="exam-courses" :title="$a['course_heading']" eyebrow="Genuine reviewed practice" subtitle="Browse published course exams and practice quizzes. Approved enrollment is required to attempt them." tone="white">
     <nav class="mb-5 flex flex-wrap gap-4 font-semibold">
-        <a href="{{ route('assessments.exams') }}">Standalone exams</a>
+        <a href="{{ route('assessments.exams') }}">{{ __('assessment_catalog.practice_exams') }}</a>
         <a href="{{ route('assessments.quizzes') }}">Quick quizzes</a>
     </nav>
     <form method="GET" role="search" action="{{ route('learning.exams') }}#exam-courses" class="flex max-w-3xl gap-2">

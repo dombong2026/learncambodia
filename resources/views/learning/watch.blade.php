@@ -21,7 +21,7 @@
                         @if($firstLesson)
                             <a href="{{ route('account.lessons.watch',[$enrollment,$firstLesson]) }}" class="rounded-xl bg-[#123862] px-5 py-3 text-xs font-black text-white">Open focused lesson</a>
                         @endif
-                        <a href="{{ route('account.enrollments.show',$enrollment) }}" class="rounded-xl border border-[#d5ac60] px-5 py-3 text-xs font-black text-[#a57829] dark:text-[#f3c777]">Open all modules</a>
+                        <a href="{{ route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']) }}" class="rounded-xl border border-[#d5ac60] px-5 py-3 text-xs font-black text-[#a57829] dark:text-[#f3c777]">Open all modules</a>
                     </div>
                 </article>
             @endforeach

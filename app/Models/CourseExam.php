@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasPublicId;
+use App\Support\CoursePricing;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +13,7 @@ final class CourseExam extends Model
 {
     use HasPublicId, SoftDeletes;
 
-    protected $fillable = ['course_id', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'featured_kind', 'featured_media_id', 'featured_alt', 'featured_value', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published', 'guest_enabled'];
+    protected $fillable = ['course_id', 'certificate_template_id', 'viewer_mode', 'kind', 'live_feedback', 'pricing', 'exam_type_id', 'title', 'featured_kind', 'featured_media_id', 'featured_alt', 'featured_value', 'public_requirement', 'content_language', 'instructions_html', 'questions', 'time_limit', 'passing_percent', 'attempt_limit', 'shuffle', 'gamified', 'published', 'guest_enabled'];
 
     protected function casts(): array
     {
@@ -22,6 +23,12 @@ final class CourseExam extends Model
     public function featuredMedia(): BelongsTo
     {
         return $this->belongsTo(EditorMedia::class);
+    }
+
+    public function isSpecialized(): bool
+    {
+        return $this->course_id === null && $this->viewer_mode === 'specialized'
+            && ($this->kind === 'exam' || ($this->kind === 'quiz' && CoursePricing::quote($this->pricing)['model'] === 'free'));
     }
 
     public function publicUrl(): string

@@ -71,7 +71,8 @@ final class McpOAuthAssessmentGuest
                 return json_decode($record->result, true, 512, JSON_THROW_ON_ERROR) + ['replayed' => true];
             }
             abort_unless(hash_equals(McpOAuthStandaloneAssessment::version($exam), $data['expected_version']), 409);
-            if ($data['guest_enabled'] && !GuestAssessment::compatible($exam->course_id, $exam->pricing, $exam->questions ?? [])) {
+            if ($data['guest_enabled'] && ($exam->viewer_mode !== 'default'
+                || !GuestAssessment::compatible($exam->course_id, $exam->pricing, $exam->questions ?? []))) {
                 throw ValidationException::withMessages(['guest_enabled' => 'Guest access requires a free standalone assessment without speaking recordings.']);
             }
             $exam->update(['guest_enabled' => $data['guest_enabled']]);

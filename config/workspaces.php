@@ -407,8 +407,11 @@ return json_decode(<<<'JSON'
         {"key": "branding", "label": "Branding", "route": "admin.system-settings.branding"},
         {"key": "security", "label": "Security", "route": "admin.system-settings.security"},
         {"key": "social-auth", "label": "Social Auth", "route": "admin.system-settings.social-auth"},
+        {"key": "smtp", "label": "SMTP", "route": "admin.system-settings.smtp"},
         {"key": "cloud-storage", "label": "Cloud Storage", "route": "admin.system-settings.cloud-storage"},
-        {"key": "mcp", "label": "MCP Management", "route": "admin.system-settings.mcp"}
+        {"key": "mcp", "label": "MCP Management", "route": "admin.system-settings.mcp"},
+        {"key": "openai", "label": "OpenAI API", "route": "admin.system-settings.openai.edit"},
+        {"key": "player", "label": "Player Settings", "route": "admin.system-settings.player.edit"}
       ]
     },
     {
@@ -600,6 +603,11 @@ return json_decode(<<<'JSON'
           "key": "progress",
           "label": "Learning Progress",
           "route": "account.progress.index"
+        },
+        {
+          "key": "certificates",
+          "label": "My Certificates",
+          "route": "account.certificates.index"
         },
         {
           "key": "cefr",

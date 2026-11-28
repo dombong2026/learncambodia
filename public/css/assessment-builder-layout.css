@@ -1,0 +1,91 @@
+/* Scoped to the first section of the shared Quiz / Exam Builder. */
+.assessment-builder-details { align-items: start; }
+.assessment-builder-details > *, .assessment-builder-identity > * { min-width: 0; }
+.assessment-builder-identity { align-content: start; }
+.assessment-builder-limits { display: contents; }
+.assessment-builder-metadata { align-items: start; }
+.assessment-builder-details .assessment-builder-switch {
+    position: relative; display: flex; align-items: center; gap: .75rem;
+    min-width: 0; min-height: 3.25rem; cursor: pointer;
+}
+.assessment-builder-switch input[type="checkbox"] {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+}
+.assessment-builder-switch-track {
+    position: relative; display: block; width: 2.5rem; height: 1.5rem;
+    flex: 0 0 2.5rem; border-radius: 999px; background: #64748b;
+    transition: background-color 150ms ease;
+}
+.assessment-builder-switch-track::after {
+    content: ""; position: absolute; top: .1875rem; left: .1875rem;
+    width: 1.125rem; height: 1.125rem; background: #fff;
+    border-radius: 50%; transition: transform 150ms ease;
+}
+.assessment-builder-switch input:checked + .assessment-builder-switch-track { background: #2563eb; }
+.assessment-builder-switch input:checked + .assessment-builder-switch-track::after { transform: translateX(1rem); }
+.assessment-builder-switch input:focus-visible + .assessment-builder-switch-track { outline: 2px solid #60a5fa; outline-offset: 3px; }
+.assessment-builder-switch input:disabled + .assessment-builder-switch-track { opacity: .5; }
+@media (prefers-reduced-motion: reduce) {
+    .assessment-builder-switch-track, .assessment-builder-switch-track::after { transition: none; }
+}
+@media (forced-colors: active) {
+    .assessment-builder-switch-track { border: 1px solid ButtonText; }
+    .assessment-builder-switch input:checked + .assessment-builder-switch-track { background: Highlight; }
+    .assessment-builder-switch-track::after { background: ButtonText; }
+}
+
+/* Reserve the same preview and controls space for every media type. */
+[data-assessment-media-panel] { min-width: 0; }
+.assessment-media-preview {
+    position: relative; display: grid; place-items: center; width: 100%;
+    aspect-ratio: 16 / 9; overflow: hidden; border: 1px dashed #94a3b8;
+    border-radius: .75rem; background: rgba(100, 116, 139, .09);
+}
+.assessment-media-preview > img, .assessment-media-preview > video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; background: #0f172a; border-radius: inherit;
+}
+.assessment-media-preview > [data-assessment-media-swatch] {
+    position: absolute; inset: 0; border-radius: inherit;
+}
+.assessment-media-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .375rem; padding: .5rem; text-align: center; font-size: .75rem;
+}
+.assessment-media-placeholder[hidden], [data-assessment-media-pick][hidden] { display: none !important; }
+.assessment-media-placeholder button { min-height: 2rem; }
+.assessment-media-controls {
+    height: 6.5rem; min-width: 0; overflow: auto; overscroll-behavior: contain;
+    scrollbar-gutter: stable; padding: .25rem .125rem .25rem 0;
+}
+.assessment-media-controls > * + * { margin-top: .5rem; }
+.assessment-media-controls [data-featured-name] {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Compact overview: details use the space beside the stable cover preview. */
+.assessment-builder-identity { grid-template-columns: minmax(0, 1fr); }
+.assessment-builder-identity .assessment-builder-wide { grid-column: 1 / -1; }
+.assessment-builder-media { align-self: start; min-width: 0; }
+@media (min-width: 640px) and (max-width: 1023px) {
+    .assessment-builder-details > .assessment-builder-identity,
+    .assessment-builder-details > .assessment-builder-media { grid-column: 1 / -1; }
+}
+@media (min-width: 640px) {
+    .assessment-builder-identity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+[data-assessment-media-panel] { display: grid; gap: .625rem; padding: .875rem; }
+[data-assessment-media-panel] > * { margin: 0 !important; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-asset]:not([hidden]) {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .375rem .5rem; align-items: center;
+}
+[data-assessment-media-panel] .assessment-media-controls [data-featured-asset] > * { margin: 0 !important; min-width: 0; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-alt] { grid-column: 1 / -1; }
+[data-assessment-media-panel] .assessment-media-controls [data-open-media-library] { max-width: 100%; white-space: normal; }
+[data-assessment-media-panel] .assessment-media-controls [data-featured-name] { min-width: 0; }
+@media (max-width: 400px) {
+    [data-assessment-media-panel] .assessment-media-controls [data-featured-asset]:not([hidden]) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    [data-assessment-media-panel] .assessment-media-controls { height: 8rem; }
+}

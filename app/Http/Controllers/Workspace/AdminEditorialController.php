@@ -12,6 +12,7 @@ use App\Models\PolicyRevision;
 use App\Support\EditorHtml;
 use App\Support\ApprovalAudit;
 use App\Support\FeaturedMedia;
+use App\Support\LearningTable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -40,6 +41,21 @@ class AdminEditorialController extends Controller
     public function index(Request $request, string $kind): View
     {
         $type = $this->type($kind);
+        if ($type === 'policy') {
+            $search = LearningTable::search($request);
+            $policies = ContentEntry::query()->where('type', $type)
+                ->when($search !== '', fn ($entries) => $entries->where(
+                    fn ($match) => $match->whereLike('title', '%'.$search.'%')
+                        ->when(strlen($search) === 6 && ctype_digit($search),
+                            fn ($numeric) => $numeric->orWhere('public_id', $search))
+                ))
+                ->orderByDesc('updated_at')->orderByDesc('id');
+
+            $entries = LearningTable::paginate($policies, $request);
+
+            return view('workspace.admin.policy-index', compact('entries'));
+        }
+
         $filter = $request->validate(['q' => ['nullable', 'string', 'max:80']]);
         $query = trim($filter['q'] ?? '');
 

@@ -8,6 +8,9 @@
     <p class="mb-4 text-sm text-teal-700 dark:text-teal-300">{{ __('auth.email_confirmed') }}</p>
     <a class="auth-primary block rounded-xl bg-[#0c2d5b] px-5 py-3 text-center text-sm font-bold text-white" href="{{ route(auth()->user()->homeRouteName()) }}">{{ __('ui.dashboard') }}</a>
 @else
+    @if(session('verification_delivery_error'))
+        <p role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-6 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{{ session('verification_delivery_error') }}</p>
+    @endif
     <form method="POST" action="{{ route('verification.send') }}">@csrf
         <button type="submit" class="auth-primary w-full rounded-xl bg-[#0c2d5b] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#19467c]">{{ __('auth.resend_confirmation') }}</button>
     </form>

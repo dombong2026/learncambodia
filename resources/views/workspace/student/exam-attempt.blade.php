@@ -1,11 +1,28 @@
-@extends('layouts.workspace')
+@extends(isset($lesson) ? 'layouts.focused-learning' : 'layouts.workspace')
+@section('title', $attempt->snapshot['title'])
+@push('focused-scripts')
+    @vite('resources/js/workspace.ts')
+@endpush
+@if($attempt->submitted_at)
+    @push(isset($lesson) ? 'focused-scripts' : 'workspace_styles')
+        <link rel="stylesheet" href="{{ asset('css/assessment-results.css') }}?v=2">
+    @endpush
+@endif
 @section('heading', $attempt->snapshot['title'])
+@section('learning-reading', 'enabled')
 @section('content')
     @php
         $label = ($attempt->snapshot['kind'] ?? 'exam') === 'quiz' ? 'Quiz' : 'Exam';
-        $back = $enrollment ? route('account.enrollments.show', $enrollment) : $attempt->exam->publicUrl();
+        $fromLesson = isset($lesson) ? ['from_lesson' => $lesson->id] : [];
+        $back = isset($lesson)
+            ? route('account.lessons.watch', [$enrollment, $lesson, 'viewer' => 'exam-'.$attempt->course_exam_id])
+            : ($enrollment ? route('account.enrollments.show', [$enrollment, 'view' => 'curriculum']) : $attempt->exam->publicUrl());
     @endphp
-    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ $enrollment ? 'course' : strtolower($label) }}</a>
+    @isset($lesson)
+        <div class="fl-grid"><div class="fl-main fl-assessment">
+        <h1>{{ $attempt->snapshot['title'] }}</h1>
+    @endisset
+    <a class="mb-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ $back }}">← Return to {{ isset($lesson) ? 'lesson' : ($enrollment ? 'course' : strtolower($label)) }}</a>
     <a class="mb-4 ml-4 inline-block text-sm font-semibold text-blue-700 dark:text-blue-300" href="{{ route('support.tickets.create') }}">{{ $label }} support</a>
     @if($errors->any())
         <ul role="alert" class="mb-4 list-disc pl-5 text-red-600 dark:text-red-300">
@@ -13,8 +30,8 @@
         </ul>
     @endif
     @if($attempt->submitted_at)
-        <section class="workspace-panel space-y-3 p-6">
-            <h2 class="text-xl font-extrabold">{{ $attempt->passed ? 'Passed' : 'Attempt complete' }}</h2>
+        <x-assessment-result-layout :attempt="$attempt">
+            <h3 class="assessment-result-heading">{{ $attempt->passed ? 'Passed' : 'Attempt complete' }}</h3>
             @if($attempt->score !== null)
                 <p>{{ $attempt->score }}% scored · {{ $attempt->snapshot['passing_percent'] }}% required</p>
             @elseif(collect($attempt->snapshot['questions'])->contains(fn ($question) => \App\Support\AssessmentQuestions::manual($question)))
@@ -22,16 +39,13 @@
             @else
                 <p>Your responses have been recorded.</p>
             @endif
+            @if($attempt->passed)
+                <x-certificate-award :certificate="$certificate" :claim="route('account.certificates.claim-assessment', [$attempt, 'lang' => app()->getLocale()])" />
+            @endif
             @if($attempt->snapshot['gamified'] && $attempt->passed)
                 <p class="font-semibold text-blue-700 dark:text-blue-300 motion-safe:animate-pulse">Milestone earned: {{ $label }} passed</p>
             @endif
-            @foreach($attempt->snapshot['questions'] as $index => $question)
-                @php($comment = \App\Support\AssessmentQuestions::manual($question) ? ($attempt->grading[$index]['feedback'] ?? null) : ($question['feedback'] ?? null))
-                @if($comment)
-                    <p class="break-words whitespace-pre-wrap"><strong>{{ $index + 1 }}.</strong> {{ $comment }}</p>
-                @endif
-            @endforeach
-        </section>
+        </x-assessment-result-layout>
     @elseif(!$attempt->expires_at->isFuture())
         <p class="workspace-panel p-6">This attempt ended when the time limit expired.</p>
     @else
@@ -45,7 +59,11 @@
                 <x-lesson-content :lesson="(object) ['content_html'=>$attempt->snapshot['instructions_html'], 'content'=>'']" class="mt-4" />
             @endif
         </section>
-        <form data-exam-attempt method="post" enctype="multipart/form-data" action="{{ $enrollment ? route('account.exam-attempts.submit', [$enrollment, $attempt]) : route('account.assessment-attempts.submit', $attempt) }}"
+        @php($aiListeningMedia = \App\Support\AssessmentQuestions::aiListeningMedia($attempt->snapshot['questions']))
+        @if($aiListeningMedia !== [] && !str_contains(strtolower(strip_tags($attempt->snapshot['instructions_html'] ?? '')), 'synthesized audio'))
+            <p class="mb-3 text-sm text-slate-600 dark:text-slate-300">Some listening recordings use synthetic narration.</p>
+        @endif
+        <form data-exam-attempt method="post" enctype="multipart/form-data" action="{{ $enrollment ? route('account.exam-attempts.submit', [$enrollment, $attempt] + $fromLesson) : route('account.assessment-attempts.submit', $attempt) }}"
             data-feedback-url="{{ $enrollment ? route('account.exam-attempts.feedback', [$enrollment, $attempt]) : route('account.assessment-attempts.feedback', $attempt) }}" class="mt-5 space-y-4">
             @csrf
             @if($attempt->snapshot['gamified'])
@@ -59,4 +77,7 @@
             <button type="submit" class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white">Submit attempt</button>
         </form>
     @endif
+    @isset($lesson)
+        </div>@include('learning.partials.outline')</div>
+    @endisset
 @endsection

@@ -1,5 +1,5 @@
 @props(['title','subtitle'=>'','eyebrow'=>'Learn Cambodia','icon'=>'book-open','stats'=>[],'actionUrl'=>null,'actionLabel'=>null])
-<section class="relative isolate overflow-hidden bg-gradient-to-br from-[#092750] via-[#143e6d] to-[#0e3059] text-white">
+<section data-skin-hero class="relative isolate overflow-hidden bg-gradient-to-br from-[#092750] via-[#143e6d] to-[#0e3059] text-white">
     <div class="pointer-events-none absolute -right-20 -top-24 h-96 w-96 rounded-full border-[54px] border-[#f1bd62]/10" aria-hidden="true"></div>
     <div class="pointer-events-none absolute bottom-0 right-[15%] h-32 w-72 -rotate-12 bg-[#eab454]/10 blur-3xl" aria-hidden="true"></div>
     <div class="relative mx-auto grid max-w-[1600px] items-center gap-10 px-4 py-14 sm:px-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(260px,.7fr)] lg:px-12 lg:py-20">

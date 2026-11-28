@@ -18,6 +18,10 @@
                     :value="old('content', $editingLesson?->content)" :html="old('content_html', $editingLesson?->content_html)" />
             </div>
             <label class="flex items-center gap-2 text-sm font-semibold"><input type="hidden" name="is_preview" value="0"><input type="checkbox" name="is_preview" value="1" @checked(old('is_preview', $editingLesson?->is_preview ?? false))> Public preview after approval</label>
+            @include('workspace.admin.openai.panel', [
+                'openAiContext' => 'course', 'openAiLevel' => $course->cefr_level,
+                'openAiTasks' => ['lesson' => 'Draft a lesson'],
+            ])
             @include('workspace.admin.course-builder.lesson-quiz-editor')
         </form>
     @else

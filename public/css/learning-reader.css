@@ -1,0 +1,134 @@
+@font-face {
+    font-family: Battambang;
+    src: url("../fonts/learning-reader/battambang-400.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;
+}
+
+@font-face {
+    font-family: Battambang;
+    src: url("../fonts/learning-reader/battambang-700.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
+    unicode-range: U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;
+}
+
+@font-face {
+    font-family: Siemreap;
+    src: url("../fonts/learning-reader/siemreap-400.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;
+}
+
+[data-learning-reader]:lang(km) {
+    --lc-khmer-body: Battambang, var(--font-sans, system-ui), sans-serif;
+    --lc-khmer-heading: Siemreap, Battambang, var(--font-sans, system-ui), sans-serif;
+    font-family: var(--lc-khmer-body);
+    font-size: 12pt;
+    line-height: 1.75;
+}
+
+[data-learning-reader]:lang(km) :is(p, li, dt, dd, th, td, blockquote, label, button, summary, textarea, select, input:not([type]), input[type="text"], small, span, a, time, output, .fl-reading-text):lang(km) {
+    font-family: var(--lc-khmer-body);
+    font-size: 12pt;
+    letter-spacing: normal;
+}
+
+[data-learning-reader]:lang(km) :is(h1, h2, h3, h4, h5, h6, legend, [role="heading"]):lang(km) {
+    font-family: var(--lc-khmer-heading);
+    font-size: 14pt;
+    font-weight: 700;
+    font-synthesis: weight;
+    letter-spacing: normal;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+[data-learning-reader]:lang(km) :is(h1, h2, h3, h4, h5, h6, legend, [role="heading"]) :is(span, a, strong):lang(km) {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+[data-learning-reader][data-reader-scaled] [data-reader-text] {
+    font-size: var(--lc-reading-font-size) !important;
+    line-height: var(--lc-reading-line-height) !important;
+    overflow-wrap: anywhere;
+}
+
+.learning-reader-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: .6rem;
+    margin-block-end: .8rem;
+}
+
+.learning-reader-actions > .learning-reader-toolbar { margin: 0; }
+
+.learning-reader-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 .8rem;
+    color: inherit;
+}
+
+[data-learning-reader] .learning-reader-toolbar[hidden] { display: none; }
+
+.learning-reader-toolbar__group {
+    display: inline-flex;
+    align-items: center;
+    padding: .2rem;
+    border: 1px solid currentColor;
+    border-color: color-mix(in srgb, currentColor 24%, transparent);
+    border-radius: .8rem;
+    background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+[data-learning-reader] .learning-reader-toolbar button {
+    display: inline-grid;
+    min-width: 2.35rem;
+    min-height: 2.25rem;
+    place-items: center;
+    padding-inline: .4rem;
+    border-radius: .55rem;
+    background: transparent;
+    color: inherit;
+    font: 650 .86rem/1 system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+[data-learning-reader] .learning-reader-toolbar button:hover:not(:disabled) {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.learning-reader-toolbar button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.learning-reader-toolbar button:disabled { opacity: .42; cursor: default; }
+.learning-reader-toolbar button svg { width: 1rem; height: 1rem; }
+
+[data-learning-reader] [data-exam-feedback]:not(:empty) {
+    padding: .65rem .85rem;
+    border-inline-start: 3px solid currentColor;
+    border-radius: .35rem;
+    background: color-mix(in srgb, currentColor 7%, transparent);
+    overflow-wrap: anywhere;
+}
+
+.learning-answer-review {
+    display: grid;
+    gap: .75rem;
+    margin-block-start: 1.2rem;
+}
+
+.learning-answer-review article {
+    min-width: 0;
+    padding: .8rem .95rem;
+    border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    border-radius: .65rem;
+}
+
+.learning-answer-review article :is(h3, p) { margin: 0 0 .3rem; overflow-wrap: anywhere; }
+.learning-answer-review article :last-child { margin-bottom: 0; }

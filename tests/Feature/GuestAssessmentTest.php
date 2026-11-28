@@ -46,6 +46,27 @@ final class GuestAssessmentTest extends TestCase
             $this->assertFalse(GuestAssessment::allowed($item));
             $this->post(route('guest-assessments.start', $item))->assertNotFound();
         }
+        // Six prior start requests exhaust the rate limit.
+        $this->post(route('guest-assessments.start', $item))
+            ->assertStatus(429);
+
+        $this->assertDatabaseCount('exam_attempts', 0);
+    }
+
+    public function test_specialized_assessment_is_denied_by_new_guest_engine(): void
+    {
+        config()->set('guest-assessment.rehearsal', true);
+
+        $exam = $this->assessment([
+            'viewer_mode' => 'specialized',
+        ]);
+
+        $this->assertSame('specialized', $exam->viewer_mode);
+        $this->assertFalse(GuestAssessment::allowed($exam));
+
+        $this->post(route('guest-assessments.start', $exam))
+            ->assertNotFound();
+
         $this->assertDatabaseCount('exam_attempts', 0);
     }
 

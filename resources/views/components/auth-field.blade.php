@@ -16,7 +16,7 @@
         @if($required) required @endif
         @if($autofocus) autofocus @endif
         aria-invalid="{{ $errors->has($name) ? 'true' : 'false' }}"
-        {{ $attributes->class(['auth-field-input w-full rounded-xl border border-slate-300 bg-white pb-2 pt-6 pl-12 pr-12 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-[#426084] dark:bg-[#0c2342] dark:text-white', 'border-red-500' => $errors->has($name)]) }}
+        {{ $attributes->class(['auth-field-input w-full rounded-xl border border-slate-300 bg-white pb-2 pt-6 pl-12 pr-12 text-sm text-slate-900 transition-colors dark:border-[#426084] dark:bg-[#0c2342] dark:text-white', 'border-red-500' => $errors->has($name)]) }}
     >
     <label for="{{ $id }}" class="auth-field-label absolute left-12 text-sm font-medium text-slate-500 dark:text-slate-300">{{ $label }}</label>
     @if($type === 'password')

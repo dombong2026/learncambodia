@@ -6,13 +6,11 @@ final class GoogleSignIn
 {
     public static function enabled(): bool
     {
-        return (bool) config('services.google.enabled')
-            && filled(config('services.google.client_id'))
-            && filled(config('services.google.client_secret'));
+        return ManagedSocialAuth::enabled(ManagedSocialAuth::settings('google'));
     }
 
     public static function callback(): string
     {
-        return rtrim(config('app.url'), '/').route('social.google.callback', absolute: false);
+        return ManagedSocialAuth::callback('google');
     }
 }

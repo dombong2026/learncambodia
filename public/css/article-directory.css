@@ -1,0 +1,311 @@
+.article-landing {
+    --article-base: #f6f8fb;
+    --article-section: #edf3f9;
+    --article-surface: #fff;
+    --article-line: #cad6e4;
+    --article-ink: #132f50;
+    --article-muted: #485f77;
+    --article-accent: #865607;
+    --article-hover: #e9f0f8;
+    background: var(--article-base);
+    color: var(--article-ink);
+}
+
+.dark .article-landing {
+    --article-base: #0b1728;
+    --article-section: #101f35;
+    --article-surface: #142842;
+    --article-line: #36516d;
+    --article-ink: #f3f7fd;
+    --article-muted: #bed0e4;
+    --article-accent: #f4c778;
+    --article-hover: #203e5d;
+}
+
+.article-frame {
+    max-width: 100rem;
+    margin-inline: auto;
+    padding-inline: clamp(0.85rem, 3.2vw, 3rem);
+}
+
+.article-hero {
+    background: radial-gradient(ellipse at 74% 85%, #294c71 0%, transparent 53%),
+        linear-gradient(115deg, #0b2446, #173c66);
+    color: #fff;
+}
+
+.article-hero-inner {
+    display: grid;
+    align-items: center;
+    gap: clamp(1.4rem, 4vw, 3.25rem);
+    padding-block: clamp(1.65rem, 3.6vw, 3rem) 0;
+}
+
+.article-hero h1 {
+    max-width: 26ch;
+    font-size: clamp(1.9rem, 4vw, 3.65rem);
+    font-weight: 850;
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+    overflow-wrap: anywhere;
+}
+
+.article-hero p {
+    max-width: 58ch;
+    margin-block-start: 0.9rem;
+    color: #d8e5f3;
+    line-height: 1.6;
+}
+
+.article-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1.1rem;
+    margin-block-start: 1.25rem;
+    color: #d8e5f3;
+    font-size: 0.85rem;
+}
+
+.article-hero-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    border-radius: 0.7rem;
+    background: #f4c778;
+    color: #102e51;
+    font-weight: 750;
+}
+
+.article-hero-link:hover { background: #ffdc9e; }
+
+.article-hero-image {
+    display: block;
+    width: 100%;
+    height: clamp(13rem, 61vw, 18rem);
+    align-self: end;
+    object-fit: contain;
+    object-position: center bottom;
+}
+
+.article-section {
+    padding-block: clamp(1.65rem, 4vw, 3.5rem);
+    scroll-margin-top: 7.5rem;
+}
+
+.article-section-alt { background: var(--article-section); }
+
+.article-section h2 {
+    font-size: clamp(1.25rem, 2.4vw, 2rem);
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.article-section-subhead { margin-block-start: clamp(1.75rem, 4vw, 3rem); }
+
+.article-directory-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.9rem 1.25rem;
+}
+
+.article-search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    width: min(100%, 29rem);
+}
+
+.article-search input[type="search"] {
+    flex: 1 1 9rem;
+    min-width: 0;
+    padding: 0.66rem 0.8rem;
+    border: 1px solid var(--article-line);
+    border-radius: 0.67rem;
+    background: var(--article-surface);
+    color: var(--article-ink);
+}
+
+.article-search input::placeholder { color: var(--article-muted); }
+
+.article-search button,
+.article-search a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding-inline: 0.8rem;
+    border: 1px solid var(--article-line);
+    border-radius: 0.67rem;
+    font-size: 0.85rem;
+    font-weight: 720;
+}
+
+.article-search button { background: var(--article-ink); color: var(--article-surface); }
+.article-search a:hover { background: var(--article-hover); }
+.article-search button:hover { background: #315982; color: #fff; }
+
+.article-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.55rem, 1.65vw, 1.35rem);
+    margin-block-start: clamp(0.9rem, 2vw, 1.45rem);
+}
+
+.article-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--article-line);
+    border-radius: clamp(0.65rem, 1.6vw, 1.05rem);
+    background: var(--article-surface);
+    color: var(--article-ink);
+    box-shadow: 0 0.25rem 0.7rem #0816280a;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.article-tile:hover {
+    border-color: var(--article-accent);
+    box-shadow: 0 0.45rem 1.3rem #0816281a;
+}
+
+.article-landing :is(a, button, input, summary):focus-visible {
+    outline: 2px solid var(--platform-focus, #a66a12);
+    outline-offset: 3px;
+}
+
+.article-hero-link:focus-visible { --platform-focus: #f4c778; }
+
+.article-tile-cover {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #173b62;
+}
+
+.article-tile-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.article-tile-cover--contain img { object-fit: contain; object-position: center bottom; }
+
+.article-tile-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: clamp(0.65rem, 1.5vw, 1.25rem);
+    overflow-wrap: anywhere;
+}
+
+.article-tile-body h3 {
+    font-size: clamp(0.88rem, 1.36vw, 1.19rem);
+    font-weight: 790;
+    line-height: 1.29;
+}
+
+.article-tile-body p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    margin-block-start: 0.55rem;
+    color: var(--article-muted);
+    font-size: clamp(0.76rem, 1.08vw, 0.93rem);
+    line-height: 1.45;
+}
+
+.article-tile-action {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    margin-block-start: auto;
+    padding-block-start: 0.85rem;
+    color: var(--article-accent);
+    font-size: clamp(0.72rem, 1vw, 0.86rem);
+    font-weight: 750;
+}
+
+.article-tile-action svg,
+.article-faq-grid summary svg { flex: 0 0 0.9rem; width: 0.9rem; height: 0.9rem; }
+
+.article-empty {
+    grid-column: 1 / -1;
+    padding: 1.2rem;
+    border: 1px dashed var(--article-line);
+    border-radius: 0.8rem;
+    color: var(--article-muted);
+}
+
+.article-empty a { color: var(--article-accent); text-decoration: underline; }
+.article-pagination nav { margin-block-start: 1.4rem; }
+.article-pagination nav p { color: var(--article-muted); }
+
+.article-pagination nav :where(a, .cursor-not-allowed, [aria-current="page"] > span) {
+    background: var(--article-surface);
+    border-color: var(--article-line);
+    color: var(--article-ink);
+}
+
+.article-pagination nav a:hover,
+.article-pagination nav [aria-current="page"] > span { background: var(--article-hover); }
+
+.article-pagination nav .cursor-not-allowed {
+    background: var(--article-section);
+    color: var(--article-muted);
+}
+
+.article-faq-grid {
+    display: grid;
+    gap: 0.7rem;
+    margin-block-start: 1rem;
+}
+
+.article-faq-grid details {
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--article-line);
+    border-radius: 0.75rem;
+    background: var(--article-surface);
+}
+
+.article-faq-grid summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 730;
+}
+
+.article-faq-grid summary::-webkit-details-marker { display: none; }
+.article-faq-grid details[open] svg { rotate: 180deg; }
+.article-faq-grid p { margin-block-start: 0.65rem; font-size: 0.86rem; color: var(--article-muted); }
+
+/* The numbered desktop paginator follows the compact mobile row. */
+@media (min-width: 40rem) {
+    .article-pagination nav > div:nth-child(2) {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .article-faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 45rem) {
+    .article-card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .article-hero-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+    .article-hero-inner > div { padding-block-end: clamp(1.65rem, 3.6vw, 3rem); }
+    .article-hero-image { height: clamp(18rem, 32vw, 26rem); }
+}
+
+@media (min-width: 75rem) {
+    .article-card-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .article-tile { transition: none; }
+}

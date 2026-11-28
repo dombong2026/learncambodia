@@ -1,3 +1,6 @@
+@php
+    $websiteSkin = \App\Support\WebsiteSkinState::active();
+@endphp
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -10,8 +13,9 @@
     @include('partials.brand-head')
     @include('partials.theme-boot')
     @vite(['resources/css/app.css','resources/js/app.ts'])
+    @if($websiteSkin)<link rel="stylesheet" href="{{ asset('css/website-skins.css') }}">@endif
 </head>
-<body data-auth-body class="min-h-screen bg-gradient-to-br from-[#e9eef5] via-[#f7f9fc] to-[#dfe9f6] text-slate-900 antialiased dark:from-[#071d3b] dark:via-[#0e274a] dark:to-[#0b2446] dark:text-white">
+<body @if($websiteSkin) data-website-skin="{{ $websiteSkin }}" @endif data-auth-body class="min-h-screen bg-gradient-to-br from-[#e9eef5] via-[#f7f9fc] to-[#dfe9f6] text-slate-900 antialiased dark:from-[#071d3b] dark:via-[#0e274a] dark:to-[#0b2446] dark:text-white">
     <a href="#auth-main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:p-3 focus:text-slate-900">{{ __('ui.skip_content') }}</a>
     <div class="absolute inset-x-0 top-0 h-1 bg-[#e7b857]" aria-hidden="true"></div>
     <main id="auth-main" class="grid min-h-screen place-items-center px-4 py-8 sm:px-6">

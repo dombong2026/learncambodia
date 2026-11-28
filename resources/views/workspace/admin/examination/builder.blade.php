@@ -8,6 +8,13 @@
 @section('heading_action')
     <a class="text-sm font-semibold underline" href="{{ route($manager.'.index') }}">{{ $quiz ? 'Quizzes' : 'Exams' }}</a>
 @endsection
+@push('workspace_styles')
+    <script defer src="{{ asset('js/exam-viewer-mode.js') }}"></script>
+@endpush
+@push('workspace_styles')
+    <link rel="stylesheet" href="{{ asset('css/assessment-builder-layout.css').'?v=3' }}">
+    <script defer src="{{ asset('js/assessment-featured-preview.js') }}"></script>
+@endpush
 @section('content')
     @if($errors->any())
         <ul role="alert" class="mb-4 list-disc space-y-1 pl-5 text-red-600 dark:text-red-300">
@@ -16,9 +23,28 @@
     @endif
     <form data-exam-builder data-question-limit="{{ $quiz ? 50 : 200 }}" data-media-upload="{{ route('editor-media.store') }}" method="post" action="{{ $exam->exists ? route($manager.'.update', $exam) : route($manager.'.store') }}" class="space-y-5">
         @csrf @if($exam->exists)@method('PATCH')@endif
-        <fieldset class="workspace-panel grid gap-4 p-5 sm:grid-cols-2">
-            <label class="builder-field sm:col-span-2">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+        <fieldset class="workspace-panel assessment-builder-details grid gap-4 p-5 sm:grid-cols-2" data-assessment-details>
+            <div class="assessment-builder-identity grid min-w-0 gap-3">
+                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} title<input name="title" required maxlength="160" value="{{ old('title', $exam->title) }}"></label>
+                <label class="builder-field assessment-builder-wide">{{ ucfirst($assessmentLabel) }} type
+                    <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
+                        <option value="">Choose a type</option>
+                        @foreach($types as $type)
+                            <option value="{{ $type->id }}" @selected((int) old('exam_type_id', $exam->exam_type_id) === $type->id)>{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                    <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
+                </label>
             @unless($quiz)
+            @php($specialized = old('viewer_mode', $exam->viewer_mode) === 'specialized')
+            <label class="builder-field">Exam viewer
+                <select name="viewer_mode" aria-describedby="exam-viewer-help">
+                    <option value="default" @selected(!$specialized)>Default</option>
+                    <option value="specialized" @selected($specialized)>Specialized</option>
+                </select>
+                <span id="exam-viewer-help" class="text-sm text-slate-500 dark:text-slate-300">Specialized is a free, standalone exam that guests can take on one page.</span>
+            </label>
+            <fieldset data-exam-course-settings @disabled($specialized) @if($specialized) hidden @endif>
             <label class="builder-field">Course (optional)
                 <select name="course_id" class="rounded-xl border px-3 py-2">
                     <option value="">Standalone (no course)</option>
@@ -27,24 +53,28 @@
                     @endforeach
                 </select>
             </label>
+            </fieldset>
             @endunless
-            <label class="builder-field">{{ ucfirst($assessmentLabel) }} type
-                <select name="exam_type_id" required class="rounded-xl border px-3 py-2">
-                    <option value="">Choose a type</option>
-                    @foreach($types as $type)
-                        <option value="{{ $type->id }}" @selected((int) old('exam_type_id', $exam->exam_type_id) === $type->id)>{{ $type->name }}</option>
-                    @endforeach
-                </select>
-                <a class="text-blue-600 dark:text-blue-300" href="{{ route($quiz ? 'admin.quiz-types.index' : 'admin.exam-types.index') }}">Manage types</a>
-            </label>
-            <div class="grid gap-4 sm:col-span-2 sm:grid-cols-3">
+            <div class="assessment-builder-limits">
+                <label class="builder-field">Certificate template
+                    <select name="certificate_template_id">
+                        <option value="">Use the default {{ $quiz ? 'Quiz' : 'Exam' }} template</option>
+                        @foreach($certificateTemplates as $template)
+                            <option value="{{ $template->id }}" @selected((int) old('certificate_template_id', $exam->certificate_template_id) === $template->id)>{{ $template->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
                 @foreach(['time_limit'=>['Time limit (minutes)',$quiz ? 5 : 60,$quiz ? 30 : 240], 'passing_percent'=>['Pass score (%)',70,100], 'attempt_limit'=>['Attempts allowed',2,10]] as $field=>[$label,$default,$maximum])
                     <label class="builder-field">{{ $label }}
                         <input name="{{ $field }}" type="number" min="1" max="{{ $maximum }}" value="{{ old($field, $exam->$field ?? $default) }}" required>
                     </label>
                 @endforeach
             </div>
-            <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="sm:col-span-2 sm:grid-cols-2" />
+            </div>
+            <div class="assessment-builder-media min-w-0">
+                @include('workspace.admin.editorial-featured-media', ['entry' => $exam, 'assessmentPreview' => true])
+            </div>
+            <x-learning-detail-fields :record="$exam" :kind="$assessmentLabel" class="assessment-builder-metadata sm:col-span-2 sm:grid-cols-2" />
             @if(\App\Support\GuestAssessment::enabled())
                 <label class="flex items-start gap-2 rounded-lg border p-3">
                     <input type="hidden" name="guest_enabled" value="0">
@@ -53,22 +83,22 @@
                 </label>
             @endif
             @foreach(['shuffle'=>'Shuffle questions', 'gamified'=>'Show progress and milestones', 'live_feedback'=>'Let learners check answers during the attempt', 'published'=>'Publish for learners'] as $key => $label)
-                <label class="flex items-center gap-2 text-sm font-semibold">
+                <label class="assessment-builder-switch rounded-xl border border-slate-200 p-3 text-sm font-semibold dark:border-slate-700">
                     <input type="hidden" name="{{ $key }}" value="0">
-                    <input type="checkbox" name="{{ $key }}" value="1" @checked(old($key,$exam->$key ?? ($quiz && in_array($key, ['gamified', 'live_feedback'], true))))>{{ $label }}
+                    <input type="checkbox" role="switch" name="{{ $key }}" value="1" @checked(old($key,$exam->$key ?? ($quiz && in_array($key, ['gamified', 'live_feedback'], true))))>
+                    <span class="assessment-builder-switch-track" aria-hidden="true"></span>
+                    <span>{{ $label }}</span>
                 </label>
             @endforeach
             <p class="text-xs text-slate-600 dark:text-slate-300 sm:col-span-2">Checking an answer locks that response. Writing and speaking are graded after submission.</p>
             @unless($quiz)
-                <div data-standalone-pricing @if(old('course_id', $exam->course_id)) hidden @endif class="sm:col-span-2">
-                    @include('workspace.admin.course-builder.pricing', ['course' => $exam])
-                </div>
+                <fieldset data-exam-pricing-settings @disabled($specialized) @if($specialized) hidden @endif class="sm:col-span-2">
+                    <div data-standalone-pricing @if(old('course_id', $exam->course_id)) hidden @endif>
+                        @include('workspace.admin.course-builder.pricing', ['course' => $exam])
+                    </div>
+                </fieldset>
             @endunless
         </fieldset>
-
-        @if($quiz)
-            @include('workspace.admin.editorial-featured-media', ['entry' => $exam])
-        @endif
 
         <section class="workspace-panel space-y-3 p-5">
             <h2 id="exam-instructions-label" class="font-extrabold">Instructions, activities & resources</h2>
@@ -80,6 +110,11 @@
 
         <section class="workspace-panel space-y-4 p-5">
             <h2 class="font-extrabold">Questions</h2>
+            @include('workspace.admin.openai.panel', [
+                'openAiContext' => $exam->kind === 'quiz' ? 'quiz' : 'exam',
+                'openAiTasks' => ['questions' => 'Draft multiple-choice questions'],
+                'placementDraft' => str_starts_with($exam->starter_key ?? '', 'placement-'),
+            ])
             <div data-exam-questions class="space-y-4">
                 @foreach(old('questions', $exam->questions ?? [[]]) as $index => $question)
                     @include('workspace.admin.examination.question', ['index' => $index, 'question' => $question])
@@ -90,7 +125,7 @@
         </section>
         <button type="submit" class="rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white">Save {{ $assessmentLabel }}</button>
     </form>
-    @if($quiz)@include('workspace.admin.media-picker')@endif
+    @include('workspace.admin.media-picker')
     @if($exam->published && !$exam->course_id)
         <a class="my-5 inline-block text-sm font-semibold underline" href="{{ $exam->publicUrl() }}">Open learner page</a>
     @endif
@@ -120,7 +155,7 @@
             <h2 class="font-extrabold">Submitted attempts</h2>
             @forelse($attempts as $result)
                 <article class="space-y-3 rounded-xl border p-4">
-                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name ?? ($result->guest_identity_hash ? 'Guest participant #'.$result->id : 'Unknown learner') }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
+                    <p class="text-sm">{{ ($result->student ?? $result->enrollment?->student)?->name ?? ($result->guest_identity_hash ? 'Guest participant #'.$result->id : 'Guest learner') }} · {{ $result->score !== null ? $result->score.'%' : 'Submitted' }} · {{ $result->submitted_at->toDateString() }}</p>
                     @foreach($result->snapshot['questions'] as $number => $question)
                         @continue(!\App\Support\AssessmentQuestions::manual($question))
                         <details class="space-y-2">

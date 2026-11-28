@@ -14,7 +14,11 @@ class CourseInstructorAssignment extends Model
 
     protected function casts(): array
     {
-        return ['assigned_at' => 'datetime', 'revoked_at' => 'datetime'];
+        return [
+            'assigned_at' => 'datetime',
+            'revoked_at' => 'datetime',
+            'support_channels' => 'array',
+        ];
     }
 
     public function course(): BelongsTo

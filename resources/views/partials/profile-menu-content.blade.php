@@ -3,9 +3,68 @@
     @php
         $workspaceRole = auth()->user()->isAdministrator() ? 'admin' : auth()->user()->role;
         $profileRole = $profileRole ?? $workspaceRole;
+        if ($profileRole === 'superadmin' && auth()->user()->isAdministrator()) {
+            $profileRole = 'admin';
+        }
         $allowedRoles = ['admin', 'instructor', 'student', 'developer'];
         $roleIsKnown = in_array($profileRole, $allowedRoles, true) && $profileRole === $workspaceRole;
-        $navGroups = $roleIsKnown ? \App\Support\WorkspaceMenu::groups($profileRole) : [];
+        // Deliberately curated frequent destinations, never a copy of the sidebar.
+        $shortcutKeys = $roleIsKnown ? match ($profileRole) {
+            'admin' => [
+                ['courses', 'all'],
+                ['examination', 'exams'],
+                ['quiz-manager', 'quizzes'],
+                ['approvals', 'course-reviews'],
+                ['approvals', 'enrollment-reviews'],
+                ['courses', 'homework'],
+                ['user-manager', 'all'],
+            ],
+            'student' => [
+                ['learning', 'courses'],
+                ['learning', 'course-catalog'],
+                ['learning', 'saved-courses'],
+                ['homework', 'available'],
+                ['learning', 'progress'],
+                ['assessments', 'practice'],
+            ],
+            'instructor' => [
+                ['teaching', 'courses'],
+                ['teaching', 'assignments'],
+                ['assessment', 'submissions'],
+            ],
+            'developer' => [
+                ['api-center', 'endpoints'],
+                ['credentials', 'tokens'],
+                ['operations', 'usage'],
+            ],
+        } : [];
+        $availableShortcuts = [];
+        if ($roleIsKnown) {
+            foreach (\App\Support\WorkspaceMenu::groups($profileRole, auth()->user()) as $group) {
+                foreach ($group['items'] as $entry) {
+                    if (!isset($entry['route']) || !\Illuminate\Support\Facades\Route::has($entry['route'])) {
+                        continue;
+                    }
+                    $availableShortcuts[\App\Support\WorkspaceMenu::href($profileRole, $group, $entry)] = true;
+                }
+            }
+        }
+        $shortcuts = [];
+        foreach ($shortcutKeys as [$section, $key]) {
+            $item = \App\Support\WorkspaceMenu::find($profileRole, $section, $key);
+            if (!isset($item['route']) || !\Illuminate\Support\Facades\Route::has($item['route'])) {
+                continue;
+            }
+            $href = route($item['route'], $item['parameters'] ?? []);
+            if (!isset($availableShortcuts[$href])) {
+                continue;
+            }
+            $shortcuts[$href] = [
+                'href' => $href,
+                'label' => $item['label'],
+                'icon' => \App\Support\WorkspaceMenu::iconFor($section, $key),
+            ];
+        }
     @endphp
     <div data-profile-divider class="border-b border-slate-200 px-3 py-3 dark:border-slate-700">
         <p class="truncate text-sm font-extrabold text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
@@ -17,33 +76,20 @@
                 <x-workspace-icon data-profile-link-icon name="layout" class="h-5 w-5 text-blue-700 dark:text-amber-300" />
                 <span>{{ __('ui.dashboard') }}</span>
             </a>
-            <a data-profile-settings href="{{ \App\Support\WorkspaceMenu::profile($profileRole) }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-amber-500 dark:hover:bg-slate-800">
-                <x-workspace-icon data-profile-link-icon name="shield-check" class="h-5 w-5 text-slate-500 dark:text-slate-300" />
-                <span>{{ __('workspace.profile_security') }}</span>
-            </a>
             @if(! auth()->user()->hasVerifiedEmail())
                 <a href="{{ route('verification.notice') }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-amber-500 dark:hover:bg-slate-800">
                     <x-workspace-icon data-profile-link-icon name="shield-check" class="h-5 w-5" /><span>{{ __('auth.confirm_email') }}</span>
                 </a>
             @endif
-            @foreach($navGroups as $group)
-                <div data-profile-nav-group="{{ $group['key'] }}" class="mt-2 pt-2">
-                    <h3 class="flex items-center gap-2 px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-300">
-                        <x-workspace-icon :name="$group['icon']" class="h-4 w-4" />
-                        <span>{{ app()->getLocale()!=='en' && __('workspace.groups.'.$group['key'])!=='workspace.groups.'.$group['key'] ? __('workspace.groups.'.$group['key']) : $group['title'] }}</span>
-                    </h3>
-                    @foreach($group['items'] as $item)
-                        @php
-                            $href = \App\Support\WorkspaceMenu::href($profileRole, $group, $item);
-                            $label = app()->getLocale()!=='en' && __('workspace.labels.'.$item['label'])!=='workspace.labels.'.$item['label']
-                                ? __('workspace.labels.'.$item['label']) : $item['label'];
-                        @endphp
-                        <a data-profile-role-link href="{{ $href }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] leading-5 text-slate-700 transition hover:bg-slate-100 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-amber-500 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-amber-200">
-                            <x-workspace-icon data-profile-link-icon :name="$item['icon'] ?? 'file'" class="h-[18px] w-[18px] text-slate-500 dark:text-slate-300" />
-                            <span class="min-w-0 flex-1">{{ $label }}</span>
-                        </a>
-                    @endforeach
-                </div>
+            @foreach($shortcuts as $item)
+                @php
+                    $label = app()->getLocale() !== 'en' && __('workspace.labels.'.$item['label']) !== 'workspace.labels.'.$item['label']
+                        ? __('workspace.labels.'.$item['label']) : $item['label'];
+                @endphp
+                <a data-profile-role-link href="{{ $item['href'] }}" class="premium-menu-option flex items-center gap-3 rounded-xl px-3 py-2 text-[13px] leading-5 text-slate-700 transition hover:bg-slate-100 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-amber-500 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-amber-200">
+                    <x-workspace-icon data-profile-link-icon :name="$item['icon']" class="h-[18px] w-[18px] text-slate-500 dark:text-slate-300" />
+                    <span class="min-w-0 flex-1">{{ $label }}</span>
+                </a>
             @endforeach
         </nav>
     @endif

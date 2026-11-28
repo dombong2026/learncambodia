@@ -1,0 +1,548 @@
+{
+  "academic": {
+    "title": "Academic English Placement",
+    "provider": "TOEFL ITP",
+    "provider_url": "https://www.ets.org/toefl/itp/test-content.html",
+    "skills": "Listening, academic reading, structure and writing",
+    "description": "Follow a short lecture, interpret research prose and build an evidence-based argument.",
+    "minutes": 55,
+    "modules": {
+      "Listening to lectures": [
+        {
+          "title": "Lecture signposts",
+          "instruction": "Mark phrases such as “first,” “however,” and “to sum up.” Use them to track the speaker’s argument.",
+          "practice": "In “Most seeds sprouted. However, only two survived,” what does “however” signal?",
+          "answer": "A contrast between sprouting and surviving."
+        },
+        {
+          "title": "Main claim and supporting evidence",
+          "instruction": "Write the speaker’s claim on one line and any examples or measurements underneath.",
+          "practice": "A speaker says shaded roofs reduce indoor heat, then reports a two-degree difference. Which part is the evidence?",
+          "answer": "The two-degree difference is the measurement that supports the claim."
+        },
+        {
+          "title": "Changes to a study plan",
+          "instruction": "Listen for what has changed and what remains scheduled. Take notes under “before” and “after.”",
+          "practice": "A tutor says “We will still meet on Thursday, but bring your draft instead of your bibliography.” What changed?",
+          "answer": "The document to bring. The meeting day stays Thursday."
+        }
+      ],
+      "Academic reading": [
+        {
+          "title": "Scope of a result",
+          "instruction": "Circle words like “some,” “may,” and “among the participants.” They show how far a result applies.",
+          "practice": "Why does “may improve recall” make a narrower claim than “improves recall”?",
+          "answer": "It leaves room for uncertainty."
+        },
+        {
+          "title": "Method and limitation",
+          "instruction": "Find how evidence was obtained and one reason it might not apply elsewhere.",
+          "practice": "A survey includes only people from one campus. Name one limitation.",
+          "answer": "The sample may not represent students at other campuses."
+        },
+        {
+          "title": "Paraphrasing a finding",
+          "instruction": "Keep the relationship between ideas and express it in new words.",
+          "practice": "Paraphrase “The gain disappeared after a week.”",
+          "answer": "After seven days, the improvement was no longer evident."
+        }
+      ],
+      "Sentence structure": [
+        {
+          "title": "Subject and verb agreement",
+          "instruction": "Find the head of the subject before choosing a singular or plural verb.",
+          "practice": "Choose “is” or “are” in “The list of materials ___ complete.”",
+          "answer": "“Is.” The subject head is “list.”"
+        },
+        {
+          "title": "Sentence boundaries",
+          "instruction": "An independent clause can stand alone. Use a period or suitable connector between independent clauses.",
+          "practice": "Fix “The lab was closed, we left.”",
+          "answer": "“The lab was closed, so we left.”"
+        },
+        {
+          "title": "Parallel form",
+          "instruction": "Items in a list should follow the same grammatical pattern.",
+          "practice": "Edit “The team collected, labelled, and was storing samples.”",
+          "answer": "“The team collected, labelled, and stored samples.”"
+        }
+      ],
+      "Academic writing": [
+        {
+          "title": "A qualified thesis",
+          "instruction": "Take a clear position and name a condition where it applies.",
+          "practice": "Give a thesis about recording lectures.",
+          "answer": "“Universities should record large lectures when recordings are accessible to every student.”"
+        },
+        {
+          "title": "Evidence and explanation",
+          "instruction": "Give a specific example, then explain how it supports the claim.",
+          "practice": "If recordings allow students to replay technical terms, what benefit follows?",
+          "answer": "Students can review unfamiliar terminology at their own pace."
+        },
+        {
+          "title": "Revising for precision",
+          "instruction": "Replace broad intensifiers with specific observations.",
+          "practice": "Revise “The study was really good.”",
+          "answer": "“The study used the same measurement method in both groups.”"
+        }
+      ]
+    },
+    "speaking": false
+  },
+  "modular": {
+    "title": "Modular Skills Placement",
+    "provider": "Cambridge Linguaskill",
+    "provider_url": "https://www.cambridgeenglish.org/exams-and-tests/linguaskill/information-about-the-exam/",
+    "skills": "Reading, listening, writing and speaking",
+    "description": "Practise the four skills in separate tasks drawn from study and workplace situations.",
+    "minutes": 60,
+    "modules": {
+      "Reading for a purpose": [
+        {
+          "title": "Scan an email",
+          "instruction": "Scan headings and final lines for deadlines, owners and actions.",
+          "practice": "In “Please confirm the room by noon Friday,” identify the action and deadline.",
+          "answer": "Confirm the room by noon Friday."
+        },
+        {
+          "title": "Compare options",
+          "instruction": "Put each option in a table and compare it against the task constraints.",
+          "practice": "A room must seat ten. Cedar seats eight; Lotus seats twelve. Which fits?",
+          "answer": "Lotus meets the capacity requirement."
+        },
+        {
+          "title": "Read implied meaning",
+          "instruction": "Combine the literal message with context and consider what action the writer expects.",
+          "practice": "A manager says “We could use another copy before the guests arrive.” What is the likely request?",
+          "answer": "Print or provide another copy before the guests arrive."
+        }
+      ],
+      "Listening at work and in class": [
+        {
+          "title": "Changes in sequence",
+          "instruction": "Use ordinal words and time expressions to map steps.",
+          "practice": "In “After checking in, collect a badge before you enter,” what comes between check-in and entry?",
+          "answer": "Collecting a badge."
+        },
+        {
+          "title": "Speaker purpose",
+          "instruction": "Identify whether a speaker is informing, persuading, apologizing or requesting action.",
+          "practice": "What is the purpose of “I’m afraid our booking system is offline. Could you call back after two?”",
+          "answer": "Explain the interruption and ask the listener to call again."
+        },
+        {
+          "title": "Concessions",
+          "instruction": "After “although” or “even though,” listen for the decision that follows.",
+          "practice": "“Although the old rooms are larger, we’ll book the new ones.” What is the decision?",
+          "answer": "Book the new rooms."
+        }
+      ],
+      "Writing for an audience": [
+        {
+          "title": "Polite professional requests",
+          "instruction": "Give brief context, one clear request and a useful time frame.",
+          "practice": "Ask a colleague for the latest figures by Thursday.",
+          "answer": "“Could you send me the latest figures by Thursday so I can update the slides?”"
+        },
+        {
+          "title": "Paragraph links",
+          "instruction": "Repeat a key term or use a connector that describes the relationship.",
+          "practice": "Add a sentence that contrasts with “The room is affordable.”",
+          "answer": "“However, it is too small for the whole group.”"
+        },
+        {
+          "title": "Acknowledge a drawback",
+          "instruction": "State a relevant objection before explaining why your decision still holds.",
+          "practice": "Recommend hybrid meetings while noting a problem.",
+          "answer": "“Although sound quality may vary, hybrid meetings let colleagues outside the city participate.”"
+        }
+      ],
+      "Speaking in short turns": [
+        {
+          "title": "Point, reason, example",
+          "instruction": "Start with an answer, add a reason and finish with a concrete example.",
+          "practice": "Speak for 30 seconds on the best place to study.",
+          "answer": "“I prefer the library because it is quiet. I can read for an hour without interruptions.”"
+        },
+        {
+          "title": "Compare aloud",
+          "instruction": "Name one shared feature, one difference and a preference.",
+          "practice": "Compare an online workshop and a classroom workshop.",
+          "answer": "“Both teach the same topic, but the classroom workshop gives me more chances to ask questions.”"
+        },
+        {
+          "title": "Make yourself understood",
+          "instruction": "Pause between ideas and restate a word if you get stuck.",
+          "practice": "Explain “compulsory” without using the word.",
+          "answer": "“Everyone has to do it.”"
+        }
+      ]
+    },
+    "speaking": true
+  },
+  "use-of-english": {
+    "title": "Use of English Placement",
+    "provider": "Oxford Placement Test",
+    "provider_url": "https://www.oup.com/elt/oxford-placement-test",
+    "skills": "Grammar, vocabulary, listening and writing",
+    "description": "Find gaps in grammar and vocabulary and listen for meaning in everyday exchanges.",
+    "minutes": 55,
+    "modules": {
+      "Verb forms in context": [
+        {
+          "title": "Completed past events",
+          "instruction": "Use the past simple with a stated finished time.",
+          "practice": "Choose “visited” or “have visited” with “last Monday.”",
+          "answer": "“Visited” fits a finished time."
+        },
+        {
+          "title": "Ongoing states",
+          "instruction": "Use “since” for a starting point and “for” for a duration.",
+          "practice": "Complete “I have lived here ___ 2020.”",
+          "answer": "“Since” introduces the year the situation began."
+        },
+        {
+          "title": "Real future conditions",
+          "instruction": "Use present simple in a basic “if” clause about a possible future event.",
+          "practice": "Complete “If the train ___ late, we’ll call.”",
+          "answer": "“Is” is the usual form in this condition."
+        }
+      ],
+      "Vocabulary and meaning": [
+        {
+          "title": "Collocations",
+          "instruction": "Learn common word partnerships in a short example.",
+          "practice": "Which fits “___ an appointment,” “do” or “make”?",
+          "answer": "“Make an appointment.”"
+        },
+        {
+          "title": "Phrasal verbs",
+          "instruction": "Compare the meaning of a phrase in a complete sentence.",
+          "practice": "In “They put off the meeting until Monday,” what does “put off” mean?",
+          "answer": "Postpone."
+        },
+        {
+          "title": "Context clues",
+          "instruction": "Use the consequences in a sentence to infer an unknown word.",
+          "practice": "In “The shop was deserted, so we could hear every footstep,” what does “deserted” suggest?",
+          "answer": "Very few people, or nobody, were there."
+        }
+      ],
+      "Everyday listening": [
+        {
+          "title": "Numbers and changes",
+          "instruction": "Record the first number and listen for a correction.",
+          "practice": "“Platform five, sorry, platform nine.” Which platform should you use?",
+          "answer": "Platform nine."
+        },
+        {
+          "title": "Indirect requests",
+          "instruction": "A question with “could” often asks someone to do something.",
+          "practice": "What response fits “Could you hold the door?”",
+          "answer": "Keep the door open."
+        },
+        {
+          "title": "Attitude and reason",
+          "instruction": "Listen for phrases such as “I’m afraid” and “I’m pleased” and the reason that follows.",
+          "practice": "“I’d love to, but I’m working then.” Can the person join?",
+          "answer": "No. The person is working at that time."
+        }
+      ],
+      "Writing from a clear prompt": [
+        {
+          "title": "Read all task requirements",
+          "instruction": "Underline the audience, topic and number of points requested.",
+          "practice": "What must you provide for “Write to your tutor with two reasons for changing class”?",
+          "answer": "A message to the tutor and two reasons for the request."
+        },
+        {
+          "title": "Develop a reason",
+          "instruction": "Explain the practical effect of each reason.",
+          "practice": "Develop “The later class is better for me.”",
+          "answer": "“It starts after my shift, so I can arrive on time.”"
+        },
+        {
+          "title": "Check familiar errors",
+          "instruction": "Read your verbs and time phrases together during revision.",
+          "practice": "Fix “Yesterday I have finished the report.”",
+          "answer": "“Yesterday I finished the report.”"
+        }
+      ]
+    },
+    "speaking": false
+  },
+  "integrated": {
+    "title": "Integrated English Placement",
+    "provider": "Pearson Versant",
+    "provider_url": "https://www.pearson.com/languages/en-us/educators/connected-english-learning-program/versant-english-placement-test.html",
+    "skills": "Reading, listening, writing and speaking",
+    "description": "Interpret practical information and communicate it clearly in written and spoken responses.",
+    "minutes": 60,
+    "modules": {
+      "Selecting source details": [
+        {
+          "title": "Read a notice",
+          "instruction": "Identify who is affected, what changes and when the change starts.",
+          "practice": "“From Monday, evening students enter through Gate B.” Who uses Gate B?",
+          "answer": "Evening students."
+        },
+        {
+          "title": "Capture figures accurately",
+          "instruction": "Write numbers with units and note what they describe.",
+          "practice": "A speaker says “The room holds eighteen, although only twelve are registered.” What is the capacity?",
+          "answer": "Eighteen people."
+        },
+        {
+          "title": "Separate fact and opinion",
+          "instruction": "Treat a measured or directly checkable detail differently from a judgement.",
+          "practice": "Which is checkable, “The course runs for six weeks” or “The course is excellent”?",
+          "answer": "The six-week duration."
+        }
+      ],
+      "Listening and reporting": [
+        {
+          "title": "Summarize an announcement",
+          "instruction": "Write the action first and include an essential detail.",
+          "practice": "A speaker moves orientation from upstairs to the lobby because the lift is broken. Summarize.",
+          "answer": "“Orientation will take place in the lobby because the lift is broken.”"
+        },
+        {
+          "title": "Compare spoken and written news",
+          "instruction": "Use the latest dated source to confirm changes.",
+          "practice": "An email sent Tuesday moves Friday’s workshop to Saturday, but an older poster says Friday. Which is current?",
+          "answer": "Saturday, based on the newer email."
+        },
+        {
+          "title": "Retell without copying",
+          "instruction": "Use shorter words where possible and keep names and facts accurate.",
+          "practice": "Paraphrase “Participants must vacate the premises by six.”",
+          "answer": "“Everyone taking part must leave the building by six.”"
+        }
+      ],
+      "Practical writing": [
+        {
+          "title": "Subject lines",
+          "instruction": "Name the action or event in a few words.",
+          "practice": "Write a subject line for asking to extend Friday’s deadline.",
+          "answer": "“Request to extend Friday’s deadline.”"
+        },
+        {
+          "title": "Prioritize information",
+          "instruction": "Place the action readers need first, then explain the reason.",
+          "practice": "Write a first sentence about a cancelled room.",
+          "answer": "“Please meet in Room 8 today because Room 5 is closed.”"
+        },
+        {
+          "title": "Evidence in a recommendation",
+          "instruction": "Use one source detail and show how it affects the choice.",
+          "practice": "Why might a lab that stays open until eight suit working students?",
+          "answer": "They have time to use the lab after their shifts."
+        }
+      ],
+      "Spoken responses": [
+        {
+          "title": "One-minute plan",
+          "instruction": "Jot down the main idea, two details and a closing line.",
+          "practice": "Give an order for a spoken update on a schedule change.",
+          "answer": "Start with the new date, explain the room and reason, then tell listeners how to confirm."
+        },
+        {
+          "title": "Repair a mistake",
+          "instruction": "Use a brief correction and continue speaking.",
+          "practice": "You said Monday but meant Tuesday. Correct it aloud.",
+          "answer": "“Sorry, I mean Tuesday. We’ll meet at nine.”"
+        },
+        {
+          "title": "Stress essential contrasts",
+          "instruction": "Emphasize the changed part of a sentence.",
+          "practice": "In “Bring the form on Friday rather than Monday,” which two words should be stressed?",
+          "answer": "“Friday” and “Monday.”"
+        }
+      ]
+    },
+    "speaking": true
+  },
+  "general": {
+    "title": "General English Placement",
+    "provider": "Michigan English Placement Test",
+    "provider_url": "https://michiganassessment.org/which-test-is-right-for-me/m-ept/",
+    "skills": "Listening, grammar, vocabulary, reading and writing",
+    "description": "Review a broad range of everyday English used in class and around campus.",
+    "minutes": 55,
+    "modules": {
+      "Listening around campus": [
+        {
+          "title": "Identify a destination",
+          "instruction": "Listen for location words after verbs such as “go,” “turn,” and “meet.”",
+          "practice": "“Meet outside the office, across from the café.” Where should you wait?",
+          "answer": "Outside the office."
+        },
+        {
+          "title": "Listen for a reason",
+          "instruction": "Focus on what follows “because,” “since,” or “so.”",
+          "practice": "“The teacher took us inside because it was raining.” Why did they move?",
+          "answer": "It was raining."
+        },
+        {
+          "title": "Follow a short exchange",
+          "instruction": "Keep one line of notes for each person’s plan.",
+          "practice": "One friend has a class at five. The other suggests meeting at six. When can they meet?",
+          "answer": "At six."
+        }
+      ],
+      "Grammar and vocabulary": [
+        {
+          "title": "Articles and sound",
+          "instruction": "Choose “a” or “an” according to the first sound.",
+          "practice": "Choose “a” or “an” before “hour.”",
+          "answer": "“An hour.” The “h” is silent."
+        },
+        {
+          "title": "Countable and uncountable nouns",
+          "instruction": "Use “many” for plural countable nouns and “much” for uncountable nouns.",
+          "practice": "Choose “many” or “much” with “information.”",
+          "answer": "“Much information.”"
+        },
+        {
+          "title": "Polite requests",
+          "instruction": "Use a modal with a base verb to make a polite request.",
+          "practice": "Change “Open the window” into a polite question.",
+          "answer": "“Could you open the window, please?”"
+        }
+      ],
+      "Reading useful texts": [
+        {
+          "title": "Signs and rules",
+          "instruction": "Look for the action a sign permits or prohibits.",
+          "practice": "What does “Staff only beyond this point” mean?",
+          "answer": "Only staff may continue past the sign."
+        },
+        {
+          "title": "Timetables",
+          "instruction": "Check day, time and any exceptions in the notes.",
+          "practice": "A class meets daily except Tuesday. Is it offered on Tuesday?",
+          "answer": "No."
+        },
+        {
+          "title": "Simple inference",
+          "instruction": "Combine two details that the writer gives you.",
+          "practice": "The café is closed and Lina has no food with her. Why might she go to a shop?",
+          "answer": "To buy food."
+        }
+      ],
+      "Writing for study": [
+        {
+          "title": "Topic sentences",
+          "instruction": "Introduce one main idea at the start of a paragraph.",
+          "practice": "Write a topic sentence about a study routine.",
+          "answer": "“Reviewing my notes each evening helps me remember new words.”"
+        },
+        {
+          "title": "Examples from everyday life",
+          "instruction": "Show your idea in a specific situation.",
+          "practice": "Give an example of studying on a bus.",
+          "answer": "“I review five vocabulary cards on my way to class.”"
+        },
+        {
+          "title": "Revision in three passes",
+          "instruction": "Check meaning first, then sentence boundaries, then spelling.",
+          "practice": "Fix “I study at home my brother studies at the library.”",
+          "answer": "“I study at home. My brother studies at the library.”"
+        }
+      ]
+    },
+    "speaking": false
+  },
+  "remote": {
+    "title": "Remote English Placement",
+    "provider": "Duolingo English Test",
+    "provider_url": "https://englishtest.duolingo.com/",
+    "skills": "Reading, listening, writing and speaking",
+    "description": "Work through short digital tasks and produce an extended response in your own words.",
+    "minutes": 60,
+    "modules": {
+      "On-screen reading": [
+        {
+          "title": "Track reference words",
+          "instruction": "Connect “they,” “these,” and “this” to the idea they refer to.",
+          "practice": "“The articles cover three topics. They are available online.” What does “they” refer to?",
+          "answer": "The articles."
+        },
+        {
+          "title": "Read between sentences",
+          "instruction": "Use connectors to identify cause, contrast and example.",
+          "practice": "What connection does “therefore” mark in “The roads flooded. Therefore, the bus was cancelled”?",
+          "answer": "The cancellation is a result of the flooding."
+        },
+        {
+          "title": "Choose an accurate summary",
+          "instruction": "Check that a summary contains the central point and avoids adding facts.",
+          "practice": "Summarize “The app saved time, but its reminders often arrived late.”",
+          "answer": "“The app helped users work faster despite unreliable reminders.”"
+        }
+      ],
+      "Short listening tasks": [
+        {
+          "title": "Key words in a short message",
+          "instruction": "Listen first for the main point. Check one missing detail on a replay if available.",
+          "practice": "“The slides are ready, but wait until Wednesday to share them.” What action is delayed?",
+          "answer": "Sharing the slides."
+        },
+        {
+          "title": "Stress and contrast",
+          "instruction": "The stressed word often shows what the speaker is correcting.",
+          "practice": "In “I said the green folder,” the word “green” is stressed. What is being clarified?",
+          "answer": "Which colour of folder is meant."
+        },
+        {
+          "title": "Reconstruct a message",
+          "instruction": "Keep the time, location and required action in your notes.",
+          "practice": "“At ten, take your ID to the main hall.” Retell it.",
+          "answer": "“Go to the main hall at ten with your ID.”"
+        }
+      ],
+      "Writing under a deadline": [
+        {
+          "title": "Plan with two ideas",
+          "instruction": "Spend a few minutes choosing two distinct reasons and one example for each.",
+          "practice": "Give two different reasons for using digital textbooks.",
+          "answer": "They are lighter to carry, and search makes definitions easier to find."
+        },
+        {
+          "title": "Connect sentences",
+          "instruction": "Link an example or consequence to the point that it supports.",
+          "practice": "After “Short videos are convenient,” add a consequence.",
+          "answer": "“As a result, students can review a lesson during a short break.”"
+        },
+        {
+          "title": "Final edit",
+          "instruction": "Check the prompt, verb agreement and missing words before returning your work.",
+          "practice": "Fix “One of the benefits are flexibility.”",
+          "answer": "“One of the benefits is flexibility.”"
+        }
+      ],
+      "Speaking remotely": [
+        {
+          "title": "Check your microphone",
+          "instruction": "Make a short recording in a quiet place and listen at normal volume.",
+          "practice": "What should you check in a ten-second test?",
+          "answer": "That the voice is clear and background sound is low."
+        },
+        {
+          "title": "Describe a scene",
+          "instruction": "Start with the main action and add details you can directly observe.",
+          "practice": "Describe a scene with two students and a map.",
+          "answer": "“Two students are looking at an open map. One is pointing to a route.”"
+        },
+        {
+          "title": "Support an opinion aloud",
+          "instruction": "State a position and add one practical example.",
+          "practice": "Should schools offer online office hours? Give one reason and an example.",
+          "answer": "“Yes. It helps students who live far away. For example, they can ask about an assignment without travelling to campus.”"
+        }
+      ]
+    },
+    "speaking": true
+  }
+}

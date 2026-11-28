@@ -12,7 +12,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'text:60', 'show_cefr' => 'bool'],
         'footer' => ['footer_note' => 'text:180'],
         'typography' => ['font_style' => 'font', 'text_scale' => 'scale'],
-        'home' => ['hero_title' => 'text:130', 'hero_intro' => 'text:480'],
+        'home' => ['home_layout' => 'home_layout', 'hero_title' => 'text:130', 'hero_intro' => 'text:480', 'hero_mode' => 'hero_mode'],
         'about' => [
             'heading'=>'text:100','intro'=>'text:350',
             'mission_heading'=>'text:120','mission_body'=>'text:650',
@@ -121,7 +121,7 @@ final class Appearance
         'menu' => ['all_categories_label' => 'All categories', 'show_cefr' => true],
         'footer' => ['footer_note' => 'Independent preparation information. Third-party exams and qualifications belong to their respective organizations.'],
         'typography' => ['font_style' => 'system', 'text_scale' => 'normal'],
-        'home' => ['hero_title' => 'Explore English learning for every ambition.', 'hero_intro' => 'Discover clear learning pathways from CEFR A1 to C2, international English examination preparation, and professional teaching development.'],
+        'home' => ['home_layout' => 'classic', 'hero_title' => 'pages.home_hero_title', 'hero_intro' => 'pages.home_hero_intro', 'hero_mode' => 'default', 'campaign_playlist' => '[]'],
         'about' => [
             'heading'=>'About Learn Cambodia',
             'intro'=>'Learning pathways built for clarity, accessibility and responsible academic review.',
@@ -262,6 +262,9 @@ final class Appearance
                 $kind === 'bool' => ['required', 'boolean'],
                 $kind === 'font' => ['required', 'in:system,serif,mono'],
                 $kind === 'scale' => ['required', 'in:compact,normal,large'],
+                $kind === 'home_layout' => ['sometimes', 'required', 'in:classic,sunrise'],
+                $kind === 'hero_mode' => ['required', 'in:default,course_player'],
+                $kind === 'course_id' => ['nullable', 'integer', 'exists:courses,id'],
                 default => ['nullable', 'string', 'max:'.explode(':', $kind)[1]],
             };
         }
@@ -275,11 +278,31 @@ final class Appearance
         $approved = AppearanceRevision::query()->approved()
             ->where('section', $section)->orderByDesc('id')->first();
 
-        return array_replace(self::DEFAULTS[$section], $approved?->settings ?? []);
+        $defaults = self::DEFAULTS[$section];
+        if ($section === 'home') {
+            // Translate ONLY the copy fields; switch values are not translation keys.
+            foreach (['hero_title', 'hero_intro'] as $key) {
+                $defaults[$key] = __($defaults[$key]);
+            }
+        }
+
+        return array_replace($defaults, $approved?->settings ?? []);
     }
 
     public static function value(string $section, string $field): mixed
     {
+        if ($section === 'home' && $field === 'home_layout') {
+            $activation = AppearanceRevision::query()->approved()
+                ->where('section', 'home_layout')
+                ->latest('id')->first();
+
+            $layout = $activation?->settings['home_layout'] ?? null;
+
+            if (in_array($layout, ['classic', 'sunrise'], true)) {
+                return $layout;
+            }
+        }
+
         return self::approved($section)[$field] ?? null;
     }
 }

@@ -1,0 +1,62 @@
+/* Apply the same focus width to component rules and the existing compiled stylesheets. */
+:root :focus-visible {
+    outline-width: 1px !important;
+}
+
+/* Place the field indicator over its border so the two read as one line. */
+:root body :is(input:where(:not([type]), [type="text"], [type="email"], [type="password"], [type="search"], [type="url"], [type="tel"], [type="number"], [type="date"], [type="datetime-local"], [type="time"], [type="week"], [type="month"]), select, textarea):focus {
+    outline: 1px solid var(--platform-focus, #986310);
+    outline-offset: -1px;
+    box-shadow: none !important;
+}
+
+/* The table search field wrapper already indicates focus with its border. */
+:root .learning-manager-search-field input:focus {
+    outline-style: none;
+}
+
+.auth-google-mark {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    padding: 2px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* Keep hover and focus surfaces in the same theme as their foregrounds. */
+:root {
+    --platform-hover-surface: #eaf2fc;
+    --platform-hover-border: #587aa2;
+    --platform-hover-focus: #1c558a;
+    --platform-hover-positive-surface: #def1df;
+    --platform-hover-positive-border: #4e926c;
+    --platform-hover-positive-focus: #227248;
+}
+
+:root.dark {
+    --platform-hover-surface: #254669;
+    --platform-hover-border: #6c98cc;
+    --platform-hover-focus: #a7cafa;
+    --platform-hover-positive-surface: #275946;
+    --platform-hover-positive-border: #75b596;
+    --platform-hover-positive-focus: #aff0c2;
+}
+
+.platform-hover-surface:is(:hover, :focus-visible) {
+    background-color: var(--platform-hover-surface);
+    border-color: var(--platform-hover-border);
+}
+
+.platform-hover-surface:focus-visible {
+    outline-color: var(--platform-hover-focus);
+}
+
+.platform-hover-positive:is(:hover, :focus-visible) {
+    background-color: var(--platform-hover-positive-surface);
+    border-color: var(--platform-hover-positive-border);
+}
+
+.platform-hover-positive:focus-visible {
+    outline-color: var(--platform-hover-positive-focus);
+}

@@ -30,11 +30,15 @@ final class CertificateVerificationController extends Controller
             if ($status === 'verified') {
                 $record = [
                     'learner' => $certificate->snapshot['learner'],
-                    'course' => $certificate->snapshot['course'],
+                    'course' => $certificate->snapshot['course'] ?? null,
+                    'assessment' => $certificate->snapshot['assessment'] ?? null,
+                    'credential_type' => isset($certificate->snapshot['kind'])
+                        ? __('certificate_verification.kind_'.$certificate->snapshot['kind']) : null,
                     'issuer' => $certificate->snapshot['issuer'],
                     'date' => $certificate->created_at->toDateString(),
                     'code' => $certificate->code,
                 ];
+                $record = array_filter($record, fn ($value) => $value !== null && $value !== '');
             }
         }
 

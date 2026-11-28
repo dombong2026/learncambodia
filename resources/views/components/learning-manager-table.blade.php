@@ -1,5 +1,6 @@
-@props(['items', 'name', 'measure' => 'Modules', 'empty' => 'No records have been created.', 'searchLabel' => 'Search by title, ID, category, or level'])
+@props(['items', 'name', 'measure' => 'Modules', 'empty' => 'No records have been created.', 'searchLabel' => 'Search by title, ID, category, or level', 'columns' => null])
 @php
+    $columns ??= ['No', 'ID', $name, 'Category', 'Level', $measure, 'Status', 'Action'];
     $search = \App\Support\LearningTable::search(request());
     $locale = request()->query('lang');
     $current = $items->currentPage();
@@ -28,14 +29,14 @@
         <table>
             <thead>
                 <tr>
-                    @foreach(['No', 'ID', $name, 'Category', 'Level', $measure, 'Status', 'Action'] as $heading)
+                    @foreach($columns as $heading)
                         <th scope="col">{{ $heading }}</th>
                     @endforeach
                 </tr>
             </thead>
             <tbody>
                 @if($items->isEmpty())
-                    <tr><td class="learning-manager-empty" colspan="8">
+                    <tr><td class="learning-manager-empty" colspan="{{ count($columns) }}">
                         @if($search === '' && isset($emptyState)){{ $emptyState }}
                         @else{{ $search === '' ? $empty : 'No records match your search.' }}@endif
                     </td></tr>

@@ -12,10 +12,13 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Auth\AccountPasskeyController;
 use App\Http\Controllers\Auth\AccountSecurityController;
 use App\Http\Controllers\Auth\GoogleSignInController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Workspace\AdminSocialAuthController;
 use Laravel\Passkeys\Http\Controllers\PasskeyLoginController;
 use Laravel\Passkeys\Http\Controllers\PasskeyRegistrationController;
 use App\Http\Controllers\Auth\PasswordRecoveryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\UserInvitationController;
 use App\Http\Controllers\BrandAssetController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CertificateVerificationController;
@@ -34,13 +37,18 @@ use App\Http\Controllers\Workspace\PublicProfileController;
 use App\Http\Controllers\Workspace\AdminPublicProfileController;
 use App\Http\Controllers\Workspace\AdminCategoryController;
 use App\Http\Controllers\Workspace\AdminRecordsController;
+use App\Http\Controllers\Workspace\AdminUserController;
+use App\Http\Controllers\Workspace\AdminUserInvitationController;
+use App\Http\Controllers\Workspace\AdminUserActionsController;
 use App\Http\Controllers\Workspace\AdminCourseController;
 use App\Http\Controllers\Workspace\AdminLearningRecordController;
 use App\Http\Controllers\Workspace\AdminCourseRevisionController;
 use App\Http\Controllers\Workspace\AdminCurriculumController;
+use App\Http\Controllers\Workspace\AdminCourseResourceController;
 use App\Http\Controllers\Workspace\AdminAppearanceController;
 use App\Http\Controllers\Workspace\AdminBrandingController;
 use App\Http\Controllers\Workspace\AdminSystemSettingsController;
+use App\Http\Controllers\Workspace\AdminSmtpController;
 use App\Http\Controllers\Workspace\AdminReviewController;
 use App\Http\Controllers\Workspace\StudentEnrollmentController;
 use App\Http\Controllers\Workspace\StudentSavedCourseController;
@@ -51,6 +59,9 @@ use App\Http\Controllers\Workspace\InstructorFeedbackTemplateController;
 use App\Http\Controllers\Workspace\AdminCurriculumHistoryController;
 use App\Http\Controllers\Workspace\StudentProgressController;
 use App\Http\Controllers\Workspace\StudentLessonQuizController;
+use App\Http\Controllers\Workspace\StudentCourseResourceController;
+use App\Http\Controllers\Workspace\LessonConversationController;
+use App\Http\Controllers\Workspace\CourseSupportSettingsController;
 use App\Http\Controllers\Workspace\StudentPracticeController;
 use App\Http\Controllers\Workspace\AdminQuizController;
 use App\Http\Controllers\Workspace\AdminLearningReportController;
@@ -95,8 +106,7 @@ Route::middleware(['auth', 'password.confirm', 'mcp.oauth.stage', 'mcp.oauth.adm
             ->middleware('throttle:10,1')->name('mcp.oauth.tokens.revoke');
     });
 
-// OAuth 2.1 discovery is fail-closed until a real authorization server
-// passes security acceptance. The existing /api/mcp bearer route is untouched.
+// OAuth Phase 2A: discovery is disabled until a reviewed OAuth provider exists.
 Route::get('/.well-known/oauth-protected-resource', [McpOAuthDiscoveryController::class, 'protectedResource'])
     ->middleware('throttle:30,1')->name('mcp.oauth.metadata.resource');
 // RFC 9728 path-aware discovery alias; identical gate and metadata.
@@ -105,6 +115,7 @@ Route::get('/.well-known/oauth-protected-resource/api/mcp/oauth', [McpOAuthDisco
 Route::get('/.well-known/oauth-authorization-server', [McpOAuthDiscoveryController::class, 'authorizationServer'])
     ->middleware('throttle:30,1')->name('mcp.oauth.metadata.authorization-server');
 
+
 Route::get('/install', [InstallController::class, 'index'])->name('install.index');
 Route::post('/install/unlock', [InstallController::class, 'unlock'])
     ->middleware('throttle:5,1')->name('install.unlock');
@@ -112,6 +123,8 @@ Route::post('/install/complete', [InstallController::class, 'complete'])
     ->middleware('throttle:3,1')->name('install.complete');
 
 Route::get('/', [CatalogController::class, 'home'])->name('home');
+Route::get('/promo-player/media/{media}', [\App\Http\Controllers\Workspace\AdminPromoPlayerController::class, 'media'])
+    ->whereUuid('media')->name('promo-player.media');
 Route::get('/brand/assets/{slot}/{version}', [BrandAssetController::class, 'image'])
     ->where('version', '[0-9A-HJKMNP-TV-Z]{26}')->name('brand.asset');
 Route::get('/brand/platform.webmanifest', [BrandAssetController::class, 'manifest'])->name('brand.manifest');
@@ -121,13 +134,26 @@ Route::get('/students', [PublicPeopleController::class, 'students'])->name('stud
 Route::get('/students/{profile}', [PublicPeopleController::class, 'student'])->name('students.show');
 Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course:slug}', [PublicCourseController::class, 'show'])->name('courses.show');
-Route::get('/library', [LearningHubController::class,'library'])->name('learning.library');
+require __DIR__.'/student-library.php';
 Route::get('/reading', [LearningHubController::class,'reading'])->name('learning.reading');
 Route::get('/exam-catalog', [LearningHubController::class,'exams'])->name('learning.exams');
 Route::get('/exam-catalog/{course:slug}', [LearningHubController::class,'exam'])->name('learning.exam.show');
 Route::get('/assessments/exams', [AssessmentAccessController::class, 'catalog'])->name('assessments.exams');
 Route::get('/assessments/quizzes', [AssessmentAccessController::class, 'catalog'])->name('assessments.quizzes');
 Route::get('/assessments/{exam}', [AssessmentAccessController::class, 'show'])->name('assessments.show');
+Route::prefix('specialized-exams')->name('specialized-exams.')->controller(StudentExaminationController::class)->group(function (): void {
+    Route::get('/attempts/{attempt}', 'showSpecialized')->whereNumber('attempt')->name('attempts.show');
+    Route::post('/attempts/{attempt}', 'submitStandalone')->whereNumber('attempt')
+        ->middleware('throttle:12,1,specialized-submit')->name('attempts.submit');
+    Route::post('/attempts/{attempt}/feedback', 'feedback')->whereNumber('attempt')
+        ->middleware('throttle:90,1,specialized-feedback')->name('attempts.feedback');
+    Route::post('/attempts/{attempt}/email', 'saveSpecializedEmail')->whereNumber('attempt')
+        ->middleware('throttle:8,1,specialized-email')->name('attempts.email');
+    Route::post('/attempts/{attempt}/claim', 'claimSpecialized')->whereNumber('attempt')
+        ->middleware(['auth', 'throttle:12,1,specialized-claim'])->name('attempts.claim');
+    Route::get('/{exam}', 'specialized')->name('show');
+    Route::post('/{exam}/start', 'startSpecialized')->middleware('throttle:12,1,specialized-start')->name('start');
+});
 Route::get('/exams/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'exam')->name('public.exams.show');
 Route::get('/quizzes/{exam}', [AssessmentAccessController::class, 'show'])->where('exam', '[1-9][0-9]{5}-[a-z0-9][a-z0-9-]*')->defaults('kind', 'quiz')->name('public.quizzes.show');
 Route::get('/recommendations', [LearningHubController::class,'recommendations'])->name('learning.recommendations');
@@ -160,18 +186,33 @@ Route::get('/cefr', [CefrController::class, 'index'])->name('cefr.index');
 Route::get('/pages/{slug}', [PublicDocumentController::class, 'page'])->name('pages.show');
 Route::get('/policies', [PublicDocumentController::class, 'policies'])->name('policies.index');
 Route::get('/policies/{slug}', [PublicDocumentController::class, 'policy'])->name('policies.show');
+Route::get('/information/placement', [\App\Http\Controllers\PlacementController::class, 'index'])->name('placement.index');
+Route::get('/information/placement/{track}', [\App\Http\Controllers\PlacementController::class, 'show'])->name('placement.show');
 Route::get('/information/{page}', [InformationController::class, 'show'])->name('information.show');
 Route::post('/contact', [PublicContactController::class, 'store'])
     ->middleware('throttle:5,1')->name('contact.store');
 Route::post('/language', [LocaleController::class, 'update'])->name('language.update');
 
+Route::view('/social-sign-in/data-deletion', 'auth.social-data-deletion')->name('social.data-deletion');
+
 Route::get('/sign-in/google/callback', [GoogleSignInController::class, 'callback'])
-    ->middleware('throttle:20,1')->name('social.google.callback');
+    ->middleware('throttle:20,1')->block(35, 10)->name('social.google.callback');
+Route::get('/sign-in/{provider}/callback', [SocialAuthController::class, 'callback'])
+    ->whereIn('provider', ['facebook', 'github', 'linkedin'])->middleware('throttle:20,1')
+    ->block(35, 10)->name('social.provider.callback');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/sign-in/google', [GoogleSignInController::class, 'start'])->middleware('throttle:10,1')->name('social.google.start');
     Route::get('/sign-in/google/register', [GoogleSignInController::class, 'registration'])->name('social.google.registration');
     Route::post('/sign-in/google/register', [GoogleSignInController::class, 'finishRegistration'])->middleware('throttle:5,1')->name('social.google.register');
+    Route::prefix('/sign-in/{provider}')->where(['provider' => 'facebook|github|linkedin'])->group(function (): void {
+        Route::get('/', [SocialAuthController::class, 'start'])->middleware('throttle:10,1')->name('social.provider.start');
+        Route::get('/register', [SocialAuthController::class, 'registration'])->name('social.provider.registration');
+        Route::post('/register', [SocialAuthController::class, 'finishRegistration'])
+            ->middleware('throttle:5,1')->block(15, 10)->name('social.provider.register');
+        Route::get('/confirm-email', [SocialAuthController::class, 'confirmRegistrationEmail'])
+            ->middleware(['signed:relative', 'throttle:10,1'])->block(10, 10)->name('social.provider.confirm-email');
+    });
     Route::get('/security/challenge', [AccountSecurityController::class, 'challenge'])->name('security.challenge');
     Route::post('/security/challenge', [AccountSecurityController::class, 'finishChallenge'])
         ->middleware('throttle:10,1')->block(10, 10)->name('security.challenge.finish');
@@ -188,6 +229,10 @@ Route::middleware('guest')->group(function (): void {
 // Password reset links are token-protected, throttled, and never disclose whether
 // an email address exists. SMTP delivery is disabled in the initial log-only install.
 Route::middleware('guest')->group(function (): void {
+    Route::get('/invite/{token}', [UserInvitationController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:30,1')->name('invitations.show');
+    Route::post('/invite/{token}', [UserInvitationController::class, 'accept'])
+        ->where('token', '[A-Za-z0-9]{64}')->middleware('throttle:8,1')->name('invitations.accept');
     Route::get('/forgot-password', [PasswordRecoveryController::class, 'requestForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordRecoveryController::class, 'sendLink'])
         ->middleware('throttle:3,1')->name('password.email');
@@ -198,6 +243,7 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::post('/account-preview/stop', [AdminUserActionsController::class, 'stop'])->name('account-preview.stop');
     Route::get('/security/methods', [AccountSecurityController::class, 'methods'])->name('security.methods');
     Route::get('/security/confirm-password', [AccountSecurityController::class, 'passwordForm'])->name('password.confirm');
     Route::post('/security/confirm-password', [AccountSecurityController::class, 'confirmPassword'])
@@ -213,6 +259,11 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/user/passkeys/{passkey}', [PasskeyRegistrationController::class, 'destroy'])->name('passkey.destroy');
         Route::post('/security/google', [GoogleSignInController::class, 'connect'])->name('social.google.connect');
         Route::delete('/security/google', [GoogleSignInController::class, 'disconnect'])->name('social.google.disconnect');
+        Route::get('/security/social-accounts/confirm', fn () => to_route('security.methods'))->name('social.accounts.confirm');
+        Route::post('/security/social-accounts/{provider}', [SocialAuthController::class, 'connect'])
+            ->whereIn('provider', ['facebook', 'github', 'linkedin'])->name('social.provider.connect');
+        Route::delete('/security/social-accounts/{provider}', [SocialAuthController::class, 'disconnect'])
+            ->whereIn('provider', ['facebook', 'github', 'linkedin'])->name('social.provider.disconnect');
     });
 
     Route::get('/account-avatar', [ProfileController::class, 'avatar'])->name('workspace.avatar');
@@ -251,22 +302,35 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/logout', [SessionController::class, 'logout'])->name('logout');
 
     Route::middleware('role:admin')->prefix('dashboard')->name('admin.')->group(function (): void {
+        require __DIR__.'/admin-openai.php';
         Route::prefix('system-settings')->name('system-settings.')->controller(AdminSystemSettingsController::class)->group(function (): void {
+            Route::get('/player', [\App\Http\Controllers\Workspace\AdminPlayerSettingsController::class, 'edit'])->name('player.edit');
+            Route::patch('/player', [\App\Http\Controllers\Workspace\AdminPlayerSettingsController::class, 'update'])->name('player.update');
+            Route::patch('/player/promo', [\App\Http\Controllers\Workspace\AdminPromoPlayerController::class, 'update'])->name('player.promo.update');
+            Route::get('/player/promo/media/{media}', [\App\Http\Controllers\Workspace\AdminPromoPlayerController::class, 'media'])
+                ->whereUuid('media')->name('player.promo.media');
             Route::get('/branding', [AdminBrandingController::class, 'edit'])->name('branding');
             Route::put('/branding', [AdminBrandingController::class, 'update'])->name('branding.update');
             Route::get('/security', 'security')->name('security');
-            Route::get('/social-auth', 'socialAuth')->name('social-auth');
-            Route::get('/mcp', [\App\Http\Controllers\Workspace\AdminMcpManagementController::class, 'index'])->name('mcp');
-            Route::post('/mcp/sessions', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'issue'])
-                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.sessions.issue');
-            Route::post('/mcp/confirm-password', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'confirmWebsitePassword'])
-                ->middleware('throttle:5,1')->name('mcp.confirm-password');
-            Route::delete('/mcp/sessions/{token}', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'revoke'])
-                ->whereNumber('token')->middleware('throttle:10,1')->name('mcp.sessions.revoke');
-            Route::get('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'show'])
-                ->middleware('password.confirm')->name('mcp.approvals.show');
-            Route::post('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'decide'])
-                ->middleware(['password.confirm','throttle:5,1'])->name('mcp.approvals.decide');
+            Route::get('/social-auth', [AdminSocialAuthController::class, 'index'])->name('social-auth');
+            Route::get('/social-auth/confirm', [AdminSocialAuthController::class, 'confirmStatus'])
+                ->middleware('password.confirm')->name('social-auth.confirm');
+            Route::prefix('/social-auth/{provider}')->where(['provider' => 'google|facebook|github|linkedin'])
+                ->middleware(['password.confirm', 'throttle:10,1'])->group(function (): void {
+                    Route::get('/configure', [AdminSocialAuthController::class, 'configure'])->name('social-auth.configure');
+                    Route::put('/', [AdminSocialAuthController::class, 'save'])->name('social-auth.save');
+                    Route::patch('/status', [AdminSocialAuthController::class, 'status'])->name('social-auth.status');
+                    Route::post('/test', [SocialAuthController::class, 'test'])->name('social-auth.test');
+                });
+            Route::get('/smtp', [AdminSmtpController::class, 'edit'])->name('smtp');
+            Route::get('/smtp/configure', [AdminSmtpController::class, 'configure'])
+                ->middleware('password.confirm')->name('smtp.configure');
+            Route::put('/smtp', [AdminSmtpController::class, 'update'])
+                ->middleware(['password.confirm', 'throttle:6,1'])->name('smtp.update');
+            Route::delete('/smtp', [AdminSmtpController::class, 'reset'])
+                ->middleware(['password.confirm', 'throttle:6,1'])->name('smtp.reset');
+            Route::post('/smtp/test', [AdminSmtpController::class, 'test'])
+                ->middleware(['password.confirm', 'throttle:3,1'])->name('smtp.test');
             Route::get('/cloud-storage', 'cloudStorage')->name('cloud-storage');
             Route::get('/cloud-storage/configure', 'configureCloudStorage')
                 ->middleware('password.confirm')->name('cloud-storage.configure');
@@ -295,6 +359,8 @@ Route::middleware('auth')->group(function (): void {
         }
         Route::patch('/assessment-access/{access}', [AssessmentAccessController::class, 'review'])->name('assessment-access.review');
         Route::patch('/assessment-attempts/{attempt}/grade', [AdminExaminationController::class, 'grade'])->name('assessment-attempts.grade');
+        Route::delete('/exam-types/{id}', [AdminExaminationController::class, 'deleteExamType'])
+            ->whereNumber('id')->name('exam-types.destroy');
         foreach (['exam-types', 'quiz-types', 'certificate-types'] as $type) {
             Route::get("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'types'])->defaults('kind', $type)->name("$type.index");
             Route::post("/$type", [\App\Http\Controllers\Workspace\AdminExaminationController::class, 'saveType'])->defaults('kind', $type)->name("$type.store");
@@ -321,6 +387,26 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/policy-history/{entry}/{revision}', [AdminEditorialController::class, 'policyRevision'])
             ->name('policy-history.show');
         Route::get('/users', [AdminRecordsController::class, 'users'])->name('users.index');
+        Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+        Route::get('/users/{user}/actions/{action}', [AdminUserActionsController::class, 'confirm'])
+            ->where('user', '[1-9][0-9]{7}')->whereIn('action', ['verify', 'delete', 'sign-in-as'])->name('users.actions');
+        Route::patch('/users/{user}/verify', [AdminUserActionsController::class, 'verify'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.verify');
+        Route::patch('/users/{user}/status', [AdminUserActionsController::class, 'status'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.status');
+        Route::delete('/users/{user}', [AdminUserActionsController::class, 'destroy'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:8,1')->name('users.destroy');
+        Route::post('/users/{user}/sign-in-as', [AdminUserActionsController::class, 'signInAs'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:5,1')->name('users.sign-in-as');
+        Route::post('/users/{user}/invitation/resend', [AdminUserInvitationController::class, 'resend'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:5,1')->name('users.invitation.resend');
+        Route::post('/users/{user}/invitation/revoke', [AdminUserInvitationController::class, 'revoke'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.invitation.revoke');
+        Route::post('/users', [AdminUserController::class, 'store'])->middleware('throttle:15,1')->name('users.store');
+        Route::get('/users/{user}/access', [AdminUserController::class, 'editAccess'])
+            ->where('user', '[1-9][0-9]{7}')->name('users.access.edit');
+        Route::patch('/users/{user}/access', [AdminUserController::class, 'updateAccess'])
+            ->where('user', '[1-9][0-9]{7}')->middleware('throttle:15,1')->name('users.access.update');
         Route::get('/users/{user}', [AdminRecordsController::class, 'user'])->where('user', '[1-9][0-9]{7}')->name('users.show');
         Route::get('/support/{kind}', [SupportTicketController::class,'adminIndex'])->name('support.index');
         Route::patch('/support/{kind}/{ticket}', [SupportTicketController::class,'adminUpdate'])->name('support.update');
@@ -362,6 +448,11 @@ Route::middleware('auth')->group(function (): void {
             Route::patch('/{course}', [AdminCourseController::class, 'update'])->name('update');
             Route::patch('/{course}/media', [AdminCourseController::class, 'media'])->name('media');
             Route::post('/{course}/submit', [AdminCourseController::class, 'submit'])->name('submit');
+            Route::get('/{course}/resources', [AdminCourseResourceController::class, 'index'])->name('resources');
+            Route::post('/{course}/resources', [AdminCourseResourceController::class, 'store'])->middleware('throttle:15,1')->name('resources.store');
+            Route::patch('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'update'])->middleware('throttle:15,1')->name('resources.update');
+            Route::get('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'download'])->name('resources.download');
+            Route::delete('/{course}/resources/{resource}', [AdminCourseResourceController::class, 'destroy'])->name('resources.destroy');
             Route::get('/{course}/history', [AdminCurriculumHistoryController::class, 'index'])->name('history.index');
             Route::post('/{course}/modules/{module}/duplicate', [AdminCurriculumController::class, 'duplicateModule'])->name('modules.duplicate');
             Route::post('/{course}/modules/{module}/lessons/{lesson}/duplicate', [AdminCurriculumController::class, 'duplicateLesson'])->name('lessons.duplicate');
@@ -387,13 +478,30 @@ Route::middleware('auth')->group(function (): void {
         });
 
         Route::prefix('appearance')->name('appearance.')->group(function (): void {
+            Route::get('/home-hero-media', [\App\Http\Controllers\Workspace\AdminHomeHeroMediaController::class, 'index'])->name('home-hero-media.index');
+            Route::post('/home-hero-media', [\App\Http\Controllers\Workspace\AdminHomeHeroMediaController::class, 'update'])->middleware('throttle:12,1')->name('home-hero-media.update');
+            Route::get('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'index'])->name('website-skins.index');
+            Route::post('/website-skins', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'update'])->middleware('throttle:15,1')->name('website-skins.update');
+            Route::get('/website-skins/preview/{skin}', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'preview'])->name('website-skins.preview');
+            Route::post('/website-skins/periods', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'addPeriod'])->middleware('throttle:15,1')->name('website-skins.periods.add');
+            Route::post('/website-skins/periods/remove', [\App\Http\Controllers\Workspace\AdminWebsiteSkinController::class, 'removePeriod'])->middleware('throttle:15,1')->name('website-skins.periods.remove');
             Route::get('/', [AdminAppearanceController::class, 'index'])->name('index');
+            Route::get('/home/campaign-builder', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'edit'])->name('campaign.edit');
+            Route::post('/home/campaign-builder', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'save'])->name('campaign.save');
+            Route::post('/home/campaign-builder/items/{campaign}/status', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'status'])->name('campaign-manager.status');
+
+            Route::post('/home/campaign-builder/media', [\App\Http\Controllers\Workspace\CampaignStudioController::class, 'media'])->middleware('throttle:20,1')->name('campaign.media');
+            Route::post('/home/campaign-builder/cover', [\App\Http\Controllers\Workspace\CampaignCoverController::class, 'save'])->middleware('throttle:10,1')->name('campaign.cover.save');
+            Route::get('/home/preview/{layout}', [CatalogController::class, 'homePreview'])->name('home-preview');
+            Route::post('/home/activate-layout', [AdminAppearanceController::class, 'activateHomeLayout'])
+                ->middleware('throttle:15,1')->name('home-layout.activate');
             Route::get('/{section}', [AdminAppearanceController::class, 'edit'])->name('edit');
             Route::post('/{section}', [AdminAppearanceController::class, 'store'])->name('store');
             Route::post('/revisions/{revision}/submit', [AdminAppearanceController::class, 'submit'])->name('submit');
         });
 
         Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/courses/approve-selected', [AdminReviewController::class, 'approveCourses'])->name('reviews.courses.approve-selected');
         Route::post('/reviews/courses/{course}', [AdminReviewController::class, 'course'])->name('reviews.course');
         Route::post('/reviews/appearance/{revision}', [AdminReviewController::class, 'appearance'])->name('reviews.appearance');
         Route::post('/reviews/enrollments/{enrollment}', [AdminReviewController::class, 'enrollment'])->name('reviews.enrollment');
@@ -469,6 +577,8 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/enrollments/{enrollment}/exam-attempts/{attempt}', [\App\Http\Controllers\Workspace\StudentExaminationController::class, 'submit'])
             ->middleware('throttle:12,1')->name('exam-attempts.submit');
         Route::get('/enrollments/{enrollment}', [StudentEnrollmentController::class, 'show'])->name('enrollments.show');
+        Route::get('/enrollments/{enrollment}/resources', [StudentCourseResourceController::class, 'index'])->name('enrollments.resources');
+        Route::get('/enrollments/{enrollment}/resources/{resource}', [StudentCourseResourceController::class, 'download'])->name('enrollments.resources.download');
         Route::get('/notes', [StudentNoteController::class, 'index'])->name('notes.index');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/notes', [StudentNoteController::class, 'store'])
             ->middleware('throttle:20,1')->name('notes.store');
@@ -485,8 +595,21 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/planner/sessions', [StudentPlannerController::class, 'storeSession'])->middleware('throttle:20,1')->name('planner.sessions.store');
         Route::delete('/planner/sessions/{session}', [StudentPlannerController::class, 'destroySession'])->name('planner.sessions.destroy');
         Route::get('/progress', [StudentProgressController::class, 'index'])->name('progress.index');
+        Route::get('/certificates', [\App\Http\Controllers\Workspace\CertificateController::class, 'mine'])->name('certificates.index');
+        Route::post('/enrollments/{enrollment}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimCourse'])
+            ->middleware('throttle:12,1')->name('certificates.claim-course');
+        Route::post('/assessment-attempts/{attempt}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimAssessment'])
+            ->middleware('throttle:12,1')->name('certificates.claim-assessment');
+        Route::post('/practice-attempts/{practiceAttempt}/certificate', [\App\Http\Controllers\Workspace\CertificateController::class, 'claimPractice'])
+            ->middleware('throttle:12,1')->name('certificates.claim-practice');
         Route::get('/enrollments/{enrollment}/watch/{lesson}', [LearningHubController::class, 'lesson'])
             ->name('lessons.watch');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/comments', [LessonConversationController::class, 'comment'])
+            ->middleware('throttle:20,1,lesson-comments')->name('lessons.comment');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/comments/{comment}/reaction', [LessonConversationController::class, 'react'])
+            ->middleware('throttle:60,1,lesson-reactions')->name('lessons.react');
+        Route::post('/enrollments/{enrollment}/watch/{lesson}/support', [LessonConversationController::class, 'send'])
+            ->middleware('throttle:20,1,lesson-support')->name('lessons.support');
         Route::post('/enrollments/{enrollment}/lessons/{lesson}/quiz', [StudentLessonQuizController::class, 'store'])
             ->middleware('throttle:20,1')->name('lessons.quiz');
         Route::get('/homework', [StudentHomeworkController::class, 'index'])->name('homework.index');
@@ -523,6 +646,9 @@ Route::middleware('auth')->group(function (): void {
             ->middleware('throttle:5,1')->name('profile.password');
         Route::get('/courses', [InstructorTeachingController::class, 'index'])->name('courses.index');
         Route::get('/courses/{course}', [InstructorTeachingController::class, 'show'])->name('courses.show');
+        Route::get('/courses/{course}/support', [CourseSupportSettingsController::class, 'edit'])->name('courses.support.edit');
+        Route::patch('/courses/{course}/support', [CourseSupportSettingsController::class, 'update'])
+            ->middleware('throttle:12,1,course-support-settings')->name('courses.support.update');
         Route::get('/insights', [InstructorInsightsController::class, 'index'])->name('insights.index');
         Route::get('/feedback-templates', [InstructorFeedbackTemplateController::class, 'index'])->name('feedback-templates.index');
         Route::post('/feedback-templates', [InstructorFeedbackTemplateController::class, 'store'])
@@ -542,6 +668,10 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/submissions/{submission}/review', [InstructorGradingController::class, 'review'])
             ->middleware('throttle:30,1')->name('grading.review');
         Route::get('/guidance', [InstructorTeachingController::class, 'guidance'])->name('guidance');
+        Route::get('/lesson-support', [LessonConversationController::class, 'index'])->name('lesson-support.index');
+        Route::get('/lesson-support/{enrollment}/{lesson}', [LessonConversationController::class, 'show'])->name('lesson-support.show');
+        Route::post('/lesson-support/{enrollment}/{lesson}', [LessonConversationController::class, 'reply'])
+            ->middleware('throttle:30,1,lesson-support-replies')->name('lesson-support.reply');
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 
@@ -558,3 +688,33 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/manage/{section}/{item}', [WorkspaceController::class, 'module'])->name('module');
     });
 });
+
+Route::fallback(static fn () => abort(404));
+
+Route::get('/campaign-media/{asset}', [\App\Http\Controllers\Workspace\CampaignStudioController::class, 'asset'])->where('asset','[a-f0-9]{64}\.(jpg|png|webp|mp4|webm)')->name('campaign.asset');
+
+Route::post('/campaign-lessons/check', [\App\Http\Controllers\Workspace\CampaignStudioController::class, 'check'])->middleware('throttle:90,1')->name('campaign.check');
+// Public Quiz and Exam endpoints, independent of the legacy singleton player.
+Route::get('/home-campaigns/{campaign}/play', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'play'])->name('campaign-manager.play');
+Route::post('/home-campaigns/{campaign}/check', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'check'])->middleware('throttle:60,1')->name('campaign-manager.check');
+Route::get('/home-campaigns/{campaign}/cover', [\App\Http\Controllers\Workspace\HomepageCampaignManagerController::class, 'cover'])->name('campaign-manager.cover');
+
+// LearnCambodia MCP Management — independent admin-only route, no remote access.
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('dashboard/system-settings')->name('admin.system-settings.')
+    ->group(function (): void {
+        Route::get('/mcp', [\App\Http\Controllers\Workspace\AdminMcpManagementController::class, 'index'])
+            ->name('mcp');
+
+        Route::post('/mcp/sessions', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'issue'])
+            ->middleware(['password.confirm','throttle:5,1'])->name('mcp.sessions.issue');
+        Route::post('/mcp/confirm-password', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'confirmWebsitePassword'])
+            ->middleware('throttle:5,1')->name('mcp.confirm-password');
+        Route::delete('/mcp/sessions/{token}', [\App\Http\Controllers\Workspace\McpAdminSessionController::class, 'revoke'])
+            ->whereNumber('token')->middleware('throttle:10,1')->name('mcp.sessions.revoke');
+        Route::get('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'show'])
+            ->middleware('password.confirm')->name('mcp.approvals.show');
+        Route::post('/mcp/approvals/{approval}', [\App\Http\Controllers\Workspace\McpBrowserApprovalController::class, 'decide'])
+            ->middleware(['password.confirm','throttle:5,1'])->name('mcp.approvals.decide');
+
+    });

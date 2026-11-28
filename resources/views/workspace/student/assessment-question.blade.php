@@ -12,7 +12,7 @@
 @endphp
 <fieldset data-attempt-question="{{ $index }}" @if(!$editable) data-answer-locked @endif class="workspace-panel space-y-3 p-5">
     <legend class="max-w-full break-words px-2 font-bold">{{ $index + 1 }}. {{ $question['prompt'] }}</legend>
-    <p class="text-xs text-slate-500 dark:text-slate-400">{{ $scored ? $question['points'].' '.Str::plural('point', $question['points']) : 'Unscored response' }}</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400">{{ $scored ? trans_choice('learning_reader.points', $question['points']) : __('learning_reader.unscored') }}</p>
     @if($format === 'reading')
         <p class="whitespace-pre-wrap break-words rounded-lg border p-3">{{ $question['passage'] }}</p>
     @elseif($format === 'listening')
@@ -63,10 +63,16 @@
         @endforeach
     @endif
 
+    @if($index === 0 && in_array(app()->getLocale(), ['km', 'zh'], true))
+        <span hidden data-exam-feedback-labels
+            data-correct="{{ __('learning_reader.correct') }}" data-incorrect="{{ __('learning_reader.incorrect') }}"
+            data-choose="{{ __('learning_reader.choose') }}" data-checking="{{ __('learning_reader.checking') }}"
+            data-error="{{ __('learning_reader.error') }}" data-locked="{{ __('learning_reader.locked') }}"></span>
+    @endif
     @if(($attempt->snapshot['live_feedback'] ?? false) && $scored && !\App\Support\AssessmentQuestions::manual($question))
         @if($editable)
-            <button type="button" data-exam-check class="rounded-lg border px-3 py-1.5 text-sm font-semibold">Check answer</button>
+            <button type="button" data-exam-check class="rounded-lg border px-3 py-1.5 text-sm font-semibold">{{ __('learning_reader.check') }}</button>
         @endif
-        <p data-exam-feedback class="text-sm" role="status">@if(!$editable){{ \App\Support\AssessmentQuestions::correct($question, $saved) ? 'Correct.' : 'Incorrect.' }} {{ $question['feedback'] ?? '' }}@endif</p>
+        <p data-exam-feedback class="text-sm" role="status">@if(!$editable){{ \App\Support\AssessmentQuestions::correct($question, $saved) ? __('learning_reader.correct') : __('learning_reader.incorrect') }} {{ $question['feedback'] ?? '' }}@endif</p>
     @endif
 </fieldset>

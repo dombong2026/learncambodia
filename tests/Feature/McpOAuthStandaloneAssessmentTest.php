@@ -567,6 +567,28 @@ final class McpOAuthStandaloneAssessmentTest extends TestCase
             $disabled = $class::execute($this->actor, array_replace($args, ['guest_enabled' => false,
                 'request_id' => (string) Str::uuid(), 'expected_version' => $result['version']]));
             $this->assertFalse($disabled['guest_enabled']);
+
+            $specialized = CourseExam::findOrFail($created['resource_id']);
+            $specialized->update(['viewer_mode' => 'specialized']);
+
+            $this->assertSame('specialized', $specialized->fresh()->viewer_mode);
+
+            $specializedVersion = Builder::execute(
+                $this->actor, 'get_draft_assessment', $lookup
+            );
+
+            try {
+                $class::execute($this->actor, array_replace($args, [
+                    'request_id' => (string) Str::uuid(),
+                    'expected_version' => $specializedVersion['version'],
+                    'guest_enabled' => true,
+                ]));
+                $this->fail('Specialized guest setting accepted.');
+            } catch (ValidationException) {
+                $this->assertFalse($specialized->fresh()->guest_enabled);
+            }
+
+            $specialized->update(['viewer_mode' => 'default']);
             CourseExam::findOrFail($created['resource_id'])->update(['published' => true]);
             try {
                 $class::execute($this->actor, $args);

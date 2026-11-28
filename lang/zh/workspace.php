@@ -20,7 +20,7 @@ return [
     'my_account' => '我的账户',
     'groups' => [
         'system-settings' => '系统设置',
-        'overview' => '概览',
+        'overview' => '仪表盘',
         'content' => '内容',
         'appearance' => '外观',
         'programs' => '学术课程',
@@ -36,6 +36,8 @@ return [
         'operations' => '运营',
     ],
     'labels' => [
+        'Exams' => '考试',
+        'Quizzes' => '测验',
         'Branding' => '品牌',
         'Social Auth' => '社交登录',
         'Cloud Storage' => '云存储',
@@ -49,6 +51,7 @@ return [
         'All Policies' => '全部政策',
         'All Users' => '所有账户',
         'Learning Progress' => '学习进度',
+        'My Certificates' => '我的证书',
         'My Enrollments' => '我的入学',
         'Available Courses' => '可选课程',
         'My Assignments' => '我的作业',

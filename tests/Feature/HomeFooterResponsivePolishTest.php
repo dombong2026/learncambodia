@@ -10,38 +10,106 @@ final class HomeFooterResponsivePolishTest extends TestCase
 {
     use RefreshDatabase;
 
+
+    private function selectHomepageLayout(string $layout): void
+    {
+        $admin = \App\Models\User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        \App\Models\AppearanceRevision::create([
+            'section' => 'home_layout',
+            'settings' => ['home_layout' => $layout],
+            'status' => 'approved',
+            'created_by' => $admin->id,
+            'reviewed_by' => $admin->id,
+            'reviewed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            $layout,
+            \App\Support\Appearance::value('home', 'home_layout')
+        );
+    }
+
     public function test_home_pathway_heading_and_level_guidance_have_inline_icons_without_blank_spacers(): void
     {
         $this->seed(CategorySeeder::class);
+        $this->selectHomepageLayout('classic');
+
         $html = $this->get('/?lang=en')->assertOk()
-            ->assertSee('data-home-pathways', false)
-            ->assertSee('data-home-level-guidance', false)
+            ->assertSee('id="home-cefr"', false)
+            ->assertSee('data-home-levels', false)
             ->assertSee('href="'.route('categories.index').'"', false)
             ->assertSee('href="'.route('cefr.index').'"', false)
             ->getContent();
 
-        $template = file_get_contents(resource_path('views/home.blade.php'));
-        $this->assertIsString($template);
-        $this->assertStringContainsString('data-home-level-guidance', $template);
-        $this->assertStringContainsString('name="award" class="h-9 w-9"', $template);
-        $this->assertStringContainsString('data-home-level-icon', $template);
-        $this->assertStringContainsString('data-home-pathways-icon', $template);
-        $this->assertStringNotContainsString('premium-card-content mt-20 text-lg font-black', $template);
-        $this->assertStringContainsString('data-home-pathways', $html);
+        $document = new \DOMDocument();
+        @$document->loadHTML($html, LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+
+        $links = $xpath->query(
+            '//*[@id="home-cefr"]//*[@data-home-levels]/a'
+        );
+
+        $this->assertCount(6, $links);
+
+        foreach (['A1','A2','B1','B2','C1','C2'] as $i => $level) {
+            $this->assertSame($level, trim($links->item($i)->textContent));
+            $this->assertSame(
+                route('cefr.index').'#'.$level,
+                $links->item($i)->getAttribute('href')
+            );
+        }
+
+        $this->assertSame(
+            1,
+            $xpath->query('//*[@id="home-cefr-title"]')->length
+        );
     }
 
     public function test_four_learning_steps_show_icons_in_each_real_navigation_card(): void
     {
+        $this->selectHomepageLayout('sunrise');
+
         $html = $this->get('/?lang=en')->assertOk()
-            ->assertSee('data-home-learning-steps', false)
-            ->assertSee('data-home-step-card', false)
-            ->assertSee('data-home-step-icon', false)
+            ->assertSee('data-home-layout="sunrise"', false)
+            ->assertSee(trans('pages.how_it_works', [], 'en'))
             ->getContent();
 
-        $this->assertSame(4, substr_count($html, 'data-home-step-card'));
-        $this->assertSame(4, substr_count($html, 'data-home-step-icon'));
-        $this->assertStringContainsString('grid-cols-2 items-stretch', $html);
-        $this->assertStringContainsString('xl:grid-cols-4', $html);
+        $document = new \DOMDocument();
+        @$document->loadHTML($html, LIBXML_NONET);
+        $xpath = new \DOMXPath($document);
+
+        $steps = $xpath->query('//a[span[@class="sr-step"]]');
+        $this->assertCount(4, $steps);
+
+        $routes = ['courses.index', 'register', 'login', 'cefr.index'];
+
+        $titles = [
+            'pages.step_discover',
+            'pages.step_account',
+            'pages.step_approval',
+            'pages.step_study',
+        ];
+
+        foreach ($routes as $index => $route) {
+            $step = $steps->item($index);
+
+            $this->assertSame(
+                route($route), $step->getAttribute('href')
+            );
+
+            $this->assertStringContainsString(
+                str_pad((string) ($index+1), 2, '0', STR_PAD_LEFT),
+                $step->textContent
+            );
+
+            $this->assertStringContainsString(
+                trans($titles[$index], [], 'en'),
+                $step->textContent
+            );
+        }
     }
 
     public function test_footer_has_four_responsive_sections_and_social_sharing_without_unverified_profiles(): void

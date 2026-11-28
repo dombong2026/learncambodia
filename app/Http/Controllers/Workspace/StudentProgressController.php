@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseEnrollment;
 use App\Models\CourseLesson;
 use App\Models\LessonProgress;
+use App\Support\CertificateAwards;
 use App\Support\LearningAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class StudentProgressController extends Controller
     {
         $data = $request->validate([
             'complete' => ['required', 'boolean'],
+            'continue_to_quiz' => ['sometimes', 'boolean'],
         ]);
 
         DB::transaction(function () use ($request, $enrollment, $lesson, $data): void {
@@ -55,7 +57,16 @@ class StudentProgressController extends Controller
                 'completed_at' => (bool) $data['complete']
                     ? ($record->completed_at ?? now()) : null,
             ]);
+            if ($data['complete']) {
+                CertificateAwards::course($course, $locked);
+            }
         });
+
+        if ($data['complete'] && ($data['continue_to_quiz'] ?? false) && filled($lesson->quiz_questions)) {
+            return redirect()->route('account.lessons.watch', [
+                $enrollment, $lesson, 'viewer' => 'quiz',
+            ] + $request->only('lang'))->with('status', 'Lesson marked complete.');
+        }
 
         return back()->with('status', (bool) $data['complete']
             ? 'Lesson marked complete.' : 'Lesson marked for review.');

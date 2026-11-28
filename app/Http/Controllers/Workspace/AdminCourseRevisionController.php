@@ -51,6 +51,9 @@ class AdminCourseRevisionController extends Controller
             ]);
 
             $new->descriptionMedia()->attach($source->descriptionMedia()->allRelatedIds());
+            foreach ($source->resources as $resource) {
+                $new->resources()->create($resource->only(['editor_media_id', 'title', 'position']));
+            }
 
             foreach ($source->modules()->with('lessons')->get() as $module) {
                 $copied = $new->modules()->create([

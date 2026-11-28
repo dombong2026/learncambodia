@@ -1,4 +1,4 @@
-@props(['course'])
+@props(['course', 'showSummary' => true])
 <article class="premium-card group flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#e4b456] hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
     @if($course->featured_kind === 'image' && $course->featuredMedia)
         <img class="mb-4 aspect-video w-full rounded-xl object-cover" src="{{ route('editor-media.show', $course->featuredMedia) }}" alt="{{ $course->featured_alt ?? '' }}" loading="lazy" decoding="async">
@@ -12,8 +12,10 @@
         @if($course->cefr_level)<span class="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">CEFR {{ $course->cefr_level }}</span>@endif
         <span class="ml-auto text-slate-400">{{ ucfirst($course->delivery_mode) }}</span>
     </div>
-    <h3 class="premium-card-content mt-5 text-xl font-black leading-snug text-[#0d2d5b] dark:text-white"><a href="{{ route('courses.show',$course->getRouteKey()) }}" class="rounded focus-visible:outline-2 focus-visible:outline-blue-600 hover:underline">{{ $course->title }}</a></h3>
-    <p class="premium-card-content mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
+    <h3 @class(['premium-card-content mt-5 text-xl font-black leading-snug text-[#0d2d5b] dark:text-white', 'flex-1' => ! $showSummary])><a href="{{ route('courses.show',$course->getRouteKey()) }}" class="rounded focus-visible:outline-2 focus-visible:outline-blue-600 hover:underline">{{ $course->title }}</a></h3>
+    @if($showSummary)
+        <p class="premium-card-content mt-3 flex-1 text-sm leading-7 text-slate-600 dark:text-slate-400">{{ $course->summary }}</p>
+    @endif
     <div class="premium-card-content mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
         <x-course-price :course="$course" class="text-xs text-slate-700 dark:text-slate-200" />
         <span class="text-xs font-semibold text-slate-500">{{ $course->lessons_count ?? $course->lessons()->count() }} {{ __('frontend.lessons') }}</span>

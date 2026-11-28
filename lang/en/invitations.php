@@ -1,0 +1,35 @@
+<?php
+
+return [
+    'send' => 'Send invitation',
+    'manual' => 'Create manually',
+    'delivery_unavailable' => 'Invitation delivery is unavailable. Configure an outgoing mail transport or create the account manually.',
+    'delivery_failed' => 'Email invitation saved. Delivery failed. Use Resend invitation to try again.',
+    'sent' => 'Invitation handed to the mail service.',
+    'revoked' => 'Invitation revoked.',
+    'resend' => 'Resend invitation',
+    'revoke' => 'Revoke invitation',
+    'invited' => 'Invited',
+    'expired' => 'Invitation expired',
+    'revoked_status' => 'Invitation revoked',
+    'unsent' => 'Email not sent',
+    'verification' => 'Verification',
+    'all_verification' => 'All verification states',
+    'email_verified' => 'Email verified',
+    'email_unverified' => 'Email unverified',
+    'phone_verified' => 'Phone verified',
+    'phone_unverified' => 'Phone unverified',
+    'accept' => 'Accept invitation',
+    'accept_intro' => 'Choose a password to activate your account. The link also confirms your email address.',
+    'accepted' => 'Your account is active. Sign in with the password you just created.',
+    'password_bytes' => 'The password must fit in 72 bytes and contain no null characters.',
+    'mail_subject' => 'You’re invited to :brand',
+    'mail_body' => 'You’ve been invited to :brand. Use this one-time link to activate your account and set your password within three days:
+
+:url',
+    'language' => 'Invitation language',
+    'expires_at' => 'Invitation expires',
+    'email_sent_at' => 'Invitation email sent',
+    'by' => 'By :name',
+    'via_invite' => 'Confirmed through invitation',
+];
