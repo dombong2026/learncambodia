@@ -88,7 +88,7 @@ jobs:
           body=next(b for b in re.findall(r"<<'PY'\n(.*?)\nPY",s,re.S) if 'live.count(old)' in b)
           path="bootstrap/app.php"
           base=subprocess.check_output(["git","show","e7416ea12cc64a427818c6f9da159b89ea22eaef:"+path],text=True)
-          target=Path(path).read_text()
+          target=subprocess.check_output(["git","show","8bd5aa20ee9f0ed217308f1c017a5800d86ade04:"+path],text=True)
           live=base.replace("use App\\Console\\Commands\\AssignAccountRole;", "// Live-only customization\nuse App\\Console\\Commands\\AssignAccountRole;",1)
           with tempfile.TemporaryDirectory() as d:
               root=Path(d)

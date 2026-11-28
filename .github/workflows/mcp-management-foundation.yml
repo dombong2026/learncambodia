@@ -34,7 +34,9 @@ jobs:
           js=Path('public/js/mcp-management.js').read_text()
           flags=Path('config/mcp.php').read_text()
           installer=Path('support/operator/learncambodia-mcp-foundation-aapanel.sh').read_text()
-          assert "Route::get('/mcp', [\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class, 'index'])->name('mcp')" in route
+          # Preserve the exact route and its admin/auth group.
+          route_compact = "".join(route.split())
+          assert "Route::middleware(['auth','role:admin'])->prefix('dashboard/system-settings')->name('admin.system-settings.')->group(function():void{Route::get('/mcp',[\\App\\Http\\Controllers\\Workspace\\AdminMcpManagementController::class,'index'])->name('mcp');" in route_compact
           assert "middleware('role:admin')" in route or "middleware(['role:admin'])" in route
           assert "admin.system-settings.mcp" in config
           assert "isAdministrator()" in controller

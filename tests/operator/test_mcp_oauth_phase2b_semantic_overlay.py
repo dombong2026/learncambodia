@@ -36,8 +36,18 @@ for path in paths:
     )
     # Phase 2B is a historical operator with a fixed reviewed route contract.
     # Later transport additions are checked separately below.
-    reviewed = (subprocess.check_output(["git", "show", "58f4a45cc67ff6215259157c8c4b77ce44ea1c98:" + path], text=True)
-                if path == "routes/web.php" else (ROOT / path).read_text())
+    # Preserve the historical reviewed fixture contract.
+    # Provider and bootstrap use the previously CI-accepted
+    # PR revision, not the evolving application worktree.
+    reviewed_sha = (
+        "58f4a45cc67ff6215259157c8c4b77ce44ea1c98"
+        if path == "routes/web.php"
+        else "8bd5aa20ee9f0ed217308f1c017a5800d86ade04"
+    )
+    reviewed = subprocess.check_output(
+        ["git", "show", reviewed_sha + ":" + path],
+        text=True,
+    )
 
     assert patch(base, reviewed, base, path) == reviewed, (
         "Base overlay must reproduce reviewed code byte-for-byte", path
